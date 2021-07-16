@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <securec.h>
+#include <memory>
 
 using namespace std;
 using namespace OHOS;
@@ -110,7 +111,7 @@ public:
     void OnCreateFailed(const std::string cameraId, int32_t errorCode) override {}
     void OnReleased(const Camera &c) override {}
 
-    Recorder *SampleCreateRecorder()
+    std::shared_ptr<Recorder> SampleCreateRecorder()
     {
         int ret = 0;
         int32_t sampleRate = 48000;
@@ -128,78 +129,64 @@ public:
         int32_t height = 1080;
         VideoCodecFormat encoder = HEVC;
 
-        Recorder *recorder = new Recorder();
-        if ((ret = recorder->SetVideoSource(source, sourceId)) != SUCCESS) {
+        std::shared_ptr<Recorder> recorder = RecorderFactory::CreateRecorder();
+        if ((ret = recorder->SetVideoSource(source, sourceId)) != ERR_OK) {
             cout << "SetVideoSource failed." << ret << endl;
-            delete recorder;
             return nullptr;
         }
-        if ((ret = recorder->SetVideoEncoder(sourceId, encoder)) != SUCCESS) {
-            cout << "SetVideoEncoder failed." << ret << endl;
-            delete recorder;
-            return nullptr;
-        }
-        if ((ret = recorder->SetOutputFormat(FORMAT_MPEG_4)) != SUCCESS) {
-            cout << "SetOutputFormat failed." << ret << endl;
-            delete recorder;
-            return nullptr;
-        }
-        if ((ret = recorder->SetVideoSize(sourceId, width, height)) != SUCCESS) {
-            cout << "SetVideoSize failed." << ret << endl;
-            delete recorder;
-            return nullptr;
-        }
-        if ((ret = recorder->SetVideoFrameRate(sourceId, frameRate)) != SUCCESS) {
-            cout << "SetVideoFrameRate failed." << ret << endl;
-            delete recorder;
-            return nullptr;
-        }
-        if ((ret = recorder->SetVideoEncodingBitRate(sourceId, rate)) != SUCCESS) {
-            cout << "SetVideoEncodingBitRate failed." << ret << endl;
-            delete recorder;
-            return nullptr;
-        }
-        if ((ret = recorder->SetCaptureRate(sourceId, fps)) != SUCCESS) {
-            cout << "SetCaptureRate failed." << ret << endl;
-            delete recorder;
-            return nullptr;
-        }
-        if ((ret = recorder->SetAudioSource(inputSource, audioSourceId)) != SUCCESS) {
+        if ((ret = recorder->SetAudioSource(inputSource, audioSourceId)) != ERR_OK) {
             cout << "SetAudioSource failed." << ret << endl;
-            delete recorder;
             return nullptr;
         }
-        if ((ret = recorder->SetAudioEncoder(audioSourceId, audioFormat)) != SUCCESS) {
+        if ((ret = recorder->SetOutputFormat(FORMAT_MPEG_4)) != ERR_OK) {
+            cout << "SetOutputFormat failed." << ret << endl;
+            return nullptr;
+        }
+        if ((ret = recorder->SetVideoEncoder(sourceId, encoder)) != ERR_OK) {
+            cout << "SetVideoEncoder failed." << ret << endl;
+            return nullptr;
+        }
+        if ((ret = recorder->SetVideoSize(sourceId, width, height)) != ERR_OK) {
+            cout << "SetVideoSize failed." << ret << endl;
+            return nullptr;
+        }
+        if ((ret = recorder->SetVideoFrameRate(sourceId, frameRate)) != ERR_OK) {
+            cout << "SetVideoFrameRate failed." << ret << endl;
+            return nullptr;
+        }
+        if ((ret = recorder->SetVideoEncodingBitRate(sourceId, rate)) != ERR_OK) {
+            cout << "SetVideoEncodingBitRate failed." << ret << endl;
+            return nullptr;
+        }
+        if ((ret = recorder->SetCaptureRate(sourceId, fps)) != ERR_OK) {
+            cout << "SetCaptureRate failed." << ret << endl;
+            return nullptr;
+        }
+        if ((ret = recorder->SetAudioEncoder(audioSourceId, audioFormat)) != ERR_OK) {
             cout << "SetAudioEncoder failed." << ret << endl;
-            delete recorder;
             return nullptr;
         }
-        if ((ret = recorder->SetAudioSampleRate(audioSourceId, sampleRate)) != SUCCESS) {
+        if ((ret = recorder->SetAudioSampleRate(audioSourceId, sampleRate)) != ERR_OK) {
             cout << "SetAudioSampleRate failed." << ret << endl;
-            delete recorder;
             return nullptr;
         }
-        if ((ret = recorder->SetAudioChannels(audioSourceId, channelCount)) != SUCCESS) {
+        if ((ret = recorder->SetAudioChannels(audioSourceId, channelCount)) != ERR_OK) {
             cout << "SetAudioChannels failed." << ret << endl;
-            delete recorder;
             return nullptr;
         }
-        if ((ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate)) != SUCCESS) {
+        if ((ret = recorder->SetAudioEncodingBitRate(audioSourceId, audioEncodingBitRate)) != ERR_OK) {
             cout << "SetAudioEncodingBitRate failed." << ret << endl;
-            delete recorder;
             return nullptr;
         }
-        if ((ret = recorder->SetMaxDuration(36000)) != SUCCESS) { // 36000s=10h
+        if ((ret = recorder->SetMaxDuration(36000)) != ERR_OK) { // 36000s=10h
             cout << "SetAudioEncodingBitRate failed." << ret << endl;
-            delete recorder;
             return nullptr;
         }
         std::shared_ptr<SampleRecorderCallback> recCB = std::make_shared<SampleRecorderCallback>();
-        if ((ret = recorder->SetRecorderCallback(recCB)) != SUCCESS) {
-            delete recorder;
+        if ((ret = recorder->SetRecorderCallback(recCB)) != ERR_OK) {
             return nullptr;
         }
-
+        videoSourceId = sourceId;
         return recorder;
     }
 
@@ -207,7 +194,6 @@ public:
     {
         if (recorder_ != nullptr) {
             recorder_->Stop(true);
-            delete recorder_;
             recorder_ = nullptr;
         }
     }
@@ -225,7 +211,7 @@ public:
             cout << "Recorder not available." << endl;
             return -1;
         }
-        return SUCCESS;
+        return ERR_OK;
     }
 
     void StartRecord()
@@ -235,32 +221,32 @@ public:
             return;
         }
         int ret = PrepareRecorder();
-        if (ret != SUCCESS) {
+        if (ret != ERR_OK) {
             cout << "PrepareRecorder failed." << endl;
             CloseRecorder();
             return;
         }
         const string path = "/data";
         ret = recorder_->SetOutputPath(path);
-        if (ret != SUCCESS) {
+        if (ret != ERR_OK) {
             cout << "SetOutputPath failed. ret=" << ret << endl;
             CloseRecorder();
             return;
         }
         ret = recorder_->Prepare();
-        if (ret != SUCCESS) {
+        if (ret != ERR_OK) {
             cout << "Prepare failed. ret=" << ret << endl;
             CloseRecorder();
             return;
         }
         ret = recorder_->Start();
-        if (ret != SUCCESS) {
+        if (ret != ERR_OK) {
             cout << "recorder start failed. ret=" << ret << endl;
             CloseRecorder();
             return;
         }
         FrameConfig *fc = new FrameConfig(FRAME_CONFIG_RECORD);
-        Surface *surface = (recorder_->GetSurface(0)).get();
+        Surface *surface = (recorder_->GetSurface(videoSourceId)).GetRefPtr();
 
         int queueSize = 10;
         int oneKilobytes = 1024;
@@ -438,7 +424,8 @@ private:
     State recordState_ = STATE_IDLE;
     EventHandler &eventHdlr_;
     Camera *cam_ = nullptr;
-    Recorder *recorder_ = nullptr;
+    std::shared_ptr<Recorder> recorder_ = nullptr;
+    int32_t videoSourceId = -1;
     SampleFrameStateCallback fsCb_;
     sptr<Surface> captureConSurface;
     std::unique_ptr<Window> window;

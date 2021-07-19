@@ -38,7 +38,7 @@ ohos_executable("camera_sample") {
 
   external_deps = [
     "ipc:ipc_core",
-    "multimedia_media_standard:recorder",
+        "multimedia_media_standard:media_client",
   ]
 
   part_name = "multimedia_camera_standard"

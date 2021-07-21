@@ -6,9 +6,18 @@
         "phone"
       ],
       "module_list": [
+        "//foundation/multimedia/camera_standard/sa_profile:camera_service_sa_profile",
+        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/prebuilts/etcs:camera_service.rc",
         "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera:camera",
+        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service:camera_service",
+        "//foundation/multimedia/camera_standard/frameworks/kitsimpl/camera:camera_framework",
+        "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test:camera_capture",
+        "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test:camera_preview",
         "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/prebuilts/etcs:cameradev.ini",
-        "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test:camera_sample"
+        "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test:camera_sample",
+        "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_napi",
+        "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_js",
+        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata"
       ],
       "inner_kits": [
           {
@@ -33,7 +42,8 @@
           }
       ],
       "test_list": [
-              "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera/test:cameramoduletest"
+              "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera/test:cameramoduletest",
+              "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/test:camerametadatatest"
       ]
     }
   }

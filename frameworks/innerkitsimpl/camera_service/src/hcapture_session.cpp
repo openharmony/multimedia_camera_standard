@@ -234,7 +234,7 @@ void StreamOperatorCallback::OnCaptureStarted(int32_t captureId,
             break;
         case CAMERA_PHOTO_CAPTURE_ID:
             if (captureSession_->streamCapture_ != nullptr) {
-                captureSession_->streamCapture_->OnCaptureStarted();
+                captureSession_->streamCapture_->OnCaptureStarted(captureId);
             }
             break;
         case CAMERA_VIDEO_CAPTURE_ID:
@@ -261,7 +261,7 @@ void StreamOperatorCallback::OnCaptureEnded(int32_t captureId,
             break;
         case CAMERA_PHOTO_CAPTURE_ID:
             if (captureSession_->streamCapture_ != nullptr) {
-                captureSession_->streamCapture_->OnCaptureEnded();
+                captureSession_->streamCapture_->OnCaptureEnded(captureId);
             }
             break;
         case CAMERA_VIDEO_CAPTURE_ID:
@@ -288,7 +288,7 @@ void StreamOperatorCallback::OnCaptureError(int32_t captureId,
             break;
         case CAMERA_PHOTO_CAPTURE_ID:
             if (captureSession_->streamCapture_ != nullptr) {
-                captureSession_->streamCapture_->OnCaptureError(info[0]->error_);
+                captureSession_->streamCapture_->OnCaptureError(captureId, info[0]->error_);
             }
             break;
         case CAMERA_VIDEO_CAPTURE_ID:
@@ -306,7 +306,9 @@ void StreamOperatorCallback::OnFrameShutter(int32_t captureId,
 {
     if (captureId == CAMERA_PHOTO_CAPTURE_ID && captureSession_ != nullptr
             && captureSession_->streamCapture_ != nullptr) {
-        captureSession_->streamCapture_->OnFrameShutter(timestamp);
+        captureSession_->streamCapture_->OnFrameShutter(captureId, timestamp);
+    } else {
+        MEDIA_INFO_LOG("HCaptureSession::OnFrameShutter(), called for other streams too");
     }
 }
 

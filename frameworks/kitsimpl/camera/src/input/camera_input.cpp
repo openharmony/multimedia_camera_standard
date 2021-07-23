@@ -245,8 +245,9 @@ camera_exposure_mode_enum_t CameraInput::GetExposureMode()
     return static_cast<camera_exposure_mode_enum_t>(item.data.u8[0]);
 }
 
-void CameraInput::SetExposureCallback(ExposureCallback &explosurecallback)
+void CameraInput::SetExposureCallback(std::shared_ptr<ExposureCallback> exposureCallback)
 {
+    exposurecallback_ = exposureCallback;
     return;
 }
 
@@ -264,8 +265,9 @@ std::vector<camera_focus_mode_enum_t> CameraInput::GetSupportedFocusModes()
     return supportedFocusModes;
 }
 
-void CameraInput::SetFocusCallback(FocusCallback &explosurecallback)
+void CameraInput::SetFocusCallback(std::shared_ptr<FocusCallback> focusCallback)
 {
+    focusCallback_ = focusCallback;
     return;
 }
 

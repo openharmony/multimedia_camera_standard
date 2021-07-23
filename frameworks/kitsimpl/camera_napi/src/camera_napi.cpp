@@ -35,26 +35,6 @@ napi_ref CameraNapi::videoEncoderRef_ = nullptr;
 napi_ref CameraNapi::audioEncoderRef_ = nullptr;
 napi_ref CameraNapi::parameterResultRef_ = nullptr;
 
-sptr<Surface> createWindowSurface()
-{
-    WindowConfig config = {
-        .width = 640,
-        .height = 480,
-        .pos_x = 0,
-        .pos_y = 0,
-        .format = PIXEL_FMT_RGBA_8888
-    };
-
-    window = WindowManager::GetInstance()->CreateWindow(&config);
-    if (window != nullptr) {
-        sptr<Surface> producerSurface = window->GetSurface();
-        producerSurface->SetQueueSize(10);
-        return producerSurface;
-    }
-    MEDIA_ERR_LOG("Failed to create Windows");
-    return nullptr;
-}
-
 namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CameraNapi"};
 }
@@ -87,32 +67,55 @@ void SurfaceListener::OnBufferAvailable()
     int64_t timestamp = 0;
     OHOS::Rect damage;
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
-    captureConSurface->AcquireBuffer(buffer, flushFence, timestamp, damage);
+    captureConsumerSurface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
     if (buffer != nullptr) {
         char *addr = static_cast<char *>(buffer->GetVirAddr());
         uint32_t size = buffer->GetSize();
-        SaveYUV(addr, size);
-        captureConSurface->ReleaseBuffer(buffer, -1);
+        int32_t intResult = 0;
+        intResult = SaveData(addr, size);
+        if (intResult != 0) {
+            MEDIA_ERR_LOG("Save Data Failed!");
+        }
+        captureConsumerSurface_->ReleaseBuffer(buffer, -1);
     } else {
         MEDIA_ERR_LOG("AcquireBuffer failed!");
     }
 }
 
-int32_t SurfaceListener::SaveYUV(char *buffer, int32_t size)
+int32_t SurfaceListener::SaveData(char *buffer, int32_t size)
 {
     struct timeval tv = {};
     gettimeofday(&tv, nullptr);
     struct tm *ltm = localtime(&tv.tv_sec);
     if (ltm != nullptr) {
         std::ostringstream ss("Capture_");
+        std::string path;
         ss << "Capture" << ltm->tm_hour << "-" << ltm->tm_min << "-" << ltm->tm_sec << ".yuv";
-
-        std::ofstream pic("/data/" + ss.str(), std::ofstream::out | std::ofstream::trunc);
+        if (photoPath.empty()) {
+            photoPath = "/data/";
+        }
+        path = photoPath + ss.str();
+        std::ofstream pic(path, std::ofstream::out | std::ofstream::trunc);
         pic.write(buffer, size);
+        if (pic.fail()) {
+            MEDIA_ERR_LOG("Write Picture failed!");
+            pic.close();
+            return -1;
+        }
         pic.close();
     }
 
     return 0;
+}
+
+void SurfaceListener::SetPhotoPath(std::string InPhotoPath)
+{
+    photoPath = InPhotoPath;
+}
+
+void SurfaceListener::SetConsumerSurface(sptr<Surface> InCaptureConsumerSurface)
+{
+    captureConsumerSurface_ = InCaptureConsumerSurface;
 }
 
 int32_t SurfaceListener::SaveYUVPreview(char *buffer, int32_t size)
@@ -167,6 +170,7 @@ CameraNapi::CameraNapi()
     : env_(nullptr), wrapper_(nullptr), capSession_(nullptr), camInput_(nullptr), photoOutput_(nullptr), previewOutput_(nullptr), listener(nullptr) {
     recConfig_ = nullptr;
     recorder_ = nullptr;
+    photoConfig_ = nullptr;
 }
 
 CameraNapi::~CameraNapi()
@@ -505,53 +509,17 @@ napi_value CameraNapi::On(napi_env env, napi_callback_info info)
     return undefinedResult;
 }
 
-int32_t CameraNapi::Prepare_NonRecorder(napi_env env, int32_t iPrepareType, CameraNapi *CameraWrapper)
-{
-    int32_t intResult = -1;
-    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
-
-    if ((CameraWrapper->capSession_ == nullptr) || (CameraWrapper->camInput_ == nullptr)) {
-        HiLog::Error(LABEL, "CameraNapi::Prepare_NonRecorder() Create was not Proper!");
-        return -1;
-    }
-    CameraWrapper->capSession_->BeginConfig();
-    intResult = CameraWrapper->capSession_->AddInput(CameraWrapper->camInput_);
-    if (intResult != 0) {
-        HiLog::Error(LABEL, "CameraNapi::Prepare_NonRecorder() AddInput Failed!");
-        return -1;
-    }
-    captureConSurface = Surface::CreateSurfaceAsConsumer();
-    CameraWrapper->listener = new SurfaceListener();
-    captureConSurface->RegisterConsumerListener(CameraWrapper->listener);
-    CameraWrapper->photoOutput_ = camManagerObj->CreatePhotoOutput(captureConSurface);
-    if (CameraWrapper->photoOutput_ == nullptr) {
-        MEDIA_ERR_LOG("Failed to create PhotoOutput");
-        return -1;
-    }
-    intResult = CameraWrapper->capSession_->AddOutput(CameraWrapper->photoOutput_);
-    if (intResult != 0) {
-        MEDIA_ERR_LOG("Failed to Add output to session, intResult: %{public}d", intResult);
-        return intResult;
-    }
-    intResult = CameraWrapper->capSession_->CommitConfig();
-    if (intResult != 0) {
-        MEDIA_ERR_LOG("Failed to Commit config, intResult: %{public}d", intResult);
-        return -1;
-    }
-
-    return 0;
-}
-
-int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
+int32_t CameraNapi::GetProfileValue(napi_env env, napi_value arg)
 {
     napi_value temp = nullptr;
     int32_t iTemp;
+    bool bIsPresent = false;
     if (napi_get_named_property(env, arg, "aBitRate", &temp) != napi_ok
         || napi_get_value_int32(env, temp, &iTemp) != napi_ok) {
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->aBitRate = iTemp;
+        recConfig_->recProfile_->aBitRate = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "aChannels", &temp) != napi_ok
@@ -559,7 +527,7 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->aChannels = iTemp;
+        recConfig_->recProfile_->aChannels = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "aCodec", &temp) != napi_ok
@@ -567,7 +535,7 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->aCodec = iTemp;
+        recConfig_->recProfile_->aCodec = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "aSampleRate", &temp) != napi_ok
@@ -575,7 +543,7 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->aSampleRate = iTemp;
+        recConfig_->recProfile_->aSampleRate = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "durationTime", &temp) != napi_ok
@@ -583,7 +551,7 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->durationTime = iTemp;
+        recConfig_->recProfile_->durationTime = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "fileFormat", &temp) != napi_ok
@@ -591,15 +559,7 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->fileFormat = iTemp;
-        iTemp = 0;
-    }
-    if (napi_get_named_property(env, arg, "qualityLevel", &temp) != napi_ok
-        || napi_get_value_int32(env, temp, &iTemp) != napi_ok) {
-        HiLog::Error(LABEL, "Could not get the string argument!");
-        return -1;
-    } else {
-        CameraWrapper->recConfig_->recProfile_->qualityLevel = iTemp;
+        recConfig_->recProfile_->fileFormat = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "vBitRate", &temp) != napi_ok
@@ -607,7 +567,7 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->vBitRate = iTemp;
+        recConfig_->recProfile_->vBitRate = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "vCodec", &temp) != napi_ok
@@ -615,7 +575,7 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->vCodec = iTemp;
+        recConfig_->recProfile_->vCodec = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "vFrameHeight", &temp) != napi_ok
@@ -623,7 +583,7 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->vFrameHeight = iTemp;
+        recConfig_->recProfile_->vFrameHeight = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "vFrameRate", &temp) != napi_ok
@@ -631,7 +591,7 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->vFrameRate = iTemp;
+        recConfig_->recProfile_->vFrameRate = iTemp;
         iTemp = 0;
     }
     if (napi_get_named_property(env, arg, "vFrameWidth", &temp) != napi_ok
@@ -639,30 +599,34 @@ int32_t GetProfileValue(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->vFrameWidth = iTemp;
+        recConfig_->recProfile_->vFrameWidth = iTemp;
         iTemp = 0;
     }
-    if (napi_get_named_property(env, arg, "aSourceType", &temp) != napi_ok
-        || napi_get_value_int32(env, temp, &iTemp) != napi_ok) {
+    napi_has_named_property(env, arg, "aSourceType", &bIsPresent);
+    if (bIsPresent && (napi_get_named_property(env, arg, "aSourceType", &temp) != napi_ok
+        || napi_get_value_int32(env, temp, &iTemp) != napi_ok)) {
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->aSourceType = static_cast<CameraNapi::AudioSourceType>(iTemp);
+        recConfig_->recProfile_->aSourceType = static_cast<CameraNapi::AudioSourceType>(iTemp);
         iTemp = 0;
+        bIsPresent = false;
     }
-    if (napi_get_named_property(env, arg, "vSourceType", &temp) != napi_ok
-        || napi_get_value_int32(env, temp, &iTemp) != napi_ok) {
+    napi_has_named_property(env, arg, "vSourceType", &bIsPresent);
+    if (bIsPresent && (napi_get_named_property(env, arg, "vSourceType", &temp) != napi_ok
+        || napi_get_value_int32(env, temp, &iTemp) != napi_ok)) {
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->recProfile_->vSourceType = static_cast<CameraNapi::VideoSourceType>(iTemp);
+        recConfig_->recProfile_->vSourceType = static_cast<CameraNapi::VideoSourceType>(iTemp);
         iTemp = 0;
+        bIsPresent = false;
     }
 
     return 0;
 }
 
-int GetRecorderConfig(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
+int32_t CameraNapi::GetRecorderConfig(napi_env env, napi_value arg)
 {
     char buffer[SIZE];
     size_t res;
@@ -672,13 +636,22 @@ int GetRecorderConfig(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
     bool bIsPresent = false;
     napi_status status = napi_ok;
     int32_t iLocation = 0;
-	int32_t intResult = -1;
+    int32_t intResult = -1;
+    if (recConfig_ != nullptr) {
+        HiLog::Error(LABEL, "Recorder Config needs reset");
+        recConfig_.reset();
+    }
+    recConfig_ = std::make_unique<RecorderConfig>();
+    if (recConfig_ == nullptr) {
+        HiLog::Error(LABEL, "Recorder Config Alloc failed");
+        return -1;
+    }
     if (napi_get_named_property(env, arg, "videoPath", &temp) != napi_ok
         || napi_get_value_string_utf8(env, temp, buffer, SIZE, &res) != napi_ok) {
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->strVideoPath = buffer;
+        recConfig_->strVideoPath = buffer;
         memset_s(buffer, SIZE, 0, sizeof(buffer));
     }
     if (napi_get_named_property(env, arg, "thumbPath", &temp) != napi_ok
@@ -686,47 +659,22 @@ int GetRecorderConfig(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->strThumbPath = buffer;
+        recConfig_->strThumbPath = buffer;
         memset_s(buffer, SIZE, 0, sizeof(buffer));
     }
-    if (napi_get_named_property(env, arg, "muted", &temp) != napi_ok
-        || napi_get_value_bool(env, temp, &bIsMuted) != napi_ok) {
+    napi_has_named_property(env, arg, "muted", &bIsPresent);
+    if (bIsPresent && (napi_get_named_property(env, arg, "muted", &temp) != napi_ok
+        || napi_get_value_bool(env, temp, &bIsMuted) != napi_ok)) {
         HiLog::Error(LABEL, "Could not get the string argument!");
         return -1;
     } else {
-        CameraWrapper->recConfig_->bIsMuted = bIsMuted;
+        recConfig_->bIsMuted = bIsMuted;
         bIsMuted = false;
+        bIsPresent = false;
     }
 
-    napi_has_named_property(env, arg, "location", &bIsPresent);
-    if (bIsPresent && napi_get_named_property(env, arg, "MediaLocation", &tmediaLocation) == napi_ok) {
-        napi_has_named_property(env, tmediaLocation, "latitude", &bIsPresent);
-        if (bIsPresent && napi_get_named_property(env, tmediaLocation, "latitude", &temp) == napi_ok) {
-            status = napi_get_value_int32(env, temp, &iLocation);
-            if (status != napi_ok) {
-                HiLog::Error(LABEL, "Could not get the latitude argument!");
-                return -1;
-            } else {
-                CameraWrapper->recConfig_->stLocation.ilatitude = iLocation;
-                iLocation = 0;
-            }
-        }
-        napi_has_named_property(env, tmediaLocation, "longitude", &bIsPresent);
-        if (bIsPresent && napi_get_named_property(env, tmediaLocation, "longitude", &temp) == napi_ok) {
-            status = napi_get_value_int32(env, temp, &iLocation);
-            if (status != napi_ok) {
-                HiLog::Error(LABEL, "Could not get the longitude argument!");
-                return -1;
-            }
-        } else {
-            CameraWrapper->recConfig_->stLocation.ilongitude = iLocation;
-            iLocation = 0;
-        }
-    }
-
-    napi_has_named_property(env, arg, "profile", &bIsPresent);
-    if (bIsPresent && napi_get_named_property(env, arg, "profile", &trecProf) == napi_ok) {
-        intResult = GetProfileValue(env, trecProf, CameraWrapper);
+    if (napi_get_named_property(env, arg, "profile", &trecProf) == napi_ok) {
+        intResult = GetProfileValue(env, trecProf);
         if (intResult != 0) {
             HiLog::Error(LABEL, "Could not get the Profile argument!");
             return -1;
@@ -736,66 +684,235 @@ int GetRecorderConfig(napi_env env, napi_value arg, CameraNapi *CameraWrapper)
     return 0;
 }
 
-int32_t CameraNapi::Prepare_Recorder(CameraNapi *CameraWrapper)
+int32_t CameraNapi::PrepareVideo(sptr<CameraManager> camManagerObj)
 {
     int32_t ret = 0;
-    CameraWrapper->aSourceID = 0;
-    CameraWrapper->vSourceID = 0;
-    ret = CameraWrapper->recorder_->SetVideoSource(GetNativeVideoSourceType(CameraWrapper->recConfig_->recProfile_->vSourceType), CameraWrapper->vSourceID);
+    ret = PrepareRecorder();
+    if (ret != 0) {
+        HiLog::Error(LABEL, "Prepare Recorder failed");
+        return -1;
+    }
+    recorderSurface_ = (recorder_->GetSurface(vSourceID));
+    if (recorderSurface_ == nullptr) {
+        HiLog::Error(LABEL, "Get Recorder Surface failed");
+        return -1;
+    }
+    videoOutput_ = camManagerObj->CreateVideoOutput(recorderSurface_);
+    if (videoOutput_ == nullptr) {
+        HiLog::Error(LABEL, "Create Video Output failed");
+        return -1;
+    }
+    return 0;
+}
+int32_t CameraNapi::PrepareRecorder()
+{
+    int32_t ret = 0;
+    aSourceID = 0;
+    vSourceID = 0;
+    ret = recorder_->SetVideoSource(GetNativeVideoSourceType(recConfig_->recProfile_->vSourceType), vSourceID);
     if (ret != 0) {
         return ret;
     }
-    ret = CameraWrapper->recorder_->SetVideoEncoder(CameraWrapper->vSourceID, GetNativeVideoCodecFormat(CameraWrapper->recConfig_->recProfile_->vCodec));
+    ret = recorder_->SetVideoEncoder(vSourceID, GetNativeVideoCodecFormat(recConfig_->recProfile_->vCodec));
     if (ret != 0) {
         return ret;
     }
-    ret = CameraWrapper->recorder_->SetOutputFormat(static_cast<OHOS::Media::OutputFormatType>(CameraWrapper->recConfig_->recProfile_->fileFormat));
+    ret = recorder_->SetOutputFormat(static_cast<OHOS::Media::OutputFormatType>(recConfig_->recProfile_->fileFormat));
     if (ret != 0) {
         return ret;
     }
-    ret = CameraWrapper->recorder_->SetVideoSize(CameraWrapper->vSourceID, CameraWrapper->recConfig_->recProfile_->vFrameWidth, CameraWrapper->recConfig_->recProfile_->vFrameHeight);
+    ret = recorder_->SetVideoSize(vSourceID, recConfig_->recProfile_->vFrameWidth,
+                                  recConfig_->recProfile_->vFrameHeight);
     if (ret != 0) {
         return ret;
     }
-    ret = CameraWrapper->recorder_->SetVideoFrameRate(CameraWrapper->vSourceID, CameraWrapper->recConfig_->recProfile_->vFrameRate);
+    ret = recorder_->SetVideoFrameRate(vSourceID, recConfig_->recProfile_->vFrameRate);
     if (ret != 0) {
         return ret;
     }
-    ret = CameraWrapper->recorder_->SetVideoEncodingBitRate(CameraWrapper->vSourceID, CameraWrapper->recConfig_->recProfile_->vBitRate);
+    ret = recorder_->SetVideoEncodingBitRate(vSourceID, recConfig_->recProfile_->vBitRate);
     if (ret != 0) {
         return ret;
     }
-    ret = CameraWrapper->recorder_->SetMaxDuration(CameraWrapper->recConfig_->recProfile_->durationTime);
+    ret = recorder_->SetMaxDuration(recConfig_->recProfile_->durationTime);
     if (ret != 0) {
         return ret;
     }
-    ret = CameraWrapper->recorder_->SetAudioSource(GetNativeAudioSourceType(CameraWrapper->recConfig_->recProfile_->aSourceType), CameraWrapper->aSourceID);
+    if (!(recConfig_->bIsMuted)) {
+        ret = recorder_->SetAudioSource(GetNativeAudioSourceType(recConfig_->recProfile_->aSourceType), aSourceID);
+        if (ret != 0) {
+            return ret;
+        }
+        ret = recorder_->SetAudioEncoder(aSourceID, GetNativeAudioCodecFormat(recConfig_->recProfile_->aCodec));
+        if (ret != 0) {
+            return ret;
+        }
+        ret = recorder_->SetAudioSampleRate(aSourceID, recConfig_->recProfile_->aSampleRate);
+        if (ret != 0) {
+            return ret;
+        }
+        ret = recorder_->SetAudioChannels(aSourceID, recConfig_->recProfile_->aChannels);
+        if (ret != 0) {
+            return ret;
+        }
+        ret = recorder_->SetAudioEncodingBitRate(aSourceID, recConfig_->recProfile_->aBitRate);
+        if (ret != 0) {
+            return ret;
+        }
+    }
+    ret = recorder_->SetOutputPath(recConfig_->strVideoPath);
     if (ret != 0) {
         return ret;
     }
-    ret = CameraWrapper->recorder_->SetAudioEncoder(CameraWrapper->aSourceID, GetNativeAudioCodecFormat(CameraWrapper->recConfig_->recProfile_->aCodec));
-    if (ret != 0) {
-        return ret;
-    }
-    ret = CameraWrapper->recorder_->SetAudioSampleRate(CameraWrapper->aSourceID, CameraWrapper->recConfig_->recProfile_->aSampleRate);
-    if (ret != 0) {
-        return ret;
-    }
-    ret = CameraWrapper->recorder_->SetAudioChannels(CameraWrapper->aSourceID, CameraWrapper->recConfig_->recProfile_->aChannels);
-    if (ret != 0) {
-        return ret;
-    }
-    ret = CameraWrapper->recorder_->SetAudioEncodingBitRate(CameraWrapper->aSourceID, CameraWrapper->recConfig_->recProfile_->aBitRate);
-    if (ret != 0) {
-        return ret;
-    }
-    ret = CameraWrapper->recorder_->SetOutputPath(CameraWrapper->recConfig_->strVideoPath);
-    if (ret != 0) {
-        return ret;
-    }
-    ret = CameraWrapper->recorder_->Prepare();
+    ret = recorder_->Prepare();
 
     return ret;
+}
+
+sptr<Surface> CameraNapi::CreateSubWindowSurface()
+{
+    if (!subWindow_) {
+        WindowConfig config = {
+            .width = 480,
+            .height = 480,
+            .pos_x = 0,
+            .pos_y = 0,
+            .format = PIXEL_FMT_RGBA_8888
+	};
+        WindowConfig subConfig = config;
+        subConfig.type = WINDOW_TYPE_VIDEO;
+        subConfig.format = PIXEL_FMT_YCRCB_420_P;
+        subConfig.subwindow = true;
+        previewWindow = WindowManager::GetInstance()->CreateWindow(&config);
+        if (previewWindow == nullptr) {
+            HiLog::Error(LABEL, "Preview Window was not created");
+            return nullptr;
+        }
+        sptr<SurfaceBuffer> buffer;
+        int32_t releaseFence = -1;
+        BufferRequestConfig requestConfig;
+        previewWindow->GetRequestConfig(requestConfig);
+        SurfaceError error = previewWindow->GetSurface()->RequestBuffer(buffer, releaseFence, requestConfig);
+        if (error != SURFACE_ERROR_OK) {
+            MEDIA_ERR_LOG("Camera Request Buffer Failed");
+            return nullptr;
+        }
+        uint32_t buffSize = buffer->GetSize();
+        void *bufferVirAddr = buffer->GetVirAddr();
+        if (bufferVirAddr == nullptr) {
+            MEDIA_ERR_LOG("bufferVirAddr is nullptr");
+            return nullptr;
+        }
+        memset_s(bufferVirAddr, buffSize, 0xFF, buffSize);
+        BufferFlushConfig flushConfig {
+            .damage = {
+                .x = 0,
+                .y = 0,
+                .w = requestConfig.width,
+                .h = requestConfig.height,
+	    },
+	    .timestamp = 0,
+        };
+        error = previewWindow->GetSurface()->FlushBuffer(buffer, -1, flushConfig);
+        if (error != SURFACE_ERROR_OK) {
+            MEDIA_ERR_LOG("Camera Flush Buffer Failed");
+            return nullptr;
+        }
+
+        subWindow_ = WindowManager::GetInstance()->CreateSubWindow(previewWindow->GetWindowID(), &subConfig);
+        if (subWindow_ == nullptr) {
+            HiLog::Error(LABEL, "SubWindow is not proper");
+            return nullptr;
+        }
+        subWindow_->GetSurface()->SetQueueSize(SURFACE_QUEUE_SIZE);
+    }
+    previewSurface_ = subWindow_->GetSurface();
+    if (previewSurface_ == nullptr) {
+        HiLog::Error(LABEL, "Preview Surface is not proper");
+        return nullptr;
+    }
+    return previewSurface_;
+}
+
+int32_t CameraNapi::PreparePhoto(sptr<CameraManager> camManagerObj)
+{
+    int32_t intResult = 0;
+    captureConsumerSurface_ = Surface::CreateSurfaceAsConsumer();
+    if (captureConsumerSurface_ == nullptr) {
+        HiLog::Error(LABEL, "CreateSurface failed");
+        return -1;
+    }
+    listener = new SurfaceListener();
+    if (listener == nullptr) {
+        HiLog::Error(LABEL, "Create Listener failed");
+        return -1;
+    }
+    listener->SetConsumerSurface(captureConsumerSurface_);
+    captureConsumerSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
+
+    photoOutput_ = camManagerObj->CreatePhotoOutput(captureConsumerSurface_);
+    if (photoOutput_ == nullptr) {
+        HiLog::Error(LABEL, "Failed to create PhotoOutput");
+        return -1;
+    }
+    intResult = capSession_->AddOutput(photoOutput_);
+    if (intResult != 0) {
+        HiLog::Error(LABEL, "Failed to Add output to session");
+        return -1;
+    }
+    return 0;
+}
+
+int32_t CameraNapi::PrepareCommon(napi_env env, int32_t iPrepareType)
+{
+    int32_t intResult = 0;
+    sptr<OHOS::CameraStandard::CameraManager> camManagerObj = OHOS::CameraStandard::CameraManager::GetInstance();
+    if (camManagerObj == nullptr) {
+        HiLog::Error(LABEL, "Failed to get Camera Manager!");
+        return -1;
+    }
+    if (camInput_ != nullptr) {
+        ((sptr<CameraInput> &)camInput_)->UnlockForControl();
+    }
+    capSession_ = camManagerObj->CreateCaptureSession();
+    if ((capSession_ == nullptr) || (camInput_ == nullptr)) {
+        HiLog::Error(LABEL, "Create was not Proper!");
+        return -1;
+    }
+    capSession_->BeginConfig();
+    intResult = capSession_->AddInput(camInput_);
+    if (intResult != 0) {
+        HiLog::Error(LABEL, "AddInput Failed!");
+        return -1;
+    }
+    previewOutput_ = camManagerObj->CreatePreviewOutput(CreateSubWindowSurface());
+    if (previewOutput_ == nullptr) {
+        HiLog::Error(LABEL, "Failed to create PreviewOutput");
+        return -1;
+    }
+    intResult = capSession_->AddOutput(previewOutput_);
+    if (intResult != 0) {
+        HiLog::Error(LABEL, "Failed to Add Preview Output");
+        return -1;
+    }
+    intResult = PreparePhoto(camManagerObj);
+    if (intResult != 0) {
+        HiLog::Error(LABEL, "Failed to Prepare Photo");
+        return -1;
+    }
+    // Needs to be integrated with Recorder
+    /* intResult = PrepareVideo(camManagerObj);
+    if (intResult != 0) {
+        HiLog::Error(LABEL, "Failed to Prepare Recorder");
+        return -1;
+    } */
+    intResult = capSession_->CommitConfig();
+    if (intResult != 0) {
+        HiLog::Error(LABEL, "Failed to Commit config");
+        return -1;
+    }
+    isReady_ = true;
+    return 0;
 }
 
 napi_value CameraNapi::Prepare(napi_env env, napi_callback_info info)
@@ -822,33 +939,13 @@ napi_value CameraNapi::Prepare(napi_env env, napi_callback_info info)
             if (i == 0 && valueType == napi_number) {
                 napi_get_value_int32(env, argv[i], &iPrepareType);
             } else if (i == 1 && valueType == napi_object) {
-                GetRecorderConfig(env, argv[1], CameraWrapper);
+                // Needs to be integrated with Recorder
+                // CameraWrapper->GetRecorderConfig(env, argv[1]);
             }
         }
     }
 
-    switch (iPrepareType) {
-        case CameraNapi::PICTURE:
-            intResult = Prepare_NonRecorder(env, iPrepareType, CameraWrapper);
-            if (intResult != 0) {
-                HiLog::Error(LABEL, "CameraNapi::Prepare Failed!");
-                return undefinedResult;
-            }
-            break;
-        case CameraNapi::PREVIEW:
-        case CameraNapi::PICNPREVIEW:
-            break;
-        case CameraNapi::RECORDER:
-            intResult = Prepare_Recorder(CameraWrapper);
-            if (intResult != 0) {
-                HiLog::Error(LABEL, "Prepare Failed!");
-                return undefinedResult;
-            }
-            break;
-        default:
-            HiLog::Error(LABEL, "CameraNapi::Prepare Unknown Prepare Type!");
-            return undefinedResult;
-    }
+    CameraWrapper->PrepareCommon(env, iPrepareType);
 
     if (CameraWrapper->prepareCallback_ == nullptr) {
         HiLog::Error(LABEL, "Prepare Callback is not registered!");
@@ -950,30 +1047,32 @@ napi_value CameraNapi::GetCameraIDs(napi_env env, napi_callback_info info)
     return result;
 }
 
-int32_t CameraNapi::InitCamera(CameraNapi *obj, std::string CameraID)
+int32_t CameraNapi::InitCamera(std::string CameraID)
 {
     int32_t intResult = -1;
     CameraManager *camManagerObj = CameraManager::GetInstance();
+    if (camManagerObj == nullptr) {
+        HiLog::Error(LABEL, "Failed to get Camera Manager");
+        return -1;
+    }
     std::vector<sptr<OHOS::CameraStandard::CameraInfo>> cameraObjList = camManagerObj->GetCameras();
 
     if (cameraObjList.size() > 0) {
-        obj->capSession_ = camManagerObj->CreateCaptureSession();
-        if (obj->capSession_ == nullptr) {
-            MEDIA_ERR_LOG("Failed to create capture session");
-            return -1;
-        }
-        obj->camInput_ = camManagerObj->CreateCameraInput(cameraObjList[0]);
-        if (obj->camInput_ == nullptr) {
+        camInput_ = camManagerObj->CreateCameraInput(cameraObjList[0]);
+        if (camInput_ == nullptr) {
             HiLog::Error(LABEL, "CameraNapi::InitCamera() CreateCameraInput() Failed!");
             return -1;
         }
     }
-    obj->recorder_ = Media::RecorderFactory::CreateRecorder();
-    if (obj->recorder_ == nullptr) {
+    // Needs to be integrated with Recorder
+    /* recorder_ = Media::RecorderFactory::CreateRecorder();
+    if (recorder_ == nullptr) {
         HiLog::Error(LABEL, "CameraNapi::InitCamera() CreateRecorder() Failed!");
         return -1;
+    } */
+    if (camInput_ != nullptr) {
+        ((sptr<CameraInput> &)camInput_)->LockForControl();
     }
-
     return 0;
 }
 
@@ -995,10 +1094,23 @@ napi_value CameraNapi::StartVideoRecording(napi_env env, napi_callback_info info
 
     status = napi_unwrap(env, jsThis, (void**) &camWrapper);
     if (status == napi_ok) {
-        if (camWrapper->recorder_->Start() != 0) {
-            HiLog::Error(LABEL, "Failed to Start Recording");
+        if (camWrapper->recordState_ == State::STATE_RUNNING) {
+            HiLog::Error(LABEL, "Camera is already recording.");
             return undefinedResult;
         }
+        int intResult = camWrapper->recorder_->Start();
+        if (intResult != ERR_OK) {
+            HiLog::Error(LABEL, "Failed to Start Recording");
+            camWrapper->CloseRecorder();
+            return undefinedResult;
+        }
+        if (camWrapper->videoOutput_ == nullptr) {
+            HiLog::Error(LABEL, "Video Output is null");
+            camWrapper->CloseRecorder();
+            return undefinedResult;
+        }
+        ((sptr<OHOS::CameraStandard::VideoOutput> &)(camWrapper->videoOutput_))->Start();
+        camWrapper->recordState_ = State::STATE_RUNNING;
 
         if (camWrapper->startCallback_ == nullptr) {
             HiLog::Error(LABEL, "Start Callback is not registered!");
@@ -1195,31 +1307,24 @@ napi_value CameraNapi::StartPreview(napi_env env, napi_callback_info info)
 
     status = napi_unwrap(env, jsThis, (void**) &cameraWrapper);
     if (status == napi_ok) {
-        sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
-        cameraWrapper->capSession_->BeginConfig();
-        intResult = cameraWrapper->capSession_->AddInput(cameraWrapper->camInput_);
-        if (intResult != 0) {
-             HiLog::Error(LABEL, "CameraNapi::StartPreview() AddInput Failed!");
-             return undefinedResult;
-        }
-	cameraWrapper->previewOutput_ = camManagerObj->CreatePreviewOutput(createWindowSurface());
-        if (cameraWrapper->previewOutput_ == nullptr) {
-             HiLog::Error(LABEL, "CameraNapi Failed to create PreviewOutput");
+        if (!(cameraWrapper->isReady_) || (cameraWrapper->capSession_ == nullptr)) {
+            HiLog::Error(LABEL, "Not ready for StartPreview.");
+            cameraWrapper->hasCallPreview_ = true;
             return undefinedResult;
         }
-	intResult = cameraWrapper->capSession_->AddOutput(cameraWrapper->previewOutput_);
-        if (intResult != 0) {
-            HiLog::Error(LABEL, "CameraNapi Failed to Add Preview Output");
+
+        if (cameraWrapper->previewState_ == State::STATE_RUNNING) {
+            HiLog::Error(LABEL, "Camera is already previewing.");
             return undefinedResult;
         }
-        intResult = cameraWrapper->capSession_->CommitConfig();
+
+        intResult = cameraWrapper->capSession_->Start();
         if (intResult != 0) {
-            MEDIA_ERR_LOG("Failed to Commit config, intResult: %{public}d", intResult);
+            HiLog::Error(LABEL, "Camera::Start Capture Session Failed");
             return undefinedResult;
         }
-        if ((cameraWrapper->capSession_->Start()) != 0) {
-            HiLog::Error(LABEL, "CameraNapi::StartPreview() Failed to Start Capture Session");
-        }
+        cameraWrapper->previewState_ = State::STATE_RUNNING;
+        cameraWrapper->hasCallPreview_ = false;
         if (cameraWrapper->startPreviewCallback_ == nullptr) {
             HiLog::Error(LABEL, "Start Preview Callback is not registered!");
             return undefinedResult;
@@ -1254,12 +1359,17 @@ napi_value CameraNapi::StopPreview(napi_env env, napi_callback_info info)
     }
     status = napi_unwrap(env, jsThis, (void**) &cameraWrapper);
     if (status == napi_ok) {
-        cameraWrapper->capSession_->Stop();
-        window.reset();
-        if (cameraWrapper->previewOutput_ != nullptr) {
-                delete cameraWrapper->previewOutput_;
-                cameraWrapper->previewOutput_ = nullptr;
+        if (cameraWrapper->capSession_ != nullptr) {
+            cameraWrapper->capSession_->Stop();
+            cameraWrapper->capSession_->Release();
         }
+        if (cameraWrapper->subWindow_ != nullptr) {
+            cameraWrapper->subWindow_.reset();
+        }
+        if (cameraWrapper->previewWindow != nullptr) {
+            cameraWrapper->previewWindow.reset();
+        }
+        cameraWrapper->previewState_ = State::STATE_IDLE;
         if (cameraWrapper->stopPreviewCallback_ == nullptr) {
             HiLog::Error(LABEL, "Stop Preview Callback is not registered!");
             return undefinedResult;
@@ -1275,6 +1385,56 @@ napi_value CameraNapi::StopPreview(napi_env env, napi_callback_info info)
     HiLog::Error(LABEL, "CameraNapi::Failed to Stop Preview");
 
     return undefinedResult;
+}
+
+int32_t CameraNapi::GetPhotoConfig(napi_env env, napi_value arg)
+{
+    char buffer[SIZE];
+    size_t res;
+    napi_value temp, mirtemp;
+    bool bIsMirror = false;
+    bool bIsPresent = false;
+    napi_has_named_property(env, arg, "photoPath", &bIsPresent);
+    if (!bIsPresent) {
+        HiLog::Error(LABEL, "No Photo Path Exists");
+        return -1;
+    }
+    if (photoConfig_) {
+        photoConfig_.reset();
+    }
+    photoConfig_ = std::make_unique<PhotoConfig>();
+    if (photoConfig_ == nullptr) {
+        HiLog::Error(LABEL, "No Photo Config Exists");
+        return -1;
+    }
+    bIsPresent = false;
+    if (napi_get_named_property(env, arg, "photoPath", &temp) != napi_ok) {
+        HiLog::Error(LABEL, "Could not get the photoPath argument!");
+        return -1;
+    }
+    photoConfig_->strPhotoPath = GetStringArgument(env, temp);
+    if (photoConfig_->strPhotoPath.empty()) {
+        photoConfig_->strPhotoPath = "/data";
+    }
+
+    if (listener != nullptr) {
+        listener->SetPhotoPath(photoConfig_->strPhotoPath);
+    }
+    memset_s(buffer, SIZE, 0, sizeof(buffer));
+    napi_has_named_property(env, arg, "mirror", &bIsPresent);
+    if (!bIsPresent) {
+        HiLog::Error(LABEL, "No mirror flag Exists");
+        return 0;
+    }
+    if (napi_get_named_property(env, arg, "mirror", &mirtemp) != napi_ok
+        || napi_get_value_bool(env, temp, &bIsMirror) != napi_ok) {
+        HiLog::Error(LABEL, "Could not get the IsMirror argument!");
+        return -1;
+    } else {
+        photoConfig_->bIsMirror = bIsMirror;
+        bIsMirror = false;
+    }
+    return 0;
 }
 
 static void TakePhotoAsyncCallbackComplete(napi_env env, napi_status status, void* data)
@@ -1315,9 +1475,8 @@ napi_value CameraNapi::TakePhoto(napi_env env, napi_callback_info info)
         for (size_t i = 0; i < argc; i++) {
             napi_valuetype valueType = napi_undefined;
             napi_typeof(env, argv[i], &valueType);
-            if (i == 0) {
-                // Need to Handle Photo Config
-                continue;
+            if (i == 0 && valueType == napi_object) {
+                (asyncContext->objectInfo)->GetPhotoConfig(env, argv[i]);
             } else if (i == 1 && valueType == napi_function) {
                 napi_create_reference(env, argv[i], 1, &asyncContext->callbackRef);
                 break;
@@ -1338,8 +1497,15 @@ napi_value CameraNapi::TakePhoto(napi_env env, napi_callback_info info)
                 CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
                 if (context->objectInfo->photoOutput_ == nullptr) {
                     HiLog::Error(LABEL, "Context Photo Output is null!");
-                } else {
+                } else if (context->objectInfo->isReady_ != true) {
+		    HiLog::Error(LABEL, "Camera not ready for Taking Photo!");
+		} else {
+		    if (context->objectInfo->recordState_ == State::STATE_RUNNING) {
+                        HiLog::Error(LABEL, "Camera not ready for Taking Photo!");
+			context->objectInfo->CloseRecorder();
+		    }
                     context->status = ((sptr<PhotoOutput> &)(context->objectInfo->photoOutput_))->Capture();
+		    context->objectInfo->SetPhotoCallFlag();
                 }
             },
             TakePhotoAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -1352,6 +1518,22 @@ napi_value CameraNapi::TakePhoto(napi_env env, napi_callback_info info)
     }
 
     return result;
+}
+
+void CameraNapi::CloseRecorder()
+{
+    if (recordState_ == State::STATE_RUNNING) {
+        if (recorder_ != nullptr) {
+            recorder_->Stop(true);
+            recorder_ = nullptr;
+        }
+        recordState_ = State::STATE_IDLE;
+    }
+}
+
+void CameraNapi::SetPhotoCallFlag()
+{
+    hasCallPhoto_ = true;
 }
 
 napi_value CameraNapi::CreateCameraWrapper(napi_env env, std::string strCamID)
@@ -2003,7 +2185,7 @@ napi_value CameraNapi::GetSupportedResolutionScales(napi_env env, napi_callback_
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
-                //Need to add logic for calling native to get supported Exposure Mode
+                // Need to add logic for calling native to get supported Resolution Scales
                 context->status = 0;
             },
             GetSupportedResolutionScalesAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -2780,7 +2962,7 @@ napi_value CameraNapi::SetZoom(napi_env env, napi_callback_info info)
 
     GET_PARAMS(env, info, 2);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 1) {
+    if (argc > ARGS_MAX_TWO_COUNT) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2911,6 +3093,7 @@ napi_value CameraNapi::Construct(napi_env env, napi_callback_info info)
     napi_value  result = nullptr;
     size_t argCount = 1;
     napi_value args[1];
+    int32_t intResult = 0;
 
     napi_get_undefined(env, &result);
     status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
@@ -2919,16 +3102,21 @@ napi_value CameraNapi::Construct(napi_env env, napi_callback_info info)
         std::unique_ptr<CameraNapi> obj = std::make_unique<CameraNapi>();
         if (obj != nullptr) {
             obj->env_ = env;
-            InitCamera(static_cast<CameraNapi*>(obj.get()), CamID);
+            intResult = obj->InitCamera(CamID);
+            if (intResult != 0) {
+                HiLog::Error(LABEL, "Init Camera Failed");
+                return result;
+            }
             // Object of the Camera Manager needs to be assigned.
             status = napi_wrap(env, jsThis, reinterpret_cast<void*>(obj.get()),
                                CameraNapi::CameraNapiDestructor, nullptr, &(obj->wrapper_));
             if (status == napi_ok) {
-                obj->nativeCallback_ = std::make_shared<CamRecorderCallback>(env, obj.get());
+                // Needs to be integrated with Recorder
+                /* obj->nativeCallback_ = std::make_shared<CamRecorderCallback>(env, obj.get());
                 if ((obj->recorder_->SetRecorderCallback(obj->nativeCallback_)) != ERR_OK) {
                     HiLog::Error(LABEL, "CameraNapi::InitCamera() SetRecorderCallBack() Failed!");
                     return result;
-                }
+                } */
                 obj.release();
                 return jsThis;
             }

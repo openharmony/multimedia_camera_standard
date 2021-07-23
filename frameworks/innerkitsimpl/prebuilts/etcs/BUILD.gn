@@ -13,19 +13,6 @@
 
 import("//build/ohos.gni")
 
-## Install cameradev.ini to /system/etc/ {{{
-ohos_prebuilt_etc("cameradev.ini") {
-    if (device_type == "Hi3516DV300") {
-        source = "cameradev_imx335.ini"
-    } else {
-        source = "cameradev_imx307.ini"
-    }
-  relative_install_dir = "."
-  part_name = "multimedia_camera_standard"
-  subsystem_name = "multimedia"
-}
-## Install cameradev.ini to /system/etc/ }}}
-
 ohos_prebuilt_etc("camera_service.rc") {
    if (use_musl) {
      source = "camera_service.cfg"

@@ -14,7 +14,7 @@
  */
 
 #ifndef OHOS_CAMERA_HSTREAM_REPEAT_CALLBACK_PROXY_H
-#define OHOS_CAMERA_HSTREAM_REPEAT_CALLBACK_PROXY_H 
+#define OHOS_CAMERA_HSTREAM_REPEAT_CALLBACK_PROXY_H
 
 #include "iremote_proxy.h"
 #include "istream_repeat_callback.h"
@@ -31,7 +31,7 @@ public:
 
     int32_t OnFrameEnded(int32_t frameCount) override;
 
-    int32_t OnFrameError(int32_t errorType) override;
+    int32_t OnFrameError(int32_t errorCode) override;
 
 private:
     static inline BrokerDelegator<HStreamRepeatCallbackProxy> delegator_;

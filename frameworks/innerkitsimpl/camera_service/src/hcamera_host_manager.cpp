@@ -81,7 +81,7 @@ int32_t HCameraHostManager::SetCallback(sptr<Camera::ICameraHostCallback> &callb
     return CAMERA_OK;
 }
 
-int32_t HCameraHostManager::SetFlashlight(std::string &cameraId, bool &isEnable)
+int32_t HCameraHostManager::SetFlashlight(std::string cameraId, bool isEnable)
 {
     Camera::CamRetCode rc = GetICameraHost()->SetFlashlight(cameraId, isEnable);
     if (rc != Camera::NO_ERROR) {

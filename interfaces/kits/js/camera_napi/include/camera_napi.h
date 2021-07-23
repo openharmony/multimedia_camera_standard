@@ -36,17 +36,25 @@
 namespace OHOS {
 namespace CameraStandard {
 
-static sptr<Surface> captureConSurface;
-static std::unique_ptr<Window> window;
 struct CamRecorderCallback;
 
 class SurfaceListener : public IBufferConsumerListener {
 public:
     void OnBufferAvailable() override;
 
-    int32_t SaveYUV(char *buffer, int32_t size);
+    int32_t SaveData(char *buffer, int32_t size);
 
     int32_t SaveYUVPreview(char *buffer, int32_t size);
+
+    void SetConsumerSurface(sptr<Surface> InCaptureConSurface);
+
+    void SetPhotoPath(std::string InPhotoPath);
+
+    int32_t SurfaceMode_;
+private:
+
+    sptr<Surface> captureConsumerSurface_;
+    std::string photoPath;
 };
 
 struct MediaLocation {
@@ -57,6 +65,8 @@ struct MediaLocation {
 static const std::int32_t SIZE = 100;
 static const std::string CAMERA_MNGR_NAPI_CLASS_NAME = "Camera";
 static const std::int32_t REFERENCE_CREATION_COUNT = 1;
+static const std::int32_t ARGS_MAX_TWO_COUNT = 2;
+static const std::int32_t SURFACE_QUEUE_SIZE = 10;
 static const std::string CAM_CALLBACK_PREPARE = "prepare";
 static const std::string CAM_CALLBACK_START_PREVIEW = "start_preview";
 static const std::string CAM_CALLBACK_STOP_PREVIEW = "stop_preview";
@@ -215,6 +225,12 @@ public:
         RECORDER = 4
     };
 
+    enum State: int32_t {
+        STATE_IDLE,
+        STATE_RUNNING,
+        STATE_BUTT
+    };
+
     enum VideoEncoder {
         VIDEO_DEFAULT = 0,
         H264 = 2,
@@ -255,7 +271,6 @@ public:
         int32_t aSampleRate;
         int32_t durationTime;
         int32_t fileFormat;
-        int32_t qualityLevel;
         int32_t vBitRate;
         int32_t vCodec;
         int32_t vFrameHeight;
@@ -273,15 +288,18 @@ public:
         RecorderProfile *recProfile_;
     };
 
+    struct PhotoConfig {
+        std::string strPhotoPath;
+        bool bIsMirror;
+    };
+
     static napi_value Init(napi_env env, napi_value exports);
     napi_ref GetErrorCallbackRef();
     CameraNapi();
     ~CameraNapi();
-    std::vector<sptr<OHOS::CameraStandard::CameraInfo>> cameraObjList;
-    RecorderConfig *recConfig_;
 
 private:
-    static int32_t InitCamera(CameraNapi *obj, std::string CameraID);
+    int32_t InitCamera(std::string CameraID);
     static void CameraNapiDestructor(napi_env env, void* nativeObject, void* finalize_hint);
     static napi_status AddNamedProperty(napi_env env, napi_value object,
                                         const std::string name, int32_t enumValue);
@@ -307,8 +325,17 @@ private:
     static napi_value CreateAudioEncoderObject(napi_env env);
     static napi_value CreateParameterResultObject(napi_env env);
     static napi_value GetCameraIDs(napi_env env, napi_callback_info info);
+    int32_t PreparePhoto(sptr<CameraManager> camManagerObj);
+    sptr<Surface> PreparePreview();
+    int32_t PrepareRecorder();
+    int32_t PrepareVideo(sptr<CameraManager> camManagerObj);
+    int32_t GetPhotoConfig(napi_env env, napi_value arg);
+    int32_t GetProfileValue(napi_env env, napi_value arg);
+    int32_t GetRecorderConfig(napi_env env, napi_value arg);
+    void CloseRecorder();
+    int32_t PrepareCommon(napi_env env, int32_t iPrepareType);
+    void SetPhotoCallFlag();
     static napi_value Prepare(napi_env env, napi_callback_info info);
-    static int32_t Prepare_NonRecorder(napi_env env, int32_t iPrepareType, CameraNapi *CameraWrapper);
     static napi_value StartVideoRecording(napi_env env, napi_callback_info info);
     static napi_value StopVideoRecording(napi_env env, napi_callback_info info);
     static napi_value PauseVideoRecording(napi_env env, napi_callback_info info);
@@ -328,7 +355,7 @@ private:
     static napi_value GetSupportedZoomRange(napi_env env, napi_callback_info info);
     static napi_value SetZoom(napi_env env, napi_callback_info info);
     static napi_value SetParameter(napi_env env, napi_callback_info info);
-    static int32_t Prepare_Recorder(CameraNapi *CameraWrapper);
+    sptr<Surface> CreateSubWindowSurface();
     static napi_ref sCtor_;
     static napi_ref cameraPositionRef_;
     static napi_ref cameraTypeRef_;
@@ -353,7 +380,20 @@ private:
     napi_ref errorCallback_ = nullptr;
     sptr<CaptureOutput> photoOutput_;
     sptr<CaptureOutput> previewOutput_;
-    sptr<IBufferConsumerListener> listener;
+    sptr<CaptureOutput> videoOutput_;
+    sptr<SurfaceListener> listener;
+    sptr<Surface> captureConsumerSurface_;
+    std::unique_ptr<Window> previewWindow;
+    std::unique_ptr<RecorderConfig> recConfig_;
+    bool hasCallPreview_ = false;
+    bool hasCallPhoto_ = false;
+    bool isReady_ = false;
+    std::unique_ptr<PhotoConfig> photoConfig_;
+    sptr<Surface> previewSurface_;
+    sptr<Surface> recorderSurface_;
+    std::unique_ptr<OHOS::SubWindow> subWindow_;
+    State previewState_ = State::STATE_IDLE;
+    State recordState_ = State::STATE_IDLE;
     sptr<CaptureSession> capSession_;
     sptr<CaptureInput> camInput_;
     std::shared_ptr<Media::Recorder> recorder_;

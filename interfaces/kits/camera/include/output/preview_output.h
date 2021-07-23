@@ -18,6 +18,7 @@
 
 #include "capture_output.h"
 #include "istream_repeat.h"
+#include "istream_repeat_callback.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -25,9 +26,9 @@ class PreviewCallback {
 public:
     PreviewCallback() = default;
     virtual ~PreviewCallback() = default;
-    virtual void onFrameStarted() = 0;
-    virtual void onFrameEnded() = 0;
-    virtual void onError(int32_t error) = 0;
+    virtual void OnFrameStarted() const = 0;
+    virtual void OnFrameEnded(const int32_t frameCount) const = 0;
+    virtual void OnError(const int32_t errorCode) const = 0;
 };
 
 class PreviewOutput : public CaptureOutput {
@@ -36,10 +37,12 @@ public:
     void SetCallback(std::shared_ptr<PreviewCallback> callback);
     void Release() override;
     sptr<IStreamRepeat> GetStreamRepeat();
+    std::shared_ptr<PreviewCallback> GetApplicationCallback();
 
 private:
     sptr<IStreamRepeat> streamRepeat_;
     std::shared_ptr<PreviewCallback> appCallback_;
+    sptr<IStreamRepeatCallback> svcCallback_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

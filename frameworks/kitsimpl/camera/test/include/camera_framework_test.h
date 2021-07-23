@@ -13,23 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_CAMERA_ISTREAM_REPEAT_CALLBACK_H
-#define OHOS_CAMERA_ISTREAM_REPEAT_CALLBACK_H
+#ifndef CAMERA_FRAMEWORK_TEST_H
+#define CAMERA_FRAMEWORK_TEST_H
 
-#include "iremote_broker.h"
 
-namespace OHOS {
-namespace CameraStandard {
-class IStreamRepeatCallback : public IRemoteBroker {
+#include "gtest/gtest.h"
+
+class CameraFrameworkTest : public testing::Test {
 public:
-    virtual int32_t OnFrameStarted() = 0;
+    /* SetUpTestCase:The preset action of the test suite is executed before the first TestCase */
+    static void SetUpTestCase(void);
 
-    virtual int32_t OnFrameEnded(int32_t frameCount) = 0;
+    /* TearDownTestCase:The test suite cleanup action is executed after the last TestCase */
+    static void TearDownTestCase(void);
 
-    virtual int32_t OnFrameError(int32_t errorCode) = 0;
+    /* SetUp:Execute before each test case */
+    void SetUp();
 
-    DECLARE_INTERFACE_DESCRIPTOR(u"IStreamRepeatCallback");
+    /* TearDown:Execute after each test case */
+    void TearDown();
 };
-} // namespace CameraStandard
-} // namespace OHOS
-#endif // OHOS_CAMERA_ISTREAM_REPEAT_CALLBACK_H
+#endif // CAMERA_FRAMEWORK_TEST_H

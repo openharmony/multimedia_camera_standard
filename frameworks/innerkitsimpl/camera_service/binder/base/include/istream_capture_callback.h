@@ -22,13 +22,13 @@ namespace OHOS {
 namespace CameraStandard {
 class IStreamCaptureCallback : public IRemoteBroker {
 public:
-    virtual int32_t OnCaptureStarted() = 0;
+    virtual int32_t OnCaptureStarted(int32_t captureId) = 0;
 
-    virtual int32_t OnCaptureEnded() = 0;
+    virtual int32_t OnCaptureEnded(int32_t captureId) = 0;
 
-    virtual int32_t OnCaptureError(int32_t errorType) = 0;
+    virtual int32_t OnCaptureError(int32_t captureId, int32_t errorType) = 0;
 
-    virtual int32_t OnFrameShutter(uint64_t timestamp) = 0;
+    virtual int32_t OnFrameShutter(int32_t captureId, uint64_t timestamp) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStreamCaptureCallback");
 };

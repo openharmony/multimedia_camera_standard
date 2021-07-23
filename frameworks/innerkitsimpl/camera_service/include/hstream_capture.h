@@ -39,10 +39,10 @@ public:
     int32_t CancelCapture() override;
     int32_t Release();
     int32_t SetCallback(sptr<IStreamCaptureCallback> &callback) override;
-    int32_t OnCaptureStarted();
-    int32_t OnCaptureEnded();
-    int32_t OnCaptureError(int32_t errorType);
-    int32_t OnFrameShutter(uint64_t timestamp);
+    int32_t OnCaptureStarted(int32_t captureId);
+    int32_t OnCaptureEnded(int32_t captureId);
+    int32_t OnCaptureError(int32_t captureId, int32_t errorType);
+    int32_t OnFrameShutter(int32_t captureId, uint64_t timestamp);
 
 private:
     sptr<Camera::IStreamOperator> streamOperator_;

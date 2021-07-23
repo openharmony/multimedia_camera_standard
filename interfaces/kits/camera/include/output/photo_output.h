@@ -26,10 +26,10 @@ class PhotoCallback {
 public:
     PhotoCallback() = default;
     virtual ~PhotoCallback() = default;
-    virtual void OnCaptureStarted(int32_t captureID) = 0;
-    virtual void OnCaptureEnded(int32_t captureID, int32_t frameCount) = 0;
-    virtual void OnFrameShutter(int32_t captureId, uint64_t timestamp) = 0;
-    virtual void onCaptureError(int32_t captureId, int32_t errorCode) = 0;
+    virtual void OnCaptureStarted(const int32_t captureID) const = 0;
+    virtual void OnCaptureEnded(const int32_t captureID) const = 0;
+    virtual void OnFrameShutter(const int32_t captureId, uint64_t timestamp) const = 0;
+    virtual void OnCaptureError(const int32_t captureId, int32_t errorCode) const = 0;
 };
 class PhotoCaptureSetting {
 public:
@@ -66,10 +66,12 @@ public:
     int32_t Capture();
     int32_t CancelCapture();
     void Release() override;
+    std::shared_ptr<PhotoCallback> GetApplicationCallback();
 
 private:
     sptr<IStreamCapture> streamCapture_;
     std::shared_ptr<PhotoCallback> appCallback_;
+    sptr<IStreamCaptureCallback> cameraSvcCallback_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

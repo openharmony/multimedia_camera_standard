@@ -35,7 +35,9 @@ public:
 
 private:
     common_metadata_header_t *metadata_;
-    bool valid_;
+
+    bool resize_add_metadata(uint32_t item, const void *data, size_t data_count);
+    void replace_metadata(common_metadata_header_t *newMetadata);
 };
 } // namespace CameraStandard
 } // namespace OHOS

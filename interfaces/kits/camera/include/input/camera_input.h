@@ -46,7 +46,7 @@ public:
     };
     ExposureCallback() = default;
     virtual ~ExposureCallback() = default;
-    virtual void onExposureState(ExposureState state) = 0;
+    virtual void OnExposureState(ExposureState state) = 0;
 };
 
 class FocusCallback {
@@ -58,7 +58,7 @@ public:
     };
     FocusCallback() = default;
     virtual ~FocusCallback() = default;
-    virtual void onFocusState(FocusState state) = 0;
+    virtual void OnFocusState(FocusState state) = 0;
 };
 
 
@@ -94,9 +94,9 @@ public:
     std::vector<camera_exposure_mode_enum_t> GetSupportedExposureModes();
     void SetExposureMode(camera_exposure_mode_enum_t exposureMode);
     camera_exposure_mode_enum_t GetExposureMode();
-    void SetExposureCallback(ExposureCallback &explosurecallback);
+    void SetExposureCallback(std::shared_ptr<ExposureCallback> exposureCallback);
     std::vector<camera_focus_mode_enum_t> GetSupportedFocusModes();
-    void SetFocusCallback(FocusCallback &explosurecallback);
+    void SetFocusCallback(std::shared_ptr<FocusCallback> focusCallback);
     void SetFocusMode(camera_focus_mode_enum_t focusMode);
     camera_focus_mode_enum_t GetFocusMode();
     std::vector<float> GetSupportedZoomRatioRange();
@@ -117,6 +117,8 @@ private:
     sptr<ICameraDeviceService> deviceObj_;
     std::shared_ptr<ErrorCallback> errorCallback_;
     sptr<ICameraDeviceServiceCallback> CameraDeviceSvcCallback_;
+    std::shared_ptr<ExposureCallback> exposurecallback_;
+    std::shared_ptr<FocusCallback> focusCallback_;
 
     template <typename DataPtr, typename Vec, typename VecType>
     static void getVector(DataPtr data, size_t count, Vec &vect, VecType dataType);

@@ -26,16 +26,16 @@ int HStreamCaptureCallbackStub::OnRemoteRequest(
 
     switch (code) {
         case CAMERA_STREAM_CAPTURE_ON_CAPTURE_STARTED:
-            errCode = OnCaptureStarted();
+            errCode = HandleOnCaptureStarted(data);
             break;
         case CAMERA_STREAM_CAPTURE_ON_CAPTURE_ENDED:
-            errCode = OnCaptureEnded();
+            errCode = HandleOnCaptureEnded(data);
             break;
         case CAMERA_STREAM_CAPTURE_ON_CAPTURE_ERROR:
-            errCode = HStreamCaptureCallbackStub::HandleOnCaptureError(data);
+            errCode = HandleOnCaptureError(data);
             break;
         case CAMERA_STREAM_CAPTURE_ON_FRAME_SHUTTER:
-            errCode = HStreamCaptureCallbackStub::HandleOnFrameShutter(data);
+            errCode = HandleOnFrameShutter(data);
             break;
         default:
             MEDIA_ERR_LOG("HStreamCaptureCallbackStub request code %{public}d not handled", code);
@@ -46,18 +46,34 @@ int HStreamCaptureCallbackStub::OnRemoteRequest(
     return errCode;
 }
 
+int HStreamCaptureCallbackStub::HandleOnCaptureStarted(MessageParcel& data)
+{
+    int32_t captureId = data.ReadInt32();
+
+    return OnCaptureStarted(captureId);
+}
+
+int HStreamCaptureCallbackStub::HandleOnCaptureEnded(MessageParcel& data)
+{
+    int32_t captureId = data.ReadInt32();
+
+    return OnCaptureEnded(captureId);
+}
+
 int HStreamCaptureCallbackStub::HandleOnCaptureError(MessageParcel& data)
 {
-    int32_t errorType = data.ReadInt32();
+    int32_t captureId = data.ReadInt32();
+    int32_t errorCode = data.ReadInt32();
 
-    return OnCaptureError(errorType);
+    return OnCaptureError(captureId, errorCode);
 }
 
 int HStreamCaptureCallbackStub::HandleOnFrameShutter(MessageParcel& data)
 {
+    int32_t captureId = data.ReadInt32();
     uint64_t timestamp = data.ReadUint64();
 
-    return OnFrameShutter(timestamp);
+    return OnFrameShutter(captureId, timestamp);
 }
 } // namespace CameraStandard
 } // namespace OHOS

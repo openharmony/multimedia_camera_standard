@@ -67,7 +67,7 @@ int32_t HStreamCapture::Capture()
     std::shared_ptr<Camera::CaptureInfo> captureInfoPhoto = std::make_shared<Camera::CaptureInfo>();
     captureInfoPhoto->streamIds_ = {photoStreamId_};
     captureInfoPhoto->captureSetting_ = cameraAbility_;
-    captureInfoPhoto->enableShutterCallback_ = false;
+    captureInfoPhoto->enableShutterCallback_ = true;
 
     rc = streamOperator_->Capture(photoCaptureId_, captureInfoPhoto, false);
     if (rc != Camera::NO_ERROR) {
@@ -107,38 +107,38 @@ int32_t HStreamCapture::SetCallback(sptr<IStreamCaptureCallback> &callback)
     return CAMERA_OK;
 }
 
-int32_t HStreamCapture::OnCaptureStarted()
+int32_t HStreamCapture::OnCaptureStarted(int32_t captureId)
 {
     if (streamCaptureCallback_ != nullptr) {
-        streamCaptureCallback_->OnCaptureStarted();
+        streamCaptureCallback_->OnCaptureStarted(captureId);
     }
     return CAMERA_OK;
 }
 
-int32_t HStreamCapture::OnCaptureEnded()
+int32_t HStreamCapture::OnCaptureEnded(int32_t captureId)
 {
     if (streamCaptureCallback_ != nullptr) {
-        streamCaptureCallback_->OnCaptureEnded();
+        streamCaptureCallback_->OnCaptureEnded(captureId);
     }
     return CAMERA_OK;
 }
 
-int32_t HStreamCapture::OnCaptureError(int32_t errorType)
+int32_t HStreamCapture::OnCaptureError(int32_t captureId, int32_t errorCode)
 {
     if (streamCaptureCallback_ != nullptr) {
-        if (errorType == Camera::BUFFER_LOST) {
-            streamCaptureCallback_->OnCaptureError(CAMERA_STREAM_BUFFER_LOST);
+        if (errorCode == Camera::BUFFER_LOST) {
+            streamCaptureCallback_->OnCaptureError(captureId, CAMERA_STREAM_BUFFER_LOST);
         } else {
-            streamCaptureCallback_->OnCaptureError(CAMERA_UNKNOWN_ERROR);
+            streamCaptureCallback_->OnCaptureError(captureId, CAMERA_UNKNOWN_ERROR);
         }
     }
     return CAMERA_OK;
 }
 
-int32_t HStreamCapture::OnFrameShutter(uint64_t timestamp)
+int32_t HStreamCapture::OnFrameShutter(int32_t captureId, uint64_t timestamp)
 {
     if (streamCaptureCallback_ != nullptr) {
-        streamCaptureCallback_->OnFrameShutter(timestamp);
+        streamCaptureCallback_->OnFrameShutter(captureId, timestamp);
     }
     return CAMERA_OK;
 }

@@ -27,13 +27,13 @@ public:
 
     virtual ~HStreamCaptureCallbackProxy() = default;
 
-    int32_t OnCaptureStarted() override;
+    int32_t OnCaptureStarted(int32_t captureId) override;
 
-    int32_t OnCaptureEnded() override;
+    int32_t OnCaptureEnded(int32_t captureId) override;
 
-    int32_t OnCaptureError(int32_t errorType) override;
+    int32_t OnCaptureError(int32_t captureId, int32_t errorType) override;
 
-    int32_t OnFrameShutter(uint64_t timestamp) override;
+    int32_t OnFrameShutter(int32_t captureId, uint64_t timestamp) override;
 
 private:
     static inline BrokerDelegator<HStreamCaptureCallbackProxy> delegator_;

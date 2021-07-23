@@ -55,13 +55,13 @@ int32_t HStreamRepeatCallbackProxy::OnFrameEnded(int32_t frameCount)
     return error;
 }
 
-int32_t HStreamRepeatCallbackProxy::OnFrameError(int32_t errorType)
+int32_t HStreamRepeatCallbackProxy::OnFrameError(int32_t errorCode)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInt32(errorType)) {
+    if (!data.WriteInt32(errorCode)) {
         MEDIA_ERR_LOG("HStreamRepeatCallbackProxy OnFrameError Write errorType failed");
         return IPC_PROXY_ERR;
     }

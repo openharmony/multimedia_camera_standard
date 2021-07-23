@@ -27,6 +27,8 @@ public:
                                 MessageParcel &reply, MessageOption &option) override;
 
 private:
+    int HandleOnCaptureStarted(MessageParcel& data);
+    int HandleOnCaptureEnded(MessageParcel& data);
     int HandleOnCaptureError(MessageParcel& data);
     int HandleOnFrameShutter(MessageParcel& data);
 };

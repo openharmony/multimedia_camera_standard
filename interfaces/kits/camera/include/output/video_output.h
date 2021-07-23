@@ -20,6 +20,7 @@
 #include <vector>
 #include "output/capture_output.h"
 #include "istream_repeat.h"
+#include "istream_repeat_callback.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -27,9 +28,9 @@ class VideoCallback {
 public:
     VideoCallback() = default;
     virtual ~VideoCallback() = default;
-    virtual void onFrameStarted() = 0;
-    virtual void onFrameEnded() = 0;
-    virtual void onError(int32_t error) = 0;
+    virtual void OnFrameStarted() const = 0;
+    virtual void OnFrameEnded(const int32_t frameCount) const = 0;
+    virtual void OnError(const int32_t errorCode) const = 0;
 };
 
 class VideoOutput : public CaptureOutput {
@@ -43,10 +44,12 @@ public:
     int32_t SetFps(float fps);
     int32_t Start();
     int32_t Stop();
+    std::shared_ptr<VideoCallback> GetApplicationCallback();
 
 private:
     sptr<IStreamRepeat> streamRepeat_;
     std::shared_ptr<VideoCallback> appCallback_;
+    sptr<IStreamRepeatCallback> svcCallback_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

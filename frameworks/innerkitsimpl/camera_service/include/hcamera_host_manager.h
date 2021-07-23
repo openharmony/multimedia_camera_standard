@@ -37,7 +37,7 @@ public:
     int32_t OpenCameraDevice(std::string &cameraId,
                              const sptr<Camera::ICameraDeviceCallback> &callback,
                              sptr<Camera::ICameraDevice> &pDevice);
-    int32_t SetFlashlight(std::string &cameraId, bool &isEnable);
+    int32_t SetFlashlight(std::string cameraId, bool isEnable);
     int32_t SetCallback(sptr<Camera::ICameraHostCallback> &callback);
 
 private:

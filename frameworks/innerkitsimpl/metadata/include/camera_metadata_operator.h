@@ -182,6 +182,9 @@ int get_camera_metadata_item(common_metadata_header_t *src, uint32_t index,
 uint32_t get_camera_metadata_item_count(const common_metadata_header_t *metadata_header);
 uint32_t get_camera_metadata_item_capacity(const common_metadata_header_t *metadata_header);
 uint32_t get_camera_metadata_data_size(const common_metadata_header_t *metadata_header);
+uint32_t copy_camera_metadata(common_metadata_header_t *newMetadata, common_metadata_header_t *oldMetadata);
+size_t calculate_camera_metadata_item_data_size(uint32_t type, size_t data_count);
+int32_t get_camera_metadata_item_type(uint32_t item, uint32_t *data_type);
 
 #ifdef __cplusplus
 }

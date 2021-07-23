@@ -66,7 +66,7 @@ size_t calculate_camera_metadata_memory_required(uint32_t item_count, uint32_t d
     memory_required += sizeof(camera_metadata_item_entry_t[item_count]);
     memory_required = ALIGN_TO(memory_required, DATA_ALIGNMENT);
 
-    memory_required += sizeof(data_count);
+    memory_required += sizeof(uint8_t[data_count]);
     memory_required = ALIGN_TO(memory_required, METADATA_PACKET_ALIGNMENT);
 
     METADATA_DEBUG_LOG("calculate_camera_metadata_memory_required memory_required: %{public}d, ",
@@ -491,4 +491,20 @@ uint32_t get_camera_metadata_item_capacity(const common_metadata_header_t *metad
 
 uint32_t get_camera_metadata_data_size(const common_metadata_header_t *metadata_header) {
     return metadata_header->data_capacity;
+}
+
+uint32_t copy_camera_metadata(common_metadata_header_t *newMetadata, common_metadata_header_t *oldMetadata) {
+    if (newMetadata == NULL || oldMetadata == NULL ) {
+        return CAM_META_INVALID_PARAM;
+    }
+
+    memcpy(get_metadata_items(newMetadata), get_metadata_items(oldMetadata),
+           sizeof(camera_metadata_item_entry_t[oldMetadata->item_count]));
+    memcpy(get_metadata_data(newMetadata), get_metadata_data(oldMetadata),
+           sizeof(uint8_t[oldMetadata->data_count]));
+
+    newMetadata->item_count = oldMetadata->item_count;
+    newMetadata->data_count = oldMetadata->data_count;
+
+    return CAM_META_SUCCESS;
 }

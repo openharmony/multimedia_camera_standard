@@ -98,13 +98,21 @@ uint64_t GetCurrentLocalTimeStamp()
 static int32_t SaveYUV(int32_t mode, void* buffer, int32_t size)
 {
     char path[PATH_MAX] = {0};
+    int32_t retlen = 0;
     if (mode == MODE_PREVIEW) {
         system("mkdir -p /mnt/preview");
-        sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv", "preview", GetCurrentLocalTimeStamp());
+        retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv",
+                                                       "preview", GetCurrentLocalTimeStamp());
     } else {
         system("mkdir -p /mnt/capture");
-        sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/capture/%s_%lld.jpg", "photo", GetCurrentLocalTimeStamp());
+        retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/capture/%s_%lld.jpg",
+                                                       "photo", GetCurrentLocalTimeStamp());
     }
+    if (retlen < 0) {
+        MEDIA_ERR_LOG("Path Assignment failed");
+        return -1;
+    }
+
     MEDIA_DEBUG_LOG("%s, saving file to %{public}s", __FUNCTION__, path);
     int imgFd = open(path, O_RDWR | O_CREAT, 00766);
     if (imgFd == -1) {
@@ -126,7 +134,12 @@ static int32_t SaveVideoFile(const void* buffer, int32_t size, int32_t operation
     if (operationMode == 0) {
         char path[255] = {0};
         system("mkdir -p /mnt/video");
-        sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h265", "video", GetCurrentLocalTimeStamp());
+        int32_t retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h265",
+                                                             "video", GetCurrentLocalTimeStamp());                                                
+        if (retlen < 0) {
+            MEDIA_ERR_LOG("Path Assignment failed");
+            return -1;
+        }
         MEDIA_DEBUG_LOG("%s, save video to file %s", __FUNCTION__, path);
         g_videoFd = open(path, O_RDWR | O_CREAT, 00766);
         if (g_videoFd == -1) {

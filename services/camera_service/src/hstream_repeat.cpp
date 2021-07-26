@@ -29,6 +29,7 @@ HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer)
     }
     producer_ = producer;
     isVideo_ = false;
+    videoCaptureId_ = 0;
 }
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo)
@@ -39,6 +40,7 @@ HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo)
     }
     producer_ = producer;
     isVideo_ = isVideo;
+    videoCaptureId_ = 0;
 }
 
 HStreamRepeat::~HStreamRepeat()

@@ -50,8 +50,6 @@ public:
     void SetQuaility(QualityLevel qualityLevel);
     RotationConfig GetRotation();
     void SetRotation(RotationConfig rotationvalue);
-    //Location &GetLocation();
-    //void SetLocation(Location &location);
     bool IsMirrored();
     void SetMirror(bool enable);
 };

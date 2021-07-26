@@ -24,11 +24,11 @@ ohos_shared_library("camera_framework") {
         "src/output/photo_output.cpp",
         "src/output/preview_output.cpp",
         "src/output/video_output.cpp",
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/client/src/hcamera_device_proxy.cpp",
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/client/src/hcamera_service_proxy.cpp",
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/client/src/hcapture_session_proxy.cpp",
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/client/src/hstream_capture_proxy.cpp",
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/client/src/hstream_repeat_proxy.cpp"
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcamera_device_proxy.cpp",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcamera_service_proxy.cpp",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcapture_session_proxy.cpp",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_capture_proxy.cpp",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_repeat_proxy.cpp"
     ]
 
     if (target_cpu == "arm") {
@@ -36,12 +36,12 @@ ohos_shared_library("camera_framework") {
     }
 
     include_dirs = [
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/include",
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/base/include",
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/client/include",
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/server/include",
+        "//foundation/multimedia/camera_standard/services/camera_service/include",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
         "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include",
-        "//foundation/multimedia/camera_standard/interfaces/kits/camera/include",
+        "//foundation/multimedia/camera_standard/interfaces/innerkits/native/camera/include",
         "//foundation/graphic/standard/frameworks/surface/include",
         "//utils/system/safwk/native/include",
         "//drivers/framework/include/utils",
@@ -68,7 +68,7 @@ ohos_shared_library("camera_framework") {
     ]
 
     deps = [
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service:camera_service",
+        "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
         "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
         "//foundation/graphic/standard:libsurface"
     ]

@@ -110,10 +110,12 @@ int32_t SaveYUV(int32_t mode, void* buffer, int32_t size)
     char path[PATH_MAX] = {0};
     if (mode == MODE_PREVIEW) {
         system("mkdir -p /mnt/preview");
-        (void) sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv", "preview", GetCurrentLocalTimeStamp());
+        (void) sprintf_s(path, sizeof(path) / sizeof(path[0]),
+                         "/mnt/preview/%s_%lld.yuv", "preview", GetCurrentLocalTimeStamp());
     } else {
         system("mkdir -p /mnt/capture");
-        (void) sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/capture/%s_%lld.jpg", "photo", GetCurrentLocalTimeStamp());
+        (void) sprintf_s(path, sizeof(path) / sizeof(path[0]),
+                         "/mnt/capture/%s_%lld.jpg", "photo", GetCurrentLocalTimeStamp());
     }
     MEDIA_DEBUG_LOG("%s, saving file to %{public}s", __FUNCTION__, path);
     int imgFd = open(path, O_RDWR | O_CREAT, 00766);
@@ -136,7 +138,8 @@ int32_t SaveVideoFile(const void* buffer, int32_t size, int32_t operationMode)
     if (operationMode == 0) {
         char path[255] = {0};
         system("mkdir -p /mnt/video");
-        (void) sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h265", "video", GetCurrentLocalTimeStamp());
+        (void) sprintf_s(path, sizeof(path) / sizeof(path[0]),
+                         "/mnt/video/%s_%lld.h264", "video", GetCurrentLocalTimeStamp());
         MEDIA_DEBUG_LOG("%s, save video to file %s", __FUNCTION__, path);
         sVideoFd = open(path, O_RDWR | O_CREAT, 00766);
         if (sVideoFd == -1) {

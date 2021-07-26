@@ -67,5 +67,8 @@ ohos_moduletest("camera_framework_test") {
     "//foundation/graphic/standard:libsurface"
   ]
 
-  external_deps = [ "ipc:ipc_core" ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core"
+  ]
 }

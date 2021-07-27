@@ -13,129 +13,72 @@
 
 import("//build/ohos.gni")
 
-SDK_LIB_DIR = rebase_path("//device/hisilicon/hispark_taurus/sdk_linux/soc/lib",
-                          root_build_dir)
-CODEC_LIB_DIR = rebase_path(
-        "//device/hisilicon/hardware/media/hal/codec/hi3516dv300/llvm/ext/libs",
-        root_build_dir)
-CAMERA_LIB_DIR = rebase_path(
-        "//device/hisilicon/hardware/media/hal/camera/hi3516dv300/llvm/ohos/libs",
-        root_build_dir)
-CAMERA_LIB_PLATFORM_DIR =
-    rebase_path("//device/hisilicon/hardware/media/hal/camera/hi3516dv300/libs",
-                root_build_dir)
-FORMAT_LIB_DIR = rebase_path(
-        "//device/hisilicon/hardware/media/hal/format/hi3516dv300/llvm/ext/libs",
-        root_build_dir)
-DTCF_LIB_DIR =
-    rebase_path("//device/hisilicon/modules/middleware/source/component/dtcf",
-                root_build_dir)
-FILEFORMAT_LIB_DIR =
-    rebase_path(
-        "//device/hisilicon/modules/middleware/source/component/fileformat",
-        root_build_dir)
-RECORDER_PRO_LIB_DIR =
-    rebase_path(
-        "//device/hisilicon/modules/middleware/source/component/recorder_pro",
-        root_build_dir)
-MIDDLEWARE_COMMON_DIR =
-    rebase_path("//device/hisilicon/modules/middleware/source/common",
-                root_build_dir)
+ohos_shared_library("camera_framework") {
+    install_enable = true
+    sources = [
+        "src/input/camera_manager.cpp",
+        "src/input/camera_info.cpp",
+        "src/input/camera_input.cpp",
+        "src/session/capture_session.cpp",
+        "src/output/capture_output.cpp",
+        "src/output/photo_output.cpp",
+        "src/output/preview_output.cpp",
+        "src/output/video_output.cpp",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcamera_device_proxy.cpp",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcamera_service_proxy.cpp",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcapture_session_proxy.cpp",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_capture_proxy.cpp",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_repeat_proxy.cpp"
+    ]
 
-ohos_shared_library("camera") {
-  install_enable = true
-  sources = [
-    "src/camera_ability.cpp",
-    "src/camera_config.cpp",
-    "src/camera_device.cpp",
-    "src/camera_impl.cpp",
-    "src/camera_kit.cpp",
-    "src/camera_manager.cpp",
-    "src/camera_service.cpp",
-    "src/event_handler.cpp",
-    "src/frame_config.cpp",
-  ]
+    if (target_cpu == "arm") {
+        cflags = [ "-DBINDER_IPC_32BIT" ]
+    }
 
-  cflags = [ "-fPIC" ]
-  cflags += [ "-Wall" ]
-  cflags_cc = cflags
-  include_dirs = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits/include/hilog",
-    "//device/hisilicon/hispark_taurus/sdk_linux/soc/src/mpp/cbb/based/arch/hi3516cv500/include/hi3516cv500",
-    "//device/hisilicon/hispark_taurus/sdk_linux/soc/src/mpp/cbb/include",
-    "//device/hisilicon/hispark_taurus/sdk_linux/soc/src/mpp/cbb/init/include/linux",
-    "//device/hisilicon/hispark_taurus/sdk_linux/soc/src/osal/include",
-    "//drivers/peripheral/codec/interfaces/include",
-    "//drivers/peripheral/display/interfaces/include",
-    "//foundation/graphic/standard/frameworks/surface/include",
-    "//foundation/graphic/standard/interfaces/kits/surface",
-    "//utils/native/base/include",
-  ]
+    include_dirs = [
+        "//foundation/multimedia/camera_standard/services/camera_service/include",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
+        "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
+        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include",
+        "//foundation/multimedia/camera_standard/interfaces/innerkits/native/camera/include",
+        "//foundation/graphic/standard/frameworks/surface/include",
+        "//utils/system/safwk/native/include",
+        "//drivers/framework/include/utils",
+        "//drivers/adapter/uhdf2/osal/include",
+        "//drivers/adapter/uhdf2/include/hdi",
+        "//drivers/peripheral/display/interfaces/include",
+        "//drivers/peripheral/camera/interfaces/include",
+        "//drivers/peripheral/camera/interfaces/include/server",
+        "//drivers/peripheral/camera/interfaces/include/callback/device",
+        "//drivers/peripheral/camera/interfaces/include/callback/operator",
+        "//drivers/peripheral/camera/interfaces/include/callback/host",
+        "//drivers/peripheral/camera/hal/device_manager/include",
+        "//drivers/peripheral/camera/hal/include",
+        "//drivers/peripheral/camera/hal/hdi_impl/include",
+        "//drivers/peripheral/camera/hal/hdi_impl/include/camera_host",
+        "//drivers/peripheral/camera/hal/hdi_impl/include/camera_device",
+        "//drivers/peripheral/camera/hal/hdi_impl/include/stream_operator",
+        "//drivers/peripheral/camera/hal/hdi_impl/include/offline_stream_operator",
+        "//drivers/peripheral/camera/hal/pipeline_core/utils",
+        "//drivers/peripheral/camera/hal/pipeline_core/include",
+        "//drivers/peripheral/camera/hal/pipeline_core/pipeline_impl/include",
+        "//drivers/peripheral/camera/hal/pipeline_core/host_stream/include",
+        "//drivers/peripheral/camera/hal/pipeline_core/ipp/include"
+    ]
 
-  lib_dirs = [ "//device/hisilicon/hispark_taurus/sdk_linux/soc/lib" ]
+    deps = [
+        "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
+        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
+        "//foundation/graphic/standard:libsurface"
+    ]
 
-  ldflags = [
-    "-L${SDK_LIB_DIR}",
-    "-L${CODEC_LIB_DIR}",
-    "-L${CAMERA_LIB_DIR}",
-    "-L${CAMERA_LIB_PLATFORM_DIR}",
-    "-L${FORMAT_LIB_DIR}",
-    "-L${DTCF_LIB_DIR}",
-    "-L${FILEFORMAT_LIB_DIR}",
-    "-L${RECORDER_PRO_LIB_DIR}",
-    "-L${MIDDLEWARE_COMMON_DIR}",
-    "-lsdk",
-    "-lcodec",
-    "-lcamera_hw_platform",
-    "-lhi3516cv500_base",
-    "-lhi3516cv500_chnl",
-    "-lhi3516cv500_dis",
-    "-lhi3516cv500_gdc",
-    "-lhi3516cv500_h264e",
-    "-lhi3516cv500_h265e",
-    "-lhi3516cv500_isp",
-    "-lhi3516cv500_ive",
-    "-lhi3516cv500_jpegd",
-    "-lhi3516cv500_jpege",
-    "-lhi3516cv500_rc",
-    "-lhi3516cv500_rgn",
-    "-lhi3516cv500_sys",
-    "-lhi3516cv500_vdec",
-    "-lhi3516cv500_vedu",
-    "-lhi3516cv500_venc",
-    "-lhi3516cv500_vfmw",
-    "-lhi3516cv500_vgs",
-    "-lhi3516cv500_vi",
-    "-lhi3516cv500_vo",
-    "-lhi3516cv500_vpss",
-    "-lhi3516cv500_aio",
-    "-lhi3516cv500_ai",
-    "-lhi3516cv500_ao",
-    "-lhi3516cv500_adec",
-    "-lhi3516cv500_acodec",
-    "-lhi3516cv500_aenc",
-    "-lhi3516cv500_nnie",
-    "-lhi_osal",
-    "-lhi_irq",
-    "-lhi_sensor_i2c",
-  ]
-
-  public_configs = [ ":camera_external_library_config" ]
-
-  deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
-
-  external_deps = [ "ipc:ipc_core" ]
-
-  public_deps = [ "//foundation/graphic/standard:libsurface" ]
-
-  part_name = "multimedia_camera_standard"
-  subsystem_name = "multimedia"
-}
-
-config("camera_external_library_config") {
-  include_dirs = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera/include" ]
-  include_dirs += [ "//foundation/multimedia/camera_standard/interfaces/innerkits/native/include" ]
+    external_deps = [
+        "hiviewdfx_hilog_native:libhilog",
+        "ipc:ipc_core",
+        "samgr_L2:samgr_proxy",
+        "safwk:system_ability_fwk"
+    ]
+    part_name = "multimedia_camera_standard"
+    subsystem_name = "multimedia"
 }

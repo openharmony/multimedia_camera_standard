@@ -34,6 +34,7 @@ public:
 class CaptureSession : public RefBase {
 public:
     CaptureSession(sptr<ICaptureSession> &captureSession);
+    ~CaptureSession() {};
     int32_t BeginConfig();
     int32_t CommitConfig();
     int32_t AddInput(sptr<CaptureInput> &input);

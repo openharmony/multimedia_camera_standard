@@ -64,11 +64,11 @@ ohos_shared_library("camera_service") {
     "//drivers/peripheral/camera/hal/pipeline_core/pipeline_impl/include/",
     "//drivers/peripheral/camera/hal/pipeline_core/host_stream/include/",
     "//drivers/peripheral/camera/hal/pipeline_core/ipp/include/",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/include",
+    "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/graphic/standard/frameworks/surface/include",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/base/include",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/client/include",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera_service/binder/server/include",
+    "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
+    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
+    "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include",
   ]
   if (target_cpu == "arm") {

@@ -83,6 +83,7 @@ public:
     };
 
     CameraInput(sptr<ICameraDeviceService> &deviceObj, sptr<CameraInfo> &camera);
+    ~CameraInput() {};
     void LockForControl();
     int32_t UnlockForControl();
     std::vector<PhotoFormat> GetSupportedPhotoFormats();

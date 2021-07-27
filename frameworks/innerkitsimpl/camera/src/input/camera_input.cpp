@@ -186,10 +186,11 @@ std::vector<CameraPicSize *> CameraInput::GetSupportedSizesForPhoto(CameraInput:
 {
     std::vector<CameraPicSize *> result = {};
     CameraPicSize *cameraPicSize = (CameraPicSize *) malloc (sizeof(CameraPicSize));
-
-    cameraPicSize->height = 720;
-    cameraPicSize->width = 1280;
-    result.emplace_back(cameraPicSize);
+    if (cameraPicSize != nullptr) {
+        cameraPicSize->height = 720;
+        cameraPicSize->width = 1280;
+        result.emplace_back(cameraPicSize);
+    }
     return result;
 }
 
@@ -197,10 +198,11 @@ std::vector<CameraPicSize *> CameraInput::GetSupportedSizesForVideo(CameraInput:
 {
     std::vector<CameraPicSize *> result = {};
     CameraPicSize *cameraPicSize = (CameraPicSize *) malloc (sizeof(CameraPicSize));
-
-    cameraPicSize->height = 720;
-    cameraPicSize->width = 1280;
-    result.emplace_back(cameraPicSize);
+    if (cameraPicSize != nullptr) {
+        cameraPicSize->height = 720;
+        cameraPicSize->width = 1280;
+        result.emplace_back(cameraPicSize);
+    }
     return result;
 }
 

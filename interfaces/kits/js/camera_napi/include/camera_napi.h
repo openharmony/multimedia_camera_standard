@@ -42,9 +42,9 @@ class SurfaceListener : public IBufferConsumerListener {
 public:
     void OnBufferAvailable() override;
 
-    int32_t SaveData(char *buffer, int32_t size);
+    int32_t SaveData(const char *buffer, int32_t size);
 
-    int32_t SaveYUVPreview(char *buffer, int32_t size);
+    int32_t SaveYUVPreview(const char *buffer, int32_t size);
 
     void SetConsumerSurface(sptr<Surface> InCaptureConSurface);
 
@@ -112,7 +112,7 @@ static const std::vector<std::string> vecQualityLevel {
     "QUALITY_LEVEL_TIME_LAPSE_QCIF", "QUALITY_LEVEL_TIME_LAPSE_QHD", "QUALITY_LEVEL_TIME_LAPSE_QVGA",
     "QUALITY_LEVEL_TIME_LAPSE_VGA", "QUALITY_LEVEL_VGA"
 };
-static const std::vector<std::string> vecFileFormat { "MP4" };
+static const std::vector<std::string> vecFileFormat { "FORMAT_DEFAULT", "MP4", "FORMAT_M4A", "FORMAT_BUTT" };
 static const std::vector<std::string> vecVideoEncoder { "H264" };
 static const std::vector<std::string> vecAudioEncoder { "AAC_LC" };
 static const std::vector<std::string> vecParameterResult { "ERROR_UNKNOWN", "PARAMETERS_RESULT"};
@@ -285,7 +285,7 @@ public:
         std::string strThumbPath;
         bool bIsMuted;
         MediaLocation stLocation;
-        RecorderProfile *recProfile_;
+        std::unique_ptr<RecorderProfile> recProfile_;
     };
 
     struct PhotoConfig {

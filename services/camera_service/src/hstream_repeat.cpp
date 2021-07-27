@@ -74,7 +74,7 @@ void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
         streamInfo->width_ = CAMERA_VIDEO_WIDTH;
         streamInfo->height_ = CAMERA_VIDEO_HEIGHT;
         streamInfo->intent_ = Camera::VIDEO;
-        streamInfo->encodeType_ = Camera::ENCODE_TYPE_H265;
+        streamInfo->encodeType_ = Camera::ENCODE_TYPE_H264;
     } else {
         streamInfo->streamId_ = previewStreamId_;
         streamInfo->width_ = CAMERA_PREVIEW_WIDTH;

@@ -49,8 +49,6 @@ public:
     void SetConsumerSurface(sptr<Surface> InCaptureConSurface);
 
     void SetPhotoPath(std::string InPhotoPath);
-
-    int32_t SurfaceMode_;
 private:
 
     sptr<Surface> captureConsumerSurface_;

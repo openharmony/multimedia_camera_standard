@@ -106,7 +106,7 @@ class PreviewOutputCallback : public PreviewCallback {
     }
 };
 
-uint64_t GetCurrentLocalTimeStamp()
+static uint64_t GetCurrentLocalTimeStamp()
 {
     std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> tp =
         std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
@@ -114,15 +114,22 @@ uint64_t GetCurrentLocalTimeStamp()
     return tmp.count();
 }
 
-int32_t SaveYUV(int32_t mode, void* buffer, int32_t size)
+static int32_t SaveYUV(int32_t mode, const char *buffer, int32_t size)
 {
     char path[PATH_MAX] = {0};
+    int32_t retVal;
     if (mode == MODE_PREVIEW) {
         system("mkdir -p /mnt/preview");
-        sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv", "preview", GetCurrentLocalTimeStamp());
+        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv", "preview",
+            GetCurrentLocalTimeStamp());
     } else {
         system("mkdir -p /mnt/capture");
-        sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/capture/%s_%lld.jpg", "photo", GetCurrentLocalTimeStamp());
+        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/capture/%s_%lld.jpg", "photo",
+            GetCurrentLocalTimeStamp());
+    }
+    if (retVal < 0) {
+        MEDIA_ERR_LOG("Path Assignment failed");
+        return -1;
     }
     MEDIA_DEBUG_LOG("%s, saving file to %{public}s", __FUNCTION__, path);
     int imgFd = open(path, O_RDWR | O_CREAT, 00766);
@@ -154,7 +161,7 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Calling SaveYUV");
             SaveYUV(mode_, addr, size);
@@ -179,7 +186,7 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Saving Image");
             SaveYUV(mode_, addr, size);

@@ -134,7 +134,7 @@ static int32_t SaveVideoFile(const void* buffer, int32_t size, int32_t operation
     if (operationMode == 0) {
         char path[255] = {0};
         system("mkdir -p /mnt/video");
-        int32_t retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h265",
+        int32_t retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h264",
                                                              "video", GetCurrentLocalTimeStamp());                                                
         if (retlen < 0) {
             MEDIA_ERR_LOG("Path Assignment failed");

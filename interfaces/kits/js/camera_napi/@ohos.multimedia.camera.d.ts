@@ -370,7 +370,7 @@ declare namespace camera {
      * @sysCap SystemCapability.Multimedia.Media
      * @devices
      */
-    prepare(config: RecorderConfig): void;
+    prepare(flowTypeFlag: number, config: RecorderConfig): void;
 
     /**
      * Start recording.

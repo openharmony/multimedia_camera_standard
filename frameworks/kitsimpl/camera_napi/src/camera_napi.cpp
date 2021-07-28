@@ -941,11 +941,6 @@ int32_t CameraNapi::PrepareCommon(napi_env env, int32_t iPrepareType)
         return -1;
     }
     // Needs to be integrated with Recorder
-    intResult = PrepareVideo(camManagerObj);
-    if (intResult != 0) {
-        HiLog::Error(LABEL, "Failed to Prepare Recorder");
-        return -1;
-    }
     intResult = capSession_->CommitConfig();
     if (intResult != 0) {
         HiLog::Error(LABEL, "Failed to Commit config");
@@ -980,11 +975,6 @@ napi_value CameraNapi::Prepare(napi_env env, napi_callback_info info)
                 napi_get_value_int32(env, argv[i], &iPrepareType);
             } else if (i == 1 && valueType == napi_object) {
                 // Needs to be integrated with Recorder
-                intResult = CameraWrapper->GetRecorderConfig(env, argv[1]);
-                if (intResult != 0) {
-                    HiLog::Error(LABEL, "GetRecorderConfig Failed");
-                    return undefinedResult;
-                }
             }
         }
         CameraWrapper->PrepareCommon(env, iPrepareType);
@@ -1109,11 +1099,6 @@ int32_t CameraNapi::InitCamera(std::string CameraID)
         }
     }
     // Needs to be integrated with Recorder
-    recorder_ = Media::RecorderFactory::CreateRecorder();
-    if (recorder_ == nullptr) {
-        HiLog::Error(LABEL, "CameraNapi::InitCamera() CreateRecorder() Failed!");
-        return -1;
-    }
     if (camInput_ != nullptr) {
         ((sptr<CameraInput> &)camInput_)->LockForControl();
     }
@@ -3183,11 +3168,6 @@ napi_value CameraNapi::Construct(napi_env env, napi_callback_info info)
                                CameraNapi::CameraNapiDestructor, nullptr, &(obj->wrapper_));
             if (status == napi_ok) {
                 // Needs to be integrated with Recorder
-                obj->nativeCallback_ = std::make_shared<CamRecorderCallback>(env, obj.get());
-                if ((obj->recorder_->SetRecorderCallback(obj->nativeCallback_)) != ERR_OK) {
-                    HiLog::Error(LABEL, "CameraNapi::InitCamera() SetRecorderCallBack() Failed!");
-                    return result;
-                }
                 obj.release();
                 return jsThis;
             }

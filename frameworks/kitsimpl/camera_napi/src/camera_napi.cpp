@@ -90,7 +90,7 @@ int32_t SurfaceListener::SaveData(const char *buffer, int32_t size)
     if (ltm != nullptr) {
         std::ostringstream ss("Capture_");
         std::string path;
-        ss << "Capture" << ltm->tm_hour << "-" << ltm->tm_min << "-" << ltm->tm_sec << ".yuv";
+        ss << "Capture" << ltm->tm_hour << "-" << ltm->tm_min << "-" << ltm->tm_sec << ".jpg";
         if (photoPath.empty()) {
             photoPath = "/data/";
         }
@@ -844,7 +844,7 @@ sptr<Surface> CameraNapi::CreateSubWindowSurface()
             return nullptr;
         }
         memset_s(bufferVirAddr, buffSize, 0xFF, buffSize);
-        BufferFlushConfig flushConfig {
+        BufferFlushConfig flushConfig = {
             .damage = {
                 .x = 0,
                 .y = 0,

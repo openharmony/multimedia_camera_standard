@@ -87,7 +87,7 @@ void CameraFrameworkTest::SetUp()
 }
 void CameraFrameworkTest::TearDown() {}
 
-uint64_t GetCurrentLocalTimeStamp()
+static uint64_t GetCurrentLocalTimeStamp()
 {
     std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> tp =
         std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
@@ -95,18 +95,18 @@ uint64_t GetCurrentLocalTimeStamp()
     return tmp.count();
 }
 
-static int32_t SaveYUV(int32_t mode, void* buffer, int32_t size)
+static int32_t SaveYUV(int32_t mode, const char *buffer, int32_t size)
 {
     char path[PATH_MAX] = {0};
     int32_t retlen = 0;
     if (mode == MODE_PREVIEW) {
         system("mkdir -p /mnt/preview");
         retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv",
-                                                       "preview", GetCurrentLocalTimeStamp());
+            "preview", GetCurrentLocalTimeStamp());
     } else {
         system("mkdir -p /mnt/capture");
         retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/capture/%s_%lld.jpg",
-                                                       "photo", GetCurrentLocalTimeStamp());
+            "photo", GetCurrentLocalTimeStamp());
     }
     if (retlen < 0) {
         MEDIA_ERR_LOG("Path Assignment failed");
@@ -129,13 +129,13 @@ static int32_t SaveYUV(int32_t mode, void* buffer, int32_t size)
     return 0;
 }
 
-static int32_t SaveVideoFile(const void* buffer, int32_t size, int32_t operationMode)
+static int32_t SaveVideoFile(const char *buffer, int32_t size, int32_t operationMode)
 {
     if (operationMode == 0) {
         char path[255] = {0};
         system("mkdir -p /mnt/video");
-        int32_t retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h265",
-                                                             "video", GetCurrentLocalTimeStamp());                                                
+        int32_t retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h264",
+            "video", GetCurrentLocalTimeStamp());
         if (retlen < 0) {
             MEDIA_ERR_LOG("Path Assignment failed");
             return -1;
@@ -307,7 +307,7 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Calling SaveYUV");
             SaveYUV(mode_, addr, size);
@@ -335,7 +335,7 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Saving to video file");
             SaveVideoFile(addr, size, 1);
@@ -359,7 +359,7 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Saving Image");
             SaveYUV(mode_, addr, size);
@@ -369,6 +369,38 @@ public:
         }
     }
 };
+
+static sptr<CaptureOutput> CreatePhotoOutput(sptr<CameraManager> &camManagerObj)
+{
+    sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
+    sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
+    capturelistener->mode_ = MODE_PHOTO;
+    capturelistener->surface_ = photoSurface;
+    photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);
+    sptr<CaptureOutput> photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
+    return photoOutput;
+}
+
+static sptr<CaptureOutput> CreatePreviewOutput(sptr<CameraManager> &camManagerObj)
+{
+    sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
+    sptr<SurfaceListener> listener = new SurfaceListener();
+    listener->mode_ = MODE_PREVIEW;
+    listener->surface_ = previewSurface;
+    previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
+    sptr<CaptureOutput> previewOutput = camManagerObj->CreatePreviewOutput(previewSurface);
+    return previewOutput;
+}
+
+static sptr<CaptureOutput> CreateVideoOutput(sptr<CameraManager> &camManagerObj)
+{
+    sptr<Surface> videoSurface = Surface::CreateSurfaceAsConsumer();
+    sptr<VideoSurfaceListener> videoListener = new VideoSurfaceListener();
+    videoListener->surface_ = videoSurface;
+    videoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoListener);
+    sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
+    return videoOutput;
+}
 
 /*
  * Feature: Framework
@@ -396,12 +428,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_001, TestSize.Level1)
     intResult = captureSession->AddInput(cameraInput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
-    sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
-    capturelistener->mode_ = MODE_PHOTO;
-    capturelistener->surface_ = photoSurface;
-    photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);
-    sptr<CaptureOutput> photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(camManagerObj);
     ASSERT_NE(photoOutput, nullptr);
 
     intResult = captureSession->AddOutput(photoOutput);
@@ -442,23 +469,13 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level1)
     intResult = captureSession->AddInput(cameraInput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
-    sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
-    capturelistener->mode_ = MODE_PHOTO;
-    capturelistener->surface_ = photoSurface;
-    photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);
-    sptr<CaptureOutput> photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(camManagerObj);
     ASSERT_NE(photoOutput, nullptr);
 
     intResult = captureSession->AddOutput(photoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
-    sptr<SurfaceListener> listener = new SurfaceListener();
-    listener->mode_ = MODE_PREVIEW;
-    listener->surface_ = previewSurface;
-    previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
-    sptr<CaptureOutput> previewOutput = camManagerObj->CreatePreviewOutput(previewSurface);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(camManagerObj);
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = captureSession->AddOutput(previewOutput);
@@ -504,22 +521,13 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_003, TestSize.Level1)
     intResult = captureSession->AddInput(cameraInput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
-    sptr<SurfaceListener> listener = new SurfaceListener();
-    listener->mode_ = MODE_PREVIEW;
-    listener->surface_ = previewSurface;
-    previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
-    sptr<CaptureOutput> previewOutput = camManagerObj->CreatePreviewOutput(previewSurface);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(camManagerObj);
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = captureSession->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<Surface> videoSurface = Surface::CreateSurfaceAsConsumer();
-    sptr<VideoSurfaceListener> videoListener = new VideoSurfaceListener();
-    videoListener->surface_ = videoSurface;
-    videoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoListener);
-    sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput(camManagerObj);
     ASSERT_NE(videoOutput, nullptr);
 
     intResult = captureSession->AddOutput(videoOutput);
@@ -586,12 +594,7 @@ void TestCallbacks(bool video)
     sptr<CaptureOutput> photoOutput = nullptr;
     sptr<CaptureOutput> videoOutput = nullptr;
     if (!video) {
-        sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
-        sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
-        capturelistener->mode_ = MODE_PHOTO;
-        capturelistener->surface_ = photoSurface;
-        photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);
-        photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
+        photoOutput = CreatePhotoOutput(camManagerObj);
         ASSERT_NE(photoOutput, nullptr);
 
         // Register photo callback
@@ -599,11 +602,7 @@ void TestCallbacks(bool video)
         intResult = captureSession->AddOutput(photoOutput);
         EXPECT_TRUE(intResult == 0);
     } else {
-        sptr<Surface> videoSurface = Surface::CreateSurfaceAsConsumer();
-        sptr<VideoSurfaceListener> videoListener = new VideoSurfaceListener();
-        videoListener->surface_ = videoSurface;
-        videoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoListener);
-        sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
+        videoOutput = CreateVideoOutput(camManagerObj);
         ASSERT_NE(videoOutput, nullptr);
 
         // Register video callback
@@ -612,12 +611,7 @@ void TestCallbacks(bool video)
         EXPECT_TRUE(intResult == 0);
     }
 
-    sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
-    sptr<SurfaceListener> listener = new SurfaceListener();
-    listener->mode_ = MODE_PREVIEW;
-    listener->surface_ = previewSurface;
-    previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
-    sptr<CaptureOutput> previewOutput = camManagerObj->CreatePreviewOutput(previewSurface);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(camManagerObj);
     ASSERT_NE(previewOutput, nullptr);
 
     // Register preview callback
@@ -710,4 +704,85 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_004, TestSize.Level1)
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_005, TestSize.Level1)
 {
     TestCallbacks(true);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Preview
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Preview
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_006, TestSize.Level1)
+{
+    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
+    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
+    EXPECT_TRUE(cameraObjList.size() != 0);
+
+    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
+    ASSERT_NE(captureSession, nullptr);
+
+    int32_t intResult = captureSession->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    ASSERT_NE(cameraInput, nullptr);
+
+    intResult = captureSession->AddInput(cameraInput);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(camManagerObj);
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = captureSession->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = captureSession->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = captureSession->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    captureSession->Stop();
+    captureSession->Release();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Video
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Video
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_007, TestSize.Level1)
+{
+    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
+    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
+    EXPECT_TRUE(cameraObjList.size() != 0);
+
+    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
+    ASSERT_NE(captureSession, nullptr);
+
+    int32_t intResult = captureSession->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    ASSERT_NE(cameraInput, nullptr);
+
+    intResult = captureSession->AddInput(cameraInput);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput(camManagerObj);
+    ASSERT_NE(videoOutput, nullptr);
+
+    intResult = captureSession->AddOutput(videoOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    // Video mode without preview is not supported
+    intResult = captureSession->CommitConfig();
+    EXPECT_TRUE(intResult != 0);
 }

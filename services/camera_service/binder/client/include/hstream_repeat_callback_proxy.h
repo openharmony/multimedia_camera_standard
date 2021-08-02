@@ -16,8 +16,8 @@
 #ifndef OHOS_CAMERA_HSTREAM_REPEAT_CALLBACK_PROXY_H
 #define OHOS_CAMERA_HSTREAM_REPEAT_CALLBACK_PROXY_H
 
-#include "iremote_proxy.h"
 #include "istream_repeat_callback.h"
+#include "iremote_proxy.h"
 
 namespace OHOS {
 namespace CameraStandard {

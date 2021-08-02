@@ -16,12 +16,10 @@
 #ifndef OHOS_CAMERA_H_STREAM_CAPTURE_H
 #define OHOS_CAMERA_H_STREAM_CAPTURE_H
 
-#include "camera_capture.h"
 #include "camera_metadata_info.h"
 #include "display_type.h"
 #include "hstream_capture_stub.h"
-#include "stream_operator.h"
-
+#include "istream_operator.h"
 #include <refbase.h>
 #include <iostream>
 
@@ -37,7 +35,7 @@ public:
     void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo);
     int32_t Capture() override;
     int32_t CancelCapture() override;
-    int32_t Release();
+    int32_t Release() override;
     int32_t SetCallback(sptr<IStreamCaptureCallback> &callback) override;
     int32_t OnCaptureStarted(int32_t captureId);
     int32_t OnCaptureEnded(int32_t captureId);

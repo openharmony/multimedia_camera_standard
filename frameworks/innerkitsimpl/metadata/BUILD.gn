@@ -14,29 +14,29 @@
 import("//build/ohos.gni")
 
 ohos_shared_library("metadata") {
-    install_enable = true
-    sources = [
-        "src/camera_metadata_operator.c",
-        "src/camera_metadata_info.cpp",
-        "src/metadata_utils.cpp"
-    ]
-    cflags = [
-        "-fPIC",
-        "-Wall",
-    ]
-    cflags_cc = cflags
-    include_dirs = [
-        "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include"
-    ]
-    deps = [
-      "//utils/native/base:utils",
-    ]
-    external_deps = [
-      "hiviewdfx_hilog_native:libhilog",
-      "ipc:ipc_core",
-    ]
-    part_name = "multimedia_camera_standard"
-    subsystem_name = "multimedia"
+  install_enable = true
+  sources = [
+    "src/camera_metadata_operator.c",
+    "src/camera_metadata_info.cpp",
+    "src/metadata_utils.cpp"
+  ]
+  cflags = [
+    "-fPIC",
+    "-Wall",
+  ]
+  cflags_cc = cflags
+  include_dirs = [
+    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include"
+  ]
+  deps = [
+    "//utils/native/base:utils",
+  ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+  ]
+  part_name = "multimedia_camera_standard"
+  subsystem_name = "multimedia"
 }
 
 ohos_executable("metadata_sample") {
@@ -53,7 +53,7 @@ ohos_executable("metadata_sample") {
   ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
+    "hiviewdfx_hilog_native:libhilog"
   ]
 
   part_name = "multimedia_camera_standard"

@@ -16,11 +16,10 @@
 #ifndef OHOS_CAMERA_H_STREAM_REPEAT_H
 #define OHOS_CAMERA_H_STREAM_REPEAT_H
 
-#include "camera_capture.h"
 #include "camera_metadata_info.h"
 #include "display_type.h"
 #include "hstream_repeat_stub.h"
-#include "stream_operator.h"
+#include "istream_operator.h"
 
 #include <refbase.h>
 #include <iostream>
@@ -36,7 +35,7 @@ public:
     int32_t LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
     std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId);
     void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo);
-    int32_t Release();
+    int32_t Release() override;
     int32_t Start() override;
     int32_t Stop() override;
     int32_t IsStreamsSupported(Camera::OperationMode mode,

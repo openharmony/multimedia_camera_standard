@@ -35,7 +35,7 @@ ohos_shared_library("camera_service") {
     "src/hcamera_service.cpp",
     "src/hcapture_session.cpp",
     "src/hstream_capture.cpp",
-    "src/hstream_repeat.cpp",
+    "src/hstream_repeat.cpp"
   ]
   cflags = [
     "-fPIC",
@@ -46,46 +46,32 @@ ohos_shared_library("camera_service") {
     "//drivers/framework/include/utils/",
     "//drivers/adapter/uhdf2/osal/include/",
     "//drivers/adapter/uhdf2/include/hdi/",
-    "//drivers/peripheral/display/interfaces/include",
     "//drivers/peripheral/camera/interfaces/include",
     "//drivers/peripheral/camera/interfaces/include/server/",
     "//drivers/peripheral/camera/interfaces/include/callback/device/",
     "//drivers/peripheral/camera/interfaces/include/callback/operator/",
     "//drivers/peripheral/camera/interfaces/include/callback/host/",
-    "//drivers/peripheral/camera/hal/device_manager/include/",
-    "//drivers/peripheral/camera/hal/include/",
-    "//drivers/peripheral/camera/hal/hdi_impl/include/",
-    "//drivers/peripheral/camera/hal/hdi_impl/include/camera_host/",
-    "//drivers/peripheral/camera/hal/hdi_impl/include/camera_device/",
-    "//drivers/peripheral/camera/hal/hdi_impl/include/stream_operator/",
-    "//drivers/peripheral/camera/hal/hdi_impl/include/offline_stream_operator/",
-    "//drivers/peripheral/camera/hal/pipeline_core/utils/",
-    "//drivers/peripheral/camera/hal/pipeline_core/include/",
-    "//drivers/peripheral/camera/hal/pipeline_core/pipeline_impl/include/",
-    "//drivers/peripheral/camera/hal/pipeline_core/host_stream/include/",
-    "//drivers/peripheral/camera/hal/pipeline_core/ipp/include/",
-    "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/graphic/standard/frameworks/surface/include",
+    "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include",
+    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include"
   ]
+
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "//drivers/peripheral/camera/hal/device_manager:camera_device_manager",
-    "//drivers/peripheral/camera/hal/hdi_impl:camera_hdi_impl",
     "//drivers/peripheral/camera/interfaces/include/client:libcamera_client",
     "//foundation/graphic/standard:libsurface",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
+    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata"
   ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "samgr_L2:samgr_proxy",
+    "samgr_L2:samgr_proxy"
   ]
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"

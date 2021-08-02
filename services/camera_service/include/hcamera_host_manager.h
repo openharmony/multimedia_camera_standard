@@ -16,9 +16,9 @@
 #ifndef OHOS_CAMERA_H_CAMERA_HOST_MANAGER_H
 #define OHOS_CAMERA_H_CAMERA_HOST_MANAGER_H
 
-#include "camera_device.h"
 #include "camera_metadata_info.h"
 #include "icamera_host.h"
+#include "icamera_device.h"
 
 #include <refbase.h>
 #include <iostream>

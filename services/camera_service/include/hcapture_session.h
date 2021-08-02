@@ -53,7 +53,6 @@ public:
     friend class StreamOperatorCallback;
 
 private:
-    sptr<StreamOperatorCallback> streamOperatorCallback_;
     sptr<Camera::IStreamOperator> streamOperator_;
     std::vector<std::shared_ptr<Camera::StreamInfo>> streamInfosPreview_;
     sptr<HStreamRepeat> streamRepeatPreview_;
@@ -64,6 +63,7 @@ private:
     std::shared_ptr<CameraMetadata> cameraAbility_;
     sptr<HCameraHostManager> cameraHostManager_;
     std::vector<int32_t> streamIds_;
+    sptr<StreamOperatorCallback> streamOperatorCallback_;
 };
 
 class StreamOperatorCallback : public Camera::StreamOperatorCallbackStub {

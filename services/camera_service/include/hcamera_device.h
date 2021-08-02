@@ -16,13 +16,12 @@
 #ifndef OHOS_CAMERA_H_CAMERA_DEVICE_H
 #define OHOS_CAMERA_H_CAMERA_DEVICE_H
 
-#include "camera_device.h"
 #include "camera_device_callback_stub.h"
-#include "camera_host.h"
 #include "camera_metadata_info.h"
 #include "hcamera_device_stub.h"
 #include "hcamera_host_manager.h"
-#include "utils.h"
+#include "icamera_device.h"
+#include "icamera_host.h"
 
 #include <iostream>
 

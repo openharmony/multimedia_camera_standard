@@ -23,7 +23,6 @@
 #include "hcapture_session.h"
 #include "hstream_capture.h"
 #include "hstream_repeat.h"
-#include "idevice_manager.h"
 #include "iremote_stub.h"
 #include "system_ability.h"
 

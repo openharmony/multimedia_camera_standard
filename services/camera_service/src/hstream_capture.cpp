@@ -28,6 +28,7 @@ HStreamCapture::HStreamCapture(sptr<OHOS::IBufferProducer> producer)
         return;
     }
     producer_ = producer;
+    photoStreamId_ = 0;
     photoCaptureId_ = 0;
 }
 

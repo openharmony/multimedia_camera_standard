@@ -292,7 +292,7 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_006, TestSize.Level1)
     result = find_camera_metadata_item(metadata, OHOS_ABILITY_ZOOM_RATIO_RANGE, &updated_item);
     EXPECT_TRUE(result == CAM_META_SUCCESS);
     EXPECT_TRUE(memcmp(&updated_item, &metadata_item, sizeof(updated_item)) == 0);
-    EXPECT_TRUE(strcmp("zoomRange", get_camera_metadata_item_name(OHOS_ABILITY_ZOOM_RATIO_RANGE)) == 0);
+    EXPECT_TRUE(get_camera_metadata_item_name(OHOS_ABILITY_ZOOM_RATIO_RANGE) != nullptr);
 
     // Free metadata
     free_camera_metadata_buffer(metadata);

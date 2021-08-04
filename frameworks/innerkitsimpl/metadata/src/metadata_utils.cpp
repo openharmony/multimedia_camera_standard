@@ -132,53 +132,67 @@ bool MetadataUtils::ReadMetadata(camera_metadata_item_t &item, MessageParcel &da
         std::vector<uint8_t> buffers;
         data.ReadUInt8Vector(&buffers);
         item.data.u8 = new(std::nothrow) uint8_t[item.count];
-        for (size_t i = 0; i < item.count; i++) {
-            item.data.u8[i] = buffers.at(i);
+        if (item.data.u8 != nullptr) {
+            for (size_t i = 0; i < item.count; i++) {
+                item.data.u8[i] = buffers.at(i);
+            }
         }
     } else if (item.data_type == META_TYPE_INT32) {
         std::vector<int32_t> buffers;
         data.ReadInt32Vector(&buffers);
         item.data.i32 = new(std::nothrow) int32_t[item.count];
-        for (size_t i = 0; i < item.count; i++) {
-            item.data.i32[i] = buffers.at(i);
+        if (item.data.i32 != nullptr) {
+            for (size_t i = 0; i < item.count; i++) {
+                item.data.i32[i] = buffers.at(i);
+            }
         }
     } else if (item.data_type == META_TYPE_FLOAT) {
         std::vector<float> buffers;
         data.ReadFloatVector(&buffers);
         item.data.f = new(std::nothrow) float[item.count];
-        for (size_t i = 0; i < item.count; i++) {
-            item.data.f[i] = buffers.at(i);
+        if (item.data.f != nullptr) {
+            for (size_t i = 0; i < item.count; i++) {
+                item.data.f[i] = buffers.at(i);
+            }
         }
     } else if (item.data_type == META_TYPE_UINT32) {
         std::vector<uint32_t> buffers;
         data.ReadUInt32Vector(&buffers);
         item.data.ui32 = new(std::nothrow) uint32_t[item.count];
-        for (size_t i = 0; i < item.count; i++) {
-            item.data.ui32[i] = buffers.at(i);
+        if (item.data.ui32 != nullptr) {
+            for (size_t i = 0; i < item.count; i++) {
+                item.data.ui32[i] = buffers.at(i);
+            }
         }
     } else if (item.data_type == META_TYPE_INT64) {
         std::vector<int64_t> buffers;
         data.ReadInt64Vector(&buffers);
         item.data.i64 = new(std::nothrow) int64_t[item.count];
-        for (size_t i = 0; i < item.count; i++) {
-            item.data.i64[i] = buffers.at(i);
+        if (item.data.i64 != nullptr) {
+            for (size_t i = 0; i < item.count; i++) {
+                item.data.i64[i] = buffers.at(i);
+            }
         }
     } else if (item.data_type == META_TYPE_DOUBLE) {
         std::vector<double> buffers;
         data.ReadDoubleVector(&buffers);
         item.data.d = new(std::nothrow) double[item.count];
-        for (size_t i = 0; i < item.count; i++) {
-            item.data.d[i] = buffers.at(i);
+        if (item.data.d != nullptr) {
+            for (size_t i = 0; i < item.count; i++) {
+                item.data.d[i] = buffers.at(i);
+            }
         }
     } else if (item.data_type == META_TYPE_RATIONAL) {
         std::vector<int32_t> buffers;
         data.ReadInt32Vector(&buffers);
         item.data.r = new(std::nothrow) camera_rational_t[item.count];
-        for (size_t i = 0, j = 0;
-                i < item.count && j < static_cast<size_t>(buffers.size());
-                i++, j += 2) {
-            item.data.r[i].numerator = buffers.at(j);
-            item.data.r[i].denominator = buffers.at(j + 1);
+        if (item.data.r != nullptr) {
+            for (size_t i = 0, j = 0;
+                    i < item.count && j < static_cast<size_t>(buffers.size());
+                    i++, j += 2) {
+                item.data.r[i].numerator = buffers.at(j);
+                item.data.r[i].denominator = buffers.at(j + 1);
+            }
         }
     }
     return true;

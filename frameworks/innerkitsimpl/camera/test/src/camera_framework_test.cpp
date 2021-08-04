@@ -14,10 +14,10 @@
  */
 
 #include "camera_framework_test.h"
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -87,7 +87,7 @@ void CameraFrameworkTest::SetUp()
 }
 void CameraFrameworkTest::TearDown() {}
 
-uint64_t GetCurrentLocalTimeStamp()
+static uint64_t GetCurrentLocalTimeStamp()
 {
     std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> tp =
         std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
@@ -95,18 +95,18 @@ uint64_t GetCurrentLocalTimeStamp()
     return tmp.count();
 }
 
-static int32_t SaveYUV(int32_t mode, void* buffer, int32_t size)
+static int32_t SaveYUV(int32_t mode, const char *buffer, int32_t size)
 {
     char path[PATH_MAX] = {0};
     int32_t retlen = 0;
     if (mode == MODE_PREVIEW) {
         system("mkdir -p /mnt/preview");
         retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv",
-                                                       "preview", GetCurrentLocalTimeStamp());
+            "preview", GetCurrentLocalTimeStamp());
     } else {
         system("mkdir -p /mnt/capture");
         retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/capture/%s_%lld.jpg",
-                                                       "photo", GetCurrentLocalTimeStamp());
+            "photo", GetCurrentLocalTimeStamp());
     }
     if (retlen < 0) {
         MEDIA_ERR_LOG("Path Assignment failed");
@@ -129,13 +129,13 @@ static int32_t SaveYUV(int32_t mode, void* buffer, int32_t size)
     return 0;
 }
 
-static int32_t SaveVideoFile(const void* buffer, int32_t size, int32_t operationMode)
+static int32_t SaveVideoFile(const char *buffer, int32_t size, int32_t operationMode)
 {
     if (operationMode == 0) {
         char path[255] = {0};
         system("mkdir -p /mnt/video");
         int32_t retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h264",
-                                                             "video", GetCurrentLocalTimeStamp());                                                
+            "video", GetCurrentLocalTimeStamp());
         if (retlen < 0) {
             MEDIA_ERR_LOG("Path Assignment failed");
             return -1;
@@ -307,7 +307,7 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Calling SaveYUV");
             SaveYUV(mode_, addr, size);
@@ -335,7 +335,7 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Saving to video file");
             SaveVideoFile(addr, size, 1);
@@ -359,7 +359,7 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Saving Image");
             SaveYUV(mode_, addr, size);

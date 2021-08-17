@@ -533,8 +533,9 @@ uint32_t get_camera_metadata_data_size(const common_metadata_header_t *metadata_
     return metadata_header->data_capacity;
 }
 
-uint32_t copy_camera_metadata(common_metadata_header_t *newMetadata, common_metadata_header_t *oldMetadata) {
-    if (newMetadata == NULL || oldMetadata == NULL ) {
+uint32_t copy_camera_metadata_items(common_metadata_header_t *newMetadata, common_metadata_header_t *oldMetadata)
+{
+    if (newMetadata == NULL || oldMetadata == NULL) {
         return CAM_META_INVALID_PARAM;
     }
 
@@ -542,14 +543,14 @@ uint32_t copy_camera_metadata(common_metadata_header_t *newMetadata, common_meta
     ret = memcpy_s(get_metadata_items(newMetadata), sizeof(camera_metadata_item_entry_t[oldMetadata->item_count]),
         get_metadata_items(oldMetadata), sizeof(camera_metadata_item_entry_t[oldMetadata->item_count]));
     if (ret != CAM_META_SUCCESS) {
-        METADATA_ERR_LOG("copy_camera_metadata memory copy failed");
+        METADATA_ERR_LOG("copy_camera_metadata_items memory copy failed");
         return CAM_META_FAILURE;
     }
 
     ret = memcpy_s(get_metadata_data(newMetadata), sizeof(uint8_t[oldMetadata->data_count]),
         get_metadata_data(oldMetadata), sizeof(uint8_t[oldMetadata->data_count]));
     if (ret != CAM_META_SUCCESS) {
-        METADATA_ERR_LOG("copy_camera_metadata memory copy failed");
+        METADATA_ERR_LOG("copy_camera_metadata_items memory copy failed");
         return CAM_META_FAILURE;
     }
 

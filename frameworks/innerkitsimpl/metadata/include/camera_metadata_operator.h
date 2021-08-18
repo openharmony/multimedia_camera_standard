@@ -16,13 +16,13 @@
 #ifndef CAMERA_METADATA_OPERATOR_H
 #define CAMERA_METADATA_OPERATOR_H
 
+#include "camera_device_ability_items.h"
+#include <stdint.h>
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "camera_device_ability_items.h"
-#include <stdio.h>
-#include <stdint.h>
 
 /** Versioning information */
 #define CURRENT_CAMERA_METADATA_VERSION 1
@@ -100,7 +100,7 @@ typedef struct camera_metadata_item {
         int64_t  *i64;
         double   *d;
         camera_rational_t *r;
-      } data;
+    } data;
 } camera_metadata_item_t;
 
 typedef struct item_info {
@@ -134,36 +134,24 @@ typedef enum camera_metadata_sec {
 #define CAM_META_DATA_CAP_EXCEED 5
 
 // Allocate a new camera metadata buffer and return the metadata header
-common_metadata_header_t *allocate_camera_metadata_buffer(uint32_t item_capacity,
-        uint32_t data_capacity);
+common_metadata_header_t *allocate_camera_metadata_buffer(uint32_t item_capacity, uint32_t data_capacity);
 
 // Find camera metadata item and fill the found item
-int find_camera_metadata_item(common_metadata_header_t *src,
-        uint32_t item,
-        camera_metadata_item_t *metadata_item);
+int find_camera_metadata_item(common_metadata_header_t *src, uint32_t item, camera_metadata_item_t *metadata_item);
 
 // Get camera metadata item name
 const char *get_camera_metadata_item_name(uint32_t item);
 
 // Update camera metadata item and fill the updated item
-int update_camera_metadata_item(common_metadata_header_t *dst,
-        uint32_t item,
-        const void *data,
-        uint32_t data_count,
-        camera_metadata_item_t *updated_item);
+int update_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const void *data, uint32_t data_count,
+                                camera_metadata_item_t *updated_item);
 
 // Update camera metadata item by index and fill the updated item
-int update_camera_metadata_item_by_index(common_metadata_header_t *dst,
-        uint32_t index,
-        const void *data,
-        uint32_t data_count,
-        camera_metadata_item_t *updated_item);
+int update_camera_metadata_item_by_index(common_metadata_header_t *dst, uint32_t index, const void *data,
+                                         uint32_t data_count, camera_metadata_item_t *updated_item);
 
 // Add camera metadata item
-int add_camera_metadata_item(common_metadata_header_t *dst,
-        uint32_t item,
-        const void *data,
-        size_t data_count);
+int add_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const void *data, size_t data_count);
 
 // Delete camera metadata item
 int delete_camera_metadata_item(common_metadata_header_t *dst, uint32_t item);

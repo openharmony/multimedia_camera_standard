@@ -38,11 +38,14 @@ public:
 
     virtual int32_t CreateCaptureSession(sptr<ICaptureSession> &session) = 0;
 
-    virtual int32_t CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamCapture> &photoOutput) = 0;
+    virtual int32_t CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer,
+                                      sptr<IStreamCapture> &photoOutput) = 0;
 
-    virtual int32_t CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamRepeat> &previewOutput) = 0;
+    virtual int32_t CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
+                                        sptr<IStreamRepeat> &previewOutput) = 0;
 
-    virtual int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamRepeat> &videoOutput) = 0;
+    virtual int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer,
+                                      sptr<IStreamRepeat> &videoOutput) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"ICameraService");
 };

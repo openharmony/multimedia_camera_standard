@@ -24,10 +24,11 @@
 #include <iostream>
 
 namespace OHOS {
-namespace CameraStandard {    
+namespace CameraStandard {
 class MetadataUtils {
 public:
-    static bool EncodeCameraMetadata(const std::shared_ptr<CameraStandard::CameraMetadata> &metadata, MessageParcel &data);
+    static bool EncodeCameraMetadata(const std::shared_ptr<CameraStandard::CameraMetadata> &metadata,
+                                     MessageParcel &data);
     static void DecodeCameraMetadata(MessageParcel &data, std::shared_ptr<CameraStandard::CameraMetadata> &metadata);
 
 private:

@@ -31,11 +31,11 @@ public:
         CONNECTION_REMOTE
     };
     CameraInfo() = default;
-    CameraInfo(std::string cameraID, std::shared_ptr<CameraMetadata>metadata);
+    CameraInfo(std::string cameraID, std::shared_ptr<CameraMetadata> metadata);
     ~CameraInfo();
     std::string GetID();
     std::shared_ptr<CameraMetadata> GetMetadata();
-    void SetMetadata(std::shared_ptr<CameraMetadata>metadata);
+    void SetMetadata(std::shared_ptr<CameraMetadata> metadata);
     camera_position_enum_t GetPosition();
     camera_type_enum_t GetCameraType();
     ConnectionType GetConnectionType();
@@ -45,7 +45,6 @@ private:
     std::shared_ptr<CameraMetadata> metadata_;
     camera_position_enum_t cameraPosition_ = OHOS_CAMERA_POSITION_OTHER;
     camera_type_enum_t cameraType_ = OHOS_CAMERA_TYPE_UNSPECIFIED;
-    // TODO: Need to use connection type as well from camera_device_ability_items.h Currently it is not defined there.
     ConnectionType connectionType_ = CONNECTION_BUILD_IN;
 
     void init(common_metadata_header_t *metadataHeader);

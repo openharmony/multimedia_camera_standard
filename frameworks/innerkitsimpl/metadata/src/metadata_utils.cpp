@@ -28,9 +28,9 @@ bool MetadataUtils::EncodeCameraMetadata(const std::shared_ptr<CameraStandard::C
     common_metadata_header_t *meta = metadata->get();
     if (meta != nullptr) {
         tagCount = get_camera_metadata_item_count(meta);
-        bRet |= data.WriteUint32(tagCount);
-        bRet |= data.WriteUint32(get_camera_metadata_item_capacity(meta));
-        bRet |= data.WriteUint32(get_camera_metadata_data_size(meta));
+        bRet = bRet && data.WriteUint32(tagCount);
+        bRet = bRet && data.WriteUint32(get_camera_metadata_item_capacity(meta));
+        bRet = bRet && data.WriteUint32(get_camera_metadata_data_size(meta));
         for (uint32_t i = 0; i < tagCount; i++) {
             camera_metadata_item_t item;
             int ret = get_camera_metadata_item(meta, i, &item);
@@ -38,16 +38,16 @@ bool MetadataUtils::EncodeCameraMetadata(const std::shared_ptr<CameraStandard::C
                 return false;
             }
 
-            bRet |= data.WriteUint32(item.index);
-            bRet |= data.WriteUint32(item.item);
-            bRet |= data.WriteUint32(item.data_type);
-            bRet |= data.WriteUint32(item.count);
-            bRet |= MetadataUtils::WriteMetadata(item, data);
+            bRet = bRet && data.WriteUint32(item.index);
+            bRet = bRet && data.WriteUint32(item.item);
+            bRet = bRet && data.WriteUint32(item.data_type);
+            bRet = bRet && data.WriteUint32(item.count);
+            bRet = bRet && MetadataUtils::WriteMetadata(item, data);
         }
     } else {
         bRet = data.WriteUint32(tagCount);
     }
-    return true;
+    return bRet;
 }
 
 void MetadataUtils::DecodeCameraMetadata(MessageParcel &data, std::shared_ptr<CameraStandard::CameraMetadata> &metadata)
@@ -78,52 +78,53 @@ void MetadataUtils::DecodeCameraMetadata(MessageParcel &data, std::shared_ptr<Ca
 
 bool MetadataUtils::WriteMetadata(const camera_metadata_item_t &item, MessageParcel &data)
 {
+    bool bRet = false;
     if (item.data_type == META_TYPE_BYTE) {
         std::vector<uint8_t> buffers;
         for (size_t i = 0; i < item.count; i++) {
             buffers.push_back(*(item.data.u8 + i));
         }
-        data.WriteUInt8Vector(buffers);
+        bRet = data.WriteUInt8Vector(buffers);
     } else if (item.data_type == META_TYPE_INT32) {
         std::vector<int32_t> buffers;
         for (size_t i = 0; i < item.count; i++) {
             buffers.push_back(*(item.data.i32 + i));
         }
-        data.WriteInt32Vector(buffers);
+        bRet = data.WriteInt32Vector(buffers);
     } else if (item.data_type == META_TYPE_FLOAT) {
         std::vector<float> buffers;
         for (size_t i = 0; i < item.count; i++) {
             buffers.push_back(*(item.data.f + i));
         }
-        data.WriteFloatVector(buffers);
+        bRet = data.WriteFloatVector(buffers);
     } else if (item.data_type == META_TYPE_UINT32) {
         std::vector<uint32_t> buffers;
         for (size_t i = 0; i < item.count; i++) {
             buffers.push_back(*(item.data.ui32 + i));
         }
-        data.WriteUInt32Vector(buffers);
+        bRet = data.WriteUInt32Vector(buffers);
     } else if (item.data_type == META_TYPE_INT64) {
         std::vector<int64_t> buffers;
         for (size_t i = 0; i < item.count; i++) {
             buffers.push_back(*(item.data.i64 + i));
         }
-        data.WriteInt64Vector(buffers);
+        bRet = data.WriteInt64Vector(buffers);
     } else if (item.data_type == META_TYPE_DOUBLE) {
         std::vector<double> buffers;
         for (size_t i = 0; i < item.count; i++) {
             buffers.push_back(*(item.data.d + i));
         }
-        data.WriteDoubleVector(buffers);
+        bRet = data.WriteDoubleVector(buffers);
     } else if (item.data_type == META_TYPE_RATIONAL) {
         std::vector<int32_t> buffers;
         for (size_t i = 0; i < item.count; i++) {
             buffers.push_back((*(item.data.r + i)).numerator);
             buffers.push_back((*(item.data.r + i)).denominator);
         }
-        data.WriteInt32Vector(buffers);
+        bRet = data.WriteInt32Vector(buffers);
     }
 
-    return true;
+    return bRet;
 }
 
 bool MetadataUtils::ReadMetadata(camera_metadata_item_t &item, MessageParcel &data)

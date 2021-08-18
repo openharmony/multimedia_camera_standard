@@ -27,7 +27,6 @@
 
 namespace OHOS {
 namespace CameraStandard {
-
 class CameraDeviceCallback;
 
 class HCameraDevice : public HCameraDeviceStub {

@@ -27,7 +27,6 @@
 
 namespace OHOS {
 namespace CameraStandard {
-
 class StreamOperatorCallback;
 
 class HCaptureSession : public HCaptureSessionStub {

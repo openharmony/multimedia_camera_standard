@@ -23,26 +23,22 @@ namespace OHOS {
 namespace CameraStandard {
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer)
 {
-    if (producer == nullptr) {
-        MEDIA_ERR_LOG("HStreamRepeat::HStreamRepeat producer is null");
-        return;
-    }
     producer_ = producer;
     isVideo_ = false;
     videoStreamId_ = 0;
     videoCaptureId_ = 0;
+    previewStreamId_ = 0;
+    previewCaptureId_ = 0;
 }
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo)
 {
-    if (producer == nullptr) {
-        MEDIA_ERR_LOG("HStreamRepeat::HStreamRepeat producer is null");
-        return;
-    }
     producer_ = producer;
     isVideo_ = isVideo;
     videoStreamId_ = 0;
     videoCaptureId_ = 0;
+    previewStreamId_ = 0;
+    previewCaptureId_ = 0;
 }
 
 HStreamRepeat::~HStreamRepeat()

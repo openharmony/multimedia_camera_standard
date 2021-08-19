@@ -14,6 +14,8 @@
  */
 
 #include "input/camera_input.h"
+
+#include <cinttypes>
 #include "camera_device_ability_items.h"
 #include "camera_util.h"
 #include "hcamera_device_callback_stub.h"
@@ -49,7 +51,7 @@ public:
 
     int32_t OnResult(const uint64_t timestamp, const std::shared_ptr<CameraMetadata> &result) override
     {
-        MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, timestamp: %{public}llu", timestamp);
+        MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, timestamp: %{public}" PRIu64, timestamp);
         return CAMERA_OK;
     }
 };

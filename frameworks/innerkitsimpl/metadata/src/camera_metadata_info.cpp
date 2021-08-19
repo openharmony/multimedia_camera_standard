@@ -80,7 +80,7 @@ bool CameraMetadata::resize_add_metadata(uint32_t item, const void *data, size_t
         return false;
     }
 
-    auto result = copy_camera_metadata(newMetadata, metadata_);
+    auto result = copy_camera_metadata_items(newMetadata, metadata_);
     if (result != CAM_META_SUCCESS) {
         METADATA_ERR_LOG("Failed to copy the old metadata to new metadata");
         free_camera_metadata_buffer(newMetadata);

@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <cinttypes>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -79,8 +80,8 @@ class PhotoOutputCallback : public PhotoCallback {
 
     void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const override
     {
-        MEDIA_INFO_LOG("PhotoOutputCallback:OnFrameShutter() called!, captureID: %{public}d, timestamp: %{public}llu",
-                       captureId, timestamp);
+        MEDIA_INFO_LOG("PhotoOutputCallback:OnFrameShutter() called!, captureID: %{public}d, timestamp: %{public}"
+            PRIu64, captureId, timestamp);
     }
 
     void OnCaptureError(const int32_t captureId, const int32_t errorCode) const override
@@ -207,7 +208,7 @@ int main()
     MEDIA_DEBUG_LOG("Setting callback to listen camera status and flash status");
     camManagerObj->SetCallback(cameraMngrCallback);
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
-    MEDIA_DEBUG_LOG("Camera ID count: %{public}d", cameraObjList.size());
+    MEDIA_DEBUG_LOG("Camera ID count: %{public}zu", cameraObjList.size());
     for (auto& it : cameraObjList) {
         MEDIA_DEBUG_LOG("Camera ID: %{public}s", it->GetID().c_str());
     }

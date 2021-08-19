@@ -69,8 +69,7 @@ size_t calculate_camera_metadata_memory_required(uint32_t item_count, uint32_t d
     memory_required += sizeof(uint8_t[data_count]);
     memory_required = ALIGN_TO(memory_required, METADATA_PACKET_ALIGNMENT);
 
-    METADATA_DEBUG_LOG("calculate_camera_metadata_memory_required memory_required: %{public}d, ",
-                        memory_required);
+    METADATA_DEBUG_LOG("calculate_camera_metadata_memory_required memory_required: %{public}zu", memory_required);
     METADATA_DEBUG_LOG("calculate_camera_metadata_memory_required end");
     return memory_required;
 }
@@ -219,8 +218,7 @@ int add_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const
                              size_t data_count)
 {
     METADATA_DEBUG_LOG("add_camera_metadata_item start");
-    METADATA_DEBUG_LOG("add_camera_metadata_item item: %{public}d, data_count: %{public}d",
-                        item, data_count);
+    METADATA_DEBUG_LOG("add_camera_metadata_item item: %{public}d, data_count: %{public}zu", item, data_count);
     if (dst == NULL) {
         METADATA_ERR_LOG("add_camera_metadata_item common_metadata_header_t is null");
         return CAM_META_INVALID_PARAM;
@@ -233,7 +231,7 @@ int add_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const
     }
 
     if (data_count && data == NULL) {
-        METADATA_ERR_LOG("add_camera_metadata_item data is not valid. data_count: %{public}d, data: %{public}p",
+        METADATA_ERR_LOG("add_camera_metadata_item data is not valid. data_count: %{public}zu, data: %{public}p",
             data_count, data);
         return CAM_META_INVALID_PARAM;
     }

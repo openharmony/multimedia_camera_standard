@@ -134,7 +134,7 @@ CamRecorderCallback::CamRecorderCallback(napi_env environment, CameraNapi *camer
 {
 }
 
-void CamRecorderCallback::OnError(int32_t errorType, int32_t errCode)
+void CamRecorderCallback::OnError(OHOS::Media::RecorderErrorType errorType, int32_t errCode)
 {
     size_t argCount = 1;
     napi_value jsCallback = nullptr;

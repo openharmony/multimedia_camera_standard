@@ -68,7 +68,7 @@ int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
 void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo)
 {
     streamInfo->format_ = PIXEL_FMT_YCRCB_420_SP;
-    streamInfo->tunneledMode_ = false;
+    streamInfo->tunneledMode_ = true;
     streamInfo->datasapce_ = CAMERA_PREVIEW_COLOR_SPACE;
     streamInfo->bufferQueue_ = producer_;
     if (isVideo_) {

@@ -56,7 +56,7 @@ void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInf
     streamInfoPhoto->format_ = PIXEL_FMT_YCRCB_420_SP;
     streamInfoPhoto->datasapce_ = CAMERA_PHOTO_COLOR_SPACE;
     streamInfoPhoto->intent_ = Camera::STILL_CAPTURE;
-    streamInfoPhoto->tunneledMode_ = false;
+    streamInfoPhoto->tunneledMode_ = true;
     streamInfoPhoto->bufferQueue_ = producer_;
     streamInfoPhoto->encodeType_ = Camera::ENCODE_TYPE_JPEG;
 }

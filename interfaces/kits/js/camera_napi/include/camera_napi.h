@@ -35,7 +35,6 @@
 #include "recorder.h"
 namespace OHOS {
 namespace CameraStandard {
-
 struct CamRecorderCallback;
 
 class SurfaceListener : public IBufferConsumerListener {
@@ -262,7 +261,7 @@ public:
         MIC = 1,
     };
 
-    struct RecorderProfile{
+    struct RecorderProfile {
         int32_t aBitRate;
         int32_t aChannels;
         int32_t aCodec;

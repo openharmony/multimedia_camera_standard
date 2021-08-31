@@ -121,7 +121,7 @@ private:
     std::shared_ptr<ExposureCallback> exposurecallback_;
     std::shared_ptr<FocusCallback> focusCallback_;
 
-    template <typename DataPtr, typename Vec, typename VecType>
+    template<typename DataPtr, typename Vec, typename VecType>
     static void getVector(DataPtr data, size_t count, Vec &vect, VecType dataType);
 };
 } // namespace CameraStandard

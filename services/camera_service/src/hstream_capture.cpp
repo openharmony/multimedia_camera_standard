@@ -23,10 +23,6 @@ namespace OHOS {
 namespace CameraStandard {
 HStreamCapture::HStreamCapture(sptr<OHOS::IBufferProducer> producer)
 {
-    if (producer == nullptr) {
-        MEDIA_ERR_LOG("HStreamCapture::HStreamCapture producer is null");
-        return;
-    }
     producer_ = producer;
     photoStreamId_ = 0;
     photoCaptureId_ = 0;

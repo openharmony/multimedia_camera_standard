@@ -14,8 +14,6 @@
  */
 
 #include "securec.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "metadata_log.h"
 
@@ -77,8 +75,8 @@ size_t calculate_camera_metadata_memory_required(uint32_t item_count, uint32_t d
 common_metadata_header_t *allocate_camera_metadata_buffer(uint32_t item_capacity, uint32_t data_capacity)
 {
     METADATA_DEBUG_LOG("allocate_camera_metadata_buffer start");
-    METADATA_DEBUG_LOG("allocate_camera_metadata_buffer item_capacity: %{public}d, "
-                        "data_capacity: %{public}d", item_capacity, data_capacity);
+    METADATA_DEBUG_LOG("allocate_camera_metadata_buffer item_capacity: %{public}d, data_capacity: %{public}d",
+        item_capacity, data_capacity);
     size_t memory_required = calculate_camera_metadata_memory_required(item_capacity,
                                                                        data_capacity);
     void *buffer = calloc(1, memory_required);
@@ -102,50 +100,50 @@ int32_t get_metadata_section(uint32_t item_section, uint32_t *section)
 {
     METADATA_DEBUG_LOG("get_metadata_section start");
     if (item_section < OHOS_CAMERA_PROPERTIES ||
-            item_section >= OHOS_ABILITY_SECTION_END) {
+        item_section >= OHOS_ABILITY_SECTION_END) {
         METADATA_ERR_LOG("get_metadata_section item_section is not valid");
         return CAM_META_FAILURE;
     }
 
     int32_t ret = CAM_META_SUCCESS;
     switch (item_section) {
-    case OHOS_CAMERA_PROPERTIES:
-        *section = OHOS_SECTION_CAMERA_PROPERTIES;
-        break;
-    case OHOS_CAMERA_SENSOR:
-        *section = OHOS_SECTION_CAMERA_SENSOR;
-        break;
-    case OHOS_CAMERA_SENSOR_INFO:
-        *section = OHOS_SECTION_CAMERA_SENSOR_INFO;
-        break;
-    case OHOS_CAMERA_STATISTICS:
-        *section = OHOS_SECTION_CAMERA_STATISTICS;
-        break;
-    case OHOS_DEVICE_CONTROL:
-        *section = OHOS_SECTION_CAMERA_CONTROL;
-        break;
-    case OHOS_DEVICE_EXPOSURE:
-        *section = OHOS_SECTION_DEVICE_EXPOSURE;
-        break;
-    case OHOS_DEVICE_FOCUS:
-        *section = OHOS_SECTION_DEVICE_FOCUS;
-        break;
-    case OHOS_DEVICE_FLASH:
-        *section = OHOS_SECTION_DEVICE_FLASH;
-        break;
-    case OHOS_DEVICE_ZOOM:
-        *section = OHOS_SECTION_DEVICE_ZOOM;
-        break;
-    case OHOS_STREAM_ABILITY:
-        *section = OHOS_SECTION_STREAM_ABILITY;
-        break;
-    case OHOS_STREAM_JPEG:
-        *section = OHOS_SECTION_STREAM_JPEG;
-        break;
-    default:
-        METADATA_ERR_LOG("get_metadata_section item section is not defined");
-        ret = CAM_META_FAILURE;
-        break;
+        case OHOS_CAMERA_PROPERTIES:
+            *section = OHOS_SECTION_CAMERA_PROPERTIES;
+            break;
+        case OHOS_CAMERA_SENSOR:
+            *section = OHOS_SECTION_CAMERA_SENSOR;
+            break;
+        case OHOS_CAMERA_SENSOR_INFO:
+            *section = OHOS_SECTION_CAMERA_SENSOR_INFO;
+            break;
+        case OHOS_CAMERA_STATISTICS:
+            *section = OHOS_SECTION_CAMERA_STATISTICS;
+            break;
+        case OHOS_DEVICE_CONTROL:
+            *section = OHOS_SECTION_CAMERA_CONTROL;
+            break;
+        case OHOS_DEVICE_EXPOSURE:
+            *section = OHOS_SECTION_DEVICE_EXPOSURE;
+            break;
+        case OHOS_DEVICE_FOCUS:
+            *section = OHOS_SECTION_DEVICE_FOCUS;
+            break;
+        case OHOS_DEVICE_FLASH:
+            *section = OHOS_SECTION_DEVICE_FLASH;
+            break;
+        case OHOS_DEVICE_ZOOM:
+            *section = OHOS_SECTION_DEVICE_ZOOM;
+            break;
+        case OHOS_STREAM_ABILITY:
+            *section = OHOS_SECTION_STREAM_ABILITY;
+            break;
+        case OHOS_STREAM_JPEG:
+            *section = OHOS_SECTION_STREAM_JPEG;
+            break;
+        default:
+            METADATA_ERR_LOG("get_metadata_section item section is not defined");
+            ret = CAM_META_FAILURE;
+            break;
     }
 
     METADATA_DEBUG_LOG("get_metadata_section end");
@@ -179,7 +177,8 @@ int32_t get_camera_metadata_item_type(uint32_t item, uint32_t *data_type)
     return CAM_META_SUCCESS;
 }
 
-const char *get_camera_metadata_item_name(uint32_t item) {
+const char *get_camera_metadata_item_name(uint32_t item)
+{
     METADATA_DEBUG_LOG("get_camera_metadata_item_name start");
     METADATA_DEBUG_LOG("get_camera_metadata_item_name item: %{public}d", item);
     uint32_t section;
@@ -198,7 +197,6 @@ const char *get_camera_metadata_item_name(uint32_t item) {
     METADATA_DEBUG_LOG("get_camera_metadata_item_name end");
     return ohos_item_info[section][item_index].item_name;
 }
-
 
 size_t calculate_camera_metadata_item_data_size(uint32_t type, size_t data_count)
 {
@@ -226,7 +224,7 @@ int add_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const
 
     if (dst->item_count == dst->item_capacity) {
         METADATA_ERR_LOG("add_camera_metadata_item item_capacity limit reached. "
-        "item_count: %{public}d, item_capacity: %{public}d", dst->item_count, dst->item_capacity);
+                         "item_count: %{public}d, item_capacity: %{public}d", dst->item_count, dst->item_capacity);
         return CAM_META_ITEM_CAP_EXCEED;
     }
 
@@ -267,7 +265,7 @@ int add_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const
     } else {
         metadata_item->data.offset = dst->data_count;
         ret = memcpy_s(get_metadata_data(dst) + metadata_item->data.offset, data_payload_bytes, data,
-                data_payload_bytes);
+            data_payload_bytes);
         if (ret != CAM_META_SUCCESS) {
             METADATA_ERR_LOG("add_camera_metadata_item memory copy failed");
             return CAM_META_FAILURE;
@@ -280,8 +278,7 @@ int add_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const
     return CAM_META_SUCCESS;
 }
 
-int get_camera_metadata_item(common_metadata_header_t *src, uint32_t index,
-                            camera_metadata_item_t *item)
+int get_camera_metadata_item(common_metadata_header_t *src, uint32_t index, camera_metadata_item_t *item)
 {
     METADATA_DEBUG_LOG("get_camera_metadata_item start");
     if (src == NULL || item == NULL) {
@@ -344,7 +341,7 @@ int find_camera_metadata_item_index(common_metadata_header_t *src, uint32_t item
 
 int find_camera_metadata_item(common_metadata_header_t *src, uint32_t item, camera_metadata_item_t *metadata_item)
 {
-    uint32_t index;
+    uint32_t index = 0;
     int ret = find_camera_metadata_item_index(src, item, &index);
     if (ret != CAM_META_SUCCESS) {
         return ret;
@@ -394,8 +391,8 @@ int update_camera_metadata_item_by_index(common_metadata_header_t *dst, uint32_t
             camera_metadata_item_entry_t *metadata_items = get_metadata_items(dst);
             for (uint32_t i = 0; i < dst->item_count; i++, ++metadata_items) {
                 if (calculate_camera_metadata_item_data_size(
-                        metadata_items->data_type, metadata_items->count) > 0 &&
-                        metadata_items->data.offset > item->data.offset) {
+                    metadata_items->data_type, metadata_items->count) > 0 &&
+                    metadata_items->data.offset > item->data.offset) {
                     metadata_items->data.offset -= old_item_size;
                 }
             }
@@ -438,9 +435,8 @@ int update_camera_metadata_item_by_index(common_metadata_header_t *dst, uint32_t
 int update_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const void *data,
                                 uint32_t data_count, camera_metadata_item_t *updated_item)
 {
-    METADATA_DEBUG_LOG("update_camera_metadata_item item: %{public}d, data_count: %{public}d",
-                    item, data_count);
-    uint32_t index;
+    METADATA_DEBUG_LOG("update_camera_metadata_item item: %{public}d, data_count: %{public}d", item, data_count);
+    uint32_t index = 0;
     uint32_t ret = find_camera_metadata_item_index(dst, item, &index);
     if (ret != CAM_META_SUCCESS) {
         return ret;
@@ -464,10 +460,8 @@ int delete_camera_metadata_item_by_index(common_metadata_header_t *dst, uint32_t
 
     int32_t ret;
     camera_metadata_item_entry_t *item_to_delete = get_metadata_items(dst) + index;
-    size_t data_bytes = calculate_camera_metadata_item_data_size(item_to_delete->data_type,
-                                                                  item_to_delete->count);
-
-    if (data_bytes > 0) { // TODO same logic in update also move it into a method
+    size_t data_bytes = calculate_camera_metadata_item_data_size(item_to_delete->data_type, item_to_delete->count);
+    if (data_bytes > 0) {
         uint8_t *start = get_metadata_data(dst) + item_to_delete->data.offset;
         uint8_t *end = start + data_bytes;
         size_t length = dst->data_count - item_to_delete->data.offset - data_bytes;
@@ -481,8 +475,8 @@ int delete_camera_metadata_item_by_index(common_metadata_header_t *dst, uint32_t
         camera_metadata_item_entry_t *metadata_items = get_metadata_items(dst);
         for (uint32_t i = 0; i < dst->item_count; i++, ++metadata_items) {
             if (calculate_camera_metadata_item_data_size(
-                    metadata_items->data_type, metadata_items->count) > 0 &&
-                    metadata_items->data.offset > item_to_delete->data.offset) {
+                metadata_items->data_type, metadata_items->count) > 0 &&
+                metadata_items->data.offset > item_to_delete->data.offset) {
                 metadata_items->data.offset -= data_bytes;
             }
         }
@@ -503,7 +497,7 @@ int delete_camera_metadata_item_by_index(common_metadata_header_t *dst, uint32_t
 int delete_camera_metadata_item(common_metadata_header_t *dst, uint32_t item)
 {
     METADATA_DEBUG_LOG("delete_camera_metadata_item item: %{public}d", item);
-    uint32_t index;
+    uint32_t index = 0;
     uint32_t ret = find_camera_metadata_item_index(dst, item, &index);
     if (ret != CAM_META_SUCCESS) {
         return ret;
@@ -519,15 +513,18 @@ void free_camera_metadata_buffer(common_metadata_header_t *dst)
     }
 }
 
-uint32_t get_camera_metadata_item_count(const common_metadata_header_t *metadata_header) {
+uint32_t get_camera_metadata_item_count(const common_metadata_header_t *metadata_header)
+{
     return metadata_header->item_count;
 }
 
-uint32_t get_camera_metadata_item_capacity(const common_metadata_header_t *metadata_header) {
+uint32_t get_camera_metadata_item_capacity(const common_metadata_header_t *metadata_header)
+{
     return metadata_header->item_capacity;
 }
 
-uint32_t get_camera_metadata_data_size(const common_metadata_header_t *metadata_header) {
+uint32_t get_camera_metadata_data_size(const common_metadata_header_t *metadata_header)
+{
     return metadata_header->data_capacity;
 }
 

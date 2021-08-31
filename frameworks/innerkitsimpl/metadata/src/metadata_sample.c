@@ -16,9 +16,8 @@
 #include "camera_metadata_operator.h"
 #include "metadata_log.h"
 
-#include <stdio.h>
-
-int main() {
+int main()
+{
     METADATA_INFO_LOG("Test Metadata");
 
     uint32_t item_capacity = 1;

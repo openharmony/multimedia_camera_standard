@@ -194,7 +194,46 @@ int32_t HCameraServiceProxy::CreatePreviewOutput(const sptr<OHOS::IBufferProduce
     return error;
 }
 
-int32_t HCameraServiceProxy::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamRepeat>& videoOutput)
+int32_t HCameraServiceProxy::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t width,
+                                                       int32_t height, sptr<IStreamRepeat>& previewOutput)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (producer == nullptr || width == 0 || height == 0) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput producer is null or invalid size is set");
+        return IPC_PROXY_ERR;
+    }
+    if (!data.WriteRemoteObject(producer->AsObject())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput write producer obj failed");
+        return IPC_PROXY_ERR;
+    }
+    if (!data.WriteInt32(width)) {
+        MEDIA_ERR_LOG("HCameraDeviceCallbackProxy Write width failed");
+        return IPC_PROXY_ERR;
+    }
+    if (!data.WriteInt32(height)) {
+        MEDIA_ERR_LOG("HCameraDeviceCallbackProxy Write height failed");
+        return IPC_PROXY_ERR;
+    }
+    int error = Remote()->SendRequest(CAMERA_SERVICE_CREATE_PREVIEW_OUTPUT_CUSTOM_SIZE, data, reply, option);
+    if (error != ERR_NONE) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput failed, error: %{public}d", error);
+        return error;
+    }
+    auto remoteObject = reply.ReadRemoteObject();
+    if (remoteObject != nullptr) {
+        previewOutput = iface_cast<IStreamRepeat>(remoteObject);
+    } else {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput previewOutput is null");
+        error = IPC_PROXY_ERR;
+    }
+    return error;
+}
+
+int32_t HCameraServiceProxy::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer,
+                                               sptr<IStreamRepeat>& videoOutput)
 {
     MessageParcel data;
     MessageParcel reply;

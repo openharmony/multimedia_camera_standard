@@ -102,11 +102,12 @@ public:
     }
 };
 
-void PhotoCaptureSetting::SetMirror(bool enable){
+void PhotoCaptureSetting::SetMirror(bool enable)
+{
     return;
 }
 
-PhotoOutput::PhotoOutput (sptr<IStreamCapture> &streamCapture)
+PhotoOutput::PhotoOutput(sptr<IStreamCapture> &streamCapture)
     : CaptureOutput(CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT), streamCapture_(streamCapture) {
 }
 

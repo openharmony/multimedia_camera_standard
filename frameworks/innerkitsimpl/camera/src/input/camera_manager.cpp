@@ -157,6 +157,25 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
     return result;
 }
 
+sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(sptr<Surface> surface, int32_t width, int32_t height)
+{
+    sptr<IStreamRepeat> streamRepeat = nullptr;
+    sptr<PreviewOutput> result = nullptr;
+    int32_t retCode = CAMERA_OK;
+
+    if (serviceProxy_ == nullptr || surface == nullptr || width == 0 || height == 0) {
+        MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput serviceProxy_ is null or surface is null or invalid size");
+        return nullptr;
+    }
+    retCode = serviceProxy_->CreateCustomPreviewOutput(surface->GetProducer(), width, height, streamRepeat);
+    if (retCode == CAMERA_OK) {
+        result = new PreviewOutput(streamRepeat);
+    } else {
+        MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
+    }
+    return result;
+}
+
 sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
 {
     sptr<IStreamRepeat> streamRepeat = nullptr;

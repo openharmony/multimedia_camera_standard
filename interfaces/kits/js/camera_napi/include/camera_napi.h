@@ -60,6 +60,10 @@ struct MediaLocation {
 };
 
 static const std::int32_t SIZE = 100;
+static const std::int32_t PHOTO_DEFAULT_WIDTH = 1280;
+static const std::int32_t PHOTO_DEFAULT_HEIGHT = 960;
+static const std::int32_t SURFACE_DEFAULT_WIDTH = 480;
+static const std::int32_t SURFACE_DEFAULT_HEIGHT = 480;
 static const std::string CAMERA_MNGR_NAPI_CLASS_NAME = "Camera";
 static const std::int32_t REFERENCE_CREATION_COUNT = 1;
 static const std::int32_t ARGS_MAX_TWO_COUNT = 2;
@@ -112,7 +116,7 @@ static const std::vector<std::string> vecQualityLevel {
 static const std::vector<std::string> vecFileFormat { "FORMAT_DEFAULT", "MP4", "FORMAT_M4A", "FORMAT_BUTT" };
 static const std::vector<std::string> vecVideoEncoder { "H264" };
 static const std::vector<std::string> vecAudioEncoder { "AAC_LC" };
-static const std::vector<std::string> vecParameterResult { "ERROR_UNKNOWN", "PARAMETERS_RESULT"};
+static const std::vector<std::string> vecParameterResult { "ERROR_UNKNOWN", "PARAMETERS_RESULT" };
 
 #define GET_PARAMS(env, info, num) \
     size_t argc = num;             \

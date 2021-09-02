@@ -41,5 +41,16 @@ int HdiToServiceError(Camera::CamRetCode ret)
     }
     return err;
 }
+
+bool IsValidSize(int32_t width, int32_t height, std::vector<std::pair<int32_t, int32_t>> validSizes)
+{
+    auto curPair = std::make_pair(width, height);
+    if (std::find(validSizes.begin(), validSizes.end(), curPair) != validSizes.end()) {
+        return true;
+    } else {
+        MEDIA_ERR_LOG("Width %{public}d and height %{public}d not found in suported sizes", width, height);
+    }
+    return false;
 }
-}
+} // namespace CameraStandard
+} // namespace OHOS

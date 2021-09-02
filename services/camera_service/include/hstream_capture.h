@@ -48,6 +48,7 @@ private:
     sptr<OHOS::IBufferProducer> producer_;
     sptr<IStreamCaptureCallback> streamCaptureCallback_;
     std::shared_ptr<CameraMetadata> cameraAbility_;
+    std::vector<std::pair<int32_t, int32_t>> validSizes_ = {{1280, 960}};
 };
 } // namespace CameraStandard
 } // namespace OHOS

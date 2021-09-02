@@ -37,6 +37,8 @@ napi_ref CameraNapi::parameterResultRef_ = nullptr;
 
 namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CameraNapi"};
+    const int ARGS_TWO = 2;
+    const int ARGS_THREE = 3;
 }
 
 struct CameraNapiAsyncContext {
@@ -422,7 +424,7 @@ static std::string GetStringArgument(napi_env env, napi_value value)
     status = napi_get_value_string_utf8(env, value, nullptr, 0, &bufLength);
     if (status == napi_ok && bufLength > 0) {
         // Create a buffer and create std::string later from it
-        buffer = (char *) malloc((bufLength + 1) * sizeof(char));
+        buffer = (char *)malloc((bufLength + 1) * sizeof(char));
         if (buffer != nullptr) {
             status = napi_get_value_string_utf8(env, value, buffer, bufLength + 1, &bufLength);
             if (status == napi_ok) {
@@ -470,7 +472,6 @@ void CameraNapi::SaveCallbackReference(napi_env env, CameraNapi* camWrapper,
     if (status != napi_ok) {
         HiLog::Error(LABEL, "Unknown error while creating reference for callback!");
     }
-
 }
 
 napi_ref CameraNapi::GetErrorCallbackRef()
@@ -482,10 +483,10 @@ napi_ref CameraNapi::GetErrorCallbackRef()
 napi_value CameraNapi::On(napi_env env, napi_callback_info info)
 {
     napi_status status;
-    size_t argCount = 2;
+    size_t argCount = ARGS_TWO;
     napi_value jsThis = nullptr;
     napi_value undefinedResult = nullptr;
-    napi_value args[2] = {0};
+    napi_value args[ARGS_TWO] = {0};
     CameraNapi* cameraWrapper = nullptr;
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
@@ -493,7 +494,7 @@ napi_value CameraNapi::On(napi_env env, napi_callback_info info)
 
     napi_get_undefined(env, &undefinedResult);
     status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok || argCount < 2) {
+    if (status != napi_ok || argCount < ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return nullptr;
     }
@@ -813,8 +814,8 @@ sptr<Surface> CameraNapi::CreateSubWindowSurface()
 {
     if (!subWindow_) {
         WindowConfig config = {
-            .width = 480,
-            .height = 480,
+            .width = SURFACE_DEFAULT_WIDTH,
+            .height = SURFACE_DEFAULT_HEIGHT,
             .pos_x = 0,
             .pos_y = 0,
             .format = PIXEL_FMT_RGBA_8888
@@ -882,6 +883,7 @@ int32_t CameraNapi::PreparePhoto(sptr<CameraManager> camManagerObj)
         HiLog::Error(LABEL, "CreateSurface failed");
         return -1;
     }
+    captureConsumerSurface_->SetDefaultWidthAndHeight(PHOTO_DEFAULT_WIDTH, PHOTO_DEFAULT_HEIGHT);
     listener = new SurfaceListener();
     if (listener == nullptr) {
         HiLog::Error(LABEL, "Create Listener failed");
@@ -959,14 +961,14 @@ napi_value CameraNapi::Prepare(napi_env env, napi_callback_info info)
     int32_t intResult = -1;
     napi_value jsCallback, result;
 
-    GET_PARAMS(env, info, 3);
+    GET_PARAMS(env, info, ARGS_THREE);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 3) {
+    if (argc > ARGS_THREE) {
         HiLog::Error(LABEL, "CameraNapi::Prepare() Invalid arguments!");
         return undefinedResult;
     }
 
-    status = napi_unwrap(env, thisVar, (void**) &CameraWrapper);
+    status = napi_unwrap(env, thisVar, (void**)&CameraWrapper);
     if (status == napi_ok && CameraWrapper != nullptr) {
         for (size_t i = 0; i < argc; i++) {
             napi_valuetype valueType = napi_undefined;
@@ -997,7 +999,7 @@ napi_value CameraNapi::Prepare(napi_env env, napi_callback_info info)
 static void GetCameraIdsAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
     auto asyncContext = static_cast<CameraNapiAsyncContext*>(data);
-    napi_value result[2] = {0};
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     size_t size = asyncContext->cameraObjList.size();
@@ -1019,7 +1021,7 @@ static void GetCameraIdsAsyncCallbackComplete(napi_env env, napi_status status, 
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -1033,10 +1035,10 @@ napi_value CameraNapi::GetCameraIDs(napi_env env, napi_callback_info info)
     std::unique_ptr<CameraNapiAsyncContext> asyncContext = std::make_unique<CameraNapiAsyncContext>();
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
 
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -1064,7 +1066,7 @@ napi_value CameraNapi::GetCameraIDs(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource,
             [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = (CameraNapiAsyncContext*) data;
+                CameraNapiAsyncContext* context = (CameraNapiAsyncContext*)data;
                 sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
                 context->cameraObjList = camManagerObj->GetCameras();
                 context->status = 0;
@@ -1121,7 +1123,7 @@ napi_value CameraNapi::StartVideoRecording(napi_env env, napi_callback_info info
         return undefinedResult;
     }
 
-    status = napi_unwrap(env, jsThis, (void**) &camWrapper);
+    status = napi_unwrap(env, jsThis, (void**)&camWrapper);
     if (status == napi_ok) {
         if (camWrapper->recordState_ == State::STATE_RUNNING) {
             HiLog::Error(LABEL, "Camera is already recording.");
@@ -1174,7 +1176,7 @@ napi_value CameraNapi::StopVideoRecording(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
 
-    status = napi_unwrap(env, jsThis, (void**) &camWrapper);
+    status = napi_unwrap(env, jsThis, (void**)&camWrapper);
     if (status == napi_ok) {
         if (camWrapper->recordState_ != State::STATE_RUNNING) {
             HiLog::Error(LABEL, "Failed to Stop Recording");
@@ -1223,7 +1225,7 @@ napi_value CameraNapi::ResetVideoRecording(napi_env env, napi_callback_info info
         return undefinedResult;
     }
 
-    status = napi_unwrap(env, jsThis, (void**) &camWrapper);
+    status = napi_unwrap(env, jsThis, (void**)&camWrapper);
     if (status == napi_ok) {
         if (camWrapper->recorder_->Reset() != 0) {
             HiLog::Error(LABEL, "Failed to Reset Recording");
@@ -1264,7 +1266,7 @@ napi_value CameraNapi::PauseVideoRecording(napi_env env, napi_callback_info info
         return undefinedResult;
     }
 
-    status = napi_unwrap(env, jsThis, (void**) &camWrapper);
+    status = napi_unwrap(env, jsThis, (void**)&camWrapper);
     if (status == napi_ok) {
         if (camWrapper->recorder_->Pause() != 0) {
             HiLog::Error(LABEL, "Failed to Pause Recording");
@@ -1275,7 +1277,7 @@ napi_value CameraNapi::PauseVideoRecording(napi_env env, napi_callback_info info
             return undefinedResult;
         }
 
-        status = napi_get_reference_value(env, camWrapper->pauseCallback_ ,&jsCallback);
+        status = napi_get_reference_value(env, camWrapper->pauseCallback_, &jsCallback);
         if (status == napi_ok && jsCallback != nullptr) {
             if (napi_call_function(env, nullptr, jsCallback, 0, nullptr, &result) == napi_ok) {
                 return undefinedResult;
@@ -1303,7 +1305,7 @@ napi_value CameraNapi::ResumeVideoRecording(napi_env env, napi_callback_info inf
         return undefinedResult;
     }
 
-    status = napi_unwrap(env, jsThis, (void**) &camWrapper);
+    status = napi_unwrap(env, jsThis, (void**)&camWrapper);
     if (status == napi_ok) {
         if (camWrapper->recorder_->Resume() != 0) {
             HiLog::Error(LABEL, "Failed to Resume Recording");
@@ -1343,7 +1345,7 @@ napi_value CameraNapi::StartPreview(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
 
-    status = napi_unwrap(env, jsThis, (void**) &cameraWrapper);
+    status = napi_unwrap(env, jsThis, (void**)&cameraWrapper);
     if (status == napi_ok) {
         if (!(cameraWrapper->isReady_) || (cameraWrapper->capSession_ == nullptr)) {
             HiLog::Error(LABEL, "Not ready for StartPreview.");
@@ -1395,7 +1397,7 @@ napi_value CameraNapi::StopPreview(napi_env env, napi_callback_info info)
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
-    status = napi_unwrap(env, jsThis, (void**) &cameraWrapper);
+    status = napi_unwrap(env, jsThis, (void**)&cameraWrapper);
     if (status == napi_ok) {
         if (cameraWrapper->capSession_ != nullptr) {
             cameraWrapper->capSession_->Stop();
@@ -1427,7 +1429,6 @@ napi_value CameraNapi::StopPreview(napi_env env, napi_callback_info info)
 
 int32_t CameraNapi::GetPhotoConfig(napi_env env, napi_value arg)
 {
-    char buffer[SIZE];
     size_t res = 0;
     napi_value temp, mirtemp;
     bool bIsMirror = false;
@@ -1458,7 +1459,6 @@ int32_t CameraNapi::GetPhotoConfig(napi_env env, napi_value arg)
     if (listener != nullptr) {
         listener->SetPhotoPath(photoConfig_->strPhotoPath);
     }
-    memset_s(buffer, SIZE, 0, sizeof(buffer));
     napi_has_named_property(env, arg, "mirror", &bIsPresent);
     if (!bIsPresent) {
         HiLog::Error(LABEL, "No mirror flag Exists");
@@ -1478,7 +1478,7 @@ int32_t CameraNapi::GetPhotoConfig(napi_env env, napi_value arg)
 static void TakePhotoAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
     auto asyncContext = static_cast<CameraNapiAsyncContext*>(data);
-    napi_value result[2] = {0};
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     napi_get_undefined(env, &result[1]);
@@ -1488,7 +1488,7 @@ static void TakePhotoAsyncCallbackComplete(napi_env env, napi_status status, voi
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -1502,9 +1502,9 @@ napi_value CameraNapi::TakePhoto(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     std::unique_ptr<CameraNapiAsyncContext> asyncContext = std::make_unique<CameraNapiAsyncContext>();
 
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &result);
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return result;
     }
@@ -1989,8 +1989,8 @@ napi_value CameraNapi::CreateParameterResultObject(napi_env env)
 
 static void GetSupportedPropertiesAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    auto asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    auto asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
 
@@ -2012,7 +2012,7 @@ static void GetSupportedPropertiesAsyncCallbackComplete(napi_env env, napi_statu
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2028,9 +2028,9 @@ napi_value CameraNapi::GetSupportedProperties(napi_env env, napi_callback_info i
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
 
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2060,7 +2060,7 @@ napi_value CameraNapi::GetSupportedProperties(napi_env env, napi_callback_info i
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
-                //Need to add logic for calling native to get supported Exposure Mode
+                // Need to add logic for calling native to get supported Exposure Mode
                 context->status = 0;
             },
             GetSupportedPropertiesAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -2077,8 +2077,8 @@ napi_value CameraNapi::GetSupportedProperties(napi_env env, napi_callback_info i
 
 static void GetPropertyValueAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     napi_get_undefined(env, &result[1]);
@@ -2088,7 +2088,7 @@ static void GetPropertyValueAsyncCallbackComplete(napi_env env, napi_status stat
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2103,15 +2103,15 @@ napi_value CameraNapi::GetPropertyValue(napi_env env, napi_callback_info info)
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
 
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
-    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
 
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
         for (size_t i = 0; i < argc; i++) {
             napi_valuetype valueType = napi_undefined;
@@ -2137,7 +2137,7 @@ napi_value CameraNapi::GetPropertyValue(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
-                //Need to add logic for calling native to get supported Exposure Mode
+                // Need to add logic for calling native to get supported Exposure Mode
                 context->status = 0;
             },
             GetPropertyValueAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -2154,8 +2154,8 @@ napi_value CameraNapi::GetPropertyValue(napi_env env, napi_callback_info info)
 
 static void GetSupportedResolutionScalesAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     size_t size = asyncContext->vecSupportedResolutionScalesList.size();
@@ -2176,7 +2176,7 @@ static void GetSupportedResolutionScalesAsyncCallbackComplete(napi_env env, napi
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2191,10 +2191,10 @@ napi_value CameraNapi::GetSupportedResolutionScales(napi_env env, napi_callback_
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
 
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2242,8 +2242,8 @@ napi_value CameraNapi::GetSupportedResolutionScales(napi_env env, napi_callback_
 
 static void SetPreviewResolutionScaleAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     napi_get_undefined(env, &result[1]);
@@ -2253,7 +2253,7 @@ static void SetPreviewResolutionScaleAsyncCallbackComplete(napi_env env, napi_st
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2268,9 +2268,9 @@ napi_value CameraNapi::SetPreviewResolutionScale(napi_env env, napi_callback_inf
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2302,7 +2302,7 @@ napi_value CameraNapi::SetPreviewResolutionScale(napi_env env, napi_callback_inf
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
-                //Need to add logic for calling native to set Preview Resolution Scale
+                // Need to add logic for calling native to set Preview Resolution Scale
                 context->status = 0;
             },
             SetPreviewResolutionScaleAsyncCallbackComplete,
@@ -2320,8 +2320,8 @@ napi_value CameraNapi::SetPreviewResolutionScale(napi_env env, napi_callback_inf
 
 static void SetPreviewQualityAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     napi_get_undefined(env, &result[1]);
@@ -2331,7 +2331,7 @@ static void SetPreviewQualityAsyncCallbackComplete(napi_env env, napi_status sta
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2346,9 +2346,9 @@ napi_value CameraNapi::SetPreviewQuality(napi_env env, napi_callback_info info)
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2381,7 +2381,7 @@ napi_value CameraNapi::SetPreviewQuality(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
-                //Need to add logic for calling native to get supported Exposure Mode
+                // Need to add logic for calling native to get supported Exposure Mode
                 context->status = 0;
             },
             SetPreviewQualityAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -2398,8 +2398,8 @@ napi_value CameraNapi::SetPreviewQuality(napi_env env, napi_callback_info info)
 
 static void GetSupportedExposureModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     size_t size = asyncContext->vecSupportedExposureModeList.size();
@@ -2419,7 +2419,7 @@ static void GetSupportedExposureModeAsyncCallbackComplete(napi_env env, napi_sta
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2434,9 +2434,9 @@ napi_value CameraNapi::GetSupportedExposureMode(napi_env env, napi_callback_info
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2483,8 +2483,8 @@ napi_value CameraNapi::GetSupportedExposureMode(napi_env env, napi_callback_info
 
 static void SetExposureModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     napi_get_undefined(env, &result[1]);
@@ -2494,7 +2494,7 @@ static void SetExposureModeAsyncCallbackComplete(napi_env env, napi_status statu
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2509,9 +2509,9 @@ napi_value CameraNapi::SetExposureMode(napi_env env, napi_callback_info info)
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2563,8 +2563,8 @@ napi_value CameraNapi::SetExposureMode(napi_env env, napi_callback_info info)
 
 static void GetSupportedFocusModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     size_t size = asyncContext->vecSupportedFocusModeList.size();
@@ -2584,7 +2584,7 @@ static void GetSupportedFocusModeAsyncCallbackComplete(napi_env env, napi_status
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2600,9 +2600,9 @@ napi_value CameraNapi::GetSupportedFocusMode(napi_env env, napi_callback_info in
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
 
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2650,8 +2650,8 @@ napi_value CameraNapi::GetSupportedFocusMode(napi_env env, napi_callback_info in
 
 static void SetFocusModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     napi_get_undefined(env, &result[1]);
@@ -2661,7 +2661,7 @@ static void SetFocusModeAsyncCallbackComplete(napi_env env, napi_status status, 
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2676,10 +2676,10 @@ napi_value CameraNapi::SetFocusMode(napi_env env, napi_callback_info info)
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
 
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2730,8 +2730,8 @@ napi_value CameraNapi::SetFocusMode(napi_env env, napi_callback_info info)
 
 static void GetSupportedFlashModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
 
@@ -2752,7 +2752,7 @@ static void GetSupportedFlashModeAsyncCallbackComplete(napi_env env, napi_status
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2767,10 +2767,10 @@ napi_value CameraNapi::GetSupportedFlashMode(napi_env env, napi_callback_info in
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
 
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2800,7 +2800,7 @@ napi_value CameraNapi::GetSupportedFlashMode(napi_env env, napi_callback_info in
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
-                //Need to add logic for calling native to get supported Exposure Mode
+                // Need to add logic for calling native to get supported Exposure Mode
                 context->vecSupportedFlashModeList = ((sptr<CameraInput> &)
                                                       (context->objectInfo->camInput_))->GetSupportedFlashModes();
                 context->status = 0;
@@ -2819,8 +2819,8 @@ napi_value CameraNapi::GetSupportedFlashMode(napi_env env, napi_callback_info in
 
 static void SetFlashModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     napi_get_undefined(env, &result[1]);
@@ -2830,7 +2830,7 @@ static void SetFlashModeAsyncCallbackComplete(napi_env env, napi_status status, 
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2846,9 +2846,9 @@ napi_value CameraNapi::SetFlashMode(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
 
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2899,8 +2899,8 @@ napi_value CameraNapi::SetFlashMode(napi_env env, napi_callback_info info)
 
 static void GetSupportedZoomRangeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     size_t size = asyncContext->vecSupportedZoomRangeList.size();
@@ -2921,7 +2921,7 @@ static void GetSupportedZoomRangeAsyncCallbackComplete(napi_env env, napi_status
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -2936,10 +2936,10 @@ napi_value CameraNapi::GetSupportedZoomRange(napi_env env, napi_callback_info in
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
 
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -2969,7 +2969,7 @@ napi_value CameraNapi::GetSupportedZoomRange(napi_env env, napi_callback_info in
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
-                //Need to add logic for calling native to get supported Exposure Mode
+                // Need to add logic for calling native to get supported Exposure Mode
                 context->vecSupportedZoomRangeList = ((sptr<CameraInput> &)
                                                       (context->objectInfo->camInput_))->GetSupportedZoomRatioRange();
                 context->status = 0;
@@ -2988,8 +2988,8 @@ napi_value CameraNapi::GetSupportedZoomRange(napi_env env, napi_callback_info in
 
 static void SetZoomAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     napi_get_undefined(env, &result[1]);
@@ -2999,7 +2999,7 @@ static void SetZoomAsyncCallbackComplete(napi_env env, napi_status status, void*
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -3015,7 +3015,7 @@ napi_value CameraNapi::SetZoom(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
 
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
     if (argc > ARGS_MAX_TWO_COUNT) {
         HiLog::Error(LABEL, "Invalid arguments!");
@@ -3066,8 +3066,8 @@ napi_value CameraNapi::SetZoom(napi_env env, napi_callback_info info)
 
 static void SetParameterAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*) data;
-    napi_value result[2] = {0};
+    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
     napi_get_undefined(env, &result[1]);
@@ -3077,7 +3077,7 @@ static void SetParameterAsyncCallbackComplete(napi_env env, napi_status status, 
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
-        napi_call_function(env, nullptr, callback, 2, result, &retVal);
+        napi_call_function(env, nullptr, callback, ARGS_TWO, result, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }
     napi_delete_async_work(env, asyncContext->work);
@@ -3091,9 +3091,9 @@ napi_value CameraNapi::SetParameter(napi_env env, napi_callback_info info)
     const int32_t refCount = 1;
     napi_value result = nullptr;
     napi_value undefinedResult = nullptr;
-    GET_PARAMS(env, info, 2);
+    GET_PARAMS(env, info, ARGS_TWO);
     napi_get_undefined(env, &undefinedResult);
-    if (argc > 2) {
+    if (argc > ARGS_TWO) {
         HiLog::Error(LABEL, "Invalid arguments!");
         return undefinedResult;
     }
@@ -3106,7 +3106,7 @@ napi_value CameraNapi::SetParameter(napi_env env, napi_callback_info info)
                 continue;
             } else if (i == 1) {
                 continue;
-            } else if (i == 2 && valueType == napi_function) {
+            } else if (i == ARGS_TWO && valueType == napi_function) {
                 napi_create_reference(env, argv[i], refCount, &asyncContext->callbackRef);
                 break;
             } else {
@@ -3127,7 +3127,7 @@ napi_value CameraNapi::SetParameter(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
-                //Need to add logic for calling native to set Parameters
+                // Need to add logic for calling native to set Parameters
                 context->status = 0;
             },
             SetParameterAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);

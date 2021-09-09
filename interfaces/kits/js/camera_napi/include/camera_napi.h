@@ -408,7 +408,7 @@ struct CamRecorderCallback : public OHOS::Media::RecorderCallback {
     CamRecorderCallback(napi_env environment = nullptr, CameraNapi *cameraWrapper = nullptr);
     virtual ~CamRecorderCallback() {}
 
-    void OnError(int32_t errorType, int32_t errCode);
+    void OnError(OHOS::Media::RecorderErrorType errorType, int32_t errCode);
     void OnInfo(int32_t type, int32_t extra) {};
 };
 } // namespace CameraStandard

@@ -41,16 +41,26 @@ enum mode_ {
     MODE_PHOTO
 };
 
+enum SaveVideoMode {
+    CREATE = 0,
+    APPEND,
+    CLOSE
+};
+
+namespace {
+    static const std::int32_t FILE_PERMISSION_FLAG = 00766;
+}
+
 class MyCallback : public CameraManagerCallback {
 public:
-    void OnCameraStatusChanged(const std::string cameraID, const CameraDeviceStatus cameraStatus) const override
+    void OnCameraStatusChanged(const std::string &cameraID, const CameraDeviceStatus cameraStatus) const override
     {
         MEDIA_DEBUG_LOG("OnCameraStatusChanged() is called, cameraID: %{public}s, cameraStatus: %{public}d",
                         cameraID.c_str(), cameraStatus);
         return;
     }
 
-    void OnFlashlightStatusChanged(const std::string cameraID, const FlashlightStatus flashStatus) const override
+    void OnFlashlightStatusChanged(const std::string &cameraID, const FlashlightStatus flashStatus) const override
     {
         MEDIA_DEBUG_LOG("OnFlashlightStatusChanged() is called cameraID: %{public}s, flashStatus: %{public}d",
                         cameraID.c_str(), flashStatus);
@@ -97,7 +107,7 @@ class VideoOutputCallback : public VideoCallback {
     }
 };
 
-uint64_t GetCurrentLocalTimeStamp()
+static uint64_t GetCurrentLocalTimeStamp()
 {
     std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> tp =
         std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
@@ -105,20 +115,20 @@ uint64_t GetCurrentLocalTimeStamp()
     return tmp.count();
 }
 
-int32_t SaveYUV(int32_t mode, void* buffer, int32_t size)
+static int32_t SaveYUV(int32_t mode, char *buffer, int32_t size)
 {
     char path[PATH_MAX] = {0};
     if (mode == MODE_PREVIEW) {
         system("mkdir -p /mnt/preview");
-        (void) sprintf_s(path, sizeof(path) / sizeof(path[0]),
-                         "/mnt/preview/%s_%lld.yuv", "preview", GetCurrentLocalTimeStamp());
+        (void)sprintf_s(path, sizeof(path) / sizeof(path[0]),
+            "/mnt/preview/%s_%lld.yuv", "preview", GetCurrentLocalTimeStamp());
     } else {
         system("mkdir -p /mnt/capture");
-        (void) sprintf_s(path, sizeof(path) / sizeof(path[0]),
-                         "/mnt/capture/%s_%lld.jpg", "photo", GetCurrentLocalTimeStamp());
+        (void)sprintf_s(path, sizeof(path) / sizeof(path[0]),
+            "/mnt/capture/%s_%lld.jpg", "photo", GetCurrentLocalTimeStamp());
     }
     MEDIA_DEBUG_LOG("%s, saving file to %{public}s", __FUNCTION__, path);
-    int imgFd = open(path, O_RDWR | O_CREAT, 00766);
+    int imgFd = open(path, O_RDWR | O_CREAT, FILE_PERMISSION_FLAG);
     if (imgFd == -1) {
         MEDIA_DEBUG_LOG("%s, open file failed, errno = %{public}s.", __FUNCTION__, strerror(errno));
         return -1;
@@ -133,20 +143,20 @@ int32_t SaveYUV(int32_t mode, void* buffer, int32_t size)
     return 0;
 }
 
-int32_t SaveVideoFile(const void* buffer, int32_t size, int32_t operationMode)
+static int32_t SaveVideoFile(const char *buffer, int32_t size, int32_t operationMode)
 {
-    if (operationMode == 0) {
+    if (operationMode == CREATE) {
         char path[255] = {0};
         system("mkdir -p /mnt/video");
-        (void) sprintf_s(path, sizeof(path) / sizeof(path[0]),
-                         "/mnt/video/%s_%lld.h264", "video", GetCurrentLocalTimeStamp());
+        (void)sprintf_s(path, sizeof(path) / sizeof(path[0]),
+                        "/mnt/video/%s_%lld.h264", "video", GetCurrentLocalTimeStamp());
         MEDIA_DEBUG_LOG("%s, save video to file %s", __FUNCTION__, path);
-        sVideoFd = open(path, O_RDWR | O_CREAT, 00766);
+        sVideoFd = open(path, O_RDWR | O_CREAT, FILE_PERMISSION_FLAG);
         if (sVideoFd == -1) {
             std::cout << "open file failed, errno = " << strerror(errno) << std::endl;
             return -1;
         }
-    } else if (operationMode == 1 && sVideoFd != -1) {
+    } else if (operationMode == APPEND && sVideoFd != -1) {
         int32_t ret = write(sVideoFd, buffer, size);
         if (ret == -1) {
             std::cout << "write file failed, error = " << strerror(errno) << std::endl;
@@ -170,7 +180,7 @@ public:
     {
         if (sVideoFd == -1) {
             // Create video file
-            SaveVideoFile(nullptr, 0, 0);
+            SaveVideoFile(nullptr, 0, CREATE);
         }
         int32_t flushFence = 0;
         int64_t timestamp = 0;
@@ -179,10 +189,10 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Saving to video file");
-            SaveVideoFile(addr, size, 1);
+            SaveVideoFile(addr, size, APPEND);
             surface_->ReleaseBuffer(buffer, -1);
         } else {
             MEDIA_DEBUG_LOG("AcquireBuffer failed!");
@@ -204,7 +214,7 @@ public:
         OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
         surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
         if (buffer != nullptr) {
-            void *addr = buffer->GetVirAddr();
+            char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Calling SaveYUV");
             SaveYUV(mode_, addr, size);
@@ -215,11 +225,54 @@ public:
     }
 };
 
-int main()
+static bool IsNumber(char number[])
 {
-    int32_t intResult = -1;
-    MEDIA_DEBUG_LOG("Camera new sample begin.");
+    for (int i = 0; number[i] != 0; i++) {
+        if (!std::isdigit(number[i])) {
+            return false;
+        }
+    }
+    return true;
+}
 
+int main(int argc, char **argv)
+{
+    const std::int32_t PREVIEW_DEFAULT_WIDTH = 640;
+    const std::int32_t PREVIEW_DEFAULT_HEIGHT = 480;
+    const std::int32_t VIDEO_DEFAULT_WIDTH = 1280;
+    const std::int32_t VIDEO_DEFAULT_HEIGHT = 720;
+    const std::int32_t PREVIEW_WIDTH_INDEX = 1;
+    const std::int32_t PREVIEW_HEIGHT_INDEX = 2;
+    const std::int32_t VIDEO_WIDTH_INDEX = 3;
+    const std::int32_t VIDEO_HEIGHT_INDEX = 4;
+    const std::int32_t VALID_ARG_COUNT = 5;
+    const std::int32_t VIDEO_CAPTURE_DURATION = 10; // Sleep for 10 sec
+    const std::int32_t PREVIEW_VIDEO_GAP = 2; // Sleep for 2 sec
+    int32_t intResult = -1;
+    // Default sizes for PreviewOutput and VideoOutput
+    int32_t previewWidth = PREVIEW_DEFAULT_WIDTH;
+    int32_t previewHeight = PREVIEW_DEFAULT_HEIGHT;
+    int32_t videoWidth = VIDEO_DEFAULT_WIDTH;
+    int32_t videoHeight = VIDEO_DEFAULT_HEIGHT;
+
+    MEDIA_DEBUG_LOG("Camera new sample begin.");
+    // Update sizes if enough number of valid arguments are passed
+    if (argc == VALID_ARG_COUNT) {
+        // Validate arguments and consider if valid
+        for (int counter = 1; counter < argc; counter++) {
+            if (!IsNumber(argv[counter])) {
+                cout << "Invalid argument: " << argv[counter] << endl;
+                cout << "Retry by giving proper sizes" << endl;
+                return 0;
+            }
+        }
+        previewWidth = atoi(argv[PREVIEW_WIDTH_INDEX]);
+        previewHeight = atoi(argv[PREVIEW_HEIGHT_INDEX]);
+        videoWidth = atoi(argv[VIDEO_WIDTH_INDEX]);
+        videoHeight = atoi(argv[VIDEO_HEIGHT_INDEX]);
+    }
+    MEDIA_DEBUG_LOG("previewWidth: %{public}d, previewHeight: %{public}d", previewWidth, previewHeight);
+    MEDIA_DEBUG_LOG("videoWidth: %{public}d, videoHeight: %{public}d", videoWidth, videoHeight);
     sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
     std::shared_ptr<MyCallback> cameraMngrCallback = make_shared<MyCallback>();
     MEDIA_DEBUG_LOG("Setting callback to listen camera status and flash status");
@@ -238,10 +291,11 @@ int main()
         sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
         if (cameraInput != nullptr) {
             std::shared_ptr<MyDeviceCallback> deviceCallback = make_shared<MyDeviceCallback>();
-            ((sptr<CameraInput> &) cameraInput)->SetErrorCallback(deviceCallback);
+            ((sptr<CameraInput> &)cameraInput)->SetErrorCallback(deviceCallback);
             intResult = captureSession->AddInput(cameraInput);
             if (intResult == 0) {
                 previewSurface = Surface::CreateSurfaceAsConsumer();
+                previewSurface->SetDefaultWidthAndHeight(previewWidth, previewHeight);
                 sptr<SurfaceListener> listener = new SurfaceListener();
                 listener->mode_ = MODE_PREVIEW;
                 listener->surface_ = previewSurface;
@@ -260,6 +314,7 @@ int main()
                     return 0;
                 }
                 videoSurface = Surface::CreateSurfaceAsConsumer();
+                videoSurface->SetDefaultWidthAndHeight(videoWidth, videoHeight);
                 sptr<VideoSurfaceListener> videoListener = new VideoSurfaceListener();
                 videoListener->surface_ = videoSurface;
                 videoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoListener);
@@ -287,21 +342,17 @@ int main()
                     return 0;
                 }
                 MEDIA_DEBUG_LOG("Preview started");
-                MEDIA_DEBUG_LOG("Waiting for 2 seconds begin");
-                sleep(2);
-                MEDIA_DEBUG_LOG("Waiting for 2 seconds end");
+                sleep(PREVIEW_VIDEO_GAP);
                 MEDIA_DEBUG_LOG("Start video recording");
                 ((sptr<VideoOutput> &)videoOutput)->Start();
-                MEDIA_DEBUG_LOG("Waiting for 10 seconds begin");
-                sleep(10);
-                MEDIA_DEBUG_LOG("Waiting for 10 seconds end");
+                sleep(VIDEO_CAPTURE_DURATION);
                 MEDIA_DEBUG_LOG("Stop video recording");
                 ((sptr<VideoOutput> &)videoOutput)->Stop();
                 MEDIA_DEBUG_LOG("Closing the session");
                 captureSession->Stop();
                 captureSession->Release();
                 // Close video file
-                SaveVideoFile(nullptr, 0, 2);
+                SaveVideoFile(nullptr, 0, CLOSE);
                 camManagerObj->SetCallback(nullptr);
             } else {
                 MEDIA_DEBUG_LOG("Add input to session is failed, intResult: %{public}d", intResult);

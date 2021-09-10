@@ -125,7 +125,8 @@ int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &pro
     return CAMERA_OK;
 }
 
-int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamRepeat> &previewOutput)
+int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
+                                            sptr<IStreamRepeat> &previewOutput)
 {
     sptr<HStreamRepeat> streamRepeatPreview;
 
@@ -136,6 +137,24 @@ int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &p
     streamRepeatPreview = new HStreamRepeat(producer);
     if (streamRepeatPreview == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreatePreviewOutput HStreamRepeat allocation failed");
+        return CAMERA_ALLOC_ERROR;
+    }
+    previewOutput = streamRepeatPreview;
+    return CAMERA_OK;
+}
+
+int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t width,
+                                                  int32_t height, sptr<IStreamRepeat> &previewOutput)
+{
+    sptr<HStreamRepeat> streamRepeatPreview;
+
+    if (producer == nullptr || width == 0 || height == 0) {
+        MEDIA_ERR_LOG("HCameraService::CreateCustomPreviewOutput producer is null or invalid custom size is set");
+        return CAMERA_INVALID_ARG;
+    }
+    streamRepeatPreview = new HStreamRepeat(producer, width, height);
+    if (streamRepeatPreview == nullptr) {
+        MEDIA_ERR_LOG("HCameraService::CreateCustomPreviewOutput HStreamRepeat allocation failed");
         return CAMERA_ALLOC_ERROR;
     }
     previewOutput = streamRepeatPreview;

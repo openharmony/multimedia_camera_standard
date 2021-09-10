@@ -29,6 +29,20 @@ HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer)
     videoCaptureId_ = 0;
     previewStreamId_ = 0;
     previewCaptureId_ = 0;
+    customPreviewWidth_ = 0;
+    customPreviewHeight_ = 0;
+}
+
+HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t width, int32_t height)
+{
+    producer_ = producer;
+    isVideo_ = false;
+    videoStreamId_ = 0;
+    videoCaptureId_ = 0;
+    previewStreamId_ = 0;
+    previewCaptureId_ = 0;
+    customPreviewWidth_ = width;
+    customPreviewHeight_ = height;
 }
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo)
@@ -39,24 +53,37 @@ HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo)
     videoCaptureId_ = 0;
     previewStreamId_ = 0;
     previewCaptureId_ = 0;
+    customPreviewWidth_ = 0;
+    customPreviewHeight_ = 0;
 }
 
 HStreamRepeat::~HStreamRepeat()
 {}
 
 int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
-            std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
+                                 std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
 {
+    int32_t previewWidth = 0;
+    int32_t previewHeight = 0;
+
     if (streamOperator == nullptr || cameraAbility == nullptr) {
         MEDIA_ERR_LOG("HStreamRepeat::LinkInput streamOperator is null");
         return CAMERA_INVALID_ARG;
     }
-    streamOperator_ = streamOperator;
     if (isVideo_) {
+        if (!IsValidSize(producer_->GetDefaultWidth(), producer_->GetDefaultHeight(), validVideoSizes_)) {
+            return CAMERA_INVALID_OUTPUT_CFG;
+        }
         videoStreamId_ = streamId;
     } else {
+        previewWidth = (customPreviewWidth_ == 0) ? producer_->GetDefaultWidth() : customPreviewWidth_;
+        previewHeight =  (customPreviewHeight_ == 0) ? producer_->GetDefaultHeight() : customPreviewHeight_;
+        if (!IsValidSize(previewWidth, previewHeight, validPreviewSizes_)) {
+            return CAMERA_INVALID_OUTPUT_CFG;
+        }
         previewStreamId_ = streamId;
     }
+    streamOperator_ = streamOperator;
     cameraAbility_ = cameraAbility;
     return CAMERA_OK;
 }
@@ -67,16 +94,14 @@ void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
     streamInfo->tunneledMode_ = true;
     streamInfo->datasapce_ = CAMERA_PREVIEW_COLOR_SPACE;
     streamInfo->bufferQueue_ = producer_;
+    streamInfo->width_ = (customPreviewWidth_ == 0) ? producer_->GetDefaultWidth() : customPreviewWidth_;
+    streamInfo->height_ = (customPreviewHeight_ == 0) ? producer_->GetDefaultHeight() : customPreviewHeight_;
     if (isVideo_) {
         streamInfo->streamId_ = videoStreamId_;
-        streamInfo->width_ = CAMERA_VIDEO_WIDTH;
-        streamInfo->height_ = CAMERA_VIDEO_HEIGHT;
         streamInfo->intent_ = Camera::VIDEO;
         streamInfo->encodeType_ = Camera::ENCODE_TYPE_H264;
     } else {
         streamInfo->streamId_ = previewStreamId_;
-        streamInfo->width_ = CAMERA_PREVIEW_WIDTH;
-        streamInfo->height_ = CAMERA_PREVIEW_HEIGHT;
         streamInfo->intent_ = Camera::PREVIEW;
     }
 }
@@ -240,7 +265,7 @@ int32_t HStreamRepeat::OnFrameError(int32_t errorType)
 {
     if (streamRepeatCallback_ != nullptr) {
         if (errorType == Camera::BUFFER_LOST) {
-           streamRepeatCallback_->OnFrameError(CAMERA_STREAM_BUFFER_LOST);
+            streamRepeatCallback_->OnFrameError(CAMERA_STREAM_BUFFER_LOST);
         } else {
             streamRepeatCallback_->OnFrameError(CAMERA_UNKNOWN_ERROR);
         }

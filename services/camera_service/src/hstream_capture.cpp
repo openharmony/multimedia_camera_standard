@@ -38,6 +38,9 @@ int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
         MEDIA_ERR_LOG("HStreamCapture::LinkInput streamOperator is null");
         return CAMERA_INVALID_ARG;
     }
+    if (!IsValidSize(producer_->GetDefaultWidth(), producer_->GetDefaultHeight(), validSizes_)) {
+        return CAMERA_INVALID_OUTPUT_CFG;
+    }
     streamOperator_ = streamOperator;
     photoStreamId_ = streamId;
     cameraAbility_ = cameraAbility;
@@ -47,8 +50,8 @@ int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
 void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfoPhoto)
 {
     streamInfoPhoto->streamId_ = photoStreamId_;
-    streamInfoPhoto->width_ = CAMERA_PHOTO_WIDTH;
-    streamInfoPhoto->height_ = CAMERA_PHOTO_HEIGHT;
+    streamInfoPhoto->width_ = producer_->GetDefaultWidth();
+    streamInfoPhoto->height_ = producer_->GetDefaultHeight();
     streamInfoPhoto->format_ = PIXEL_FMT_YCRCB_420_SP;
     streamInfoPhoto->datasapce_ = CAMERA_PHOTO_COLOR_SPACE;
     streamInfoPhoto->intent_ = Camera::STILL_CAPTURE;

@@ -47,6 +47,8 @@ public:
     int32_t CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamCapture> &photoOutput) override;
     int32_t CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
                                 sptr<IStreamRepeat> &previewOutput) override;
+    int32_t CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t width, int32_t height,
+                                sptr<IStreamRepeat> &previewOutput) override;
     int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamRepeat> &videoOutput) override;
     int32_t SetCallback(sptr<ICameraServiceCallback> &callback) override;
     void OnDump() override;

@@ -31,7 +31,7 @@ HStreamCapture::~HStreamCapture()
 {}
 
 int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
-                                  std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
+    std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
 {
     if (streamOperator == nullptr || cameraAbility == nullptr) {
         MEDIA_ERR_LOG("HStreamCapture::LinkInput streamOperator is null");

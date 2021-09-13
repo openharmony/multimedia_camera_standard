@@ -56,7 +56,7 @@ public:
 
 class PhotoOutput : public CaptureOutput {
 public:
-    PhotoOutput (sptr<IStreamCapture> &streamCapture);
+    PhotoOutput(sptr<IStreamCapture> &streamCapture);
     sptr<IStreamCapture> GetStreamCapture();
     void SetCallback(std::shared_ptr<PhotoCallback> callback);
     PhotoCaptureSetting &GetCaptureSetting();

@@ -47,6 +47,12 @@ enum CaptureType {
     CAPTURE_TYPE_VIDEO
 };
 
+static const std::int32_t CAMERA_PHOTO_HEIGHT = 720;
+static const std::int32_t CAMERA_PHOTO_WIDTH = 1280;
+
+static const std::int32_t CAMERA_VIDEO_HEIGHT = 720;
+static const std::int32_t CAMERA_VIDEO_WIDTH = 1280;
+
 enum CamServiceError {
     CAMERA_OK = 0,
     CAMERA_ALLOC_ERROR,

@@ -15,24 +15,28 @@
 
 #ifndef CAMERA_NAPI_H_
 #define CAMERA_NAPI_H_
-#include <iostream>
-#include <vector>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sstream>
+
+#include "display_type.h"
 #include "input/camera_manager.h"
-#include "napi/native_api.h"
-#include "napi/native_node_api.h"
-#include <sys/types.h>
-#include <fcntl.h>
-#include <fstream>
-#include <securec.h>
 #include "istream_operator_callback.h"
 #include "istream_operator.h"
 #include "media_log.h"
-#include "window_manager.h"
-#include "display_type.h"
+#include "napi/native_api.h"
+#include "napi/native_node_api.h"
 #include "recorder.h"
+#include <securec.h>
+#include "window_manager.h"
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <vector>
+
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+
 namespace OHOS {
 namespace CameraStandard {
 struct CamRecorderCallback;
@@ -301,7 +305,7 @@ public:
 
 private:
     int32_t InitCamera(std::string CameraID);
-    static void CameraNapiDestructor(napi_env env, void* nativeObject, void* finalize_hint);
+    static void CameraNapiDestructor(napi_env env, void *nativeObject, void *finalize_hint);
     static napi_status AddNamedProperty(napi_env env, napi_value object,
                                         const std::string name, int32_t enumValue);
     static napi_value Construct(napi_env env, napi_callback_info info);
@@ -310,7 +314,7 @@ private:
     static napi_value CreateCamera(napi_env env, napi_callback_info info);
     static napi_value StartPreview(napi_env env, napi_callback_info info);
     static napi_value StopPreview(napi_env env, napi_callback_info info);
-    void SaveCallbackReference(napi_env env, CameraNapi* camWrapper,
+    void SaveCallbackReference(napi_env env, CameraNapi *camWrapper,
                                std::string callbackName, napi_value callback);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value TakePhoto(napi_env env, napi_callback_info info);

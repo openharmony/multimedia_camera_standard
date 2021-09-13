@@ -23,6 +23,8 @@
 
 namespace OHOS {
 namespace CameraStandard {
+static const std::int32_t METADATA_HEADER_DATA_SIZE = 4;
+
 class CameraDeviceServiceCallback : public HCameraDeviceCallbackStub {
 public:
     sptr<CameraInput> camInput_ = nullptr;
@@ -88,17 +90,14 @@ int32_t CameraInput::UnlockForControl()
 
     int length = [&]() {
         int totalLength = 0;
-        for (auto& it: configBatch_) {
-            if (it.second.get()->length_ > 4) {
-                totalLength += it.second.get()->length_;
+        for (auto& itr: configBatch_) {
+            if (itr.second.get()->length_ > METADATA_HEADER_DATA_SIZE) {
+                totalLength += itr.second.get()->length_;
             }
         }
         return totalLength;
     }();
     std::shared_ptr<CameraMetadata> changedMetadata = std::make_shared<CameraMetadata>(configBatch_.size(), length);
-
-    /* TODO: Currently we don't realloc metadata if items and data capacity with new change doesn't
-    fit in metadata buffer */
     std::shared_ptr<CameraMetadata> baseMetadata = cameraObj_->GetMetadata();
 
     for (auto& it: configBatch_) {
@@ -126,7 +125,7 @@ ChangeMetadata::~ChangeMetadata()
     free(data_);
 }
 
-template <typename DataPtr, typename Vec, typename VecType>
+template<typename DataPtr, typename Vec, typename VecType>
 void CameraInput::getVector(DataPtr data, size_t count, Vec &vect, VecType dataType)
 {
     for (size_t index = 0; index < count; index++) {
@@ -154,13 +153,12 @@ bool CameraInput::IsPhotoFormatSupported(CameraInput::PhotoFormat photoFormat)
 {
     bool result = false;
 
-    switch (photoFormat)
-    {
+    switch (photoFormat) {
         case PhotoFormat::JPEG_FORMAT:
             result = true;
             break;
 
-        default :
+        default:
             break;
     }
     return result;
@@ -170,15 +168,14 @@ bool CameraInput::IsVideoFormatSupported(CameraInput::VideoFormat videoFormat)
 {
     bool result = false;
 
-    switch (videoFormat)
-    {
+    switch (videoFormat) {
         case VideoFormat::YUV_FORMAT:
         case VideoFormat::H264_FORMAT:
         case VideoFormat::H265_FORMAT:
             result = true;
             break;
 
-        default :
+        default:
             break;
     }
     return result;
@@ -187,10 +184,10 @@ bool CameraInput::IsVideoFormatSupported(CameraInput::VideoFormat videoFormat)
 std::vector<CameraPicSize *> CameraInput::GetSupportedSizesForPhoto(CameraInput::PhotoFormat photoFormat)
 {
     std::vector<CameraPicSize *> result = {};
-    CameraPicSize *cameraPicSize = (CameraPicSize *) malloc (sizeof(CameraPicSize));
+    CameraPicSize *cameraPicSize = (CameraPicSize *)malloc(sizeof(CameraPicSize));
     if (cameraPicSize != nullptr) {
-        cameraPicSize->height = 720;
-        cameraPicSize->width = 1280;
+        cameraPicSize->height = CAMERA_PHOTO_HEIGHT;
+        cameraPicSize->width = CAMERA_PHOTO_WIDTH;
         result.emplace_back(cameraPicSize);
     }
     return result;
@@ -199,10 +196,10 @@ std::vector<CameraPicSize *> CameraInput::GetSupportedSizesForPhoto(CameraInput:
 std::vector<CameraPicSize *> CameraInput::GetSupportedSizesForVideo(CameraInput::VideoFormat videoFormat)
 {
     std::vector<CameraPicSize *> result = {};
-    CameraPicSize *cameraPicSize = (CameraPicSize *) malloc (sizeof(CameraPicSize));
+    CameraPicSize *cameraPicSize = (CameraPicSize *)malloc(sizeof(CameraPicSize));
     if (cameraPicSize != nullptr) {
-        cameraPicSize->height = 720;
-        cameraPicSize->width = 1280;
+        cameraPicSize->height = CAMERA_VIDEO_HEIGHT;
+        cameraPicSize->width = CAMERA_VIDEO_WIDTH;
         result.emplace_back(cameraPicSize);
     }
     return result;
@@ -224,10 +221,8 @@ std::vector<camera_exposure_mode_enum_t> CameraInput::GetSupportedExposureModes(
 
 void CameraInput::SetExposureMode(camera_exposure_mode_enum_t exposureMode)
 {
-    /* TODO: What should we do when set is called without LockForControl(). Need to check for
-     other metadata as well */
     int len = sizeof(uint8_t);
-    uint8_t *exposure = (uint8_t *) malloc(len);
+    uint8_t *exposure = (uint8_t *)malloc(len);
     if (exposure == NULL) {
         MEDIA_ERR_LOG("CameraInput::SetExposureMode Memory allocation failed");
         return;
@@ -278,7 +273,7 @@ void CameraInput::SetFocusCallback(std::shared_ptr<FocusCallback> focusCallback)
 void CameraInput::SetFocusMode(camera_focus_mode_enum_t focusMode)
 {
     int len = sizeof(uint8_t);
-    uint8_t *focus = (uint8_t *) malloc(len);
+    uint8_t *focus = (uint8_t *)malloc(len);
     if (focus == NULL) {
         MEDIA_ERR_LOG("CameraInput::SetFocusMode Memory allocation failed");
         return;
@@ -321,8 +316,6 @@ float CameraInput::GetZoomRatio()
     int ret = find_camera_metadata_item(metadata->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetZoomRatio Failed with return code %{public}d", ret);
-        /* TODO: Need to return default upon error ? Need to do same behavior for other metadata
-        as well */
         return 0;
     }
     return static_cast<float>(item.data.f[0]);
@@ -331,7 +324,7 @@ float CameraInput::GetZoomRatio()
 void CameraInput::SetZoomRatio(float zoomRatio)
 {
     int len = sizeof(float);
-    float *zoom = (float *) malloc(len);
+    float *zoom = (float *)malloc(len);
     if (zoom == NULL) {
         MEDIA_ERR_LOG("CameraInput::SetZoomRatio Memory allocation failed");
         return;
@@ -370,10 +363,10 @@ camera_flash_mode_enum_t CameraInput::GetFlashMode()
 void CameraInput::SetFlashMode(camera_flash_mode_enum_t flashMode)
 {
     int len = sizeof(uint8_t);
-    uint8_t *flash = (uint8_t *) malloc(len);
+    uint8_t *flash = (uint8_t *)malloc(len);
     if (flash == NULL) {
         MEDIA_ERR_LOG("CameraInput::SetFlashMode Memory allocation failed");
-	        return;
+        return;
     }
     *flash = flashMode;
     configBatch_[OHOS_CONTROL_FLASHMODE] = std::make_unique<ChangeMetadata>(flash, len, 1);

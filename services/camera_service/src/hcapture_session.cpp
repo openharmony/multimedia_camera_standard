@@ -53,7 +53,6 @@ int32_t HCaptureSession::AddInput(sptr<ICameraDeviceService> cameraDevice)
 
 int32_t HCaptureSession::AddOutput(sptr<IStreamRepeat> streamRepeat)
 {
-    // TODO Need to be removed once library linking issue is resolved
     sptr<Surface> captureSurface = Surface::CreateSurfaceAsConsumer();
 
     if (streamRepeat == nullptr) {

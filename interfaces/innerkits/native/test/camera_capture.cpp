@@ -219,8 +219,9 @@ int main(int argc, char **argv)
     const std::int32_t PREVIEW_HEIGHT_INDEX = 2;
     const std::int32_t PHOTO_WIDTH_INDEX = 3;
     const std::int32_t PHOTO_HEIGHT_INDEX = 4;
-    const std::int32_t VALID_ARG_COUNT = 5;
-    const std::int32_t GAP_AFTER_CAPTURE = 2; // 2 seconds
+    const std::int32_t PHOTO_CAPTURE_COUNT_INDEX = 5;
+    const std::int32_t VALID_ARG_COUNT = 6;
+    const std::int32_t GAP_AFTER_CAPTURE = 1; // 2 seconds
     const std::int32_t PREVIEW_CAPTURE_GAP = 5; // 5 seconds
     int32_t intResult = -1;
     // Default sizes for Preview Output and PhotoOutput
@@ -228,6 +229,7 @@ int main(int argc, char **argv)
     int32_t previewHeight = PREVIEW_DEFAULT_HEIGHT;
     int32_t photoWidth = PHOTO_DEFAULT_WIDTH;
     int32_t photoHeight = PHOTO_DEFAULT_HEIGHT;
+    int32_t photoCaptureCount = 1;
 
     MEDIA_DEBUG_LOG("Camera new sample begin.");
     // Update sizes if enough number of valid arguments are passed
@@ -244,9 +246,15 @@ int main(int argc, char **argv)
         previewHeight = atoi(argv[PREVIEW_HEIGHT_INDEX]);
         photoWidth = atoi(argv[PHOTO_WIDTH_INDEX]);
         photoHeight = atoi(argv[PHOTO_HEIGHT_INDEX]);
+        photoCaptureCount = atoi(argv[PHOTO_CAPTURE_COUNT_INDEX]);
+    } else if (argc != 1) {
+        cout << "Pass " << (VALID_ARG_COUNT - 1) << "arguments" << endl;
+        cout << "PreviewHeight, PreviewWidth, PhotoWidth, PhotoHeight, CaptureCount" << endl;
+        return 0;
     }
     MEDIA_DEBUG_LOG("previewWidth: %{public}d, previewHeight: %{public}d", previewWidth, previewHeight);
     MEDIA_DEBUG_LOG("photoWidth: %{public}d, photoHeight: %{public}d", photoWidth, photoHeight);
+    MEDIA_DEBUG_LOG("photoCaptureCount: %{public}d", photoCaptureCount);
     sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
     std::shared_ptr<MyCallback> cameraMngrCallback = make_shared<MyCallback>();
     MEDIA_DEBUG_LOG("Setting callback to listen camera status and flash status");
@@ -320,13 +328,15 @@ int main(int argc, char **argv)
                 }
                 MEDIA_DEBUG_LOG("Preview started");
                 sleep(PREVIEW_CAPTURE_GAP);
-                MEDIA_DEBUG_LOG("Photo capture started");
-                intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
-                if (intResult != 0) {
-                    MEDIA_DEBUG_LOG("Failed to capture, intResult: %{public}d", intResult);
-                    return 0;
+                for (int i = 1; i <= photoCaptureCount; i++) {
+                    MEDIA_DEBUG_LOG("Photo capture %{public}d started", i);
+                    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
+                    if (intResult != 0) {
+                        MEDIA_DEBUG_LOG("Failed to capture, intResult: %{public}d", intResult);
+                        return 0;
+                    }
+                    sleep(GAP_AFTER_CAPTURE);
                 }
-                sleep(GAP_AFTER_CAPTURE);
                 MEDIA_DEBUG_LOG("Closing the session");
                 captureSession->Stop();
                 captureSession->Release();

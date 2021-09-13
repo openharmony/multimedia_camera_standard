@@ -43,6 +43,7 @@ public:
     int32_t OnFrameShutter(int32_t captureId, uint64_t timestamp);
 
 private:
+    bool IsValidCaptureID();
     sptr<Camera::IStreamOperator> streamOperator_;
     int32_t photoStreamId_, photoCaptureId_;
     sptr<OHOS::IBufferProducer> producer_;

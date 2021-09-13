@@ -13,20 +13,24 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
 #include "media_log.h"
-#include <securec.h>
 #include "surface.h"
+
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+
+#include <securec.h>
 
 using namespace std;
 using namespace OHOS;
@@ -36,12 +40,12 @@ static sptr<Surface> videoSurface;
 static sptr<Surface> previewSurface;
 static int32_t sVideoFd = -1;
 
-enum mode_ {
+enum class mode_ {
     MODE_PREVIEW = 0,
     MODE_PHOTO
 };
 
-enum SaveVideoMode {
+enum class SaveVideoMode {
     CREATE = 0,
     APPEND,
     CLOSE
@@ -115,10 +119,10 @@ static uint64_t GetCurrentLocalTimeStamp()
     return tmp.count();
 }
 
-static int32_t SaveYUV(int32_t mode, char *buffer, int32_t size)
+static int32_t SaveYUV(mode_ mode, const char *buffer, int32_t size)
 {
     char path[PATH_MAX] = {0};
-    if (mode == MODE_PREVIEW) {
+    if (mode == mode_::MODE_PREVIEW) {
         system("mkdir -p /mnt/preview");
         (void)sprintf_s(path, sizeof(path) / sizeof(path[0]),
             "/mnt/preview/%s_%lld.yuv", "preview", GetCurrentLocalTimeStamp());
@@ -143,9 +147,9 @@ static int32_t SaveYUV(int32_t mode, char *buffer, int32_t size)
     return 0;
 }
 
-static int32_t SaveVideoFile(const char *buffer, int32_t size, int32_t operationMode)
+static int32_t SaveVideoFile(const char *buffer, int32_t size, SaveVideoMode operationMode)
 {
-    if (operationMode == CREATE) {
+    if (operationMode == SaveVideoMode::CREATE) {
         char path[255] = {0};
         system("mkdir -p /mnt/video");
         (void)sprintf_s(path, sizeof(path) / sizeof(path[0]),
@@ -156,7 +160,7 @@ static int32_t SaveVideoFile(const char *buffer, int32_t size, int32_t operation
             std::cout << "open file failed, errno = " << strerror(errno) << std::endl;
             return -1;
         }
-    } else if (operationMode == APPEND && sVideoFd != -1) {
+    } else if (operationMode == SaveVideoMode::APPEND && sVideoFd != -1) {
         int32_t ret = write(sVideoFd, buffer, size);
         if (ret == -1) {
             std::cout << "write file failed, error = " << strerror(errno) << std::endl;
@@ -180,7 +184,7 @@ public:
     {
         if (sVideoFd == -1) {
             // Create video file
-            SaveVideoFile(nullptr, 0, CREATE);
+            SaveVideoFile(nullptr, 0, SaveVideoMode::CREATE);
         }
         int32_t flushFence = 0;
         int64_t timestamp = 0;
@@ -192,7 +196,7 @@ public:
             char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Saving to video file");
-            SaveVideoFile(addr, size, APPEND);
+            SaveVideoFile(addr, size, SaveVideoMode::APPEND);
             surface_->ReleaseBuffer(buffer, -1);
         } else {
             MEDIA_DEBUG_LOG("AcquireBuffer failed!");
@@ -202,7 +206,7 @@ public:
 
 class SurfaceListener : public IBufferConsumerListener {
 public:
-    int32_t mode_;
+    mode_ mode;
     sptr<Surface> surface_;
 
     void OnBufferAvailable() override
@@ -217,7 +221,7 @@ public:
             char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Calling SaveYUV");
-            SaveYUV(mode_, addr, size);
+            SaveYUV(mode, addr, size);
             surface_->ReleaseBuffer(buffer, -1);
         } else {
             MEDIA_DEBUG_LOG("AcquireBuffer failed!");
@@ -297,7 +301,7 @@ int main(int argc, char **argv)
                 previewSurface = Surface::CreateSurfaceAsConsumer();
                 previewSurface->SetDefaultWidthAndHeight(previewWidth, previewHeight);
                 sptr<SurfaceListener> listener = new SurfaceListener();
-                listener->mode_ = MODE_PREVIEW;
+                listener->mode = mode_::MODE_PREVIEW;
                 listener->surface_ = previewSurface;
                 previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
                 sptr<CaptureOutput> previewOutput = camManagerObj->CreatePreviewOutput(previewSurface);
@@ -352,7 +356,7 @@ int main(int argc, char **argv)
                 captureSession->Stop();
                 captureSession->Release();
                 // Close video file
-                SaveVideoFile(nullptr, 0, CLOSE);
+                SaveVideoFile(nullptr, 0, SaveVideoMode::CLOSE);
                 camManagerObj->SetCallback(nullptr);
             } else {
                 MEDIA_DEBUG_LOG("Add input to session is failed, intResult: %{public}d", intResult);

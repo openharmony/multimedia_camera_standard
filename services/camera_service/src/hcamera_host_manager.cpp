@@ -28,7 +28,8 @@ HCameraHostManager::HCameraHostManager()
 HCameraHostManager::~HCameraHostManager()
 {}
 
-sptr<Camera::ICameraHost> HCameraHostManager::GetICameraHost() {
+sptr<Camera::ICameraHost> HCameraHostManager::GetICameraHost()
+{
     if (cameraHostService_ == nullptr) {
         cameraHostService_ = Camera::ICameraHost::Get("camera_service");
         if (cameraHostService_ == nullptr) {

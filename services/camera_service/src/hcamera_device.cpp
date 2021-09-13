@@ -35,7 +35,8 @@ HCameraDevice::HCameraDevice(sptr<HCameraHostManager> &cameraHostManager,
 HCameraDevice::~HCameraDevice()
 {}
 
-std::string HCameraDevice::GetCameraId() {
+std::string HCameraDevice::GetCameraId()
+{
     return cameraID_;
 }
 
@@ -212,7 +213,8 @@ void CameraDeviceCallback::OnResult(const uint64_t timestamp,
     }
 }
 
-void CameraDeviceCallback::SetHCameraDevice(sptr<HCameraDevice> hCameraDevice) {
+void CameraDeviceCallback::SetHCameraDevice(sptr<HCameraDevice> hCameraDevice)
+{
     hCameraDevice_ = hCameraDevice;
 }
 } // namespace CameraStandard

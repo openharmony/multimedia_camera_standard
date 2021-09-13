@@ -53,7 +53,7 @@ struct CameraNapiAsyncContext {
     double dZoomRatio;
     int32_t iResScale;
     int32_t iQuality;
-    CameraNapi* objectInfo;
+    CameraNapi *objectInfo;
     std::vector<sptr<OHOS::CameraStandard::CameraInfo>> cameraObjList;
     std::vector<std::string> vecSupportedPropertyList;
     std::vector<CameraNapi::ResolutionScale> vecSupportedResolutionScalesList;
@@ -438,7 +438,7 @@ static std::string GetStringArgument(napi_env env, napi_value value)
     return strValue;
 }
 
-void CameraNapi::SaveCallbackReference(napi_env env, CameraNapi* camWrapper,
+void CameraNapi::SaveCallbackReference(napi_env env, CameraNapi *camWrapper,
     std::string callbackName, napi_value callback)
 {
     napi_ref *ref = nullptr;
@@ -487,7 +487,7 @@ napi_value CameraNapi::On(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
     napi_value undefinedResult = nullptr;
     napi_value args[ARGS_TWO] = {0};
-    CameraNapi* cameraWrapper = nullptr;
+    CameraNapi *cameraWrapper = nullptr;
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
     std::string callbackName;
@@ -996,7 +996,7 @@ napi_value CameraNapi::Prepare(napi_env env, napi_callback_info info)
     return undefinedResult;
 }
 
-static void GetCameraIdsAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void GetCameraIdsAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
     auto asyncContext = static_cast<CameraNapiAsyncContext*>(data);
     napi_value result[ARGS_TWO] = {0};
@@ -1066,7 +1066,7 @@ napi_value CameraNapi::GetCameraIDs(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource,
             [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = (CameraNapiAsyncContext*)data;
+                CameraNapiAsyncContext *context = (CameraNapiAsyncContext*)data;
                 sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
                 context->cameraObjList = camManagerObj->GetCameras();
                 context->status = 0;
@@ -1113,7 +1113,7 @@ napi_value CameraNapi::StartVideoRecording(napi_env env, napi_callback_info info
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_value undefinedResult = nullptr;
-    CameraNapi* camWrapper = nullptr;
+    CameraNapi *camWrapper = nullptr;
     napi_value jsCallback, result;
 
     napi_get_undefined(env, &undefinedResult);
@@ -1166,7 +1166,7 @@ napi_value CameraNapi::StopVideoRecording(napi_env env, napi_callback_info info)
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_value undefinedResult = nullptr;
-    CameraNapi* camWrapper = nullptr;
+    CameraNapi *camWrapper = nullptr;
     napi_value jsCallback, result;
 
     napi_get_undefined(env, &undefinedResult);
@@ -1215,7 +1215,7 @@ napi_value CameraNapi::ResetVideoRecording(napi_env env, napi_callback_info info
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_value undefinedResult = nullptr;
-    CameraNapi* camWrapper = nullptr;
+    CameraNapi *camWrapper = nullptr;
     napi_value jsCallback, result;
 
     napi_get_undefined(env, &undefinedResult);
@@ -1255,7 +1255,7 @@ napi_value CameraNapi::PauseVideoRecording(napi_env env, napi_callback_info info
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_value undefinedResult = nullptr;
-    CameraNapi* camWrapper = nullptr;
+    CameraNapi *camWrapper = nullptr;
     napi_value jsCallback, result;
 
     napi_get_undefined(env, &undefinedResult);
@@ -1296,7 +1296,7 @@ napi_value CameraNapi::ResumeVideoRecording(napi_env env, napi_callback_info inf
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_value undefinedResult = nullptr;
-    CameraNapi* camWrapper = nullptr;
+    CameraNapi *camWrapper = nullptr;
     napi_value jsCallback, result;
 
     status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
@@ -1334,7 +1334,7 @@ napi_value CameraNapi::StartPreview(napi_env env, napi_callback_info info)
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_value undefinedResult = nullptr;
-    CameraNapi* cameraWrapper = nullptr;
+    CameraNapi *cameraWrapper = nullptr;
     int32_t intResult = -1;
     napi_value jsCallback, result;
     napi_get_undefined(env, &undefinedResult);
@@ -1388,7 +1388,7 @@ napi_value CameraNapi::StopPreview(napi_env env, napi_callback_info info)
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_value undefinedResult = nullptr;
-    CameraNapi* cameraWrapper = nullptr;
+    CameraNapi *cameraWrapper = nullptr;
     napi_value jsCallback, result;
 
     napi_get_undefined(env, &undefinedResult);
@@ -1475,7 +1475,7 @@ int32_t CameraNapi::GetPhotoConfig(napi_env env, napi_value arg)
     return 0;
 }
 
-static void TakePhotoAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void TakePhotoAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
     auto asyncContext = static_cast<CameraNapiAsyncContext*>(data);
     napi_value result[ARGS_TWO] = {0};
@@ -1531,8 +1531,8 @@ napi_value CameraNapi::TakePhoto(napi_env env, napi_callback_info info)
         napi_create_string_utf8(env, "TakePhoto", NAPI_AUTO_LENGTH, &resource);
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 if (context->objectInfo->photoOutput_ == nullptr) {
                     HiLog::Error(LABEL, "Context Photo Output is null!");
                 } else if (context->objectInfo->isReady_ != true) {
@@ -1987,7 +1987,7 @@ napi_value CameraNapi::CreateParameterResultObject(napi_env env)
     return result;
 }
 
-static void GetSupportedPropertiesAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void GetSupportedPropertiesAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
     auto asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
@@ -2058,8 +2058,8 @@ napi_value CameraNapi::GetSupportedProperties(napi_env env, napi_callback_info i
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 // Need to add logic for calling native to get supported Exposure Mode
                 context->status = 0;
             },
@@ -2075,9 +2075,9 @@ napi_value CameraNapi::GetSupportedProperties(napi_env env, napi_callback_info i
     return result;
 }
 
-static void GetPropertyValueAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void GetPropertyValueAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2135,8 +2135,8 @@ napi_value CameraNapi::GetPropertyValue(napi_env env, napi_callback_info info)
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 // Need to add logic for calling native to get supported Exposure Mode
                 context->status = 0;
             },
@@ -2152,9 +2152,9 @@ napi_value CameraNapi::GetPropertyValue(napi_env env, napi_callback_info info)
     return result;
 }
 
-static void GetSupportedResolutionScalesAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void GetSupportedResolutionScalesAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2222,8 +2222,8 @@ napi_value CameraNapi::GetSupportedResolutionScales(napi_env env, napi_callback_
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 // Need to add logic for calling native to get supported Resolution Scales
                 context->status = 0;
             },
@@ -2240,9 +2240,9 @@ napi_value CameraNapi::GetSupportedResolutionScales(napi_env env, napi_callback_
     return result;
 }
 
-static void SetPreviewResolutionScaleAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void SetPreviewResolutionScaleAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2300,8 +2300,8 @@ napi_value CameraNapi::SetPreviewResolutionScale(napi_env env, napi_callback_inf
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 // Need to add logic for calling native to set Preview Resolution Scale
                 context->status = 0;
             },
@@ -2318,9 +2318,9 @@ napi_value CameraNapi::SetPreviewResolutionScale(napi_env env, napi_callback_inf
     return result;
 }
 
-static void SetPreviewQualityAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void SetPreviewQualityAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2379,8 +2379,8 @@ napi_value CameraNapi::SetPreviewQuality(napi_env env, napi_callback_info info)
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 // Need to add logic for calling native to get supported Exposure Mode
                 context->status = 0;
             },
@@ -2396,9 +2396,9 @@ napi_value CameraNapi::SetPreviewQuality(napi_env env, napi_callback_info info)
     return result;
 }
 
-static void GetSupportedExposureModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void GetSupportedExposureModeAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2464,8 +2464,8 @@ napi_value CameraNapi::GetSupportedExposureMode(napi_env env, napi_callback_info
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 context->vecSupportedExposureModeList = ((sptr<CameraInput> &)
                                                          (context->objectInfo->camInput_))->GetSupportedExposureModes();
                 context->status = 0;
@@ -2481,9 +2481,9 @@ napi_value CameraNapi::GetSupportedExposureMode(napi_env env, napi_callback_info
     return result;
 }
 
-static void SetExposureModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void SetExposureModeAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2542,8 +2542,8 @@ napi_value CameraNapi::SetExposureMode(napi_env env, napi_callback_info info)
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 ((sptr<CameraInput> &)
                  (context->objectInfo->camInput_))->SetExposureMode(static_cast<camera_exposure_mode_enum_t>
                (context->iExposureMode));
@@ -2561,9 +2561,9 @@ napi_value CameraNapi::SetExposureMode(napi_env env, napi_callback_info info)
     return result;
 }
 
-static void GetSupportedFocusModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void GetSupportedFocusModeAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2631,7 +2631,7 @@ napi_value CameraNapi::GetSupportedFocusMode(napi_env env, napi_callback_info in
         status = napi_create_async_work(
             env, nullptr, resource,
             [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*>(data);
                 context->vecSupportedFocusModeList = ((sptr<CameraInput> &)
                                                       (context->objectInfo->camInput_))->GetSupportedFocusModes();
                 context->status = 0;
@@ -2648,9 +2648,9 @@ napi_value CameraNapi::GetSupportedFocusMode(napi_env env, napi_callback_info in
     return result;
 }
 
-static void SetFocusModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void SetFocusModeAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2709,8 +2709,8 @@ napi_value CameraNapi::SetFocusMode(napi_env env, napi_callback_info info)
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 ((sptr<CameraInput> &)
                  (context->objectInfo->camInput_)
                  )->SetFocusMode(static_cast<camera_focus_mode_enum_t>(context->iFocusMode));
@@ -2728,9 +2728,9 @@ napi_value CameraNapi::SetFocusMode(napi_env env, napi_callback_info info)
     return result;
 }
 
-static void GetSupportedFlashModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void GetSupportedFlashModeAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2798,8 +2798,8 @@ napi_value CameraNapi::GetSupportedFlashMode(napi_env env, napi_callback_info in
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 // Need to add logic for calling native to get supported Exposure Mode
                 context->vecSupportedFlashModeList = ((sptr<CameraInput> &)
                                                       (context->objectInfo->camInput_))->GetSupportedFlashModes();
@@ -2819,7 +2819,7 @@ napi_value CameraNapi::GetSupportedFlashMode(napi_env env, napi_callback_info in
 
 static void SetFlashModeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2878,8 +2878,8 @@ napi_value CameraNapi::SetFlashMode(napi_env env, napi_callback_info info)
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 ((sptr<CameraInput> &)
                  (context->objectInfo->camInput_)
                  )->SetFlashMode(static_cast<camera_flash_mode_enum_t>(context->iFlashMode));
@@ -2897,9 +2897,9 @@ napi_value CameraNapi::SetFlashMode(napi_env env, napi_callback_info info)
     return result;
 }
 
-static void GetSupportedZoomRangeAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void GetSupportedZoomRangeAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -2967,8 +2967,8 @@ napi_value CameraNapi::GetSupportedZoomRange(napi_env env, napi_callback_info in
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 // Need to add logic for calling native to get supported Exposure Mode
                 context->vecSupportedZoomRangeList = ((sptr<CameraInput> &)
                                                       (context->objectInfo->camInput_))->GetSupportedZoomRatioRange();
@@ -2986,9 +2986,9 @@ napi_value CameraNapi::GetSupportedZoomRange(napi_env env, napi_callback_info in
     return result;
 }
 
-static void SetZoomAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void SetZoomAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -3047,8 +3047,8 @@ napi_value CameraNapi::SetZoom(napi_env env, napi_callback_info info)
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*>(data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 ((sptr<CameraInput> &)
                  (context->objectInfo->camInput_))->SetZoomRatio(static_cast<float>(context->dZoomRatio));
                 context->status = 0;
@@ -3064,9 +3064,9 @@ napi_value CameraNapi::SetZoom(napi_env env, napi_callback_info info)
     return result;
 }
 
-static void SetParameterAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void SetParameterAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-    CameraNapiAsyncContext* asyncContext = (CameraNapiAsyncContext*)data;
+    CameraNapiAsyncContext *asyncContext = (CameraNapiAsyncContext*)data;
     napi_value result[ARGS_TWO] = {0};
     napi_value retVal;
     napi_get_undefined(env, &result[0]);
@@ -3125,8 +3125,8 @@ napi_value CameraNapi::SetParameter(napi_env env, napi_callback_info info)
 
         status = napi_create_async_work(
             env, nullptr, resource,
-            [](napi_env env, void* data) {
-                CameraNapiAsyncContext* context = static_cast<CameraNapiAsyncContext*> (data);
+            [](napi_env env, void *data) {
+                CameraNapiAsyncContext *context = static_cast<CameraNapiAsyncContext*>(data);
                 // Need to add logic for calling native to set Parameters
                 context->status = 0;
             },

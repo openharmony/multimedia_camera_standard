@@ -13,20 +13,24 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include "input/camera_input.h"
+#include "input/camera_manager.h"
+#include "media_log.h"
+#include "surface.h"
+
 #include <cinttypes>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include "input/camera_manager.h"
-#include "input/camera_input.h"
-#include "media_log.h"
-#include "surface.h"
+
 #include <securec.h>
 
 using namespace std;
@@ -36,7 +40,7 @@ using namespace OHOS::CameraStandard;
 static sptr<Surface> previewSurface;
 static sptr<Surface> photoSurface;
 
-enum mode_ {
+enum class mode_ {
     MODE_PREVIEW = 0,
     MODE_PHOTO
 };
@@ -114,13 +118,13 @@ static uint64_t GetCurrentLocalTimeStamp()
     return tmp.count();
 }
 
-static int32_t SaveYUV(int32_t mode, const char *buffer, int32_t size)
+static int32_t SaveYUV(mode_ mode, const char *buffer, int32_t size)
 {
     static const std::int32_t FILE_PERMISSION_FLAG = 00766;
     char path[PATH_MAX] = {0};
     int32_t retVal;
 
-    if (mode == MODE_PREVIEW) {
+    if (mode == mode_::MODE_PREVIEW) {
         system("mkdir -p /mnt/preview");
         retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv", "preview",
             GetCurrentLocalTimeStamp());
@@ -151,7 +155,7 @@ static int32_t SaveYUV(int32_t mode, const char *buffer, int32_t size)
 
 class SurfaceListener : public IBufferConsumerListener {
 public:
-    int32_t mode_;
+    mode_ mode;
     sptr<Surface> surface_;
 
     void OnBufferAvailable() override
@@ -166,7 +170,7 @@ public:
             char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Calling SaveYUV");
-            SaveYUV(mode_, addr, size);
+            SaveYUV(mode, addr, size);
             surface_->ReleaseBuffer(buffer, -1);
         } else {
             MEDIA_DEBUG_LOG("AcquireBuffer failed!");
@@ -176,7 +180,7 @@ public:
 
 class CaptureSurfaceListener : public IBufferConsumerListener {
 public:
-    int32_t mode_;
+    mode_ mode;
     sptr<Surface> surface_;
 
     void OnBufferAvailable() override
@@ -191,7 +195,7 @@ public:
             char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Saving Image");
-            SaveYUV(mode_, addr, size);
+            SaveYUV(mode, addr, size);
             surface_->ReleaseBuffer(buffer, -1);
         } else {
             MEDIA_DEBUG_LOG("AcquireBuffer failed!");
@@ -221,7 +225,7 @@ int main(int argc, char **argv)
     const std::int32_t PHOTO_HEIGHT_INDEX = 4;
     const std::int32_t PHOTO_CAPTURE_COUNT_INDEX = 5;
     const std::int32_t VALID_ARG_COUNT = 6;
-    const std::int32_t GAP_AFTER_CAPTURE = 1; // 2 seconds
+    const std::int32_t GAP_AFTER_CAPTURE = 1; // 1 second
     const std::int32_t PREVIEW_CAPTURE_GAP = 5; // 5 seconds
     int32_t intResult = -1;
     // Default sizes for Preview Output and PhotoOutput
@@ -279,7 +283,7 @@ int main(int argc, char **argv)
                 photoSurface = Surface::CreateSurfaceAsConsumer();
                 photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
                 sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
-                capturelistener->mode_ = MODE_PHOTO;
+                capturelistener->mode = mode_::MODE_PHOTO;
                 capturelistener->surface_ = photoSurface;
                 photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);
                 sptr<CaptureOutput> photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
@@ -298,7 +302,7 @@ int main(int argc, char **argv)
                 previewSurface = Surface::CreateSurfaceAsConsumer();
                 previewSurface->SetDefaultWidthAndHeight(previewHeight, previewWidth);
                 sptr<SurfaceListener> listener = new SurfaceListener();
-                listener->mode_ = MODE_PREVIEW;
+                listener->mode = mode_::MODE_PREVIEW;
                 listener->surface_ = previewSurface;
                 previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
                 sptr<CaptureOutput> previewOutput = camManagerObj->CreateCustomPreviewOutput(previewSurface,

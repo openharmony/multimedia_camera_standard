@@ -42,6 +42,20 @@ int HdiToServiceError(Camera::CamRetCode ret)
     return err;
 }
 
+CaptureType GetCaptureType(int32_t captureId)
+{
+    CaptureType capType;
+
+    if (captureId >= PREVIEW_CAPTURE_ID_START && captureId <= PREVIEW_CAPTURE_ID_END) {
+        capType = CAPTURE_TYPE_PREVIEW;
+    } else if (captureId >= PHOTO_CAPTURE_ID_START && captureId <= PHOTO_CAPTURE_ID_END) {
+        capType = CAPTURE_TYPE_PHOTO;
+    } else {
+        capType = CAPTURE_TYPE_VIDEO;
+    }
+    return capType;
+}
+
 bool IsValidSize(int32_t width, int32_t height, std::vector<std::pair<int32_t, int32_t>> validSizes)
 {
     auto curPair = std::make_pair(width, height);

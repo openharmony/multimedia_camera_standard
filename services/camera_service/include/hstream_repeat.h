@@ -53,8 +53,8 @@ public:
 private:
     int32_t StartPreview();
     int32_t StartVideo();
-    int32_t StopPreview();
-    int32_t StopVideo();
+    bool IsvalidCaptureID();
+    int32_t curCaptureID_;
     bool isVideo_;
     int32_t customPreviewWidth_;
     int32_t customPreviewHeight_;

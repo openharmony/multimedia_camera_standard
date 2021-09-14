@@ -29,6 +29,7 @@ namespace CameraStandard {
 class HStreamRepeat : public HStreamRepeatStub {
 public:
     HStreamRepeat(sptr<OHOS::IBufferProducer> producer);
+    HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t width, int32_t height);
     HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo);
     ~HStreamRepeat();
 
@@ -52,15 +53,19 @@ public:
 private:
     int32_t StartPreview();
     int32_t StartVideo();
-    int32_t StopPreview();
-    int32_t StopVideo();
+    bool IsvalidCaptureID();
+    int32_t curCaptureID_;
     bool isVideo_;
+    int32_t customPreviewWidth_;
+    int32_t customPreviewHeight_;
     sptr<Camera::IStreamOperator> streamOperator_;
     int32_t previewStreamId_, previewCaptureId_;
     int32_t videoStreamId_, videoCaptureId_;
     sptr<OHOS::IBufferProducer> producer_;
     sptr<IStreamRepeatCallback> streamRepeatCallback_;
     std::shared_ptr<CameraMetadata> cameraAbility_;
+    std::vector<std::pair<int32_t, int32_t>> validPreviewSizes_ = {{640, 480}, {832, 480}};
+    std::vector<std::pair<int32_t, int32_t>> validVideoSizes_ = {{1280, 720}};
 };
 } // namespace CameraStandard
 } // namespace OHOS

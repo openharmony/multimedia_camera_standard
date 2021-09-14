@@ -132,21 +132,33 @@ int32_t HCaptureSession::CommitConfig()
     streamIds_.clear();
     cameraAbility_ = cameraDevice_->GetSettings();
     if (streamRepeatPreview_ != nullptr) {
-        streamRepeatPreview_->LinkInput(streamOperator_, cameraAbility_, previewStreamID_);
+        rc = streamRepeatPreview_->LinkInput(streamOperator_, cameraAbility_, previewStreamID_);
+        if (rc != CAMERA_OK) {
+            MEDIA_ERR_LOG("HCaptureSession::CommitConfig(), Failed to link input to PreviewOutput, %{public}d", rc);
+            return rc;
+        }
         streamInfo = std::make_shared<Camera::StreamInfo>();
         streamRepeatPreview_->SetStreamInfo(streamInfo);
         streamInfos.push_back(streamInfo);
         streamIds_.push_back(previewStreamID_);
     }
     if (streamCapture_ != nullptr) {
-        streamCapture_->LinkInput(streamOperator_, cameraAbility_, photoStreamID_);
+        rc = streamCapture_->LinkInput(streamOperator_, cameraAbility_, photoStreamID_);
+        if (rc != CAMERA_OK) {
+            MEDIA_ERR_LOG("HCaptureSession::CommitConfig(), Failed to link input to PhotoOutput, %{public}d", rc);
+            return rc;
+        }
         streamInfo = std::make_shared<Camera::StreamInfo>();
         streamCapture_->SetStreamInfo(streamInfo);
         streamInfos.push_back(streamInfo);
         streamIds_.push_back(photoStreamID_);
     }
     if (streamRepeatVideo_ != nullptr) {
-        streamRepeatVideo_->LinkInput(streamOperator_, cameraAbility_, videoStreamID_);
+        rc = streamRepeatVideo_->LinkInput(streamOperator_, cameraAbility_, videoStreamID_);
+        if (rc != CAMERA_OK) {
+            MEDIA_ERR_LOG("HCaptureSession::CommitConfig(), Failed to link input to VideoOutput, %{public}d", rc);
+            return rc;
+        }
         streamInfo = std::make_shared<Camera::StreamInfo>();
         streamRepeatVideo_->SetStreamInfo(streamInfo);
         streamInfos.push_back(streamInfo);
@@ -226,18 +238,20 @@ void StreamOperatorCallback::OnCaptureStarted(int32_t captureId,
     if (captureSession_ == nullptr) {
         return;
     }
-    switch (captureId) {
-        case CAMERA_PREVIEW_CAPTURE_ID:
+    CaptureType capType = GetCaptureType(captureId);
+
+    switch (capType) {
+        case CAPTURE_TYPE_PREVIEW:
             if (captureSession_->streamRepeatPreview_ != nullptr) {
                 captureSession_->streamRepeatPreview_->OnFrameStarted();
             }
             break;
-        case CAMERA_PHOTO_CAPTURE_ID:
+        case CAPTURE_TYPE_PHOTO:
             if (captureSession_->streamCapture_ != nullptr) {
                 captureSession_->streamCapture_->OnCaptureStarted(captureId);
             }
             break;
-        case CAMERA_VIDEO_CAPTURE_ID:
+        case CAPTURE_TYPE_VIDEO:
             if (captureSession_->streamRepeatVideo_ != nullptr) {
                 captureSession_->streamRepeatVideo_->OnFrameStarted();
             }
@@ -253,18 +267,20 @@ void StreamOperatorCallback::OnCaptureEnded(int32_t captureId,
     if (captureSession_ == nullptr) {
         return;
     }
-    switch (captureId) {
-        case CAMERA_PREVIEW_CAPTURE_ID:
+    CaptureType capType = GetCaptureType(captureId);
+
+    switch (capType) {
+        case CAPTURE_TYPE_PREVIEW:
             if (captureSession_->streamRepeatPreview_ != nullptr) {
                 captureSession_->streamRepeatPreview_->OnFrameEnded(info[0]->frameCount_);
             }
             break;
-        case CAMERA_PHOTO_CAPTURE_ID:
+        case CAPTURE_TYPE_PHOTO:
             if (captureSession_->streamCapture_ != nullptr) {
                 captureSession_->streamCapture_->OnCaptureEnded(captureId);
             }
             break;
-        case CAMERA_VIDEO_CAPTURE_ID:
+        case CAPTURE_TYPE_VIDEO:
             if (captureSession_->streamRepeatVideo_ != nullptr) {
                 captureSession_->streamRepeatVideo_->OnFrameEnded(info[0]->frameCount_);
             }
@@ -280,18 +296,20 @@ void StreamOperatorCallback::OnCaptureError(int32_t captureId,
     if (captureSession_ == nullptr) {
         return;
     }
-    switch (captureId) {
-        case CAMERA_PREVIEW_CAPTURE_ID:
+    CaptureType capType = GetCaptureType(captureId);
+
+    switch (capType) {
+        case CAPTURE_TYPE_PREVIEW:
             if (captureSession_->streamRepeatPreview_ != nullptr) {
                 captureSession_->streamRepeatPreview_->OnFrameError(info[0]->error_);
             }
             break;
-        case CAMERA_PHOTO_CAPTURE_ID:
+        case CAPTURE_TYPE_PHOTO:
             if (captureSession_->streamCapture_ != nullptr) {
                 captureSession_->streamCapture_->OnCaptureError(captureId, info[0]->error_);
             }
             break;
-        case CAMERA_VIDEO_CAPTURE_ID:
+        case CAPTURE_TYPE_VIDEO:
             if (captureSession_->streamRepeatVideo_ != nullptr) {
                 captureSession_->streamRepeatVideo_->OnFrameError(info[0]->error_);
             }
@@ -304,15 +322,17 @@ void StreamOperatorCallback::OnCaptureError(int32_t captureId,
 void StreamOperatorCallback::OnFrameShutter(int32_t captureId,
                                             const std::vector<int32_t> &streamId, uint64_t timestamp)
 {
-    if (captureId == CAMERA_PHOTO_CAPTURE_ID && captureSession_ != nullptr
-            && captureSession_->streamCapture_ != nullptr) {
+    CaptureType capType = GetCaptureType(captureId);
+    if (capType == CAPTURE_TYPE_PHOTO && captureSession_ != nullptr
+        && captureSession_->streamCapture_ != nullptr) {
         captureSession_->streamCapture_->OnFrameShutter(captureId, timestamp);
     } else {
         MEDIA_INFO_LOG("HCaptureSession::OnFrameShutter(), called for other streams too");
     }
 }
 
-void StreamOperatorCallback::SetCaptureSession(sptr<HCaptureSession> captureSession) {
+void StreamOperatorCallback::SetCaptureSession(sptr<HCaptureSession> captureSession)
+{
     captureSession_ = captureSession;
 }
 } // namespace CameraStandard

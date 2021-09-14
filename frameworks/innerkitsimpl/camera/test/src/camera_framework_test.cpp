@@ -14,6 +14,7 @@
  */
 
 #include "camera_framework_test.h"
+#include <cinttypes>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -38,6 +39,12 @@ enum mode_ {
     MODE_PHOTO
 };
 
+enum SaveVideoMode {
+    CREATE = 0,
+    APPEND,
+    CLOSE
+};
+
 enum CAM_PHOTO_EVENTS {
     CAM_PHOTO_CAPTURE_START = 0,
     CAM_PHOTO_CAPTURE_END,
@@ -60,17 +67,24 @@ enum CAM_VIDEO_EVENTS {
     CAM_VIDEO_MAX_EVENT
 };
 
-
-static std::bitset<CAM_PHOTO_MAX_EVENT> g_photoEvents;
-static std::bitset<CAM_PREVIEW_MAX_EVENT> g_previewEvents;
-static std::bitset<CAM_VIDEO_MAX_EVENT> g_videoEvents;
-static std::unordered_map<std::string, bool> g_camStatusMap;
-static std::unordered_map<std::string, bool> g_camFlashMap;
-static bool g_camInputOnError = false;
-static int32_t g_videoFd = -1;
-static const int WAIT_TIME_AFTER_START = 5;
-static const int WAIT_TIME_BEFORE_STOP = 2;
-
+namespace {
+    static std::bitset<CAM_PHOTO_MAX_EVENT> g_photoEvents;
+    static std::bitset<CAM_PREVIEW_MAX_EVENT> g_previewEvents;
+    static std::bitset<CAM_VIDEO_MAX_EVENT> g_videoEvents;
+    static std::unordered_map<std::string, bool> g_camStatusMap;
+    static std::unordered_map<std::string, bool> g_camFlashMap;
+    static bool g_camInputOnError = false;
+    static int32_t g_videoFd = -1;
+    static const int WAIT_TIME_AFTER_START = 5;
+    static const int WAIT_TIME_BEFORE_STOP = 2;
+    static const std::int32_t PHOTO_DEFAULT_WIDTH = 1280;
+    static const std::int32_t PHOTO_DEFAULT_HEIGHT = 960;
+    static const std::int32_t PREVIEW_DEFAULT_WIDTH = 640;
+    static const std::int32_t PREVIEW_DEFAULT_HEIGHT = 480;
+    static const std::int32_t VIDEO_DEFAULT_WIDTH = 1280;
+    static const std::int32_t VIDEO_DEFAULT_HEIGHT = 720;
+    static const std::int32_t FILE_PERMISSION_FLAG = 00766;
+}
 
 void CameraFrameworkTest::SetUpTestCase(void) {}
 void CameraFrameworkTest::TearDownTestCase(void) {}
@@ -114,7 +128,7 @@ static int32_t SaveYUV(int32_t mode, const char *buffer, int32_t size)
     }
 
     MEDIA_DEBUG_LOG("%s, saving file to %{public}s", __FUNCTION__, path);
-    int imgFd = open(path, O_RDWR | O_CREAT, 00766);
+    int imgFd = open(path, O_RDWR | O_CREAT, FILE_PERMISSION_FLAG);
     if (imgFd == -1) {
         MEDIA_DEBUG_LOG("%s, open file failed, errno = %{public}s.", __FUNCTION__, strerror(errno));
         return -1;
@@ -131,7 +145,7 @@ static int32_t SaveYUV(int32_t mode, const char *buffer, int32_t size)
 
 static int32_t SaveVideoFile(const char *buffer, int32_t size, int32_t operationMode)
 {
-    if (operationMode == 0) {
+    if (operationMode == CREATE) {
         char path[255] = {0};
         system("mkdir -p /mnt/video");
         int32_t retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h264",
@@ -141,12 +155,12 @@ static int32_t SaveVideoFile(const char *buffer, int32_t size, int32_t operation
             return -1;
         }
         MEDIA_DEBUG_LOG("%s, save video to file %s", __FUNCTION__, path);
-        g_videoFd = open(path, O_RDWR | O_CREAT, 00766);
+        g_videoFd = open(path, O_RDWR | O_CREAT, FILE_PERMISSION_FLAG);
         if (g_videoFd == -1) {
             std::cout << "open file failed, errno = " << strerror(errno) << std::endl;
             return -1;
         }
-    } else if (operationMode == 1 && g_videoFd != -1) {
+    } else if (operationMode == APPEND && g_videoFd != -1) {
         int32_t ret = write(g_videoFd, buffer, size);
         if (ret == -1) {
             std::cout << "write file failed, error = " << strerror(errno) << std::endl;
@@ -164,7 +178,7 @@ static int32_t SaveVideoFile(const char *buffer, int32_t size, int32_t operation
 
 class AppCallback : public CameraManagerCallback, public ErrorCallback, public PhotoCallback, public PreviewCallback {
 public:
-    void OnCameraStatusChanged(const std::string cameraID, const CameraDeviceStatus cameraStatus) const override
+    void OnCameraStatusChanged(const std::string &cameraID, const CameraDeviceStatus cameraStatus) const override
     {
         switch (cameraStatus) {
             case CAMERA_DEVICE_STATUS_UNAVAILABLE: {
@@ -187,7 +201,7 @@ public:
         return;
     }
 
-    void OnFlashlightStatusChanged(const std::string cameraID, const FlashlightStatus flashStatus) const override
+    void OnFlashlightStatusChanged(const std::string &cameraID, const FlashlightStatus flashStatus) const override
     {
         switch (flashStatus) {
             case FLASHLIGHT_STATUS_OFF: {
@@ -239,7 +253,8 @@ public:
 
     void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const override
     {
-        MEDIA_DEBUG_LOG("AppCallback::OnFrameShutter captureId: %{public}d", captureId);
+        MEDIA_DEBUG_LOG("AppCallback::OnFrameShutter captureId: %{public}d, timestamp: %{public}"
+                        PRIu64, captureId, timestamp);
         g_photoEvents[CAM_PHOTO_FRAME_SHUTTER] = 1;
         return;
     }
@@ -326,7 +341,7 @@ public:
     {
         if (g_videoFd == -1) {
             // Create video file
-            SaveVideoFile(nullptr, 0, 0);
+            SaveVideoFile(nullptr, 0, CREATE);
         }
         int32_t flushFence = 0;
         int64_t timestamp = 0;
@@ -338,7 +353,7 @@ public:
             char *addr = static_cast<char *>(buffer->GetVirAddr());
             int32_t size = buffer->GetSize();
             MEDIA_DEBUG_LOG("Saving to video file");
-            SaveVideoFile(addr, size, 1);
+            SaveVideoFile(addr, size, APPEND);
             surface_->ReleaseBuffer(buffer, -1);
         } else {
             MEDIA_DEBUG_LOG("AcquireBuffer failed!");
@@ -373,6 +388,7 @@ public:
 static sptr<CaptureOutput> CreatePhotoOutput(sptr<CameraManager> &camManagerObj)
 {
     sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
+    photoSurface->SetDefaultWidthAndHeight(PHOTO_DEFAULT_WIDTH, PHOTO_DEFAULT_HEIGHT);
     sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
     capturelistener->mode_ = MODE_PHOTO;
     capturelistener->surface_ = photoSurface;
@@ -384,6 +400,7 @@ static sptr<CaptureOutput> CreatePhotoOutput(sptr<CameraManager> &camManagerObj)
 static sptr<CaptureOutput> CreatePreviewOutput(sptr<CameraManager> &camManagerObj)
 {
     sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
+    previewSurface->SetDefaultWidthAndHeight(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT);
     sptr<SurfaceListener> listener = new SurfaceListener();
     listener->mode_ = MODE_PREVIEW;
     listener->surface_ = previewSurface;
@@ -395,6 +412,7 @@ static sptr<CaptureOutput> CreatePreviewOutput(sptr<CameraManager> &camManagerOb
 static sptr<CaptureOutput> CreateVideoOutput(sptr<CameraManager> &camManagerObj)
 {
     sptr<Surface> videoSurface = Surface::CreateSurfaceAsConsumer();
+    videoSurface->SetDefaultWidthAndHeight(VIDEO_DEFAULT_WIDTH, VIDEO_DEFAULT_HEIGHT);
     sptr<VideoSurfaceListener> videoListener = new VideoSurfaceListener();
     videoListener->surface_ = videoSurface;
     videoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoListener);
@@ -550,7 +568,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_003, TestSize.Level1)
     captureSession->Stop();
     captureSession->Release();
 
-    SaveVideoFile(nullptr, 0, 2);
+    SaveVideoFile(nullptr, 0, CLOSE);
 }
 
 void TestCallbacks(bool video)
@@ -668,7 +686,7 @@ void TestCallbacks(bool video)
     }
 
     if (videoOutput != nullptr) {
-        SaveVideoFile(nullptr, 0, 2);
+        SaveVideoFile(nullptr, 0, CLOSE);
 
         EXPECT_TRUE(g_videoEvents[CAM_VIDEO_FRAME_START] == 1);
 

@@ -25,30 +25,33 @@ HStreamCapture::HStreamCapture(sptr<OHOS::IBufferProducer> producer)
 {
     producer_ = producer;
     photoStreamId_ = 0;
-    photoCaptureId_ = 0;
 }
 
 HStreamCapture::~HStreamCapture()
 {}
 
 int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
-        std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
+                                  std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
 {
     if (streamOperator == nullptr || cameraAbility == nullptr) {
         MEDIA_ERR_LOG("HStreamCapture::LinkInput streamOperator is null");
         return CAMERA_INVALID_ARG;
     }
+    if (!IsValidSize(producer_->GetDefaultWidth(), producer_->GetDefaultHeight(), validSizes_)) {
+        return CAMERA_INVALID_OUTPUT_CFG;
+    }
     streamOperator_ = streamOperator;
     photoStreamId_ = streamId;
     cameraAbility_ = cameraAbility;
+    photoCaptureId_ = PHOTO_CAPTURE_ID_START;
     return CAMERA_OK;
 }
 
 void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfoPhoto)
 {
     streamInfoPhoto->streamId_ = photoStreamId_;
-    streamInfoPhoto->width_ = CAMERA_PHOTO_WIDTH;
-    streamInfoPhoto->height_ = CAMERA_PHOTO_HEIGHT;
+    streamInfoPhoto->width_ = producer_->GetDefaultWidth();
+    streamInfoPhoto->height_ = producer_->GetDefaultHeight();
     streamInfoPhoto->format_ = PIXEL_FMT_YCRCB_420_SP;
     streamInfoPhoto->datasapce_ = CAMERA_PHOTO_COLOR_SPACE;
     streamInfoPhoto->intent_ = Camera::STILL_CAPTURE;
@@ -57,19 +60,31 @@ void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInf
     streamInfoPhoto->encodeType_ = Camera::ENCODE_TYPE_JPEG;
 }
 
+bool HStreamCapture::IsValidCaptureID()
+{
+    return (photoCaptureId_ >= PHOTO_CAPTURE_ID_START && photoCaptureId_ <= PHOTO_CAPTURE_ID_END);
+}
+
 int32_t HStreamCapture::Capture()
 {
     Camera::CamRetCode rc = Camera::NO_ERROR;
+    int32_t CurCaptureId = 0;
 
-    photoCaptureId_ = CAMERA_PHOTO_CAPTURE_ID;
+    if (!IsValidCaptureID()) {
+        MEDIA_ERR_LOG("HStreamCapture::Capture crossed the allowed limit, CurCaptureId: %{public}d", photoCaptureId_);
+        return CAMERA_CAPTURE_LIMIT_EXCEED;
+    }
+    CurCaptureId = photoCaptureId_;
+    photoCaptureId_++;
     std::shared_ptr<Camera::CaptureInfo> captureInfoPhoto = std::make_shared<Camera::CaptureInfo>();
     captureInfoPhoto->streamIds_ = {photoStreamId_};
     captureInfoPhoto->captureSetting_ = cameraAbility_;
     captureInfoPhoto->enableShutterCallback_ = true;
 
-    rc = streamOperator_->Capture(photoCaptureId_, captureInfoPhoto, false);
+    MEDIA_INFO_LOG("HStreamCapture::Capture() Starting photo capture with capture ID: %{public}d", CurCaptureId);
+    rc = streamOperator_->Capture(CurCaptureId, captureInfoPhoto, false);
     if (rc != Camera::NO_ERROR) {
-        MEDIA_ERR_LOG("HStreamCapture::Capture failed with error Code:%{public}d", rc);
+        MEDIA_ERR_LOG("HStreamCapture::Capture failed with error Code: %{public}d", rc);
         return HdiToServiceError(rc);
     }
     return CAMERA_OK;
@@ -77,14 +92,7 @@ int32_t HStreamCapture::Capture()
 
 int32_t HStreamCapture::CancelCapture()
 {
-    if (photoCaptureId_ != 0) {
-        Camera::CamRetCode rc = streamOperator_->CancelCapture(CAMERA_PHOTO_CAPTURE_ID);
-        if (rc != Camera::NO_ERROR) {
-            MEDIA_ERR_LOG("HStreamCapture::CancelCapture failed with error Code:%{public}d", rc);
-            return HdiToServiceError(rc);
-        }
-        photoCaptureId_ = 0;
-    }
+    // Cancel cature is dummy till continuous/burst mode is supported
     return CAMERA_OK;
 }
 

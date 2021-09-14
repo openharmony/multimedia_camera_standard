@@ -46,8 +46,8 @@ class CameraManagerCallback {
 public:
     CameraManagerCallback() = default;
     virtual ~CameraManagerCallback() = default;
-    virtual void OnCameraStatusChanged(const std::string cameraID, const CameraDeviceStatus cameraStatus) const = 0;
-    virtual void OnFlashlightStatusChanged(const std::string cameraID, const FlashlightStatus flashStatus) const = 0;
+    virtual void OnCameraStatusChanged(const std::string &cameraID, const CameraDeviceStatus cameraStatus) const = 0;
+    virtual void OnFlashlightStatusChanged(const std::string &cameraID, const FlashlightStatus flashStatus) const = 0;
 };
 
 class CameraManager : public RefBase {
@@ -59,6 +59,7 @@ public:
     sptr<PhotoOutput> CreatePhotoOutput(sptr<Surface> &surface);
     sptr<VideoOutput> CreateVideoOutput(sptr<Surface> &surface);
     sptr<PreviewOutput> CreatePreviewOutput(sptr<Surface> surface);
+    sptr<PreviewOutput> CreateCustomPreviewOutput(sptr<Surface> surface, int32_t width, int32_t height);
     void SetCallback(std::shared_ptr<CameraManagerCallback> callback);
     std::shared_ptr<CameraManagerCallback> GetApplicationCallback();
 

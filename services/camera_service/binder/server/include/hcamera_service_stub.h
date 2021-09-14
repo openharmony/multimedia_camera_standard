@@ -33,6 +33,7 @@ private:
     int HandleCreateCaptureSession(MessageParcel &reply);
     int HandleCreatePhotoOutput(MessageParcel &data, MessageParcel &reply);
     int HandleCreatePreviewOutput(MessageParcel &data, MessageParcel &reply);
+    int HandleCreatePreviewOutputCustomSize(MessageParcel &data, MessageParcel &reply);
     int HandleCreateVideoOutput(MessageParcel &data, MessageParcel &reply);
 };
 } // namespace CameraStandard

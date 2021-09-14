@@ -44,6 +44,9 @@ public:
     virtual int32_t CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
                                         sptr<IStreamRepeat> &previewOutput) = 0;
 
+    virtual int32_t CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t width,
+                                              int32_t height, sptr<IStreamRepeat> &previewOutput) = 0;
+
     virtual int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer,
                                       sptr<IStreamRepeat> &videoOutput) = 0;
 

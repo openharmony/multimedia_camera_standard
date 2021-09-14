@@ -29,6 +29,22 @@ HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer)
     videoCaptureId_ = 0;
     previewStreamId_ = 0;
     previewCaptureId_ = 0;
+    customPreviewWidth_ = 0;
+    customPreviewHeight_ = 0;
+    curCaptureID_ = 0;
+}
+
+HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t width, int32_t height)
+{
+    producer_ = producer;
+    isVideo_ = false;
+    videoStreamId_ = 0;
+    videoCaptureId_ = 0;
+    previewStreamId_ = 0;
+    previewCaptureId_ = 0;
+    customPreviewWidth_ = width;
+    customPreviewHeight_ = height;
+    curCaptureID_ = 0;
 }
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo)
@@ -39,24 +55,40 @@ HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo)
     videoCaptureId_ = 0;
     previewStreamId_ = 0;
     previewCaptureId_ = 0;
+    customPreviewWidth_ = 0;
+    customPreviewHeight_ = 0;
+    curCaptureID_ = 0;
 }
 
 HStreamRepeat::~HStreamRepeat()
 {}
 
 int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
-            std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
+                                 std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
 {
+    int32_t previewWidth = 0;
+    int32_t previewHeight = 0;
+
     if (streamOperator == nullptr || cameraAbility == nullptr) {
         MEDIA_ERR_LOG("HStreamRepeat::LinkInput streamOperator is null");
         return CAMERA_INVALID_ARG;
     }
-    streamOperator_ = streamOperator;
     if (isVideo_) {
+        if (!IsValidSize(producer_->GetDefaultWidth(), producer_->GetDefaultHeight(), validVideoSizes_)) {
+            return CAMERA_INVALID_OUTPUT_CFG;
+        }
         videoStreamId_ = streamId;
+        videoCaptureId_ = VIDEO_CAPTURE_ID_START;
     } else {
+        previewWidth = (customPreviewWidth_ == 0) ? producer_->GetDefaultWidth() : customPreviewWidth_;
+        previewHeight =  (customPreviewHeight_ == 0) ? producer_->GetDefaultHeight() : customPreviewHeight_;
+        if (!IsValidSize(previewWidth, previewHeight, validPreviewSizes_)) {
+            return CAMERA_INVALID_OUTPUT_CFG;
+        }
         previewStreamId_ = streamId;
+        previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
     }
+    streamOperator_ = streamOperator;
     cameraAbility_ = cameraAbility;
     return CAMERA_OK;
 }
@@ -67,16 +99,14 @@ void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
     streamInfo->tunneledMode_ = true;
     streamInfo->datasapce_ = CAMERA_PREVIEW_COLOR_SPACE;
     streamInfo->bufferQueue_ = producer_;
+    streamInfo->width_ = (customPreviewWidth_ == 0) ? producer_->GetDefaultWidth() : customPreviewWidth_;
+    streamInfo->height_ = (customPreviewHeight_ == 0) ? producer_->GetDefaultHeight() : customPreviewHeight_;
     if (isVideo_) {
         streamInfo->streamId_ = videoStreamId_;
-        streamInfo->width_ = CAMERA_VIDEO_WIDTH;
-        streamInfo->height_ = CAMERA_VIDEO_HEIGHT;
         streamInfo->intent_ = Camera::VIDEO;
         streamInfo->encodeType_ = Camera::ENCODE_TYPE_H264;
     } else {
         streamInfo->streamId_ = previewStreamId_;
-        streamInfo->width_ = CAMERA_PREVIEW_WIDTH;
-        streamInfo->height_ = CAMERA_PREVIEW_HEIGHT;
         streamInfo->intent_ = Camera::PREVIEW;
     }
 }
@@ -85,6 +115,10 @@ int32_t HStreamRepeat::Start()
 {
     int32_t rc = CAMERA_OK;
 
+    if (curCaptureID_ != 0) {
+        MEDIA_ERR_LOG("HStreamRepeat::Start, Already started with captureID: %{public}d", curCaptureID_);
+        return CAMERA_INVALID_STATE;
+    }
     if (isVideo_) {
         rc = StartVideo();
     } else {
@@ -93,17 +127,42 @@ int32_t HStreamRepeat::Start()
     return rc;
 }
 
+bool HStreamRepeat::IsvalidCaptureID()
+{
+    int32_t startValue = 0;
+    int32_t endValue = 0;
+    int32_t captureID = 0;
+
+    if (isVideo_) {
+        captureID = videoCaptureId_;
+        startValue = VIDEO_CAPTURE_ID_START;
+        endValue = VIDEO_CAPTURE_ID_END;
+    } else {
+        captureID = previewCaptureId_;
+        startValue = PREVIEW_CAPTURE_ID_START;
+        endValue = PREVIEW_CAPTURE_ID_END;
+    }
+    return (captureID >= startValue && captureID <= endValue);
+}
+
 int32_t HStreamRepeat::StartVideo()
 {
     Camera::CamRetCode rc = Camera::NO_ERROR;
 
-    videoCaptureId_ = CAMERA_VIDEO_CAPTURE_ID;
+    if (!IsvalidCaptureID()) {
+        MEDIA_ERR_LOG("HStreamRepeat::StartVideo Failed to Start Video videoCaptureId_:%{public}d", videoCaptureId_);
+        return CAMERA_CAPTURE_LIMIT_EXCEED;
+    }
+    curCaptureID_ = videoCaptureId_;
+    videoCaptureId_++;
     std::shared_ptr<Camera::CaptureInfo> captureInfoVideo = std::make_shared<Camera::CaptureInfo>();
     captureInfoVideo->streamIds_ = {videoStreamId_};
     captureInfoVideo->captureSetting_ = cameraAbility_;
     captureInfoVideo->enableShutterCallback_ = false;
-    rc = streamOperator_->Capture(videoCaptureId_, captureInfoVideo, true);
+    MEDIA_INFO_LOG("HStreamCapture::StartVideo() Starting video with capture ID: %{public}d", curCaptureID_);
+    rc = streamOperator_->Capture(curCaptureID_, captureInfoVideo, true);
     if (rc != Camera::NO_ERROR) {
+        curCaptureID_ = 0;
         MEDIA_ERR_LOG("HStreamRepeat::Start CommitStreams Video failed with error Code:%{public}d", rc);
         return HdiToServiceError(rc);
     }
@@ -114,58 +173,43 @@ int32_t HStreamRepeat::StartPreview()
 {
     Camera::CamRetCode rc = Camera::NO_ERROR;
 
-    previewCaptureId_ = CAMERA_PREVIEW_CAPTURE_ID;
+    if (!IsvalidCaptureID()) {
+        MEDIA_ERR_LOG("HStreamRepeat::StartVideo Failed to Start Preview previewCaptureId_:%{public}d",
+                      previewCaptureId_);
+        return CAMERA_CAPTURE_LIMIT_EXCEED;
+    }
+    curCaptureID_ = previewCaptureId_;
+    previewCaptureId_++;
     std::shared_ptr<Camera::CaptureInfo> captureInfoPreview = std::make_shared<Camera::CaptureInfo>();
     captureInfoPreview->streamIds_ = {previewStreamId_};
     captureInfoPreview->captureSetting_ = cameraAbility_;
     captureInfoPreview->enableShutterCallback_ = false;
-    rc = streamOperator_->Capture(previewCaptureId_, captureInfoPreview, true);
+    MEDIA_INFO_LOG("HStreamCapture::StartPreview() Starting preview with capture ID: %{public}d", curCaptureID_);
+    rc = streamOperator_->Capture(curCaptureID_, captureInfoPreview, true);
     if (rc != Camera::NO_ERROR) {
         MEDIA_ERR_LOG("HStreamRepeat::StartPreview failed with error Code:%{public}d", rc);
+        curCaptureID_ = 0;
         return HdiToServiceError(rc);
     }
     return HdiToServiceError(rc);
 }
 
-int32_t HStreamRepeat::StopPreview()
-{
-    Camera::CamRetCode rc = Camera::NO_ERROR;
-
-    if (previewCaptureId_ != 0) {
-        rc = streamOperator_->CancelCapture(previewCaptureId_);
-        if (rc != Camera::NO_ERROR) {
-            MEDIA_ERR_LOG("HStreamRepeat::StopStreamRepeat failed with error Code:%{public}d", rc);
-            return HdiToServiceError(rc);
-        }
-        previewCaptureId_ = 0;
-    }
-    return HdiToServiceError(rc);
-}
-
-int32_t HStreamRepeat::StopVideo()
-{
-    Camera::CamRetCode rc = Camera::NO_ERROR;
-
-    if (videoCaptureId_ != 0) {
-        rc = streamOperator_->CancelCapture(videoCaptureId_);
-        if (rc != NO_ERROR) {
-            MEDIA_ERR_LOG("HStreamRepeat::Stop failed  with error Code:%{public}d", rc);
-            return HdiToServiceError(rc);
-        }
-        videoCaptureId_ = 0;
-    }
-    return rc;
-}
-
 int32_t HStreamRepeat::Stop()
 {
     int32_t rc = NO_ERROR;
+    Camera::CamRetCode hdiCode = Camera::NO_ERROR;
 
-    if (isVideo_) {
-        rc = StopVideo();
-    } else {
-        rc = StopPreview();
+    if (curCaptureID_ == 0) {
+        MEDIA_ERR_LOG("HStreamRepeat::Stop, Stream not started yet");
+        return CAMERA_INVALID_STATE;
     }
+    hdiCode = streamOperator_->CancelCapture(curCaptureID_);
+    if (rc != NO_ERROR) {
+        MEDIA_ERR_LOG("HStreamRepeat::Stop failed  with errorCode:%{public}d, curCaptureID_: %{public}d",
+                      rc, curCaptureID_);
+        return HdiToServiceError(hdiCode);
+    }
+    curCaptureID_ = 0;
     return rc;
 }
 
@@ -179,6 +223,7 @@ int32_t HStreamRepeat::Release()
     streamRepeatCallback_ = nullptr;
     videoCaptureId_ = 0;
     previewCaptureId_ = 0;
+    curCaptureID_ = 0;
     return CAMERA_OK;
 }
 
@@ -240,7 +285,7 @@ int32_t HStreamRepeat::OnFrameError(int32_t errorType)
 {
     if (streamRepeatCallback_ != nullptr) {
         if (errorType == Camera::BUFFER_LOST) {
-           streamRepeatCallback_->OnFrameError(CAMERA_STREAM_BUFFER_LOST);
+            streamRepeatCallback_->OnFrameError(CAMERA_STREAM_BUFFER_LOST);
         } else {
             streamRepeatCallback_->OnFrameError(CAMERA_UNKNOWN_ERROR);
         }

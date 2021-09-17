@@ -64,7 +64,11 @@ bool IsValidSize(int32_t width, int32_t height, std::vector<std::pair<int32_t, i
     } else {
         MEDIA_ERR_LOG("Width %{public}d and height %{public}d not found in suported sizes", width, height);
     }
+#ifdef RK_CAMERA
+    return true;
+#else
     return false;
+#endif
 }
 } // namespace CameraStandard
 } // namespace OHOS

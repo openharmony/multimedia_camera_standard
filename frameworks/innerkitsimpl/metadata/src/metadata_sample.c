@@ -16,7 +16,7 @@
 #include "camera_metadata_operator.h"
 #include "metadata_log.h"
 
-int main()
+int main(void)
 {
     METADATA_INFO_LOG("Test Metadata");
 

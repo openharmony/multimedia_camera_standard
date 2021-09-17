@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
-#include "securec.h"
-#include <string.h>
-#include "metadata_log.h"
 
 #include "camera_metadata_item_info.c"
+#include "metadata_log.h"
+#include "securec.h"
+
+#include <string.h>
+
+#define METADATA_HEADER_DATA_SIZE 4
 
 uint8_t *get_metadata_data(const common_metadata_header_t *metadata_header)
 {
-    return (uint8_t *) metadata_header + metadata_header->data_start;
+    return (uint8_t *)metadata_header + metadata_header->data_start;
 }
 
 camera_metadata_item_entry_t *get_metadata_items(const common_metadata_header_t *metadata_header)
@@ -39,7 +42,7 @@ common_metadata_header_t *fill_camera_metadata(void *buffer, size_t memory_requi
         return NULL;
     }
 
-    common_metadata_header_t *metadata_header = (common_metadata_header_t *) buffer;
+    common_metadata_header_t *metadata_header = (common_metadata_header_t *)buffer;
     metadata_header->version = CURRENT_CAMERA_METADATA_VERSION;
     metadata_header->size = memory_required;
     metadata_header->item_count = 0;
@@ -154,7 +157,7 @@ int32_t get_camera_metadata_item_type(uint32_t item, uint32_t *data_type)
 {
     METADATA_DEBUG_LOG("get_camera_metadata_item_type start");
     uint32_t section;
-    int32_t ret = get_metadata_section(item >> 16, &section);
+    int32_t ret = get_metadata_section(item >> BITWISE_SHIFT_16, &section);
     if (ret != CAM_META_SUCCESS) {
         METADATA_ERR_LOG("get_camera_metadata_item_type section is not valid");
         return ret;
@@ -182,7 +185,7 @@ const char *get_camera_metadata_item_name(uint32_t item)
     METADATA_DEBUG_LOG("get_camera_metadata_item_name start");
     METADATA_DEBUG_LOG("get_camera_metadata_item_name item: %{public}d", item);
     uint32_t section;
-    int32_t ret = get_metadata_section(item >> 16, &section);
+    int32_t ret = get_metadata_section(item >> BITWISE_SHIFT_16, &section);
     if (ret != CAM_META_SUCCESS) {
         METADATA_ERR_LOG("get_camera_metadata_item_name section is not valid");
         return NULL;
@@ -209,7 +212,7 @@ size_t calculate_camera_metadata_item_data_size(uint32_t type, size_t data_count
     size_t data_bytes = data_count * ohos_camera_metadata_type_size[type];
 
     METADATA_DEBUG_LOG("calculate_camera_metadata_item_data_size end");
-    return data_bytes <= 4 ? 0 : ALIGN_TO(data_bytes, DATA_ALIGNMENT);
+    return (data_bytes <= METADATA_HEADER_DATA_SIZE) ? 0 : ALIGN_TO(data_bytes, DATA_ALIGNMENT);
 }
 
 int add_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const void *data,
@@ -230,7 +233,7 @@ int add_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const
 
     if (data_count && data == NULL) {
         METADATA_ERR_LOG("add_camera_metadata_item data is not valid. data_count: %{public}zu, data: %{public}p",
-            data_count, data);
+                         data_count, data);
         return CAM_META_INVALID_PARAM;
     }
 

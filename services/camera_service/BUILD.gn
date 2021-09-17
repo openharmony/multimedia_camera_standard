@@ -35,7 +35,7 @@ ohos_shared_library("camera_service") {
     "src/hcamera_service.cpp",
     "src/hcapture_session.cpp",
     "src/hstream_capture.cpp",
-    "src/hstream_repeat.cpp"
+    "src/hstream_repeat.cpp",
   ]
   cflags = [
     "-fPIC",
@@ -56,22 +56,25 @@ ohos_shared_library("camera_service") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include"
+    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include",
   ]
 
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
+  if (device_name == "rk3566" || device_name == "rk3568") {
+    cflags += [ "-DRK_CAMERA" ]
+  }
   deps = [
     "//drivers/peripheral/camera/interfaces/include/client:libcamera_client",
     "//foundation/graphic/standard:libsurface",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata"
+    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
   ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "samgr_L2:samgr_proxy"
+    "samgr_L2:samgr_proxy",
   ]
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"

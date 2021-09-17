@@ -52,7 +52,11 @@ void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInf
     streamInfoPhoto->streamId_ = photoStreamId_;
     streamInfoPhoto->width_ = producer_->GetDefaultWidth();
     streamInfoPhoto->height_ = producer_->GetDefaultHeight();
+#ifdef RK_CAMERA
+    streamInfoPhoto->format_ = PIXEL_FMT_RGBA_8888;
+#else
     streamInfoPhoto->format_ = PIXEL_FMT_YCRCB_420_SP;
+#endif
     streamInfoPhoto->datasapce_ = CAMERA_PHOTO_COLOR_SPACE;
     streamInfoPhoto->intent_ = Camera::STILL_CAPTURE;
     streamInfoPhoto->tunneledMode_ = true;

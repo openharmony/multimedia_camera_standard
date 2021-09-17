@@ -47,7 +47,7 @@ int HCameraServiceCallbackStub::HandleOnCameraStatusChanged(MessageParcel& data)
     std::string cameraId = data.ReadString();
     int32_t status = data.ReadInt32();
 
-    return OnCameraStatusChanged(cameraId, (CameraStatus) status);
+    return OnCameraStatusChanged(cameraId, (CameraStatus)status);
 }
 
 int HCameraServiceCallbackStub::HandleOnFlashlightStatusChanged(MessageParcel& data)
@@ -55,7 +55,7 @@ int HCameraServiceCallbackStub::HandleOnFlashlightStatusChanged(MessageParcel& d
     std::string cameraId = data.ReadString();
     int32_t status = data.ReadInt32();
 
-    return OnFlashlightStatusChanged(cameraId, (FlashStatus) status);
+    return OnFlashlightStatusChanged(cameraId, (FlashStatus)status);
 }
 } // namespace CameraStandard
 } // namespace OHOS

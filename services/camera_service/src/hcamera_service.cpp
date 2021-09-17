@@ -108,7 +108,8 @@ int32_t HCameraService::CreateCaptureSession(sptr<ICaptureSession> &session)
     return CAMERA_OK;
 }
 
-int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamCapture> &photoOutput)
+int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer,
+                                          sptr<IStreamCapture> &photoOutput)
 {
     sptr<HStreamCapture> streamCapture;
 

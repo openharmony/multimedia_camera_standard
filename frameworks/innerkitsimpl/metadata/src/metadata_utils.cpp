@@ -17,7 +17,8 @@
 
 namespace OHOS {
 namespace CameraStandard {
-bool MetadataUtils::EncodeCameraMetadata(const std::shared_ptr<CameraStandard::CameraMetadata> &metadata, MessageParcel &data)
+bool MetadataUtils::EncodeCameraMetadata(const std::shared_ptr<CameraStandard::CameraMetadata> &metadata,
+                                         MessageParcel &data)
 {
     if (metadata == nullptr) {
         return false;

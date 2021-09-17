@@ -21,7 +21,6 @@
 using namespace std;
 namespace OHOS {
 namespace CameraStandard {
-
 PhotoCaptureSetting::QualityLevel PhotoCaptureSetting::GetQuaility()
 {
     return QualityLevel::NORMAL_QUALITY;

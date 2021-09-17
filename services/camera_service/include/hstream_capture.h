@@ -16,12 +16,13 @@
 #ifndef OHOS_CAMERA_H_STREAM_CAPTURE_H
 #define OHOS_CAMERA_H_STREAM_CAPTURE_H
 
+#include <iostream>
+
 #include "camera_metadata_info.h"
 #include "display_type.h"
 #include "hstream_capture_stub.h"
 #include "istream_operator.h"
 #include <refbase.h>
-#include <iostream>
 
 namespace OHOS {
 namespace CameraStandard {

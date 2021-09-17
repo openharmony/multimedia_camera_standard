@@ -33,7 +33,7 @@ void CameraMetadataTest::TearDown() {}
  * EnvConditions: NA
  * CaseDescription: Test allocation of camera metadata
  */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_001, TestSize.Level1)
+static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_001, TestSize.Level1)
 {
     uint32_t item_capacity = 1;
     uint32_t data_capacity = 1;
@@ -212,7 +212,7 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_005, TestSize.Level1)
 * CaseDescription: Test find metadata and update metadata items with camera type, camera position,
 *                  flash mode, exposure mode and zoom ratio range.
 */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_006, TestSize.Level1)
+static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_006, TestSize.Level1)
 {
     uint32_t item_capacity = 5;
     uint32_t data_capacity = ALIGN_TO(6 * sizeof(float), DATA_ALIGNMENT);
@@ -396,15 +396,17 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_008, TestSize.Level1)
 * EnvConditions: NA
 * CaseDescription: Test updateEntry with metadata item data size more than 4 bytes and then delete item
 */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_009, TestSize.Level1)
+static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_009, TestSize.Level1)
 {
-    std::shared_ptr<CameraMetadata> meta = std::make_shared<CameraMetadata>(3, ALIGN_TO(7 * sizeof(float), DATA_ALIGNMENT));
+    std::shared_ptr<CameraMetadata> meta = std::make_shared<CameraMetadata>(3, ALIGN_TO(7 * sizeof(float),
+                                                                            DATA_ALIGNMENT));
     uint8_t cameraType = OHOS_CAMERA_TYPE_TRUE_DEAPTH;
     bool ret = meta->addEntry(OHOS_ABILITY_CAMERA_TYPE, &cameraType, 1);
     EXPECT_TRUE(ret == true);
 
     float zoomRatioRange[5] = {1.0, 2.0, 4.0, 8.0, 16.0};
-    ret = meta->addEntry(OHOS_ABILITY_ZOOM_RATIO_RANGE, zoomRatioRange, sizeof(zoomRatioRange)/sizeof(zoomRatioRange[0]));
+    ret = meta->addEntry(OHOS_ABILITY_ZOOM_RATIO_RANGE, zoomRatioRange,
+                         sizeof(zoomRatioRange)/sizeof(zoomRatioRange[0]));
     EXPECT_TRUE(ret == true);
 
     uint8_t cameraPosition = OHOS_CAMERA_POSITION_FRONT;
@@ -422,7 +424,8 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_009, TestSize.Level1)
     EXPECT_TRUE(base_item->item == OHOS_ABILITY_ZOOM_RATIO_RANGE);
     EXPECT_TRUE(base_item->data_type == META_TYPE_FLOAT);
     EXPECT_TRUE(base_item->count == sizeof(zoomRatioRange)/sizeof(zoomRatioRange[0]));
-    EXPECT_TRUE(memcmp(zoomRatioRange, get_metadata_data(meta->get()) + base_item->data.offset, sizeof(zoomRatioRange)) == 0);
+    EXPECT_TRUE(memcmp(zoomRatioRange, get_metadata_data(meta->get()) + base_item->data.offset,
+        sizeof(zoomRatioRange)) == 0);
 
     base_item++;
     EXPECT_TRUE(base_item->item == OHOS_ABILITY_CAMERA_POSITION);
@@ -432,7 +435,8 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_009, TestSize.Level1)
 
     // update the zoom ration range
     float newZoomRatioRange[7] = {1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0};
-    ret = meta->updateEntry(OHOS_ABILITY_ZOOM_RATIO_RANGE, newZoomRatioRange, sizeof(newZoomRatioRange)/sizeof(newZoomRatioRange[0]));
+    ret = meta->updateEntry(OHOS_ABILITY_ZOOM_RATIO_RANGE, newZoomRatioRange,
+    		                sizeof(newZoomRatioRange)/sizeof(newZoomRatioRange[0]));
     EXPECT_TRUE(ret == true);
 
     // Verify metadata items in buffer
@@ -446,7 +450,8 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_009, TestSize.Level1)
     EXPECT_TRUE(base_item->item == OHOS_ABILITY_ZOOM_RATIO_RANGE);
     EXPECT_TRUE(base_item->data_type == META_TYPE_FLOAT);
     EXPECT_TRUE(base_item->count == sizeof(newZoomRatioRange)/sizeof(newZoomRatioRange[0]));
-    EXPECT_TRUE(memcmp(newZoomRatioRange, get_metadata_data(meta->get()) + base_item->data.offset, sizeof(newZoomRatioRange)) == 0);
+    EXPECT_TRUE(memcmp(newZoomRatioRange, get_metadata_data(meta->get()) + base_item->data.offset,
+                       sizeof(newZoomRatioRange)) == 0);
 
     base_item++;
     EXPECT_TRUE(base_item->item == OHOS_ABILITY_CAMERA_POSITION);
@@ -480,7 +485,7 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_009, TestSize.Level1)
 * EnvConditions: NA
 * CaseDescription: Test operations(add/find/delete) on metadata items with all data types
 */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_010, TestSize.Level1)
+static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_010, TestSize.Level1)
 {
     std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(9, 80);
 
@@ -530,7 +535,8 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_010, TestSize.Level1)
 
     // int32 array
     int32_t activeArray[3] = {1, 2, 0xFFFFFFFF};
-    ret = cameraMetadata->addEntry(OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE, activeArray, sizeof(activeArray)/sizeof(activeArray[0]));
+    ret = cameraMetadata->addEntry(OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE, activeArray,
+                                   sizeof(activeArray)/sizeof(activeArray[0]));
     EXPECT_TRUE(ret == true);
 
     result = find_camera_metadata_item(metadata, OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE, &item);
@@ -569,7 +575,8 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_010, TestSize.Level1)
 
     // float array
     float zoomRatioRange[7] = {1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0};
-    ret = cameraMetadata->addEntry(OHOS_ABILITY_ZOOM_RATIO_RANGE, zoomRatioRange, sizeof(zoomRatioRange)/sizeof(zoomRatioRange[0]));
+    ret = cameraMetadata->addEntry(OHOS_ABILITY_ZOOM_RATIO_RANGE, zoomRatioRange,
+                                   sizeof(zoomRatioRange)/sizeof(zoomRatioRange[0]));
     EXPECT_TRUE(ret == true);
 
     result = find_camera_metadata_item(metadata, OHOS_ABILITY_ZOOM_RATIO_RANGE, &item);
@@ -582,7 +589,8 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_010, TestSize.Level1)
 
     // double array
     double gpsCoordinates[2] = {23.0166738, 77.7625576};
-    ret = cameraMetadata->addEntry(OHOS_JPEG_GPS_COORDINATES, gpsCoordinates, sizeof(gpsCoordinates)/sizeof(gpsCoordinates[0]));
+    ret = cameraMetadata->addEntry(OHOS_JPEG_GPS_COORDINATES, gpsCoordinates,
+                                   sizeof(gpsCoordinates)/sizeof(gpsCoordinates[0]));
     EXPECT_TRUE(ret == true);
 
     result = find_camera_metadata_item(metadata, OHOS_JPEG_GPS_COORDINATES, &item);

@@ -127,7 +127,8 @@ int32_t HCameraServiceProxy::CreateCaptureSession(sptr<ICaptureSession>& session
     return error;
 }
 
-int32_t HCameraServiceProxy::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamCapture>& photoOutput)
+int32_t HCameraServiceProxy::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer,
+    sptr<IStreamCapture>& photoOutput)
 {
     MessageParcel data;
     MessageParcel reply;

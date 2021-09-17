@@ -21,7 +21,7 @@ using namespace std;
 
 namespace OHOS {
 namespace CameraStandard {
-CameraInfo::CameraInfo(std::string cameraID, std::shared_ptr<CameraMetadata>metadata)
+CameraInfo::CameraInfo(std::string cameraID, std::shared_ptr<CameraMetadata> metadata)
 {
     cameraID_ = cameraID;
     metadata_ = metadata;

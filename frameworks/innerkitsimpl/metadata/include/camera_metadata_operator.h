@@ -16,9 +16,10 @@
 #ifndef CAMERA_METADATA_OPERATOR_H
 #define CAMERA_METADATA_OPERATOR_H
 
-#include "camera_device_ability_items.h"
 #include <stdint.h>
 #include <stdio.h>
+
+#include "camera_device_ability_items.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -132,6 +133,9 @@ typedef enum camera_metadata_sec {
 #define CAM_META_ITEM_NOT_FOUND  3
 #define CAM_META_ITEM_CAP_EXCEED 4
 #define CAM_META_DATA_CAP_EXCEED 5
+
+/* for shift opereration */
+#define BITWISE_SHIFT_16 16
 
 // Allocate a new camera metadata buffer and return the metadata header
 common_metadata_header_t *allocate_camera_metadata_buffer(uint32_t item_capacity, uint32_t data_capacity);

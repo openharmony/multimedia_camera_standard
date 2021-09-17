@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-enum class CAPTURE_OUTPUT_TYPE {
+enum CAPTURE_OUTPUT_TYPE {
     PREVIEW_OUTPUT,
     PHOTO_OUTPUT,
     VIDEO_OUTPUT

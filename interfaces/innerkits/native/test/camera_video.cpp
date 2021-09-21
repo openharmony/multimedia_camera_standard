@@ -52,7 +52,7 @@ enum class SaveVideoMode {
 };
 
 namespace {
-    static const std::int32_t FILE_PERMISSION_FLAG = 00766;
+const std::int32_t FILE_PERMISSION_FLAG = 00766;
 }
 
 class MyCallback : public CameraManagerCallback {

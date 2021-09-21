@@ -21,10 +21,12 @@
 #include "hcamera_device_callback_stub.h"
 #include "media_log.h"
 
+namespace {
+const std::int32_t METADATA_HEADER_DATA_SIZE = 4;
+}
+
 namespace OHOS {
 namespace CameraStandard {
-static const std::int32_t METADATA_HEADER_DATA_SIZE = 4;
-
 class CameraDeviceServiceCallback : public HCameraDeviceCallbackStub {
 public:
     sptr<CameraInput> camInput_ = nullptr;

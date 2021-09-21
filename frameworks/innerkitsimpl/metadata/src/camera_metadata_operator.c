@@ -227,7 +227,8 @@ int add_camera_metadata_item(common_metadata_header_t *dst, uint32_t item, const
 
     if (dst->item_count == dst->item_capacity) {
         METADATA_ERR_LOG("add_camera_metadata_item item_capacity limit reached. "
-                         "item_count: %{public}d, item_capacity: %{public}d", dst->item_count, dst->item_capacity);
+                         "item_count: %{public}d, item_capacity: %{public}d",
+                         dst->item_count, dst->item_capacity);
         return CAM_META_ITEM_CAP_EXCEED;
     }
 

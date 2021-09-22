@@ -203,7 +203,7 @@ public:
     }
 };
 
-static bool IsNumber(char number[])
+static bool IsNumber(const char number[])
 {
     for (int i = 0; number[i] != 0; i++) {
         if (!std::isdigit(number[i])) {

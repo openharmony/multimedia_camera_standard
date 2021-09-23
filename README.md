@@ -126,9 +126,12 @@ Steps to capture a photo:
     }
 ```
 
-7. Create the Consumer Surface and register listerner for buffer updates.
+7. Create the Consumer Surface and register listerner for buffer updates. The photo width and height can be configured to the supported resolution which is 1290x960.
 ```
     sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
+    int32_t photoWidth = 1290;
+    int32_t photoHeight = 960;
+    photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
     sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
     capturelistener->mode_ = MODE_PHOTO;
     capturelistener->surface_ = photoSurface;
@@ -219,9 +222,11 @@ Steps to start and stop preview:
     }
 ```
 
-6. Create a Preview Output with Surface obtained from Window Manager to render on display. And to save to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo.
+6. Create a Preview Output with Surface obtained from Window Manager to render on display. The preview width and Height can be configured as per the supported resolutions which are 640x480 or 832x480. And to save to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo.
 ```
-    sptr<CaptureOutput> previewOutput = camManagerObj->CreatePreviewOutput(previewSurface);
+    int32_t previewWidth = 640;
+    int32_t previewHeight = 480;
+    sptr<CaptureOutput> previewOutput = camManagerObj->CreateCustomPreviewOutput(previewSurface, previewWidth, previewHeight);
     if (previewOutput == nullptr) {
         MEDIA_ERR_LOG("Failed to create preview output");
         return previewOutput;
@@ -314,7 +319,7 @@ Steps to record Video:
     }
 ```
 
-6. Create a Video Output with Surface obtained from Recoder to MUX with audio and save the file. And to save just Video buffer to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo
+6. Create a Video Output with Surface obtained from Recoder to MUX with audio and save the file. And to save just Video buffer to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo. The video resolution can be configured from supported resolutions which are 1280x720 or 640x360 while setting the recorder configurations.
 ```
     sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
     if (videoOutput == nullptr) {

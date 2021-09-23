@@ -65,7 +65,7 @@ private:
     sptr<IStreamRepeatCallback> streamRepeatCallback_;
     std::shared_ptr<CameraMetadata> cameraAbility_;
     std::vector<std::pair<int32_t, int32_t>> validPreviewSizes_ = {{640, 480}, {832, 480}};
-    std::vector<std::pair<int32_t, int32_t>> validVideoSizes_ = {{1280, 720}};
+    std::vector<std::pair<int32_t, int32_t>> validVideoSizes_ = {{640, 360}, {1280, 720}};
 };
 } // namespace CameraStandard
 } // namespace OHOS

@@ -16,6 +16,7 @@ import("//build/ohos.gni")
 config("camera_config") {
   include_dirs = [
     "//foundation/multimedia/camera_standard/interfaces/innerkits/native/camera/include",
+    "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
@@ -31,7 +32,7 @@ config("camera_config") {
     "//drivers/peripheral/camera/interfaces/include/server",
     "//drivers/peripheral/camera/interfaces/include/callback/device",
     "//drivers/peripheral/camera/interfaces/include/callback/operator",
-    "//drivers/peripheral/camera/interfaces/include/callback/host"
+    "//drivers/peripheral/camera/interfaces/include/callback/host",
   ]
 }
 
@@ -42,20 +43,18 @@ ohos_executable("camera_video") {
   cflags += [ "-Wall" ]
   cflags_cc = cflags
 
-  configs = [
-    ":camera_config"
-  ]
+  configs = [ ":camera_config" ]
 
   deps = [
+    "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera:camera_framework",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
-    "//foundation/graphic/standard:libsurface",
-    "//utils/native/base:utils"
+    "//utils/native/base:utils",
   ]
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core"
+    "ipc:ipc_core",
   ]
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"
@@ -68,20 +67,45 @@ ohos_executable("camera_capture") {
   cflags += [ "-Wall" ]
   cflags_cc = cflags
 
-  configs = [
-      ":camera_config"
-  ]
+  configs = [ ":camera_config" ]
 
   deps = [
+    "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera:camera_framework",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
-    "//foundation/graphic/standard:libsurface",
-    "//utils/native/base:utils"
+    "//utils/native/base:utils",
   ]
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core"
+    "ipc:ipc_core",
+  ]
+  part_name = "multimedia_camera_standard"
+  subsystem_name = "multimedia"
+}
+
+ohos_executable("camera_capture_video") {
+  install_enable = false
+  sources = [
+    "camera_capture_video.cpp",
+    "test_common.cpp",
+  ]
+  cflags = [ "-fPIC" ]
+  cflags += [ "-Wall" ]
+  cflags_cc = cflags
+
+  configs = [ ":camera_config" ]
+
+  deps = [
+    "//foundation/graphic/standard:libsurface",
+    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera:camera_framework",
+    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
+    "//utils/native/base:utils",
+  ]
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
   ]
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"

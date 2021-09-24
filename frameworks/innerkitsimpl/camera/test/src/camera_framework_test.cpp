@@ -78,6 +78,7 @@ namespace {
     std::unordered_map<std::string, bool> g_camFlashMap;
     bool g_camInputOnError = false;
     int32_t g_videoFd = -1;
+    const int WAIT_TIME_AFTER_CAPTURE = 1;
     const int WAIT_TIME_AFTER_START = 5;
     const int WAIT_TIME_BEFORE_STOP = 2;
     const std::int32_t PHOTO_DEFAULT_WIDTH = 1280;
@@ -460,6 +461,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_001, TestSize.Level1)
 
     intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
     EXPECT_TRUE(intResult == 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
 
     captureSession->Release();
 }
@@ -511,6 +513,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level1)
     sleep(WAIT_TIME_AFTER_START);
     intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
     EXPECT_TRUE(intResult == 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
 
     captureSession->Stop();
     captureSession->Release();

@@ -28,8 +28,9 @@ The  **camera\_standard**  repository enables your application to provide camera
 
     This function repeatedly captures multiple frames in the buffer once the recording is started and continues till the recording is stopped. It is used for video recording.
 
-**Figure  1**  Position in the subsystem architecture<a name="fig310889397"></a>
-![](figures/position-in-the-subsystem-architecture.png "position-in-the-subsystem-architecture")
+**Figure  1**  Camera architecture<a name="fig310889397"></a>
+
+![](figures/camera-architecture-en.png "camera-architecture-en")
 
 ## Directory Structure<a name="section176641621345"></a>
 

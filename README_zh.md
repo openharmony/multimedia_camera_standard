@@ -13,8 +13,9 @@
 
 相机组件支持相机业务的开发，开发者可以通过已开放的接口实现相机硬件的访问、操作和新功能开发，最常见的操作如：预览、拍照和录像等。
 
-**图 1**  camera组件架构图<a name="fig310889397"></a>  
-![](figures/camera组件架构图.png "camera组件架构图")
+**图 1**  相机组件架构图<a name="fig310889397"></a>
+
+![](figures/camera-architecture-zh.png "camera-architecture-zh")
 
 ## 目录<a name="section176641621345"></a>
 

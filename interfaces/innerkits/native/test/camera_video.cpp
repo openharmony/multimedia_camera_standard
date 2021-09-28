@@ -251,6 +251,7 @@ int main(int argc, char **argv)
     const std::int32_t VIDEO_HEIGHT_INDEX = 4;
     const std::int32_t VALID_ARG_COUNT = 5;
     const std::int32_t VIDEO_CAPTURE_DURATION = 10; // Sleep for 10 sec
+    const std::int32_t VIDEO_PAUSE_DURATION = 5; // Sleep for 5 sec
     const std::int32_t PREVIEW_VIDEO_GAP = 2; // Sleep for 2 sec
     int32_t intResult = -1;
     // Default sizes for PreviewOutput and VideoOutput
@@ -349,6 +350,12 @@ int main(int argc, char **argv)
                 sleep(PREVIEW_VIDEO_GAP);
                 MEDIA_DEBUG_LOG("Start video recording");
                 ((sptr<VideoOutput> &)videoOutput)->Start();
+                sleep(VIDEO_CAPTURE_DURATION);
+                MEDIA_DEBUG_LOG("Pause video recording for 5 sec");
+                ((sptr<VideoOutput> &)videoOutput)->Pause();
+                sleep(VIDEO_PAUSE_DURATION);
+                MEDIA_DEBUG_LOG("Resume video recording");
+                ((sptr<VideoOutput> &)videoOutput)->Resume();
                 sleep(VIDEO_CAPTURE_DURATION);
                 MEDIA_DEBUG_LOG("Stop video recording");
                 ((sptr<VideoOutput> &)videoOutput)->Stop();

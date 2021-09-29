@@ -28,8 +28,8 @@ public:
     virtual ~PhotoCallback() = default;
     virtual void OnCaptureStarted(const int32_t captureID) const = 0;
     virtual void OnCaptureEnded(const int32_t captureID) const = 0;
-    virtual void OnFrameShutter(int32_t captureId, uint64_t timestamp) const = 0;
-    virtual void OnCaptureError(int32_t captureId, int32_t errorCode) const = 0;
+    virtual void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const = 0;
+    virtual void OnCaptureError(const int32_t captureId, const int32_t errorCode) const = 0;
 };
 class PhotoCaptureSetting {
 public:

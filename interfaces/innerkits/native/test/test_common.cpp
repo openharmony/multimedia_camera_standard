@@ -24,10 +24,6 @@
 
 namespace OHOS {
 namespace CameraStandard {
-const char *TestUtils::PREVIEW_PATH = "/mnt/preview/";
-const char *TestUtils::PHOTO_PATH = "/mnt/photo/";
-const char *TestUtils::VIDEO_PATH = "/mnt/video/";
-
 namespace {
     static const int32_t PREVIEW_SKIP_FRAMES = 10;
 }
@@ -43,31 +39,20 @@ uint64_t TestUtils::GetCurrentLocalTimeStamp()
 int32_t TestUtils::SaveYUV(const char *buffer, int32_t size, SurfaceType type)
 {
     char path[PATH_MAX] = {0};
-    char command[PATH_MAX] = {0};
     int32_t retVal;
 
     MEDIA_DEBUG_LOG("TestUtils::SaveYUV(), type: %{public}d", type);
     if (type == SurfaceType::PREVIEW) {
-        retVal = sprintf_s(command, sizeof(command) / sizeof(command[0]), "mkdir -p %s", PREVIEW_PATH);
-        if (retVal < 0) {
-            MEDIA_ERR_LOG("Creating %{public}s path failed!", PREVIEW_PATH);
-            return -1;
-        }
-        (void)system(command);
-        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "%s%s_%lld.yuv", PREVIEW_PATH, "preview",
+        (void)system("mkdir -p /mnt/preview");
+        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv", "preview",
                            GetCurrentLocalTimeStamp());
         if (retVal < 0) {
             MEDIA_ERR_LOG("Path Assignment failed");
             return -1;
         }
     } else if (type == SurfaceType::PHOTO) {
-        retVal = sprintf_s(command, sizeof(command) / sizeof(command[0]), "mkdir -p %s", PHOTO_PATH);
-        if (retVal < 0) {
-            MEDIA_ERR_LOG("Creating %{public}s path failed!", PHOTO_PATH);
-            return -1;
-        }
-        (void)system(command);
-        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "%s%s_%lld.jpg", PHOTO_PATH, "photo",
+        (void)system("mkdir -p /mnt/photo");
+        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/photo/%s_%lld.jpg", "photo",
                            GetCurrentLocalTimeStamp());
         if (retVal < 0) {
             MEDIA_ERR_LOG("Path Assignment failed");
@@ -110,16 +95,10 @@ int32_t TestUtils::SaveVideoFile(const char *buffer, int32_t size, VideoSaveMode
 
     if (operationMode == VideoSaveMode::CREATE) {
         char path[255] = {0};
-        char command[PATH_MAX] = {0};
 
-        retVal = sprintf_s(command, sizeof(command) / sizeof(command[0]), "mkdir -p %s", VIDEO_PATH);
-        if (retVal < 0) {
-            MEDIA_ERR_LOG("Creating %{public}s path failed!", VIDEO_PATH);
-            return -1;
-        }
-        (void)system(command);
+        (void)system("mkdir -p /mnt/video");
         retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]),
-                           "%s%s_%lld.h264", VIDEO_PATH, "video", GetCurrentLocalTimeStamp());
+                           "/mnt/video/%s_%lld.h264", "video", GetCurrentLocalTimeStamp());
         if (retVal < 0) {
             MEDIA_ERR_LOG("Failed to create video file name");
             return -1;

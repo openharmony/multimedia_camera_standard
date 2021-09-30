@@ -34,9 +34,6 @@ enum class SurfaceType {
 
 class TestUtils {
 public:
-    static const char *PREVIEW_PATH;
-    static const char *PHOTO_PATH;
-    static const char *VIDEO_PATH;
     static const std::int32_t FILE_PERMISSIONS_FLAG = 00766;
 
     static uint64_t GetCurrentLocalTimeStamp();

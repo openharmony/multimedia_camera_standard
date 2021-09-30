@@ -113,6 +113,16 @@ int32_t VideoOutput::Stop()
     return streamRepeat_->Stop();
 }
 
+int32_t VideoOutput::Resume()
+{
+    return streamRepeat_->Start();
+}
+
+int32_t VideoOutput::Pause()
+{
+    return streamRepeat_->Stop();
+}
+
 void VideoOutput::Release()
 {
     int32_t errCode = streamRepeat_->Release();

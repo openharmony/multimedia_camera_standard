@@ -44,6 +44,8 @@ public:
     int32_t SetFps(float fps);
     int32_t Start();
     int32_t Stop();
+    int32_t Pause();
+    int32_t Resume();
     std::shared_ptr<VideoCallback> GetApplicationCallback();
 
 private:

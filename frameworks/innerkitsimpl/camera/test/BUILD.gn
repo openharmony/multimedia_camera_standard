@@ -16,11 +16,9 @@ import("//build/test.gni")
 module_output_path = "camera_standard/camera_framework"
 
 group("cameraframeworktest") {
-    testonly = true
+  testonly = true
 
-    deps = [
-        ":camera_framework_test",
-    ]
+  deps = [ ":camera_framework_test" ]
 }
 
 ohos_moduletest("camera_framework_test") {
@@ -33,6 +31,7 @@ ohos_moduletest("camera_framework_test") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include",
     "//foundation/multimedia/camera_standard/interfaces/innerkits/native/camera/include",
+    "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test",
     "//foundation/graphic/standard/frameworks/surface/include",
     "//utils/system/safwk/native/include",
     "//drivers/framework/include/utils",
@@ -55,20 +54,24 @@ ohos_moduletest("camera_framework_test") {
     "//drivers/peripheral/camera/hal/pipeline_core/include",
     "//drivers/peripheral/camera/hal/pipeline_core/pipeline_impl/include",
     "//drivers/peripheral/camera/hal/pipeline_core/host_stream/include",
-    "//drivers/peripheral/camera/hal/pipeline_core/ipp/include"
+    "//drivers/peripheral/camera/hal/pipeline_core/ipp/include",
   ]
 
-  sources = [ "src/camera_framework_test.cpp" ]
+  sources = [
+    "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test/test_common.cpp",
+    "src/camera_framework_test.cpp",
+  ]
 
   deps = [
+    "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera:camera_framework",
-    "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
-    "//foundation/graphic/standard:libsurface"
+    "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
   ]
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core"
+    "ipc:ipc_core",
+    "multimedia_media_standard:media_client",
   ]
 }

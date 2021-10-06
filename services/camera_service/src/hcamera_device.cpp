@@ -76,7 +76,9 @@ int32_t HCameraDevice::Open()
 
 int32_t HCameraDevice::Close()
 {
-    hdiCameraDevice_->Close();
+    if (hdiCameraDevice_ != nullptr) {
+        hdiCameraDevice_->Close();
+    }
     hdiCameraDevice_ = nullptr;
     return CAMERA_OK;
 }

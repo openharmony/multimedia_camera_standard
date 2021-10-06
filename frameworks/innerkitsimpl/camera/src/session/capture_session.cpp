@@ -42,11 +42,19 @@ int32_t CaptureSession::CommitConfig()
 
 int32_t CaptureSession::AddInput(sptr<CaptureInput> &input)
 {
+    if (input == nullptr) {
+        MEDIA_ERR_LOG("CaptureSession::AddInput input is null");
+        return CAMERA_INVALID_ARG;
+    }
     return captureSession_->AddInput(((sptr<CameraInput> &)input)->GetCameraDevice());
 }
 
 int32_t CaptureSession::AddOutput(sptr<CaptureOutput> &output)
 {
+    if (output == nullptr) {
+        MEDIA_ERR_LOG("CaptureSession::AddOutput output is null");
+        return CAMERA_INVALID_ARG;
+    }
     if (output->GetType() == CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT) {
         return captureSession_->AddOutput(((sptr<PhotoOutput> &)output)->GetStreamCapture());
     } else if (output->GetType() == CAPTURE_OUTPUT_TYPE::PREVIEW_OUTPUT) {

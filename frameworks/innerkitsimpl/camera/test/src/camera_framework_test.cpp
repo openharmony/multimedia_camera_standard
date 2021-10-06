@@ -31,63 +31,383 @@
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
 #include "media_log.h"
+#include "recorder.h"
 #include "surface.h"
+#include "test_common.h"
 
 using namespace OHOS;
 using namespace OHOS::CameraStandard;
+using namespace OHOS::Media;
 using namespace testing::ext;
 
-enum class mode_ {
-    MODE_PREVIEW = 0,
-    MODE_PHOTO
-};
-
-enum class SaveVideoMode {
-    CREATE = 0,
-    APPEND,
-    CLOSE
-};
-
-enum class CAM_PHOTO_EVENTS {
-    CAM_PHOTO_CAPTURE_START = 0,
-    CAM_PHOTO_CAPTURE_END,
-    CAM_PHOTO_CAPTURE_ERR,
-    CAM_PHOTO_FRAME_SHUTTER,
-    CAM_PHOTO_MAX_EVENT
-};
-
-enum class CAM_PREVIEW_EVENTS {
-    CAM_PREVIEW_FRAME_START = 0,
-    CAM_PREVIEW_FRAME_END,
-    CAM_PREVIEW_FRAME_ERR,
-    CAM_PREVIEW_MAX_EVENT
-};
-
-enum class CAM_VIDEO_EVENTS {
-    CAM_VIDEO_FRAME_START = 0,
-    CAM_VIDEO_FRAME_END,
-    CAM_VIDEO_FRAME_ERR,
-    CAM_VIDEO_MAX_EVENT
-};
-
 namespace {
+    enum class CAM_PHOTO_EVENTS {
+        CAM_PHOTO_CAPTURE_START = 0,
+        CAM_PHOTO_CAPTURE_END,
+        CAM_PHOTO_CAPTURE_ERR,
+        CAM_PHOTO_FRAME_SHUTTER,
+        CAM_PHOTO_MAX_EVENT
+    };
+
+    enum class CAM_PREVIEW_EVENTS {
+        CAM_PREVIEW_FRAME_START = 0,
+        CAM_PREVIEW_FRAME_END,
+        CAM_PREVIEW_FRAME_ERR,
+        CAM_PREVIEW_MAX_EVENT
+    };
+
+    enum class CAM_VIDEO_EVENTS {
+        CAM_VIDEO_FRAME_START = 0,
+        CAM_VIDEO_FRAME_END,
+        CAM_VIDEO_FRAME_ERR,
+        CAM_VIDEO_MAX_EVENT
+    };
+
+    const int32_t WAIT_TIME_AFTER_CAPTURE = 1;
+    const int32_t WAIT_TIME_AFTER_START = 5;
+    const int32_t WAIT_TIME_BEFORE_STOP = 2;
+    const int32_t PHOTO_DEFAULT_WIDTH = 1280;
+    const int32_t PHOTO_DEFAULT_HEIGHT = 960;
+    const int32_t PREVIEW_DEFAULT_WIDTH = 640;
+    const int32_t PREVIEW_DEFAULT_HEIGHT = 480;
+    const int32_t VIDEO_DEFAULT_WIDTH = 640;
+    const int32_t VIDEO_DEFAULT_HEIGHT = 360;
+    const int32_t AUDIO_CHANNEL_COUNT = 2;
+    const int32_t AUDIO_SAMPLE_RATE = 48000;
+    const int32_t AUDIO_ENCODING_BITRATE = 48000;
+    const int32_t VIDEO_ENCODING_BITRATE = 48000;
+    const int32_t VIDEO_FRAME_RATE = 30;
+    const int32_t VIDEO_CAPTURE_RATE = 30;
+    const int32_t RECORD_MAX_DURATION = 36000;
+    bool g_camInputOnError = false;
+    int32_t g_videoFd = -1;
     std::bitset<static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_MAX_EVENT)> g_photoEvents;
     std::bitset<static_cast<unsigned int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_MAX_EVENT)> g_previewEvents;
     std::bitset<static_cast<unsigned int>(CAM_VIDEO_EVENTS::CAM_VIDEO_MAX_EVENT)> g_videoEvents;
     std::unordered_map<std::string, bool> g_camStatusMap;
     std::unordered_map<std::string, bool> g_camFlashMap;
-    bool g_camInputOnError = false;
-    int32_t g_videoFd = -1;
-    const int WAIT_TIME_AFTER_CAPTURE = 1;
-    const int WAIT_TIME_AFTER_START = 5;
-    const int WAIT_TIME_BEFORE_STOP = 2;
-    const std::int32_t PHOTO_DEFAULT_WIDTH = 1280;
-    const std::int32_t PHOTO_DEFAULT_HEIGHT = 960;
-    const std::int32_t PREVIEW_DEFAULT_WIDTH = 640;
-    const std::int32_t PREVIEW_DEFAULT_HEIGHT = 480;
-    const std::int32_t VIDEO_DEFAULT_WIDTH = 1280;
-    const std::int32_t VIDEO_DEFAULT_HEIGHT = 720;
-    const std::int32_t FILE_PERMISSION_FLAG = 00766;
+    sptr<CameraManager> manager;
+    std::vector<sptr<CameraInfo>> cameras;
+    sptr<CaptureInput> input;
+    sptr<CaptureSession> session;
+
+    class AppCallback : public CameraManagerCallback, public ErrorCallback, public PhotoCallback,
+                        public PreviewCallback {
+    public:
+        void OnCameraStatusChanged(const std::string &cameraID, const CameraDeviceStatus cameraStatus) const override
+        {
+            switch (cameraStatus) {
+                case CAMERA_DEVICE_STATUS_UNAVAILABLE: {
+                    MEDIA_DEBUG_LOG("AppCallback::OnCameraStatusChanged %{public}s: CAMERA_DEVICE_STATUS_UNAVAILABLE",
+                                    cameraID.c_str());
+                    g_camStatusMap.erase(cameraID);
+                    break;
+                }
+                case CAMERA_DEVICE_STATUS_AVAILABLE: {
+                    MEDIA_DEBUG_LOG("AppCallback::OnCameraStatusChanged %{public}s: CAMERA_DEVICE_STATUS_AVAILABLE",
+                                    cameraID.c_str());
+                    g_camStatusMap[cameraID] = true;
+                    break;
+                }
+                default: {
+                    MEDIA_DEBUG_LOG("AppCallback::OnCameraStatusChanged %{public}s: unknown", cameraID.c_str());
+                    EXPECT_TRUE(false);
+                }
+            }
+            return;
+        }
+
+        void OnFlashlightStatusChanged(const std::string &cameraID, const FlashlightStatus flashStatus) const override
+        {
+            switch (flashStatus) {
+                case FLASHLIGHT_STATUS_OFF: {
+                    MEDIA_DEBUG_LOG("AppCallback::OnFlashlightStatusChanged %{public}s: FLASHLIGHT_STATUS_OFF",
+                                    cameraID.c_str());
+                    g_camFlashMap[cameraID] = false;
+                    break;
+                }
+                case FLASHLIGHT_STATUS_ON: {
+                    MEDIA_DEBUG_LOG("AppCallback::OnFlashlightStatusChanged %{public}s: FLASHLIGHT_STATUS_ON",
+                                    cameraID.c_str());
+                    g_camFlashMap[cameraID] = true;
+                    break;
+                }
+                case FLASHLIGHT_STATUS_UNAVAILABLE: {
+                    MEDIA_DEBUG_LOG("AppCallback::OnFlashlightStatusChanged %{public}s: FLASHLIGHT_STATUS_UNAVAILABLE",
+                                    cameraID.c_str());
+                    g_camFlashMap.erase(cameraID);
+                    break;
+                }
+                default: {
+                    MEDIA_DEBUG_LOG("AppCallback::OnFlashlightStatusChanged %{public}s: unknown", cameraID.c_str());
+                    EXPECT_TRUE(false);
+                }
+            }
+            return;
+        }
+
+        void OnError(const int32_t errorType, const int32_t errorMsg) const override
+        {
+            MEDIA_DEBUG_LOG("AppCallback::OnError errorType: %{public}d, errorMsg: %{public}d", errorType, errorMsg);
+            g_camInputOnError = true;
+            return;
+        }
+
+        void OnCaptureStarted(const int32_t captureID) const override
+        {
+            MEDIA_DEBUG_LOG("AppCallback::OnCaptureStarted captureID: %{public}d", captureID);
+            g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_START)] = 1;
+            return;
+        }
+
+        void OnCaptureEnded(const int32_t captureID) const override
+        {
+            MEDIA_DEBUG_LOG("AppCallback::OnCaptureEnded captureID: %{public}d", captureID);
+            g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_END)] = 1;
+            return;
+        }
+
+        void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const override
+        {
+            MEDIA_DEBUG_LOG("AppCallback::OnFrameShutter captureId: %{public}d, timestamp: %{public}"
+                            PRIu64, captureId, timestamp);
+            g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_FRAME_SHUTTER)] = 1;
+            return;
+        }
+
+        void OnCaptureError(const int32_t captureId, const int32_t errorCode) const override
+        {
+            MEDIA_DEBUG_LOG("AppCallback::OnCaptureError captureId: %{public}d, errorCode: %{public}d",
+                            captureId, errorCode);
+            g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_ERR)] = 1;
+            return;
+        }
+
+        void OnFrameStarted() const override
+        {
+            MEDIA_DEBUG_LOG("AppCallback::OnFrameStarted");
+            g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_START)] = 1;
+            return;
+        }
+        void OnFrameEnded(const int32_t frameCount) const override
+        {
+            MEDIA_DEBUG_LOG("AppCallback::OnFrameEnded frameCount: %{public}d", frameCount);
+            g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_END)] = 1;
+            return;
+        }
+        void OnError(const int32_t errorCode) const override
+        {
+            MEDIA_DEBUG_LOG("AppCallback::OnError errorCode: %{public}d", errorCode);
+            g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_ERR)] = 1;
+            return;
+        }
+    };
+
+    class AppVideoCallback : public VideoCallback {
+        void OnFrameStarted() const override
+        {
+            MEDIA_DEBUG_LOG("AppVideoCallback::OnFrameStarted");
+            g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_START)] = 1;
+            return;
+        }
+        void OnFrameEnded(const int32_t frameCount) const override
+        {
+            MEDIA_DEBUG_LOG("AppVideoCallback::OnFrameEnded frameCount: %{public}d", frameCount);
+            g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_END)] = 1;
+            return;
+        }
+        void OnError(const int32_t errorCode) const override
+        {
+            MEDIA_DEBUG_LOG("AppVideoCallback::OnError errorCode: %{public}d", errorCode);
+            g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_ERR)] = 1;
+            return;
+        }
+    };
+
+    class TestVideoRecorderCallback : public RecorderCallback {
+    public:
+        void OnError(RecorderErrorType errorType, int32_t errorCode)
+        {
+            MEDIA_DEBUG_LOG("OnError errorType is %{public}d, errorCode is  %{public}d", errorType, errorCode);
+        }
+        void OnInfo(int32_t type, int32_t extra)
+        {
+            MEDIA_DEBUG_LOG("OnInfo Type is %{public}d, extra is  %{public}d", type, extra);
+        }
+    };
+
+    bool ConfigureVideoParams(std::shared_ptr<Recorder> &recorder, int32_t videoSourceId)
+    {
+        if (recorder->SetVideoEncoder(videoSourceId, Media::H264)) {
+            MEDIA_DEBUG_LOG("Set Video Encoder Failed");
+            return false;
+        }
+
+        if (recorder->SetVideoSize(videoSourceId, VIDEO_DEFAULT_WIDTH, VIDEO_DEFAULT_HEIGHT)) {
+            MEDIA_DEBUG_LOG("Set Video Size Failed");
+            return false;
+        }
+
+        if (recorder->SetVideoFrameRate(videoSourceId, VIDEO_FRAME_RATE)) {
+            MEDIA_DEBUG_LOG("Set Video Frame Rate Failed");
+            return false;
+        }
+
+        if (recorder->SetVideoEncodingBitRate(videoSourceId, VIDEO_ENCODING_BITRATE)) {
+            MEDIA_DEBUG_LOG("Set Video Encoding Bit Rate Failed");
+            return false;
+        }
+
+        if (recorder->SetCaptureRate(videoSourceId, VIDEO_CAPTURE_RATE)) {
+            MEDIA_DEBUG_LOG("Set Capture Rate Failed");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool ConfigureAudioParams(std::shared_ptr<Recorder> &recorder, int32_t audioSourceId)
+    {
+        if (recorder->SetAudioEncoder(audioSourceId, Media::AAC_LC)) {
+            MEDIA_DEBUG_LOG("Set Audio Encoder Failed");
+            return false;
+        }
+
+        if (recorder->SetAudioSampleRate(audioSourceId, AUDIO_SAMPLE_RATE)) {
+            MEDIA_DEBUG_LOG("Set Audio Sample Rate Failed");
+            return false;
+        }
+
+        if (recorder->SetAudioChannels(audioSourceId, AUDIO_CHANNEL_COUNT)) {
+            MEDIA_DEBUG_LOG("Set Audio Channels Failed");
+            return false;
+        }
+
+        if (recorder->SetAudioEncodingBitRate(audioSourceId, AUDIO_ENCODING_BITRATE)) {
+            MEDIA_DEBUG_LOG("Set Audio Encoding Bit Rate Failed");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool CreateAndConfigureRecorder(std::shared_ptr<Recorder> &recorder, int32_t &videoSourceId)
+    {
+        recorder = RecorderFactory::CreateRecorder();
+        if (recorder == nullptr) {
+            MEDIA_DEBUG_LOG("Create Recorder Failed");
+            return false;
+        }
+
+        int32_t audioSourceId = 0;
+        if (recorder->SetVideoSource(Media::VIDEO_SOURCE_SURFACE_ES, videoSourceId)) {
+            MEDIA_DEBUG_LOG("Set Video Source Failed");
+            return false;
+        }
+
+        if (recorder->SetAudioSource(Media::AUDIO_MIC, audioSourceId)) {
+            MEDIA_DEBUG_LOG("Set Audio Source Failed");
+            return false;
+        }
+
+        if (recorder->SetOutputFormat(Media::FORMAT_MPEG_4)) {
+            MEDIA_DEBUG_LOG("Set Output Format Failed");
+            return false;
+        }
+
+        if (!ConfigureVideoParams(recorder, videoSourceId)) {
+            MEDIA_DEBUG_LOG("Failed to configure video for recorder");
+            return false;
+        }
+
+        if (!ConfigureAudioParams(recorder, audioSourceId)) {
+            MEDIA_DEBUG_LOG("Failed to configure audio for recorder");
+            return false;
+        }
+
+        if (recorder->SetMaxDuration(RECORD_MAX_DURATION)) {
+            MEDIA_DEBUG_LOG("Set Max Duration Failed");
+            return false;
+        }
+
+        if (recorder->SetOutputPath("/data/recorder")) {
+            MEDIA_DEBUG_LOG("Set output Path Failed");
+            return false;
+        }
+
+        if (recorder->SetRecorderCallback(std::make_shared<TestVideoRecorderCallback>())) {
+            MEDIA_DEBUG_LOG("Set Recorder Callback Failed");
+            return false;
+        }
+        return true;
+    }
+
+    sptr<CaptureOutput> CreatePhotoOutput(sptr<CameraManager> &cameraManager,
+                                          int32_t width = PHOTO_DEFAULT_WIDTH,
+                                          int32_t height = PHOTO_DEFAULT_HEIGHT)
+    {
+        int32_t fd = -1;
+        sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
+        surface->SetDefaultWidthAndHeight(width, height);
+        sptr<SurfaceListener> listener = new SurfaceListener("Test_Capture", SurfaceType::PHOTO, fd, surface);
+        surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
+        sptr<CaptureOutput> photoOutput = cameraManager->CreatePhotoOutput(surface);
+        return photoOutput;
+    }
+
+    sptr<CaptureOutput> CreatePreviewOutput(sptr<CameraManager> &cameraManager,
+                                            bool customPreview = false,
+                                            int32_t width = PREVIEW_DEFAULT_WIDTH,
+                                            int32_t height = PREVIEW_DEFAULT_HEIGHT)
+    {
+        int32_t fd = -1;
+        sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
+        surface->SetDefaultWidthAndHeight(width, height);
+        sptr<SurfaceListener> listener = new SurfaceListener("Test_Preview", SurfaceType::PREVIEW, fd, surface);
+        surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
+        sptr<CaptureOutput> previewOutput = nullptr;
+        if (customPreview) {
+            previewOutput = cameraManager->CreateCustomPreviewOutput(surface, width, height);
+        } else {
+            previewOutput = cameraManager->CreatePreviewOutput(surface);
+        }
+        return previewOutput;
+    }
+
+    sptr<CaptureOutput> CreateVideoOutput(sptr<CameraManager> &cameraManager,
+                                          int32_t width = VIDEO_DEFAULT_WIDTH,
+                                          int32_t height = VIDEO_DEFAULT_HEIGHT)
+    {
+        sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
+        surface->SetDefaultWidthAndHeight(width, height);
+        sptr<SurfaceListener> listener = new SurfaceListener("Test_Video", SurfaceType::VIDEO, g_videoFd, surface);
+        surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
+        sptr<CaptureOutput> videoOutput = cameraManager->CreateVideoOutput(surface);
+        return videoOutput;
+    }
+
+    sptr<CaptureOutput> CreateVideoOutputWithRecorder(sptr<CameraManager> &cameraManager,
+                                                      std::shared_ptr<Recorder> &recorder)
+    {
+        int32_t videoSourceId = 0;
+        CreateAndConfigureRecorder(recorder, videoSourceId);
+        if (recorder == nullptr) {
+            return nullptr;
+        }
+
+        if (recorder->Prepare()) {
+            return nullptr;
+        }
+
+        sptr<Surface> videoSurface = recorder->GetSurface(videoSourceId);
+        if (videoSurface == nullptr) {
+            return nullptr;
+        }
+
+        videoSurface->SetDefaultWidthAndHeight(VIDEO_DEFAULT_WIDTH, VIDEO_DEFAULT_HEIGHT);
+        sptr<CaptureOutput> videoOutput = cameraManager->CreateVideoOutput(videoSurface);
+        return videoOutput;
+    }
 }
 
 void CameraFrameworkTest::SetUpTestCase(void) {}
@@ -102,326 +422,23 @@ void CameraFrameworkTest::SetUp()
     g_camFlashMap.clear();
     g_camInputOnError = false;
     g_videoFd = -1;
-}
-void CameraFrameworkTest::TearDown() {}
 
-static uint64_t GetCurrentLocalTimeStamp()
-{
-    std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> tp =
-        std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
-    auto tmp = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch());
-    return tmp.count();
-}
+    manager = CameraManager::GetInstance();
+    manager->SetCallback(std::make_shared<AppCallback>());
 
-static int32_t SaveYUV(mode_ mode, const char *buffer, int32_t size)
-{
-    char path[PATH_MAX] = {0};
-    int32_t retlen = 0;
-    if (mode == mode_::MODE_PREVIEW) {
-        system("mkdir -p /mnt/preview");
-        retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv",
-            "preview", GetCurrentLocalTimeStamp());
-    } else {
-        system("mkdir -p /mnt/capture");
-        retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/capture/%s_%lld.jpg",
-            "photo", GetCurrentLocalTimeStamp());
-    }
-    if (retlen < 0) {
-        MEDIA_ERR_LOG("Path Assignment failed");
-        return -1;
-    }
+    cameras = manager->GetCameras();
+    ASSERT_TRUE(cameras.size() != 0);
 
-    MEDIA_DEBUG_LOG("%s, saving file to %{public}s", __FUNCTION__, path);
-    int imgFd = open(path, O_RDWR | O_CREAT, FILE_PERMISSION_FLAG);
-    if (imgFd == -1) {
-        MEDIA_DEBUG_LOG("%s, open file failed, errno = %{public}s.", __FUNCTION__, strerror(errno));
-        return -1;
-    }
-    int ret = write(imgFd, buffer, size);
-    if (ret == -1) {
-        MEDIA_DEBUG_LOG("%s, write file failed, error = %{public}s", __FUNCTION__, strerror(errno));
-        close(imgFd);
-        return -1;
-    }
-    close(imgFd);
-    return 0;
+    input = manager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    session = manager->CreateCaptureSession();
+    ASSERT_NE(session, nullptr);
 }
 
-static int32_t SaveVideoFile(const char *buffer, int32_t size, SaveVideoMode operationMode)
+void CameraFrameworkTest::TearDown()
 {
-    if (operationMode == SaveVideoMode::CREATE) {
-        char path[255] = {0};
-        system("mkdir -p /mnt/video");
-        int32_t retlen = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/video/%s_%lld.h264",
-            "video", GetCurrentLocalTimeStamp());
-        if (retlen < 0) {
-            MEDIA_ERR_LOG("Path Assignment failed");
-            return -1;
-        }
-        MEDIA_DEBUG_LOG("%s, save video to file %s", __FUNCTION__, path);
-        g_videoFd = open(path, O_RDWR | O_CREAT, FILE_PERMISSION_FLAG);
-        if (g_videoFd == -1) {
-            std::cout << "open file failed, errno = " << strerror(errno) << std::endl;
-            return -1;
-        }
-    } else if (operationMode == SaveVideoMode::APPEND && g_videoFd != -1) {
-        int32_t ret = write(g_videoFd, buffer, size);
-        if (ret == -1) {
-            std::cout << "write file failed, error = " << strerror(errno) << std::endl;
-            close(g_videoFd);
-            return -1;
-        }
-    } else {
-        if (g_videoFd != -1) {
-            close(g_videoFd);
-            g_videoFd = -1;
-        }
-    }
-    return 0;
-}
-
-class AppCallback : public CameraManagerCallback, public ErrorCallback, public PhotoCallback, public PreviewCallback {
-public:
-    void OnCameraStatusChanged(const std::string &cameraID, const CameraDeviceStatus cameraStatus) const override
-    {
-        switch (cameraStatus) {
-            case CAMERA_DEVICE_STATUS_UNAVAILABLE: {
-                MEDIA_DEBUG_LOG("AppCallback::OnCameraStatusChanged %{public}s: CAMERA_DEVICE_STATUS_UNAVAILABLE",
-                                cameraID.c_str());
-                g_camStatusMap.erase(cameraID);
-                break;
-            }
-            case CAMERA_DEVICE_STATUS_AVAILABLE: {
-                MEDIA_DEBUG_LOG("AppCallback::OnCameraStatusChanged %{public}s: CAMERA_DEVICE_STATUS_AVAILABLE",
-                                cameraID.c_str());
-                g_camStatusMap[cameraID] = true;
-                break;
-            }
-            default: {
-                MEDIA_DEBUG_LOG("AppCallback::OnCameraStatusChanged %{public}s: unknown", cameraID.c_str());
-                EXPECT_TRUE(false);
-            }
-        }
-        return;
-    }
-
-    void OnFlashlightStatusChanged(const std::string &cameraID, const FlashlightStatus flashStatus) const override
-    {
-        switch (flashStatus) {
-            case FLASHLIGHT_STATUS_OFF: {
-                MEDIA_DEBUG_LOG("AppCallback::OnFlashlightStatusChanged %{public}s: FLASHLIGHT_STATUS_OFF",
-                                cameraID.c_str());
-                g_camFlashMap[cameraID] = false;
-                break;
-            }
-            case FLASHLIGHT_STATUS_ON: {
-                MEDIA_DEBUG_LOG("AppCallback::OnFlashlightStatusChanged %{public}s: FLASHLIGHT_STATUS_ON",
-                                cameraID.c_str());
-                g_camFlashMap[cameraID] = true;
-                break;
-            }
-            case FLASHLIGHT_STATUS_UNAVAILABLE: {
-                MEDIA_DEBUG_LOG("AppCallback::OnFlashlightStatusChanged %{public}s: FLASHLIGHT_STATUS_UNAVAILABLE",
-                                cameraID.c_str());
-                g_camFlashMap.erase(cameraID);
-                break;
-            }
-            default: {
-                MEDIA_DEBUG_LOG("AppCallback::OnFlashlightStatusChanged %{public}s: unknown", cameraID.c_str());
-                EXPECT_TRUE(false);
-            }
-        }
-        return;
-    }
-
-    void OnError(const int32_t errorType, const int32_t errorMsg) const override
-    {
-        MEDIA_DEBUG_LOG("AppCallback::OnError errorType: %{public}d, errorMsg: %{public}d", errorType, errorMsg);
-        g_camInputOnError = true;
-        return;
-    }
-
-    void OnCaptureStarted(const int32_t captureID) const override
-    {
-        MEDIA_DEBUG_LOG("AppCallback::OnCaptureStarted captureID: %{public}d", captureID);
-        g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_START)] = 1;
-        return;
-    }
-
-    void OnCaptureEnded(const int32_t captureID) const override
-    {
-        MEDIA_DEBUG_LOG("AppCallback::OnCaptureEnded captureID: %{public}d", captureID);
-        g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_END)] = 1;
-        return;
-    }
-
-    void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const override
-    {
-        MEDIA_DEBUG_LOG("AppCallback::OnFrameShutter captureId: %{public}d, timestamp: %{public}"
-                        PRIu64, captureId, timestamp);
-        g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_FRAME_SHUTTER)] = 1;
-        return;
-    }
-
-    void OnCaptureError(const int32_t captureId, const int32_t errorCode) const override
-    {
-        MEDIA_DEBUG_LOG("AppCallback::OnCaptureError captureId: %{public}d, errorCode: %{public}d",
-                        captureId, errorCode);
-        g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_ERR)] = 1;
-        return;
-    }
-
-    void OnFrameStarted() const override
-    {
-        MEDIA_DEBUG_LOG("AppCallback::OnFrameStarted");
-        g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_START)] = 1;
-        return;
-    }
-    void OnFrameEnded(const int32_t frameCount) const override
-    {
-        MEDIA_DEBUG_LOG("AppCallback::OnFrameEnded frameCount: %{public}d", frameCount);
-        g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_END)] = 1;
-        return;
-    }
-    void OnError(const int32_t errorCode) const override
-    {
-        MEDIA_DEBUG_LOG("AppCallback::OnError errorCode: %{public}d", errorCode);
-        g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_ERR)] = 1;
-        return;
-    }
-};
-
-class AppVideoCallback : public VideoCallback {
-    void OnFrameStarted() const override
-    {
-        MEDIA_DEBUG_LOG("AppVideoCallback::OnFrameStarted");
-        g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_START)] = 1;
-        return;
-    }
-    void OnFrameEnded(const int32_t frameCount) const override
-    {
-        MEDIA_DEBUG_LOG("AppVideoCallback::OnFrameEnded frameCount: %{public}d", frameCount);
-        g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_END)] = 1;
-        return;
-    }
-    void OnError(const int32_t errorCode) const override
-    {
-        MEDIA_DEBUG_LOG("AppVideoCallback::OnError errorCode: %{public}d", errorCode);
-        g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_ERR)] = 1;
-        return;
-    }
-};
-
-class SurfaceListener : public IBufferConsumerListener {
-public:
-    mode_ mode;
-    sptr<Surface> surface_;
-
-    void OnBufferAvailable() override
-    {
-        int32_t flushFence = 0;
-        int64_t timestamp = 0;
-        OHOS::Rect damage;
-        MEDIA_DEBUG_LOG("SurfaceListener OnBufferAvailable");
-        OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
-        surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
-        if (buffer != nullptr) {
-            char *addr = static_cast<char *>(buffer->GetVirAddr());
-            int32_t size = buffer->GetSize();
-            MEDIA_DEBUG_LOG("Calling SaveYUV");
-            SaveYUV(mode, addr, size);
-            surface_->ReleaseBuffer(buffer, -1);
-        } else {
-            MEDIA_DEBUG_LOG("AcquireBuffer failed!");
-        }
-    }
-};
-
-class VideoSurfaceListener : public IBufferConsumerListener {
-public:
-    sptr<Surface> surface_;
-
-    void OnBufferAvailable() override
-    {
-        if (g_videoFd == -1) {
-            // Create video file
-            SaveVideoFile(nullptr, 0, SaveVideoMode::CREATE);
-        }
-        int32_t flushFence = 0;
-        int64_t timestamp = 0;
-        OHOS::Rect damage;
-        MEDIA_DEBUG_LOG("VideoSurfaceListener OnBufferAvailable");
-        OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
-        surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
-        if (buffer != nullptr) {
-            char *addr = static_cast<char *>(buffer->GetVirAddr());
-            int32_t size = buffer->GetSize();
-            MEDIA_DEBUG_LOG("Saving to video file");
-            SaveVideoFile(addr, size, SaveVideoMode::APPEND);
-            surface_->ReleaseBuffer(buffer, -1);
-        } else {
-            MEDIA_DEBUG_LOG("AcquireBuffer failed!");
-        }
-    }
-};
-
-class CaptureSurfaceListener : public IBufferConsumerListener {
-public:
-    mode_ mode;
-    sptr<Surface> surface_;
-    void OnBufferAvailable() override
-    {
-        int32_t flushFence = 0;
-        int64_t timestamp = 0;
-        OHOS::Rect damage;
-        MEDIA_DEBUG_LOG("CaptureSurfaceListener OnBufferAvailable");
-        OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
-        surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
-        if (buffer != nullptr) {
-            char *addr = static_cast<char *>(buffer->GetVirAddr());
-            int32_t size = buffer->GetSize();
-            MEDIA_DEBUG_LOG("Saving Image");
-            SaveYUV(mode, addr, size);
-            surface_->ReleaseBuffer(buffer, -1);
-        } else {
-            MEDIA_DEBUG_LOG("AcquireBuffer failed!");
-        }
-    }
-};
-
-static sptr<CaptureOutput> CreatePhotoOutput(sptr<CameraManager> &camManagerObj)
-{
-    sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
-    photoSurface->SetDefaultWidthAndHeight(PHOTO_DEFAULT_WIDTH, PHOTO_DEFAULT_HEIGHT);
-    sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
-    capturelistener->mode = mode_::MODE_PHOTO;
-    capturelistener->surface_ = photoSurface;
-    photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);
-    sptr<CaptureOutput> photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
-    return photoOutput;
-}
-
-static sptr<CaptureOutput> CreatePreviewOutput(sptr<CameraManager> &camManagerObj)
-{
-    sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
-    previewSurface->SetDefaultWidthAndHeight(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT);
-    sptr<SurfaceListener> listener = new SurfaceListener();
-    listener->mode = mode_::MODE_PREVIEW;
-    listener->surface_ = previewSurface;
-    previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
-    sptr<CaptureOutput> previewOutput = camManagerObj->CreatePreviewOutput(previewSurface);
-    return previewOutput;
-}
-
-static sptr<CaptureOutput> CreateVideoOutput(sptr<CameraManager> &camManagerObj)
-{
-    sptr<Surface> videoSurface = Surface::CreateSurfaceAsConsumer();
-    videoSurface->SetDefaultWidthAndHeight(VIDEO_DEFAULT_WIDTH, VIDEO_DEFAULT_HEIGHT);
-    sptr<VideoSurfaceListener> videoListener = new VideoSurfaceListener();
-    videoListener->surface_ = videoSurface;
-    videoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoListener);
-    sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
-    return videoOutput;
+    session->Release();
 }
 
 /*
@@ -434,36 +451,24 @@ static sptr<CaptureOutput> CreateVideoOutput(sptr<CameraManager> &camManagerObj)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_001, TestSize.Level1)
 {
-    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
-    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
-    EXPECT_TRUE(cameraObjList.size() != 0);
-
-    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
-    ASSERT_NE(captureSession, nullptr);
-
-    int32_t intResult = captureSession->BeginConfig();
+    int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
-    ASSERT_NE(cameraInput, nullptr);
-
-    intResult = captureSession->AddInput(cameraInput);
+    intResult = session->AddInput(input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(camManagerObj);
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(manager);
     ASSERT_NE(photoOutput, nullptr);
 
-    intResult = captureSession->AddOutput(photoOutput);
+    intResult = session->AddOutput(photoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = captureSession->CommitConfig();
+    intResult = session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
     intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
     EXPECT_TRUE(intResult == 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
-
-    captureSession->Release();
 }
 
 /*
@@ -476,38 +481,28 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_001, TestSize.Level1)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level1)
 {
-    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
-    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
-    EXPECT_TRUE(cameraObjList.size() != 0);
-
-    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
-    ASSERT_NE(captureSession, nullptr);
-
-    int32_t intResult = captureSession->BeginConfig();
+    int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
-    ASSERT_NE(cameraInput, nullptr);
-
-    intResult = captureSession->AddInput(cameraInput);
+    intResult = session->AddInput(input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(camManagerObj);
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(manager);
     ASSERT_NE(photoOutput, nullptr);
 
-    intResult = captureSession->AddOutput(photoOutput);
+    intResult = session->AddOutput(photoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(camManagerObj);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = captureSession->AddOutput(previewOutput);
+    intResult = session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = captureSession->CommitConfig();
+    intResult = session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = captureSession->Start();
+    intResult = session->Start();
     EXPECT_TRUE(intResult == 0);
 
     sleep(WAIT_TIME_AFTER_START);
@@ -515,8 +510,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level1)
     EXPECT_TRUE(intResult == 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
-    captureSession->Stop();
-    captureSession->Release();
+    session->Stop();
 }
 
 /*
@@ -529,38 +523,28 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level1)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_003, TestSize.Level1)
 {
-    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
-    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
-    EXPECT_TRUE(cameraObjList.size() != 0);
-
-    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
-    ASSERT_NE(captureSession, nullptr);
-
-    int32_t intResult = captureSession->BeginConfig();
+    int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
-    ASSERT_NE(cameraInput, nullptr);
-
-    intResult = captureSession->AddInput(cameraInput);
+    intResult = session->AddInput(input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(camManagerObj);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = captureSession->AddOutput(previewOutput);
+    intResult = session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> videoOutput = CreateVideoOutput(camManagerObj);
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput(manager);
     ASSERT_NE(videoOutput, nullptr);
 
-    intResult = captureSession->AddOutput(videoOutput);
+    intResult = session->AddOutput(videoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = captureSession->CommitConfig();
+    intResult = session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = captureSession->Start();
+    intResult = session->Start();
     EXPECT_TRUE(intResult == 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
@@ -571,34 +555,18 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_003, TestSize.Level1)
     intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
     EXPECT_TRUE(intResult == 0);
 
-    captureSession->Stop();
-    captureSession->Release();
-
-    SaveVideoFile(nullptr, 0, SaveVideoMode::CLOSE);
+    TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+    session->Stop();
 }
 
 void TestCallbacks(bool video)
 {
-    std::shared_ptr<AppCallback> callback = std::make_shared<AppCallback>();
-    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
-
-    // Register application callback
-    camManagerObj->SetCallback(callback);
-
-    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
-    EXPECT_TRUE(cameraObjList.size() != 0);
-
-    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
-    ASSERT_NE(captureSession, nullptr);
-
-    int32_t intResult = captureSession->BeginConfig();
+    int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
-    ASSERT_NE(cameraInput, nullptr);
-
     // Register error callback
-    sptr<CameraInput> camInput = (sptr<CameraInput> &)cameraInput;
+    std::shared_ptr<AppCallback> callback = std::make_shared<AppCallback>();
+    sptr<CameraInput> camInput = (sptr<CameraInput> &)input;
     camInput->SetErrorCallback(callback);
 
     camInput->LockForControl();
@@ -612,51 +580,51 @@ void TestCallbacks(bool video)
 
     EXPECT_TRUE(g_camInputOnError == false);
 
-    intResult = captureSession->AddInput(cameraInput);
+    intResult = session->AddInput(input);
     EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureOutput> photoOutput = nullptr;
     sptr<CaptureOutput> videoOutput = nullptr;
     if (!video) {
-        photoOutput = CreatePhotoOutput(camManagerObj);
+        photoOutput = CreatePhotoOutput(manager);
         ASSERT_NE(photoOutput, nullptr);
 
         // Register photo callback
         ((sptr<PhotoOutput> &)photoOutput)->SetCallback(callback);
-        intResult = captureSession->AddOutput(photoOutput);
+        intResult = session->AddOutput(photoOutput);
         EXPECT_TRUE(intResult == 0);
     } else {
-        videoOutput = CreateVideoOutput(camManagerObj);
+        videoOutput = CreateVideoOutput(manager);
         ASSERT_NE(videoOutput, nullptr);
 
         // Register video callback
         ((sptr<VideoOutput> &)videoOutput)->SetCallback(std::make_shared<AppVideoCallback>());
-        intResult = captureSession->AddOutput(videoOutput);
+        intResult = session->AddOutput(videoOutput);
         EXPECT_TRUE(intResult == 0);
     }
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(camManagerObj);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
     ASSERT_NE(previewOutput, nullptr);
 
     // Register preview callback
     ((sptr<PreviewOutput> &)previewOutput)->SetCallback(callback);
-    intResult = captureSession->AddOutput(previewOutput);
+    intResult = session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = captureSession->CommitConfig();
+    intResult = session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
     // Commit again and check if error callback is hit
-    intResult = captureSession->CommitConfig();
+    intResult = session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 
-    EXPECT_TRUE(g_camFlashMap.count(cameraObjList[0]->GetID()) != 0);
+    EXPECT_TRUE(g_camFlashMap.count(cameras[0]->GetID()) != 0);
 
     EXPECT_TRUE(g_photoEvents.none());
     EXPECT_TRUE(g_previewEvents.none());
     EXPECT_TRUE(g_videoEvents.none());
 
-    intResult = captureSession->Start();
+    intResult = session->Start();
     EXPECT_TRUE(intResult == 0);
 
     if (videoOutput != nullptr) {
@@ -676,8 +644,7 @@ void TestCallbacks(bool video)
     }
 
     sleep(WAIT_TIME_BEFORE_STOP);
-    captureSession->Stop();
-    captureSession->Release();
+    session->Stop();
 
     EXPECT_TRUE(g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_START)] == 1);
 
@@ -692,7 +659,7 @@ void TestCallbacks(bool video)
     }
 
     if (videoOutput != nullptr) {
-        SaveVideoFile(nullptr, 0, SaveVideoMode::CLOSE);
+        TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
         EXPECT_TRUE(g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_START)] == 1);
 
@@ -701,7 +668,7 @@ void TestCallbacks(bool video)
 
     ((sptr<PreviewOutput> &)previewOutput)->Release();
 
-    EXPECT_TRUE(g_camStatusMap.count(cameraObjList[0]->GetID()) == 0);
+    EXPECT_TRUE(g_camStatusMap.count(cameras[0]->GetID()) == 0);
 }
 
 /*
@@ -740,38 +707,27 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_005, TestSize.Level1)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_006, TestSize.Level1)
 {
-    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
-    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
-    EXPECT_TRUE(cameraObjList.size() != 0);
-
-    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
-    ASSERT_NE(captureSession, nullptr);
-
-    int32_t intResult = captureSession->BeginConfig();
+    int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
-    ASSERT_NE(cameraInput, nullptr);
-
-    intResult = captureSession->AddInput(cameraInput);
+    intResult = session->AddInput(input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(camManagerObj);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = captureSession->AddOutput(previewOutput);
+    intResult = session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = captureSession->CommitConfig();
+    intResult = session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = captureSession->Start();
+    intResult = session->Start();
     EXPECT_TRUE(intResult == 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
-    captureSession->Stop();
-    captureSession->Release();
+    session->Stop();
 }
 
 /*
@@ -784,29 +740,736 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_006, TestSize.Level1)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_007, TestSize.Level1)
 {
-    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
-    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
-    EXPECT_TRUE(cameraObjList.size() != 0);
-
-    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
-    ASSERT_NE(captureSession, nullptr);
-
-    int32_t intResult = captureSession->BeginConfig();
+    int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
-    ASSERT_NE(cameraInput, nullptr);
-
-    intResult = captureSession->AddInput(cameraInput);
+    intResult = session->AddInput(input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> videoOutput = CreateVideoOutput(camManagerObj);
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput(manager);
     ASSERT_NE(videoOutput, nullptr);
 
-    intResult = captureSession->AddOutput(videoOutput);
+    intResult = session->AddOutput(videoOutput);
     EXPECT_TRUE(intResult == 0);
 
     // Video mode without preview is not supported
-    intResult = captureSession->CommitConfig();
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult != 0);
+}
+
+void TestSupportedResolution(int32_t previewWidth, int32_t previewHeight, int32_t videoWidth = VIDEO_DEFAULT_WIDTH,
+                             int32_t videoHeight = VIDEO_DEFAULT_HEIGHT)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager, true, previewWidth, previewHeight);
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> videoOutput = nullptr;
+    if ((videoWidth != VIDEO_DEFAULT_WIDTH) || (videoHeight != VIDEO_DEFAULT_HEIGHT)) {
+        videoOutput = CreateVideoOutput(manager, videoWidth, videoHeight);
+        ASSERT_NE(videoOutput, nullptr);
+
+        intResult = session->AddOutput(videoOutput);
+        EXPECT_TRUE(intResult == 0);
+    }
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    if (videoOutput != nullptr) {
+        intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
+        EXPECT_TRUE(intResult == 0);
+    }
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    if (videoOutput != nullptr) {
+        intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
+        EXPECT_TRUE(intResult == 0);
+        TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+    }
+
+    session->Stop();
+}
+
+void TestUnSupportedResolution(int32_t previewWidth, int32_t previewHeight, int32_t videoWidth = VIDEO_DEFAULT_WIDTH,
+                               int32_t videoHeight = VIDEO_DEFAULT_HEIGHT, int32_t photoWidth = PHOTO_DEFAULT_WIDTH,
+                               int32_t photoHeight = PHOTO_DEFAULT_HEIGHT)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = nullptr;
+    if ((previewWidth != PREVIEW_DEFAULT_WIDTH) || (previewHeight != PREVIEW_DEFAULT_HEIGHT)) {
+        previewOutput = CreatePreviewOutput(manager, true, previewWidth, previewHeight);
+    } else {
+        previewOutput = CreatePreviewOutput(manager);
+    }
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> output = nullptr;
+    if ((videoWidth != VIDEO_DEFAULT_WIDTH) || (videoHeight != VIDEO_DEFAULT_HEIGHT)) {
+        output = CreateVideoOutput(manager, videoWidth, videoHeight);
+        ASSERT_NE(output, nullptr);
+    } else if ((photoWidth != PHOTO_DEFAULT_WIDTH) || (photoHeight != PHOTO_DEFAULT_HEIGHT)) {
+        output = CreatePhotoOutput(manager, photoWidth, photoHeight);
+        ASSERT_NE(output, nullptr);
+    }
+
+    if (output != nullptr) {
+        intResult = session->AddOutput(output);
+        EXPECT_TRUE(intResult == 0);
+    }
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult != 0);
+
+    session->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Custom Preview with valid resolution
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Custom Preview with valid resolution(640 * 480)
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_008, TestSize.Level1)
+{
+    TestSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Custom Preview with valid resolution
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Custom Preview with valid resolution(832 * 480)
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_009, TestSize.Level1)
+{
+    TestSupportedResolution(832, 480);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Video with valid resolution
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Video with valid resolution(1280 * 720)
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_010, TestSize.Level1)
+{
+    TestSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT, 1280, 720);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Custom Preview with invalid resolutions
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Custom Preview with invalid resolutions(0 * 0)
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_011, TestSize.Level1)
+{
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager, true, 0, 0);
+    EXPECT_TRUE(previewOutput == nullptr);
+}
+
+
+/*
+ * Feature: Framework
+ * Function: Test Video with invalid resolutions
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Video with invalid resolutions(0 * 0)
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_012, TestSize.Level1)
+{
+    TestUnSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT, 0, 0);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Capture with invalid resolutions
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Capture with invalid resolutions(0 * 0)
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_013, TestSize.Level1)
+{
+    TestUnSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT, VIDEO_DEFAULT_WIDTH,
+                              VIDEO_DEFAULT_HEIGHT, 0, 0);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Custom Preview with unsupported resolutions
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Custom Preview with unsupported resolutions(1280 * 720)
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_014, TestSize.Level1)
+{
+    int32_t previewWidth = 1280;
+    int32_t previewHeight = 720;
+    TestUnSupportedResolution(previewWidth, previewHeight);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Video with unsupported resolutions
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Video with unsupported resolutions(640 * 480)
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_015, TestSize.Level1)
+{
+    int32_t videoWidth = 640;
+    int32_t videoHeight = 480;
+    TestUnSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT, videoWidth, videoHeight);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Capture with unsupported resolutions
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Capture with unsupported resolutions(640 * 480)
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_016, TestSize.Level1)
+{
+    int32_t photoWidth = 640;
+    int32_t photoHeight = 480;
+    TestUnSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT, VIDEO_DEFAULT_WIDTH,
+                              VIDEO_DEFAULT_HEIGHT, photoWidth, photoHeight);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test with recorder
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test with recorder
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    std::shared_ptr<Recorder> recorder = nullptr;
+    sptr<CaptureOutput> videoOutput = CreateVideoOutputWithRecorder(manager, recorder);
+    ASSERT_NE(videoOutput, nullptr);
+
+    intResult = session->AddOutput(videoOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = recorder->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = recorder->Stop(false);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = recorder->Reset();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = recorder->Release();
+    EXPECT_TRUE(intResult == 0);
+
+    session->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session add input with invalid value
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session add input with invalid value
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_018, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureInput> input1 = nullptr;
+    intResult = session->AddInput(input1);
+    EXPECT_TRUE(intResult != 0);
+
+    session->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session add output with invalid value
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session add output with invalid value
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_019, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = nullptr;
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult != 0);
+
+    session->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session commit config without adding input
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session commit config without adding input
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_020, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult != 0);
+
+    session->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session commit config without adding output
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session commit config without adding output
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_021, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult != 0);
+
+    session->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session start and stop without adding preview output
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session start and stop without adding preview output
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_022, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(manager);
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session->AddOutput(photoOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult != 0);
+
+    intResult = session->Stop();
+    EXPECT_TRUE(intResult != 0);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session without begin config
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session without begin config
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_023, TestSize.Level1)
+{
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(manager);
+    ASSERT_NE(photoOutput, nullptr);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput, nullptr);
+
+    int32_t intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult != 0);
+
+    intResult = session->AddOutput(photoOutput);
+    EXPECT_TRUE(intResult != 0);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult != 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult != 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult != 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
+    EXPECT_TRUE(intResult != 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    session->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session with multiple photo outputs
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session with multiple photo outputs
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_024, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> photoOutput1 = CreatePhotoOutput(manager);
+    ASSERT_NE(photoOutput1, nullptr);
+
+    intResult = session->AddOutput(photoOutput1);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> photoOutput2 = CreatePhotoOutput(manager);
+    ASSERT_NE(photoOutput2, nullptr);
+
+    intResult = session->AddOutput(photoOutput2);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput1)->Capture();
+    EXPECT_TRUE(intResult != 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    intResult = ((sptr<PhotoOutput> &)photoOutput2)->Capture();
+    EXPECT_TRUE(intResult == 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    session->Stop();
+
+    ((sptr<PhotoOutput> &)photoOutput1)->Release();
+    ((sptr<PhotoOutput> &)photoOutput2)->Release();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session with multiple preview outputs
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session with multiple preview ouputs
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_025, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput1 = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput1, nullptr);
+
+    intResult = session->AddOutput(previewOutput1);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput2 = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput2, nullptr);
+
+    intResult = session->AddOutput(previewOutput2);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    session->Stop();
+
+    ((sptr<PhotoOutput> &)previewOutput1)->Release();
+    ((sptr<PhotoOutput> &)previewOutput2)->Release();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session with multiple video outputs
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session with multiple video ouputs
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_026, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> videoOutput1 = CreateVideoOutput(manager);
+    ASSERT_NE(videoOutput1, nullptr);
+
+    intResult = session->AddOutput(videoOutput1);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> videoOutput2 = CreateVideoOutput(manager);
+    ASSERT_NE(videoOutput2, nullptr);
+
+    intResult = session->AddOutput(videoOutput2);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput1)->Start();
+    EXPECT_TRUE(intResult != 0);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput2)->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput1)->Stop();
+    EXPECT_TRUE(intResult != 0);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput2)->Stop();
+    EXPECT_TRUE(intResult == 0);
+
+    TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+
+    session->Stop();
+
+    ((sptr<PhotoOutput> &)videoOutput1)->Release();
+    ((sptr<PhotoOutput> &)videoOutput2)->Release();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session start and stop preview multiple times
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session start and stop preview multiple times
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_027, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = session->Stop();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    session->Stop();
+}
+
+
+/*
+ * Feature: Framework
+ * Function: Test capture session start and stop video multiple times
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session start and stop video multiple times
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_028, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput(manager);
+    ASSERT_NE(videoOutput, nullptr);
+
+    intResult = session->AddOutput(videoOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
+    EXPECT_TRUE(intResult == 0);
+
+    TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+
+    session->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test capture session with commit config multiple times
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session with commit config multiple times
+ */
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_029, TestSize.Level1)
+{
+    int32_t intResult = session->BeginConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->AddInput(input);
+    EXPECT_TRUE(intResult == 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session->AddOutput(previewOutput);
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 }

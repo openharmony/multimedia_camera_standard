@@ -31,6 +31,7 @@ HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     previewStreamID_ = CAMERA_PREVIEW_STREAM_ID;
     photoStreamID_ = CAMERA_PHOTO_STREAM_ID;
     videoStreamID_ = CAMERA_VIDEO_STREAM_ID;
+    isConfigCommitted = true;
 }
 
 HCaptureSession::~HCaptureSession()
@@ -38,11 +39,17 @@ HCaptureSession::~HCaptureSession()
 
 int32_t HCaptureSession::BeginConfig()
 {
+    isConfigCommitted = false;
     return CAMERA_OK;
 }
 
 int32_t HCaptureSession::AddInput(sptr<ICameraDeviceService> cameraDevice)
 {
+    if (isConfigCommitted) {
+        MEDIA_ERR_LOG("HCaptureSession::AddInput Need to call BeginConfig before adding input");
+        return CAMERA_INVALID_STATE;
+    }
+
     if (cameraDevice == nullptr) {
         MEDIA_ERR_LOG("HCaptureSession::AddInput cameraDevice is null");
         return CAMERA_INVALID_ARG;
@@ -53,6 +60,11 @@ int32_t HCaptureSession::AddInput(sptr<ICameraDeviceService> cameraDevice)
 
 int32_t HCaptureSession::AddOutput(sptr<IStreamRepeat> streamRepeat)
 {
+    if (isConfigCommitted) {
+        MEDIA_ERR_LOG("HCaptureSession::AddOutput Need to call BeginConfig before adding output");
+        return CAMERA_INVALID_STATE;
+    }
+
     sptr<Surface> captureSurface = Surface::CreateSurfaceAsConsumer();
 
     if (streamRepeat == nullptr) {
@@ -70,6 +82,11 @@ int32_t HCaptureSession::AddOutput(sptr<IStreamRepeat> streamRepeat)
 
 int32_t HCaptureSession::AddOutput(sptr<IStreamCapture> streamCapture)
 {
+    if (isConfigCommitted) {
+        MEDIA_ERR_LOG("HCaptureSession::AddOutput Need to call BeginConfig before adding output");
+        return CAMERA_INVALID_STATE;
+    }
+
     if (streamCapture == nullptr) {
         MEDIA_ERR_LOG("HCaptureSession::AddOutput streamCapture is null");
         return CAMERA_INVALID_ARG;
@@ -80,12 +97,22 @@ int32_t HCaptureSession::AddOutput(sptr<IStreamCapture> streamCapture)
 
 int32_t HCaptureSession::RemoveInput()
 {
+    if (isConfigCommitted) {
+        MEDIA_ERR_LOG("HCaptureSession::RemoveOutput Need to call BeginConfig before removing input");
+        return CAMERA_INVALID_STATE;
+    }
+
     cameraDevice_ = nullptr;
     return CAMERA_OK;
 }
 
 int32_t HCaptureSession::RemoveOutput(sptr<IStreamRepeat> streamRepeat)
 {
+    if (isConfigCommitted) {
+        MEDIA_ERR_LOG("HCaptureSession::RemoveOutput Need to call BeginConfig before removing output");
+        return CAMERA_INVALID_STATE;
+    }
+
     if (streamRepeat == nullptr) {
         MEDIA_ERR_LOG("HCaptureSession::RemoveOutput streamRepeat is null");
         return CAMERA_INVALID_ARG;
@@ -101,6 +128,11 @@ int32_t HCaptureSession::RemoveOutput(sptr<IStreamRepeat> streamRepeat)
 
 int32_t HCaptureSession::RemoveOutput(sptr<IStreamCapture> streamCapture)
 {
+    if (isConfigCommitted) {
+        MEDIA_ERR_LOG("HCaptureSession::RemoveOutput Need to call BeginConfig before removing output");
+        return CAMERA_INVALID_STATE;
+    }
+
     streamCapture_ = nullptr;
     return CAMERA_OK;
 }
@@ -112,10 +144,21 @@ int32_t HCaptureSession::CommitConfig()
     std::vector<std::shared_ptr<Camera::StreamInfo>> streamInfos;
     std::shared_ptr<Camera::StreamInfo> streamInfo = nullptr;
 
+    if (isConfigCommitted) {
+        MEDIA_ERR_LOG("HCaptureSession::CommitConfig() Need to call BeginConfig before committing configuration");
+        return CAMERA_INVALID_STATE;
+    }
+
     if (cameraDevice_ == nullptr) {
         MEDIA_ERR_LOG("HCaptureSession::CommitConfig(), Camera input is not added!");
         return CAMERA_UNKNOWN_ERROR;
     }
+
+    if (streamRepeatPreview_ == nullptr && streamCapture_ == nullptr && streamRepeatVideo_ == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSession::CommitConfig(), Camera output(s) not added!");
+        return CAMERA_INVALID_OUTPUT_CFG;
+    }
+
     rc = cameraDevice_->Open();
     if (rc != CAMERA_OK) {
         MEDIA_ERR_LOG("HCaptureSession::CommitConfig(), Failed to open camera, rc: %{public}d", rc);
@@ -145,6 +188,7 @@ int32_t HCaptureSession::CommitConfig()
         rc = streamCapture_->LinkInput(streamOperator_, cameraAbility_, photoStreamID_);
         if (rc != CAMERA_OK) {
             MEDIA_ERR_LOG("HCaptureSession::CommitConfig(), Failed to link input to PhotoOutput, %{public}d", rc);
+            streamIds_.clear();
             return rc;
         }
         streamInfo = std::make_shared<Camera::StreamInfo>();
@@ -156,6 +200,7 @@ int32_t HCaptureSession::CommitConfig()
         rc = streamRepeatVideo_->LinkInput(streamOperator_, cameraAbility_, videoStreamID_);
         if (rc != CAMERA_OK) {
             MEDIA_ERR_LOG("HCaptureSession::CommitConfig(), Failed to link input to VideoOutput, %{public}d", rc);
+            streamIds_.clear();
             return rc;
         }
         streamInfo = std::make_shared<Camera::StreamInfo>();
@@ -168,6 +213,7 @@ int32_t HCaptureSession::CommitConfig()
         if (rc == Camera::NO_ERROR) {
             rc = streamOperator_->CommitStreams(Camera::NORMAL, cameraAbility_);
             if (rc == Camera::NO_ERROR) {
+                isConfigCommitted = true;
                 rc = CAMERA_OK;
             } else {
                 MEDIA_ERR_LOG("HCaptureSession::CommitConfig(), Failed to commit config %{public}d", rc);

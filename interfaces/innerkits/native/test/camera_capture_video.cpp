@@ -79,7 +79,7 @@ static void Usage(std::shared_ptr<CameraCaptureVideo> testObj)
     return;
 }
 
-static char PutMenuAndGetChr(std::shared_ptr<CameraCaptureVideo> testObj)
+static char PutMenuAndGetChr(std::shared_ptr<CameraCaptureVideo> &testObj)
 {
     int32_t result = 0;
     char userInput[1];

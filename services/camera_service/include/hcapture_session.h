@@ -52,7 +52,7 @@ public:
     friend class StreamOperatorCallback;
 
 private:
-    bool isConfigCommitted;
+    bool isConfigCommitted_;
     sptr<Camera::IStreamOperator> streamOperator_;
     std::vector<std::shared_ptr<Camera::StreamInfo>> streamInfosPreview_;
     sptr<HStreamRepeat> streamRepeatPreview_;

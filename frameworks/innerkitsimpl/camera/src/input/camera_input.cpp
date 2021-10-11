@@ -21,10 +21,6 @@
 #include "hcamera_device_callback_stub.h"
 #include "media_log.h"
 
-namespace {
-const std::int32_t METADATA_HEADER_DATA_SIZE = 4;
-}
-
 namespace OHOS {
 namespace CameraStandard {
 class CameraDeviceServiceCallback : public HCameraDeviceCallbackStub {
@@ -78,53 +74,56 @@ void CameraInput::Release()
 
 void CameraInput::LockForControl()
 {
-    configBatch_.clear();
-    isStartConfig_ = true;
+    int32_t items = 10;
+    int32_t dataLength = 100;
+    changedMetadata_ = std::make_shared<CameraMetadata>(items, dataLength);
     return;
 }
 
 int32_t CameraInput::UnlockForControl()
 {
-    if (!configBatch_.size()) {
-        isStartConfig_ = false;
+    if (changedMetadata_ == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::UnlockForControl Need to call LockForControl() before UnlockForControl()");
+        return CAMERA_INVALID_ARG;
+    }
+
+    if (!get_camera_metadata_item_count(changedMetadata_->get())) {
+        MEDIA_INFO_LOG("CameraInput::UnlockForControl No configuration to update");
         return CAMERA_OK;
     }
 
-    int length = [&]() {
-        int totalLength = 0;
-        for (auto& itr: configBatch_) {
-            if (itr.second.get()->length_ > METADATA_HEADER_DATA_SIZE) {
-                totalLength += itr.second.get()->length_;
-            }
-        }
-        return totalLength;
-    }();
-    std::shared_ptr<CameraMetadata> changedMetadata = std::make_shared<CameraMetadata>(configBatch_.size(), length);
-    std::shared_ptr<CameraMetadata> baseMetadata = cameraObj_->GetMetadata();
+    int32_t ret = deviceObj_->UpdateSetting(changedMetadata_);
+    if (ret != CAMERA_OK) {
+        MEDIA_ERR_LOG("CameraInput::UnlockForControl Failed to update settings");
+        return ret;
+    }
 
-    for (auto& it: configBatch_) {
-        if (changedMetadata->addEntry(it.first, it.second.get()->data_, it.second.get()->count_)) {
-            camera_metadata_item_t item;
-            int ret = find_camera_metadata_item(baseMetadata->get(), it.first, &item);
-            if (ret == CAM_META_SUCCESS) {
-                baseMetadata->updateEntry(it.first, it.second.get()->data_, it.second.get()->count_);
-            } else if (ret == CAM_META_ITEM_NOT_FOUND) {
-                baseMetadata->addEntry(it.first, it.second.get()->data_, it.second.get()->count_);
-            } else {
-                MEDIA_ERR_LOG("CameraInput::UnlockForControl find_camera_metadata_item %{public}d", ret);
-            }
+    std::shared_ptr<CameraMetadata> baseMetadata = cameraObj_->GetMetadata();
+    camera_metadata_item_entry_t *itemEntry = get_metadata_items(changedMetadata_->get());
+    uint8_t *data = get_metadata_data(changedMetadata_->get());
+    int32_t count = changedMetadata_->get()->item_count;
+    int32_t length;
+    for (int32_t i = 0; i < count; i++, itemEntry++) {
+        bool status = false;
+        camera_metadata_item_t item;
+        length = calculate_camera_metadata_item_data_size(itemEntry->data_type, itemEntry->count);
+        ret = find_camera_metadata_item(baseMetadata->get(), itemEntry->item, &item);
+        if (ret == CAM_META_SUCCESS) {
+            status = baseMetadata->updateEntry(itemEntry->item,
+                                               (length == 0) ? itemEntry->data.value : (data + itemEntry->data.offset),
+                                               itemEntry->count);
+        } else if (ret == CAM_META_ITEM_NOT_FOUND) {
+            status = baseMetadata->addEntry(itemEntry->item,
+                                            (length == 0) ? itemEntry->data.value : (data + itemEntry->data.offset),
+                                            itemEntry->count);
+        }
+        if (!status) {
+            MEDIA_ERR_LOG("CameraInput::UnlockForControl Failed to add/update metadata item: %{public}d",
+                          itemEntry->item);
         }
     }
-    isStartConfig_ = false;
-    configBatch_.clear();
-    deviceObj_->UpdateSetting(changedMetadata);
-    cameraObj_->SetMetadata(baseMetadata);
+    changedMetadata_ = nullptr;
     return CAMERA_OK;
-}
-
-ChangeMetadata::~ChangeMetadata()
-{
-    free(data_);
 }
 
 template<typename DataPtr, typename Vec, typename VecType>
@@ -223,14 +222,25 @@ std::vector<camera_exposure_mode_enum_t> CameraInput::GetSupportedExposureModes(
 
 void CameraInput::SetExposureMode(camera_exposure_mode_enum_t exposureMode)
 {
-    int len = sizeof(uint8_t);
-    uint8_t *exposure = (uint8_t *)malloc(len);
-    if (exposure == NULL) {
-        MEDIA_ERR_LOG("CameraInput::SetExposureMode Memory allocation failed");
+    if (changedMetadata_ == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::SetExposureMode Need to call LockForControl() before setting camera properties");
         return;
     }
-    *exposure = exposureMode;
-    configBatch_[OHOS_CONTROL_EXPOSUREMODE] = std::make_unique<ChangeMetadata>(exposure, len, 1);
+    bool status = false;
+    uint32_t count = 1;
+    uint8_t exposure = exposureMode;
+    camera_metadata_item_t item;
+    int ret = find_camera_metadata_item(changedMetadata_->get(), OHOS_CONTROL_EXPOSUREMODE, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_EXPOSUREMODE, &exposure, count);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_EXPOSUREMODE, &exposure, count);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::SetExposureMode Failed to set exposure mode");
+    }
+
     return;
 }
 
@@ -274,14 +284,25 @@ void CameraInput::SetFocusCallback(std::shared_ptr<FocusCallback> focusCallback)
 
 void CameraInput::SetFocusMode(camera_focus_mode_enum_t focusMode)
 {
-    int len = sizeof(uint8_t);
-    uint8_t *focus = (uint8_t *)malloc(len);
-    if (focus == NULL) {
-        MEDIA_ERR_LOG("CameraInput::SetFocusMode Memory allocation failed");
+    if (changedMetadata_ == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::SetFocusMode Need to call LockForControl() before setting camera properties");
         return;
     }
-    *focus = focusMode;
-    configBatch_[OHOS_CONTROL_FOCUSMODE] = std::make_unique<ChangeMetadata>(focus, len, 1);
+
+    bool status = false;
+    uint32_t count = 1;
+    uint8_t focus = focusMode;
+    camera_metadata_item_t item;
+    int ret = find_camera_metadata_item(changedMetadata_->get(), OHOS_CONTROL_FOCUSMODE, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_FOCUSMODE, &focus, count);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_FOCUSMODE, &focus, count);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::SetFocusMode Failed to set focus mode");
+    }
     return;
 }
 
@@ -325,14 +346,24 @@ float CameraInput::GetZoomRatio()
 
 void CameraInput::SetZoomRatio(float zoomRatio)
 {
-    int len = sizeof(float);
-    float *zoom = (float *)malloc(len);
-    if (zoom == NULL) {
-        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Memory allocation failed");
+    if (changedMetadata_ == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Need to call LockForControl() before setting camera properties");
         return;
     }
-    *zoom = zoomRatio;
-    configBatch_[OHOS_CONTROL_ZOOM_RATIO] = std::make_unique<ChangeMetadata>(zoom, len, 1);
+
+    bool status = false;
+    uint32_t count = 1;
+    camera_metadata_item_t item;
+    int ret = find_camera_metadata_item(changedMetadata_->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_ZOOM_RATIO, &zoomRatio, count);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_ZOOM_RATIO, &zoomRatio, count);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Failed to set zoom mode");
+    }
     return;
 }
 
@@ -364,14 +395,25 @@ camera_flash_mode_enum_t CameraInput::GetFlashMode()
 
 void CameraInput::SetFlashMode(camera_flash_mode_enum_t flashMode)
 {
-    int len = sizeof(uint8_t);
-    uint8_t *flash = (uint8_t *)malloc(len);
-    if (flash == NULL) {
-        MEDIA_ERR_LOG("CameraInput::SetFlashMode Memory allocation failed");
+    if (changedMetadata_ == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::SetFlashMode Need to call LockForControl() before setting camera properties");
         return;
     }
-    *flash = flashMode;
-    configBatch_[OHOS_CONTROL_FLASHMODE] = std::make_unique<ChangeMetadata>(flash, len, 1);
+
+    bool status = false;
+    uint32_t count = 1;
+    uint8_t flash = flashMode;
+    camera_metadata_item_t item;
+    int ret = find_camera_metadata_item(changedMetadata_->get(), OHOS_CONTROL_FLASHMODE, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_FLASHMODE, &flash, count);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_FLASHMODE, &flash, count);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::SetFlashMode Failed to set flash mode");
+    }
     return;
 }
 

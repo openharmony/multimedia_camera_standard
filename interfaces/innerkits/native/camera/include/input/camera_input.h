@@ -61,16 +61,6 @@ public:
     virtual void OnFocusState(FocusState state) = 0;
 };
 
-
-class ChangeMetadata {
-public:
-    void *data_;
-    int length_;
-    int count_;
-    ChangeMetadata(void *data, int length, int count) : data_(data), length_(length), count_(count) {}
-    virtual ~ChangeMetadata();
-};
-
 class CameraInput : public CaptureInput {
 public:
     enum PhotoFormat {
@@ -112,8 +102,7 @@ public:
     std::shared_ptr<ErrorCallback> GetErrorCallback();
 
 private:
-    bool isStartConfig_;
-    std::unordered_map<camera_device_metadata_tag_t, std::unique_ptr<ChangeMetadata>> configBatch_;
+    std::shared_ptr<CameraMetadata> changedMetadata_;
     sptr<CameraInfo> cameraObj_;
     sptr<ICameraDeviceService> deviceObj_;
     std::shared_ptr<ErrorCallback> errorCallback_;

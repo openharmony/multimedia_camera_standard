@@ -559,6 +559,30 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_003, TestSize.Level1)
     session->Stop();
 }
 
+void SetCameraParameters(sptr<CameraInput> &camInput)
+{
+    camInput->LockForControl();
+
+    float zoom = 4.0;
+    camInput->SetZoomRatio(zoom);
+
+    camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
+    camInput->SetFlashMode(flash);
+
+    camera_focus_mode_enum_t focus = OHOS_CAMERA_FOCUS_MODE_AUTO;
+    camInput->SetFocusMode(focus);
+
+    camera_exposure_mode_enum_t exposure = OHOS_CAMERA_EXPOSURE_MODE_CONTINUOUS_AUTO;
+    camInput->SetExposureMode(exposure);
+
+    camInput->UnlockForControl();
+
+    EXPECT_TRUE(camInput->GetZoomRatio() == zoom);
+    EXPECT_TRUE(camInput->GetFlashMode() == flash);
+    EXPECT_TRUE(camInput->GetFocusMode() == focus);
+    EXPECT_TRUE(camInput->GetExposureMode() == exposure);
+}
+
 void TestCallbacks(bool video)
 {
     int32_t intResult = session->BeginConfig();
@@ -569,14 +593,7 @@ void TestCallbacks(bool video)
     sptr<CameraInput> camInput = (sptr<CameraInput> &)input;
     camInput->SetErrorCallback(callback);
 
-    camInput->LockForControl();
-
-    camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
-    camInput->SetFlashMode(flash);
-
-    camInput->UnlockForControl();
-
-    EXPECT_TRUE(camInput->GetFlashMode() == flash);
+    SetCameraParameters(camInput);
 
     EXPECT_TRUE(g_camInputOnError == false);
 
@@ -592,7 +609,6 @@ void TestCallbacks(bool video)
         // Register photo callback
         ((sptr<PhotoOutput> &)photoOutput)->SetCallback(callback);
         intResult = session->AddOutput(photoOutput);
-        EXPECT_TRUE(intResult == 0);
     } else {
         videoOutput = CreateVideoOutput(manager);
         ASSERT_NE(videoOutput, nullptr);
@@ -600,8 +616,9 @@ void TestCallbacks(bool video)
         // Register video callback
         ((sptr<VideoOutput> &)videoOutput)->SetCallback(std::make_shared<AppVideoCallback>());
         intResult = session->AddOutput(videoOutput);
-        EXPECT_TRUE(intResult == 0);
     }
+
+    EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
     ASSERT_NE(previewOutput, nullptr);
@@ -613,10 +630,6 @@ void TestCallbacks(bool video)
 
     intResult = session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
-
-    // Commit again and check if error callback is hit
-    intResult = session->CommitConfig();
-    EXPECT_TRUE(intResult != 0);
 
     EXPECT_TRUE(g_camFlashMap.count(cameras[0]->GetID()) != 0);
 

@@ -27,7 +27,7 @@ ohos_copy("camera_declaration") {
 }
 
 ohos_shared_library("camera_napi") {
-  include_dirs = [ 
+  include_dirs = [
     "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi/include",
     "//drivers/peripheral/camera/hal/hdi_impl/include/camera_device",
     "//drivers/peripheral/camera/hal/hdi_impl/include/camera_host",
@@ -85,23 +85,22 @@ ohos_shared_library("camera_napi") {
   ]
   sources = [ "//foundation/multimedia/camera_standard/frameworks/kitsimpl/camera_napi/src/camera_napi.cpp" ]
   deps = [
-    "//foundation/ace/napi:ace_napi",
-    "//foundation/graphic/standard/frameworks/surface:surface",
     "//drivers/peripheral/camera/hal:camera_hal",
-    "//drivers/peripheral/camera/hal/hdi_impl:camera_hdi_impl",
     "//drivers/peripheral/camera/hal/device_manager:camera_device_manager",
+    "//drivers/peripheral/camera/hal/hdi_impl:camera_hdi_impl",
     "//drivers/peripheral/camera/interfaces/include/client:libcamera_client",
+    "//foundation/ace/napi:ace_napi",
+    "//foundation/graphic/standard:libwms_client",
     "//foundation/graphic/standard/frameworks/surface:surface",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
-    "//utils/native/base:utils",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera:camera_framework",
+    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
     "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
-    "//foundation/graphic/standard:libwms_client"
+    "//utils/native/base:utils",
   ]
-  external_deps = [ 
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "multimedia_media_standard:media_client",
-    "hiviewdfx_hilog_native:libhilog" 
   ]
   relative_install_dir = "module/multimedia"
   part_name = "multimedia_camera_standard"

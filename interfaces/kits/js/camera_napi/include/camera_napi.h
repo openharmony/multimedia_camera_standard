@@ -16,6 +16,8 @@
 #ifndef CAMERA_NAPI_H_
 #define CAMERA_NAPI_H_
 
+#include <securec.h>
+
 #include "display_type.h"
 #include "input/camera_manager.h"
 #include "istream_operator_callback.h"
@@ -24,7 +26,6 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "recorder.h"
-#include <securec.h>
 #include "window_manager.h"
 
 #include <fstream>

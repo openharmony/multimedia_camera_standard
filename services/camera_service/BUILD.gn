@@ -47,9 +47,10 @@ ohos_shared_library("camera_service") {
     "//drivers/adapter/uhdf2/osal/include/",
     "//drivers/adapter/uhdf2/include/hdi/",
     "//drivers/peripheral/camera/interfaces/include",
-    "//drivers/peripheral/camera/interfaces/include/callback/device/",
-    "//drivers/peripheral/camera/interfaces/include/callback/operator/",
-    "//drivers/peripheral/camera/interfaces/include/callback/host/",
+    "//drivers/peripheral/camera/interfaces/hdi_cpp/utils/include",
+    "//drivers/peripheral/camera/interfaces/hdi_cpp/callback/device/include",
+    "//drivers/peripheral/camera/interfaces/hdi_cpp/callback/operator/include",
+    "//drivers/peripheral/camera/interfaces/hdi_cpp/callback/host/include",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
@@ -64,7 +65,7 @@ ohos_shared_library("camera_service") {
     cflags += [ "-DRK_CAMERA" ]
   }
   deps = [
-    "//drivers/peripheral/camera/interfaces/include/client:libcamera_client",
+    "//drivers/peripheral/camera/interfaces/hdi_cpp/client:libcamera_client",
     "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
   ]

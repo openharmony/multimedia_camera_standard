@@ -48,6 +48,7 @@ ohos_shared_library("camera_service") {
     "//drivers/adapter/uhdf2/include/hdi/",
     "//drivers/peripheral/camera/interfaces/include",
     "//drivers/peripheral/camera/interfaces/hdi_cpp/utils/include",
+    "//drivers/peripheral/camera/interfaces/hdi_cpp/server/include",
     "//drivers/peripheral/camera/interfaces/hdi_cpp/callback/device/include",
     "//drivers/peripheral/camera/interfaces/hdi_cpp/callback/operator/include",
     "//drivers/peripheral/camera/interfaces/hdi_cpp/callback/host/include",

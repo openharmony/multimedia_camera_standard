@@ -16,9 +16,10 @@
 #include "camera_metadata_test.h"
 #include "metadata_utils.h"
 
-using namespace OHOS::CameraStandard;
 using namespace testing::ext;
 
+namespace OHOS {
+namespace CameraStandard {
 void CameraMetadataTest::SetUpTestCase(void) {}
 void CameraMetadataTest::TearDownTestCase(void) {}
 
@@ -33,7 +34,7 @@ void CameraMetadataTest::TearDown() {}
  * EnvConditions: NA
  * CaseDescription: Test allocation of camera metadata
  */
-static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_001, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_001, TestSize.Level0)
 {
     uint32_t item_capacity = 1;
     uint32_t data_capacity = 1;
@@ -55,7 +56,7 @@ static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_001, TestSize.Lev
  * EnvConditions: NA
  * CaseDescription: Test add camera metadata item with camera type
  */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_002, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_002, TestSize.Level0)
 {
     uint32_t item_capacity = 1;
     uint32_t data_capacity = 0;
@@ -86,7 +87,7 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_002, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test add camera metadata item with camera type and camera position
  */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_003, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_003, TestSize.Level0)
 {
     uint32_t item_capacity = 2;
     uint32_t data_capacity = 0;
@@ -122,7 +123,7 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_003, TestSize.Level1)
  * CaseDescription: Test add camera metadata item with camera type, camera position and available
  * focus modes
  */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_004, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_004, TestSize.Level0)
 {
     uint32_t item_capacity = 3;
     uint32_t data_capacity = 0;
@@ -166,7 +167,7 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_004, TestSize.Level1)
  * CaseDescription: Test add camera metadata item with camera type, camera position,
  *                  focus mode and zoom ratio range
  */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_005, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_005, TestSize.Level0)
 {
     uint32_t item_capacity = 4;
     uint32_t data_capacity = ALIGN_TO(5 * sizeof(float), DATA_ALIGNMENT);
@@ -212,7 +213,7 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_005, TestSize.Level1)
 * CaseDescription: Test find metadata and update metadata items with camera type, camera position,
 *                  flash mode, exposure mode and zoom ratio range.
 */
-static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_006, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_006, TestSize.Level0)
 {
     uint32_t item_capacity = 5;
     uint32_t data_capacity = ALIGN_TO(6 * sizeof(float), DATA_ALIGNMENT);
@@ -306,7 +307,7 @@ static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_006, TestSize.Lev
 * EnvConditions: NA
 * CaseDescription: Test delete metadata item
 */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_007, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_007, TestSize.Level0)
 {
     uint32_t item_capacity = 3;
     uint32_t data_capacity = 0;
@@ -365,7 +366,7 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_007, TestSize.Level1)
 * EnvConditions: NA
 * CaseDescription: Test addEntry
 */
-HWTEST_F(CameraMetadataTest, media_camera_metadata_test_008, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_008, TestSize.Level0)
 {
     std::shared_ptr<CameraMetadata> meta = std::make_shared<CameraMetadata>(2, 0);
     uint8_t cameraType = OHOS_CAMERA_TYPE_TRUE_DEAPTH;
@@ -396,7 +397,7 @@ HWTEST_F(CameraMetadataTest, media_camera_metadata_test_008, TestSize.Level1)
 * EnvConditions: NA
 * CaseDescription: Test updateEntry with metadata item data size more than 4 bytes and then delete item
 */
-static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_009, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_009, TestSize.Level0)
 {
     std::shared_ptr<CameraMetadata> meta = std::make_shared<CameraMetadata>(3, ALIGN_TO(7 * sizeof(float),
                                                                             DATA_ALIGNMENT));
@@ -485,7 +486,7 @@ static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_009, TestSize.Lev
 * EnvConditions: NA
 * CaseDescription: Test operations(add/find/delete) on metadata items with all data types
 */
-static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_010, TestSize.Level1)
+HWTEST_F(CameraMetadataTest, media_camera_metadata_test_010, TestSize.Level0)
 {
     std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(9, 80);
 
@@ -709,3 +710,5 @@ static HWTEST_F(CameraMetadataTest, media_camera_metadata_test_010, TestSize.Lev
     EXPECT_TRUE(item.count == 1);
     EXPECT_TRUE(memcmp(item.data.r, &rational, sizeof(rational)) == 0);
 }
+} // CameraStandard
+} // OHOS

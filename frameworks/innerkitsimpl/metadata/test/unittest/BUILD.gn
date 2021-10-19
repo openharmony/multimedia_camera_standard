@@ -11,8 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("cameraframeworktest") {
-  testonly = true
+import("//build/test.gni")
 
-  deps = [ "unittest:camera_framework_unittest" ]
+module_output_path = "camera_standard/camera_metadata"
+
+ohos_unittest("camera_metadata_unittest") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "./include",
+    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include",
+  ]
+
+  sources = [ "src/camera_metadata_test.cpp" ]
+
+  deps = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata" ]
+
+  external_deps = [ "ipc:ipc_core" ]
 }

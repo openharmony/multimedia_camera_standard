@@ -16,19 +16,19 @@ import("//build/ohos.gni")
 ohos_shared_library("camera_framework") {
   install_enable = true
   sources = [
-    "src/input/camera_manager.cpp",
-    "src/input/camera_info.cpp",
-    "src/input/camera_input.cpp",
-    "src/session/capture_session.cpp",
-    "src/output/capture_output.cpp",
-    "src/output/photo_output.cpp",
-    "src/output/preview_output.cpp",
-    "src/output/video_output.cpp",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcamera_device_proxy.cpp",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcamera_service_proxy.cpp",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcapture_session_proxy.cpp",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_capture_proxy.cpp",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_repeat_proxy.cpp"
+    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_repeat_proxy.cpp",
+    "src/input/camera_info.cpp",
+    "src/input/camera_input.cpp",
+    "src/input/camera_manager.cpp",
+    "src/output/capture_output.cpp",
+    "src/output/photo_output.cpp",
+    "src/output/preview_output.cpp",
+    "src/output/video_output.cpp",
+    "src/session/capture_session.cpp",
   ]
 
   if (target_cpu == "arm") {
@@ -51,20 +51,20 @@ ohos_shared_library("camera_framework") {
     "//drivers/peripheral/camera/interfaces/include/server",
     "//drivers/peripheral/camera/interfaces/include/callback/device",
     "//drivers/peripheral/camera/interfaces/include/callback/operator",
-    "//drivers/peripheral/camera/interfaces/include/callback/host"
+    "//drivers/peripheral/camera/interfaces/include/callback/host",
   ]
 
   deps = [
-    "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
+    "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
-    "//foundation/graphic/standard:libsurface"
+    "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
   ]
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr_L2:samgr_proxy",
-    "safwk:system_ability_fwk"
+    "safwk:system_ability_fwk",
+    "samgr_standard:samgr_proxy",
   ]
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"

@@ -14,20 +14,6 @@
  */
 
 #include "camera_framework_test.h"
-
-#include <cinttypes>
-#include <cstdio>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <securec.h>
-
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
 #include "media_log.h"
@@ -35,11 +21,13 @@
 #include "surface.h"
 #include "test_common.h"
 
-using namespace OHOS;
-using namespace OHOS::CameraStandard;
+#include <cinttypes>
+
 using namespace OHOS::Media;
 using namespace testing::ext;
 
+namespace OHOS {
+namespace CameraStandard {
 namespace {
     enum class CAM_PHOTO_EVENTS {
         CAM_PHOTO_CAPTURE_START = 0,
@@ -408,7 +396,7 @@ namespace {
         sptr<CaptureOutput> videoOutput = cameraManager->CreateVideoOutput(videoSurface);
         return videoOutput;
     }
-}
+} // namespace
 
 void CameraFrameworkTest::SetUpTestCase(void) {}
 void CameraFrameworkTest::TearDownTestCase(void) {}
@@ -449,7 +437,7 @@ void CameraFrameworkTest::TearDown()
  * EnvConditions: NA
  * CaseDescription: Test Capture
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_001, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_001, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -479,7 +467,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_001, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Capture + Preview
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -521,7 +509,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Preview + Video
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_003, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_003, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -692,7 +680,7 @@ void TestCallbacks(bool video)
  * EnvConditions: NA
  * CaseDescription: Test callbacks
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_004, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_004, TestSize.Level0)
 {
     TestCallbacks(false);
 }
@@ -705,7 +693,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_004, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test callbacks
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_005, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_005, TestSize.Level0)
 {
     TestCallbacks(true);
 }
@@ -718,7 +706,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_005, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Preview
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_006, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_006, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -751,7 +739,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_006, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Video
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_007, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_007, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -865,7 +853,7 @@ void TestUnSupportedResolution(int32_t previewWidth, int32_t previewHeight, int3
  * EnvConditions: NA
  * CaseDescription: Test Custom Preview with valid resolution(640 * 480)
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_008, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_008, TestSize.Level0)
 {
     TestSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT);
 }
@@ -878,7 +866,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_008, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Custom Preview with valid resolution(832 * 480)
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_009, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_009, TestSize.Level0)
 {
     TestSupportedResolution(832, 480);
 }
@@ -891,7 +879,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_009, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Video with valid resolution(1280 * 720)
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_010, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_010, TestSize.Level0)
 {
     TestSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT, 1280, 720);
 }
@@ -904,7 +892,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_010, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Custom Preview with invalid resolutions(0 * 0)
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_011, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_011, TestSize.Level0)
 {
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager, true, 0, 0);
     EXPECT_TRUE(previewOutput == nullptr);
@@ -919,7 +907,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_011, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Video with invalid resolutions(0 * 0)
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_012, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_012, TestSize.Level0)
 {
     TestUnSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT, 0, 0);
 }
@@ -932,7 +920,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_012, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Capture with invalid resolutions(0 * 0)
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_013, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_013, TestSize.Level0)
 {
     TestUnSupportedResolution(PREVIEW_DEFAULT_WIDTH, PREVIEW_DEFAULT_HEIGHT, VIDEO_DEFAULT_WIDTH,
                               VIDEO_DEFAULT_HEIGHT, 0, 0);
@@ -946,7 +934,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_013, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Custom Preview with unsupported resolutions(1280 * 720)
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_014, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_014, TestSize.Level0)
 {
     int32_t previewWidth = 1280;
     int32_t previewHeight = 720;
@@ -961,7 +949,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_014, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Video with unsupported resolutions(640 * 480)
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_015, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_015, TestSize.Level0)
 {
     int32_t videoWidth = 640;
     int32_t videoHeight = 480;
@@ -976,7 +964,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_015, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test Capture with unsupported resolutions(640 * 480)
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_016, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_016, TestSize.Level0)
 {
     int32_t photoWidth = 640;
     int32_t photoHeight = 480;
@@ -992,7 +980,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_016, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test with recorder
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1050,7 +1038,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session add input with invalid value
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_018, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_018, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1070,7 +1058,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_018, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session add output with invalid value
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_019, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_019, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1090,7 +1078,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_019, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session commit config without adding input
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_020, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_020, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1115,7 +1103,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_020, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session commit config without adding output
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_021, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_021, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1137,7 +1125,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_021, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session start and stop without adding preview output
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_022, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_022, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1169,7 +1157,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_022, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session without begin config
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_023, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_023, TestSize.Level0)
 {
     sptr<CaptureOutput> photoOutput = CreatePhotoOutput(manager);
     ASSERT_NE(photoOutput, nullptr);
@@ -1208,7 +1196,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_023, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session with multiple photo outputs
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_024, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_024, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1263,7 +1251,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_024, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session with multiple preview ouputs
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_025, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_025, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1305,7 +1293,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_025, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session with multiple video ouputs
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_026, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_026, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1367,7 +1355,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_026, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session start and stop preview multiple times
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_027, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_027, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1409,7 +1397,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_027, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session start and stop video multiple times
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_028, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_028, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1464,7 +1452,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_028, TestSize.Level1)
  * EnvConditions: NA
  * CaseDescription: Test capture session with commit config multiple times
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_029, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_029, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -1486,3 +1474,5 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_029, TestSize.Level1)
     intResult = session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 }
+} // CameraStandard
+} // OHOS

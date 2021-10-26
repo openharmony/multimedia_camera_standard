@@ -29,10 +29,11 @@ config("camera_config") {
     "//drivers/adapter/uhdf2/include/hdi",
     "//drivers/peripheral/display/interfaces/include",
     "//drivers/peripheral/camera/interfaces/include",
-    "//drivers/peripheral/camera/interfaces/include/server",
-    "//drivers/peripheral/camera/interfaces/include/callback/device",
-    "//drivers/peripheral/camera/interfaces/include/callback/operator",
-    "//drivers/peripheral/camera/interfaces/include/callback/host",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/device",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/operator",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host",
   ]
 }
 

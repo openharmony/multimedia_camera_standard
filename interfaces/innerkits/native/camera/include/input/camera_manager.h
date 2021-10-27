@@ -57,8 +57,11 @@ public:
     sptr<CameraInput> CreateCameraInput(sptr<CameraInfo> &camera);
     sptr<CaptureSession> CreateCaptureSession();
     sptr<PhotoOutput> CreatePhotoOutput(sptr<Surface> &surface);
+    sptr<PhotoOutput> CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer);
     sptr<VideoOutput> CreateVideoOutput(sptr<Surface> &surface);
+    sptr<VideoOutput> CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer);
     sptr<PreviewOutput> CreatePreviewOutput(sptr<Surface> surface);
+    sptr<PreviewOutput> CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer);
     sptr<PreviewOutput> CreateCustomPreviewOutput(sptr<Surface> surface, int32_t width, int32_t height);
     void SetCallback(std::shared_ptr<CameraManagerCallback> callback);
     std::shared_ptr<CameraManagerCallback> GetApplicationCallback();

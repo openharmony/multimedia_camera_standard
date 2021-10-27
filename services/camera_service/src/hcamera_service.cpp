@@ -66,7 +66,7 @@ int32_t HCameraService::GetCameras(std::vector<std::string> &cameraIds,
     std::shared_ptr<CameraMetadata> cameraAbility;
     for (auto id : cameraIds) {
         ret = cameraHostManager_->GetCameraAbility(id, cameraAbility);
-            if (ret != CAMERA_OK) {
+        if (ret != CAMERA_OK) {
             MEDIA_ERR_LOG("HCameraService::GetCameraAbility failed");
             return ret;
         }

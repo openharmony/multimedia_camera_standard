@@ -980,7 +980,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_016, TestSize.Level0)
  * EnvConditions: NA
  * CaseDescription: Test with recorder
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level0)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level1)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);

@@ -138,6 +138,25 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(sptr<Surface> &surface)
     return result;
 }
 
+sptr<PhotoOutput> CameraManager::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer)
+{
+    sptr<IStreamCapture> streamCapture = nullptr;
+    sptr<PhotoOutput> result = nullptr;
+    int32_t retCode = CAMERA_OK;
+
+    if (serviceProxy_ == nullptr || producer == nullptr) {
+        MEDIA_ERR_LOG("CameraManager::CreatePhotoOutput serviceProxy_ is null or producer is null");
+        return nullptr;
+    }
+    retCode = serviceProxy_->CreatePhotoOutput(producer, streamCapture);
+    if (retCode == CAMERA_OK) {
+        result = new PhotoOutput(streamCapture);
+    } else {
+        MEDIA_ERR_LOG("Failed to get stream capture object from hcamera service!, %{public}d", retCode);
+    }
+    return result;
+}
+
 sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
 {
     sptr<IStreamRepeat> streamRepeat = nullptr;
@@ -149,6 +168,25 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
         return nullptr;
     }
     retCode = serviceProxy_->CreatePreviewOutput(surface->GetProducer(), streamRepeat);
+    if (retCode == CAMERA_OK) {
+        result = new PreviewOutput(streamRepeat);
+    } else {
+        MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
+    }
+    return result;
+}
+
+sptr<PreviewOutput> CameraManager::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer)
+{
+    sptr<IStreamRepeat> streamRepeat = nullptr;
+    sptr<PreviewOutput> result = nullptr;
+    int32_t retCode = CAMERA_OK;
+
+    if (serviceProxy_ == nullptr || producer == nullptr) {
+        MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput serviceProxy_ is null or producer is null");
+        return nullptr;
+    }
+    retCode = serviceProxy_->CreatePreviewOutput(producer, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new PreviewOutput(streamRepeat);
     } else {
@@ -187,6 +225,25 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
         return nullptr;
     }
     retCode = serviceProxy_->CreateVideoOutput(surface->GetProducer(), streamRepeat);
+    if (retCode == CAMERA_OK) {
+        result = new VideoOutput(streamRepeat);
+    } else {
+        MEDIA_ERR_LOG("VideoOutpout: Failed to get stream repeat object from hcamera service! %{public}d", retCode);
+    }
+    return result;
+}
+
+sptr<VideoOutput> CameraManager::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer)
+{
+    sptr<IStreamRepeat> streamRepeat = nullptr;
+    sptr<VideoOutput> result = nullptr;
+    int32_t retCode = CAMERA_OK;
+
+    if (serviceProxy_ == nullptr || producer == nullptr) {
+        MEDIA_ERR_LOG("CameraManager::CreateVideoOutput serviceProxy_ is null or producer is null");
+        return nullptr;
+    }
+    retCode = serviceProxy_->CreateVideoOutput(producer, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new VideoOutput(streamRepeat);
     } else {

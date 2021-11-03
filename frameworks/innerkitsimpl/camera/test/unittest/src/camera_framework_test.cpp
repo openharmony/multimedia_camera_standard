@@ -17,13 +17,11 @@
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
 #include "media_log.h"
-#include "recorder.h"
 #include "surface.h"
 #include "test_common.h"
 
 #include <cinttypes>
 
-using namespace OHOS::Media;
 using namespace testing::ext;
 
 namespace OHOS {
@@ -60,13 +58,6 @@ namespace {
     const int32_t PREVIEW_DEFAULT_HEIGHT = 480;
     const int32_t VIDEO_DEFAULT_WIDTH = 640;
     const int32_t VIDEO_DEFAULT_HEIGHT = 360;
-    const int32_t AUDIO_CHANNEL_COUNT = 2;
-    const int32_t AUDIO_SAMPLE_RATE = 48000;
-    const int32_t AUDIO_ENCODING_BITRATE = 48000;
-    const int32_t VIDEO_ENCODING_BITRATE = 48000;
-    const int32_t VIDEO_FRAME_RATE = 30;
-    const int32_t VIDEO_CAPTURE_RATE = 30;
-    const int32_t RECORD_MAX_DURATION = 36000;
     bool g_camInputOnError = false;
     int32_t g_videoFd = -1;
     std::bitset<static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_MAX_EVENT)> g_photoEvents;
@@ -212,124 +203,6 @@ namespace {
         }
     };
 
-    class TestVideoRecorderCallback : public RecorderCallback {
-    public:
-        void OnError(RecorderErrorType errorType, int32_t errorCode)
-        {
-            MEDIA_DEBUG_LOG("OnError errorType is %{public}d, errorCode is  %{public}d", errorType, errorCode);
-        }
-        void OnInfo(int32_t type, int32_t extra)
-        {
-            MEDIA_DEBUG_LOG("OnInfo Type is %{public}d, extra is  %{public}d", type, extra);
-        }
-    };
-
-    bool ConfigureVideoParams(std::shared_ptr<Recorder> &recorder, int32_t videoSourceId)
-    {
-        if (recorder->SetVideoEncoder(videoSourceId, Media::H264)) {
-            MEDIA_DEBUG_LOG("Set Video Encoder Failed");
-            return false;
-        }
-
-        if (recorder->SetVideoSize(videoSourceId, VIDEO_DEFAULT_WIDTH, VIDEO_DEFAULT_HEIGHT)) {
-            MEDIA_DEBUG_LOG("Set Video Size Failed");
-            return false;
-        }
-
-        if (recorder->SetVideoFrameRate(videoSourceId, VIDEO_FRAME_RATE)) {
-            MEDIA_DEBUG_LOG("Set Video Frame Rate Failed");
-            return false;
-        }
-
-        if (recorder->SetVideoEncodingBitRate(videoSourceId, VIDEO_ENCODING_BITRATE)) {
-            MEDIA_DEBUG_LOG("Set Video Encoding Bit Rate Failed");
-            return false;
-        }
-
-        if (recorder->SetCaptureRate(videoSourceId, VIDEO_CAPTURE_RATE)) {
-            MEDIA_DEBUG_LOG("Set Capture Rate Failed");
-            return false;
-        }
-
-        return true;
-    }
-
-    bool ConfigureAudioParams(std::shared_ptr<Recorder> &recorder, int32_t audioSourceId)
-    {
-        if (recorder->SetAudioEncoder(audioSourceId, Media::AAC_LC)) {
-            MEDIA_DEBUG_LOG("Set Audio Encoder Failed");
-            return false;
-        }
-
-        if (recorder->SetAudioSampleRate(audioSourceId, AUDIO_SAMPLE_RATE)) {
-            MEDIA_DEBUG_LOG("Set Audio Sample Rate Failed");
-            return false;
-        }
-
-        if (recorder->SetAudioChannels(audioSourceId, AUDIO_CHANNEL_COUNT)) {
-            MEDIA_DEBUG_LOG("Set Audio Channels Failed");
-            return false;
-        }
-
-        if (recorder->SetAudioEncodingBitRate(audioSourceId, AUDIO_ENCODING_BITRATE)) {
-            MEDIA_DEBUG_LOG("Set Audio Encoding Bit Rate Failed");
-            return false;
-        }
-
-        return true;
-    }
-
-    bool CreateAndConfigureRecorder(std::shared_ptr<Recorder> &recorder, int32_t &videoSourceId)
-    {
-        recorder = RecorderFactory::CreateRecorder();
-        if (recorder == nullptr) {
-            MEDIA_DEBUG_LOG("Create Recorder Failed");
-            return false;
-        }
-
-        int32_t audioSourceId = 0;
-        if (recorder->SetVideoSource(Media::VIDEO_SOURCE_SURFACE_ES, videoSourceId)) {
-            MEDIA_DEBUG_LOG("Set Video Source Failed");
-            return false;
-        }
-
-        if (recorder->SetAudioSource(Media::AUDIO_MIC, audioSourceId)) {
-            MEDIA_DEBUG_LOG("Set Audio Source Failed");
-            return false;
-        }
-
-        if (recorder->SetOutputFormat(Media::FORMAT_MPEG_4)) {
-            MEDIA_DEBUG_LOG("Set Output Format Failed");
-            return false;
-        }
-
-        if (!ConfigureVideoParams(recorder, videoSourceId)) {
-            MEDIA_DEBUG_LOG("Failed to configure video for recorder");
-            return false;
-        }
-
-        if (!ConfigureAudioParams(recorder, audioSourceId)) {
-            MEDIA_DEBUG_LOG("Failed to configure audio for recorder");
-            return false;
-        }
-
-        if (recorder->SetMaxDuration(RECORD_MAX_DURATION)) {
-            MEDIA_DEBUG_LOG("Set Max Duration Failed");
-            return false;
-        }
-
-        if (recorder->SetOutputPath("/data/recorder")) {
-            MEDIA_DEBUG_LOG("Set output Path Failed");
-            return false;
-        }
-
-        if (recorder->SetRecorderCallback(std::make_shared<TestVideoRecorderCallback>())) {
-            MEDIA_DEBUG_LOG("Set Recorder Callback Failed");
-            return false;
-        }
-        return true;
-    }
-
     sptr<CaptureOutput> CreatePhotoOutput(sptr<CameraManager> &cameraManager,
                                           int32_t width = PHOTO_DEFAULT_WIDTH,
                                           int32_t height = PHOTO_DEFAULT_HEIGHT)
@@ -371,29 +244,6 @@ namespace {
         sptr<SurfaceListener> listener = new SurfaceListener("Test_Video", SurfaceType::VIDEO, g_videoFd, surface);
         surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
         sptr<CaptureOutput> videoOutput = cameraManager->CreateVideoOutput(surface);
-        return videoOutput;
-    }
-
-    sptr<CaptureOutput> CreateVideoOutputWithRecorder(sptr<CameraManager> &cameraManager,
-                                                      std::shared_ptr<Recorder> &recorder)
-    {
-        int32_t videoSourceId = 0;
-        CreateAndConfigureRecorder(recorder, videoSourceId);
-        if (recorder == nullptr) {
-            return nullptr;
-        }
-
-        if (recorder->Prepare()) {
-            return nullptr;
-        }
-
-        sptr<Surface> videoSurface = recorder->GetSurface(videoSourceId);
-        if (videoSurface == nullptr) {
-            return nullptr;
-        }
-
-        videoSurface->SetDefaultWidthAndHeight(VIDEO_DEFAULT_WIDTH, VIDEO_DEFAULT_HEIGHT);
-        sptr<CaptureOutput> videoOutput = cameraManager->CreateVideoOutput(videoSurface);
         return videoOutput;
     }
 } // namespace
@@ -974,13 +824,13 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_016, TestSize.Level0)
 
 /*
  * Feature: Framework
- * Function: Test with recorder
+ * Function: Test capture session with commit config multiple times
  * SubFunction: NA
  * FunctionPoints: NA
  * EnvConditions: NA
- * CaseDescription: Test with recorder
+ * CaseDescription: Test capture session with commit config multiple times
  */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level1)
+HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level0)
 {
     int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
@@ -994,40 +844,13 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level1)
     intResult = session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    std::shared_ptr<Recorder> recorder = nullptr;
-    sptr<CaptureOutput> videoOutput = CreateVideoOutputWithRecorder(manager, recorder);
-    ASSERT_NE(videoOutput, nullptr);
-
-    intResult = session->AddOutput(videoOutput);
-    EXPECT_TRUE(intResult == 0);
-
     intResult = session->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
-
-    intResult = session->Start();
-    EXPECT_TRUE(intResult == 0);
-
-    intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
-    EXPECT_TRUE(intResult == 0);
-
-    intResult = recorder->Start();
     EXPECT_TRUE(intResult == 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
-    intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
-    EXPECT_TRUE(intResult == 0);
-
-    intResult = recorder->Stop(false);
-    EXPECT_TRUE(intResult == 0);
-
-    intResult = recorder->Reset();
-    EXPECT_TRUE(intResult == 0);
-
-    intResult = recorder->Release();
-    EXPECT_TRUE(intResult == 0);
-
-    session->Stop();
+    intResult = session->CommitConfig();
+    EXPECT_TRUE(intResult != 0);
 }
 
 /*
@@ -1442,37 +1265,6 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_028, TestSize.Level0)
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
     session->Stop();
-}
-
-/*
- * Feature: Framework
- * Function: Test capture session with commit config multiple times
- * SubFunction: NA
- * FunctionPoints: NA
- * EnvConditions: NA
- * CaseDescription: Test capture session with commit config multiple times
- */
-HWTEST_F(CameraFrameworkTest, media_camera_framework_test_029, TestSize.Level0)
-{
-    int32_t intResult = session->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
-
-    intResult = session->AddInput(input);
-    EXPECT_TRUE(intResult == 0);
-
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
-    ASSERT_NE(previewOutput, nullptr);
-
-    intResult = session->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
-
-    intResult = session->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
-
-    sleep(WAIT_TIME_AFTER_START);
-
-    intResult = session->CommitConfig();
-    EXPECT_TRUE(intResult != 0);
 }
 } // CameraStandard
 } // OHOS

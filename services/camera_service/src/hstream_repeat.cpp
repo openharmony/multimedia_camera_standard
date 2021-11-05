@@ -233,7 +233,7 @@ int32_t HStreamRepeat::Release()
 
 int32_t HStreamRepeat::IsStreamsSupported(Camera::OperationMode mode,
                                           const std::shared_ptr<CameraStandard::CameraMetadata> &modeSetting,
-                                          const std::shared_ptr<Camera::StreamInfo> &pInfo)
+                                          const std::vector<std::shared_ptr<Camera::StreamInfo>> &pInfo)
 {
     Camera::StreamSupportType pType;
     Camera::CamRetCode rc = streamOperator_->IsStreamsSupported(mode, modeSetting,

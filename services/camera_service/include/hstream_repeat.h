@@ -41,7 +41,7 @@ public:
     int32_t Stop() override;
     int32_t IsStreamsSupported(Camera::OperationMode mode,
                                const std::shared_ptr<CameraStandard::CameraMetadata> &modeSetting,
-                               const std::shared_ptr<Camera::StreamInfo> &pInfo);
+                               const std::vector<std::shared_ptr<Camera::StreamInfo>> &pInfo);
     sptr<OHOS::IBufferProducer> GetBufferProducer();
     int32_t SetFps(float Fps) override;
     int32_t SetCallback(sptr<IStreamRepeatCallback> &callback) override;

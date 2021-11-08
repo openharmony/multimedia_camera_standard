@@ -39,7 +39,10 @@ config("camera_config") {
 
 ohos_executable("camera_video") {
   install_enable = false
-  sources = [ "camera_video.cpp" ]
+  sources = [
+    "camera_video.cpp",
+    "test_common.cpp",
+  ]
   cflags = [ "-fPIC" ]
   cflags += [ "-Wall" ]
   cflags_cc = cflags
@@ -56,6 +59,7 @@ ohos_executable("camera_video") {
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "multimedia_media_standard:media_client",
   ]
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"

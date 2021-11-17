@@ -33,7 +33,7 @@ public:
 
     virtual int32_t AddOutput(sptr<IStreamCapture> streamCapture) = 0;
 
-    virtual int32_t RemoveInput() = 0;
+    virtual int32_t RemoveInput(sptr<ICameraDeviceService> cameraDevice) = 0;
 
     virtual int32_t RemoveOutput(sptr<IStreamCapture> streamCapture) = 0;
 

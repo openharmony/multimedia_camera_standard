@@ -30,6 +30,7 @@ private:
     int HandleAddInput(MessageParcel &data);
     int HandleAddCaptureOutput(MessageParcel &data);
     int HandleAddRepeatOutput(MessageParcel &data);
+    int HandleRemoveInput(MessageParcel &data);
     int HandleRemoveCaptureOutput(MessageParcel &data);
     int HandleRemoveRepeatOutput(MessageParcel &data);
 };

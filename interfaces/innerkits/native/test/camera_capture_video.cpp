@@ -26,10 +26,13 @@ using namespace OHOS::CameraStandard;
 namespace {
     static const int32_t PREVIEW_WIDTH = 640;
     static const int32_t PREVIEW_HEIGHT = 480;
+    static const int32_t SECOND_PREVIEW_WIDTH = 832;
+    static const int32_t SECOND_PREVIEW_HEIGHT = 480;
     static const int32_t PHOTO_WIDTH = 1280;
     static const int32_t PHOTO_HEIGHT = 960;
     static const int32_t VIDEO_WIDTH = 640;
     static const int32_t VIDEO_HEIGHT = 360;
+    static const int32_t GAP_AFTER_STOP = 1;
     static const char *TEST_NAME = "Camera_capture_video";
 }
 
@@ -44,7 +47,8 @@ static void PhotoModeUsage(FILE *fp)
                      "Options:\n"
                      "h      Print this message\n"
                      "c      Capture one picture\n"
-                     "s      Switch to video mode\n"
+                     "v      Switch to video mode\n"
+                     "d      Double preview mode\n"
                      "q      Quit this app\n");
     if (result < 0) {
         MEDIA_ERR_LOG("Failed to display menu, %{public}d", result);
@@ -62,7 +66,26 @@ static void VideoModeUsage(FILE *fp)
                      "Options:\n"
                      "h      Print this message\n"
                      "r      Record video\n"
-                     "s      Switch to Photo mode\n"
+                     "p      Switch to Photo mode\n"
+                     "d      Switch to Double preview mode\n"
+                     "q      Quit this app\n");
+    if (result < 0) {
+        MEDIA_ERR_LOG("Failed to display menu, %{public}d", result);
+    }
+}
+
+static void DoublePreviewModeUsage(FILE *fp)
+{
+    int32_t result = 0;
+
+    result = fprintf(fp,
+                     "---------------------\n"
+                     "Running in Double preview mode\n"
+                     "---------------------\n"
+                     "Options:\n"
+                     "h      Print this message\n"
+                     "p      Switch to Photo mode\n"
+                     "v      Switch to Video mode\n"
                      "q      Quit this app\n");
     if (result < 0) {
         MEDIA_ERR_LOG("Failed to display menu, %{public}d", result);
@@ -73,8 +96,10 @@ static void Usage(std::shared_ptr<CameraCaptureVideo> testObj)
 {
     if (testObj->currentState_ == State::PHOTO_CAPTURE) {
         PhotoModeUsage(stdout);
-    } else {
+    } else if (testObj->currentState_ == State::VIDEO_RECORDING) {
         VideoModeUsage(stdout);
+    } else if (testObj->currentState_ == State::DOUBLE_PREVIEW) {
+        DoublePreviewModeUsage(stdout);
     }
     return;
 }
@@ -92,15 +117,16 @@ static char PutMenuAndGetChr(std::shared_ptr<CameraCaptureVideo> &testObj)
     return userInput[0];
 }
 
-static int32_t SwitchMode(std::shared_ptr<CameraCaptureVideo> testObj)
+static int32_t SwitchMode(std::shared_ptr<CameraCaptureVideo> testObj, State state)
 {
-    testObj->Release();
-    if (testObj->currentState_ == State::PHOTO_CAPTURE) {
-        testObj->currentState_ = State::VIDEO_RECORDING;
-    } else {
-        testObj->currentState_ = State::PHOTO_CAPTURE;
+    int32_t result = CAMERA_OK;
+
+    if (testObj->currentState_ != state) {
+        testObj->Release();
+        testObj->currentState_ = state;
+        result = testObj->StartPreview();
     }
-    return testObj->StartPreview();
+    return result;
 }
 
 static void DisplayMenu(std::shared_ptr<CameraCaptureVideo> testObj)
@@ -132,8 +158,28 @@ static void DisplayMenu(std::shared_ptr<CameraCaptureVideo> testObj)
                 }
                 break;
 
-            case 's':
-                result = SwitchMode(testObj);
+            case 'v':
+                if (testObj->currentState_ != State::VIDEO_RECORDING) {
+                    result = SwitchMode(testObj, State::VIDEO_RECORDING);
+                }
+                if (result == CAMERA_OK) {
+                    c = PutMenuAndGetChr(testObj);
+                }
+                break;
+
+            case 'p':
+                if (testObj->currentState_ != State::PHOTO_CAPTURE) {
+                    result = SwitchMode(testObj, State::PHOTO_CAPTURE);
+                }
+                if (result == CAMERA_OK) {
+                    c = PutMenuAndGetChr(testObj);
+                }
+                break;
+
+            case 'd':
+                if (testObj->currentState_ != State::DOUBLE_PREVIEW) {
+                    result = SwitchMode(testObj, State::DOUBLE_PREVIEW);
+                }
                 if (result == CAMERA_OK) {
                     c = PutMenuAndGetChr(testObj);
                 }
@@ -173,7 +219,7 @@ int32_t CameraCaptureVideo::TakePhoto()
 
     result = ((sptr<PhotoOutput> &)photoOutput_)->Capture();
     if (result != CAMERA_OK) {
-        MEDIA_DEBUG_LOG("Failed to capture, result: %{public}d", result);
+        MEDIA_ERR_LOG("Failed to capture, result: %{public}d", result);
         return result;
     }
     sleep(gapAfterCapture_);
@@ -186,13 +232,13 @@ int32_t CameraCaptureVideo::RecordVideo()
 
     result = ((sptr<VideoOutput> &)videoOutput_)->Start();
     if (result != CAMERA_OK) {
-        MEDIA_DEBUG_LOG("Failed to start recording, result: %{public}d", result);
+        MEDIA_ERR_LOG("Failed to start recording, result: %{public}d", result);
         return result;
     }
     sleep(videoCaptureDuration_);
     result = ((sptr<VideoOutput> &)videoOutput_)->Stop();
     if (result != CAMERA_OK) {
-        MEDIA_DEBUG_LOG("Failed to stop recording, result: %{public}d", result);
+        MEDIA_ERR_LOG("Failed to stop recording, result: %{public}d", result);
         return result;
     }
     sleep(gapAfterCapture_);
@@ -205,6 +251,7 @@ void CameraCaptureVideo::Release()
 {
     if (captureSession_ != nullptr) {
         captureSession_->Stop();
+        sleep(GAP_AFTER_STOP);
         captureSession_->Release();
         captureSession_ = nullptr;
     }
@@ -222,6 +269,10 @@ void CameraCaptureVideo::Release()
     videoSurfaceListener_ = nullptr;
     videoOutput_ = nullptr;
     videoOutputCallback_ = nullptr;
+    secondPreviewSurface_ = nullptr;
+    secondPreviewSurfaceListener_ = nullptr;
+    secondPreviewOutput_ = nullptr;
+    secondPreviewOutputCallback_ = nullptr;
 }
 
 int32_t CameraCaptureVideo::InitCameraManager()
@@ -248,12 +299,12 @@ int32_t CameraCaptureVideo::InitCameraInput()
     if (cameraInput_ == nullptr) {
         std::vector<sptr<CameraInfo>> cameraObjList = cameraManager_->GetCameras();
         if (cameraObjList.size() <= 0) {
-            MEDIA_DEBUG_LOG("No cameras are availble!!!");
+            MEDIA_ERR_LOG("No cameras are availble!!!");
             return result;
         }
         cameraInput_ = cameraManager_->CreateCameraInput(cameraObjList[0]);
         if (cameraInput_ == nullptr) {
-            MEDIA_DEBUG_LOG("Failed to create CameraInput");
+            MEDIA_ERR_LOG("Failed to create CameraInput");
             return result;
         }
         cameraInputCallback_ = std::make_shared<TestDeviceCallback>(TEST_NAME);
@@ -274,11 +325,34 @@ int32_t CameraCaptureVideo::InitPreviewOutput()
         previewSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)previewSurfaceListener_);
         previewOutput_ = cameraManager_->CreatePreviewOutput(previewSurface_);
         if (previewOutput_ == nullptr) {
-            MEDIA_DEBUG_LOG("Failed to create previewOutput");
+            MEDIA_ERR_LOG("Failed to create previewOutput");
             return result;
         }
         previewOutputCallback_ = std::make_shared<TestPreviewOutputCallback>(TEST_NAME);
         ((sptr<PreviewOutput> &)previewOutput_)->SetCallback(previewOutputCallback_);
+    }
+    result = CAMERA_OK;
+    return result;
+}
+
+int32_t CameraCaptureVideo::InitSecondPreviewOutput()
+{
+    int32_t result = -1;
+
+    if (secondPreviewOutput_ == nullptr) {
+        secondPreviewSurface_ = Surface::CreateSurfaceAsConsumer();
+        secondPreviewSurface_->SetDefaultWidthAndHeight(previewWidth_, previewHeight_);
+        secondPreviewSurfaceListener_ = new SurfaceListener(TEST_NAME,
+            SurfaceType::SECOND_PREVIEW, fd_, secondPreviewSurface_);
+        secondPreviewSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)secondPreviewSurfaceListener_);
+        secondPreviewOutput_ = cameraManager_->CreateCustomPreviewOutput(secondPreviewSurface_->GetProducer(),
+                                                                         SECOND_PREVIEW_WIDTH, SECOND_PREVIEW_HEIGHT);
+        if (secondPreviewOutput_ == nullptr) {
+            MEDIA_ERR_LOG("Failed to create second previewOutput");
+            return result;
+        }
+        secondPreviewOutputCallback_ = std::make_shared<TestPreviewOutputCallback>(TEST_NAME);
+        ((sptr<PreviewOutput> &)secondPreviewOutput_)->SetCallback(secondPreviewOutputCallback_);
     }
     result = CAMERA_OK;
     return result;
@@ -295,7 +369,7 @@ int32_t CameraCaptureVideo::InitPhotoOutput()
         photoSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)photoSurfaceListener_);
         photoOutput_ = cameraManager_->CreatePhotoOutput(photoSurface_);
         if (photoOutput_ == nullptr) {
-            MEDIA_DEBUG_LOG("Failed to create PhotoOutput");
+            MEDIA_ERR_LOG("Failed to create PhotoOutput");
             return result;
         }
         photoOutputCallback_ = std::make_shared<TestPhotoOutputCallback>(TEST_NAME);
@@ -316,13 +390,42 @@ int32_t CameraCaptureVideo::InitVideoOutput()
         videoSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoSurfaceListener_);
         videoOutput_ = cameraManager_->CreateVideoOutput(videoSurface_);
         if (videoOutput_ == nullptr) {
-            MEDIA_DEBUG_LOG("Failed to create VideoOutput");
+            MEDIA_ERR_LOG("Failed to create VideoOutput");
             return result;
         }
         videoOutputCallback_ = std::make_shared<TestVideoOutputCallback>(TEST_NAME);
         ((sptr<VideoOutput> &)videoOutput_)->SetCallback(videoOutputCallback_);
     }
     result = CAMERA_OK;
+    return result;
+}
+
+int32_t CameraCaptureVideo::AddOutputbyState()
+{
+    int32_t result = -1;
+
+    switch (currentState_) {
+        case State::PHOTO_CAPTURE :
+            result = InitPhotoOutput();
+            if (result == CAMERA_OK) {
+                result = captureSession_->AddOutput(photoOutput_);
+            }
+            break;
+        case State::VIDEO_RECORDING:
+            result = InitVideoOutput();
+            if (result == CAMERA_OK) {
+                result = captureSession_->AddOutput(videoOutput_);
+            }
+            break;
+        case State::DOUBLE_PREVIEW:
+            result = InitSecondPreviewOutput();
+            if (result == CAMERA_OK) {
+                result = captureSession_->AddOutput(secondPreviewOutput_);
+            }
+            break;
+        default:
+            break;
+    }
     return result;
 }
 
@@ -347,12 +450,7 @@ int32_t CameraCaptureVideo::StartPreview()
     if (CAMERA_OK != result) {
         return result;
     }
-    result = (currentState_ == State::PHOTO_CAPTURE) ? InitPhotoOutput() : InitVideoOutput();
-    if (result != CAMERA_OK) {
-        return result;
-    }
-    result = (currentState_ == State::PHOTO_CAPTURE) ? captureSession_->AddOutput(photoOutput_)
-        : captureSession_->AddOutput(videoOutput_);
+    result = AddOutputbyState();
     if (result != CAMERA_OK) {
         return result;
     }
@@ -366,7 +464,7 @@ int32_t CameraCaptureVideo::StartPreview()
     }
     result = captureSession_->CommitConfig();
     if (CAMERA_OK != result) {
-        MEDIA_DEBUG_LOG("Failed to Commit config");
+        MEDIA_ERR_LOG("Failed to Commit config");
         return result;
     }
     result = captureSession_->Start();

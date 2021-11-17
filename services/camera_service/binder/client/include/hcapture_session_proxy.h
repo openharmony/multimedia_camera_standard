@@ -35,7 +35,7 @@ public:
 
     int32_t AddOutput(sptr<IStreamCapture> streamCapture) override;
 
-    int32_t RemoveInput() override;
+    int32_t RemoveInput(sptr<ICameraDeviceService> cameraDevice) override;
 
     int32_t RemoveOutput(sptr<IStreamCapture> streamCapture) override;
 

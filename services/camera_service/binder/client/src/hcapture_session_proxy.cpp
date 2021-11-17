@@ -108,7 +108,7 @@ int32_t HCaptureSessionProxy::AddOutput(sptr<IStreamCapture> streamCapture)
     return error;
 }
 
-int32_t HCaptureSessionProxy::RemoveInput()
+int32_t HCaptureSessionProxy::RemoveInput(sptr<ICameraDeviceService> cameraDevice)
 {
     MessageParcel data;
     MessageParcel reply;

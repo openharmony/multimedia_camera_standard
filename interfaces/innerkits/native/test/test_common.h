@@ -28,6 +28,7 @@ enum class VideoSaveMode {
 enum class SurfaceType {
     INVALID = 0,
     PREVIEW,
+    SECOND_PREVIEW,
     PHOTO,
     VIDEO
 };
@@ -120,6 +121,7 @@ private:
     int32_t &fd_;
     sptr<Surface> surface_;
     int32_t previewIndex_ = 0;
+    int32_t secondPreviewIndex_ = 0;
 };
 } // namespace CameraStandard
 } // namespace OHOS

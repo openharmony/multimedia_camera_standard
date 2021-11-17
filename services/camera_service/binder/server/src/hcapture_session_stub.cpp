@@ -38,7 +38,7 @@ int HCaptureSessionStub::OnRemoteRequest(
             errCode = HCaptureSessionStub::HandleAddRepeatOutput(data);
             break;
         case CAMERA_CAPTURE_SESSION_REMOVE_INPUT:
-            errCode = RemoveInput();
+            errCode = HCaptureSessionStub::HandleRemoveInput(data);
             break;
         case CAMERA_CAPTURE_SESSION_REMOVE_OUTPUT_CAPTURE:
             errCode = HCaptureSessionStub::HandleRemoveCaptureOutput(data);
@@ -78,6 +78,19 @@ int HCaptureSessionStub::HandleAddInput(MessageParcel &data)
     sptr<ICameraDeviceService> cameraDevice = iface_cast<ICameraDeviceService>(remoteObj);
 
     return AddInput(cameraDevice);
+}
+
+int HCaptureSessionStub::HandleRemoveInput(MessageParcel &data)
+{
+    sptr<IRemoteObject> remoteObj = data.ReadRemoteObject();
+    if (remoteObj == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSessionStub HandleAddInput CameraDevice is null");
+        return IPC_STUB_INVALID_DATA_ERR;
+    }
+
+    sptr<ICameraDeviceService> cameraDevice = iface_cast<ICameraDeviceService>(remoteObj);
+
+    return RemoveInput(cameraDevice);
 }
 
 int HCaptureSessionStub::HandleAddCaptureOutput(MessageParcel &data)

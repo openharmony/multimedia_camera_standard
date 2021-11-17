@@ -33,6 +33,7 @@ public:
     HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo);
     ~HStreamRepeat();
 
+    static void ResetCaptureIds();
     int32_t LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
     std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId);
     void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo);
@@ -49,8 +50,11 @@ public:
     int32_t OnFrameEnded(int32_t frameCount);
     int32_t OnFrameError(int32_t errorType);
     bool IsVideo();
+    int32_t GetStreamId();
 
 private:
+    static int32_t videoCaptureId_;
+    static int32_t previewCaptureId_;
     int32_t StartPreview();
     int32_t StartVideo();
     bool IsvalidCaptureID();
@@ -59,8 +63,7 @@ private:
     int32_t customPreviewWidth_;
     int32_t customPreviewHeight_;
     sptr<Camera::IStreamOperator> streamOperator_;
-    int32_t previewStreamId_, previewCaptureId_;
-    int32_t videoStreamId_, videoCaptureId_;
+    int32_t streamId_;
     sptr<OHOS::IBufferProducer> producer_;
     sptr<IStreamRepeatCallback> streamRepeatCallback_;
     std::shared_ptr<CameraMetadata> cameraAbility_;

@@ -29,6 +29,14 @@ namespace OHOS {
 namespace CameraStandard {
 class StreamOperatorCallback;
 
+enum class CaptureSessionState {
+    SESSION_INIT = 0,
+    SESSION_CONFIG_INPROGRESS,
+    SESSION_CONFIG_COMMITTED,
+};
+
+static const int32_t STREAMID_BEGIN = 1;
+
 class HCaptureSession : public HCaptureSessionStub {
 public:
     HCaptureSession(sptr<HCameraHostManager> cameraHostManager, sptr<StreamOperatorCallback> streamOperatorCallback);
@@ -41,7 +49,7 @@ public:
     int32_t AddOutput(sptr<IStreamRepeat> streamRepeat) override;
     int32_t AddOutput(sptr<IStreamCapture> streamCapture) override;
 
-    int32_t RemoveInput() override;
+    int32_t RemoveInput(sptr<ICameraDeviceService> cameraDevice) override;
     int32_t RemoveOutput(sptr<IStreamCapture> streamCapture) override;
     int32_t RemoveOutput(sptr<IStreamRepeat> streamRepeat) override;
 
@@ -52,18 +60,30 @@ public:
     friend class StreamOperatorCallback;
 
 private:
-    bool isConfigCommitted_;
+    int32_t ValidateSessionInputs();
+    int32_t ValidateSessionOutputs();
+    int32_t GetStreamOperator();
+    int32_t HandleCaptureOuputsConfig();
+    int32_t CheckAndCommitStreams(std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);
+    void UpdateSessionConfig();
+    void FindAndDeleteStream(int32_t deletedStreamID);
+    void RestorePreviousState();
+    void ReleaseStreams();
+    CaptureSessionState curState_ = CaptureSessionState::SESSION_INIT;
+    CaptureSessionState prevState_ = CaptureSessionState::SESSION_INIT;
     sptr<Camera::IStreamOperator> streamOperator_;
-    std::vector<std::shared_ptr<Camera::StreamInfo>> streamInfosPreview_;
-    sptr<HStreamRepeat> streamRepeatPreview_;
-    sptr<HStreamRepeat> streamRepeatVideo_;
-    sptr<HStreamCapture> streamCapture_;
     sptr<HCameraDevice> cameraDevice_;
-    int32_t previewStreamID_, photoStreamID_, videoStreamID_;
+    std::vector<sptr<HStreamRepeat>> streamRepeats_;
+    std::vector<sptr<HStreamCapture>> streamCaptures_;
+    std::vector<sptr<HCameraDevice>> cameraDevices_;
+    std::vector<sptr<HStreamRepeat>> tempStreamRepeats_;
+    std::vector<sptr<HStreamCapture>> tempStreamCaptures_;
+    std::vector<sptr<HCameraDevice>> tempCameraDevices_;
+    std::vector<int32_t> deletedStreamIds_;
     std::shared_ptr<CameraMetadata> cameraAbility_;
     sptr<HCameraHostManager> cameraHostManager_;
-    std::vector<int32_t> streamIds_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;
+    int32_t streamId_ = STREAMID_BEGIN;
 };
 
 class StreamOperatorCallback : public Camera::StreamOperatorCallbackStub {
@@ -82,6 +102,8 @@ public:
     void SetCaptureSession(sptr<HCaptureSession> captureSession);
 
 private:
+    sptr<HStreamCapture> GetStreamCaptureByStreamID(std::int32_t streamId);
+    sptr<HStreamRepeat> GetStreamRepeatByStreamID(std::int32_t streamId);
     sptr<HCaptureSession> captureSession_;
 };
 } // namespace CameraStandard

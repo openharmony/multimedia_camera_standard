@@ -58,6 +58,14 @@ int32_t TestUtils::SaveYUV(const char *buffer, int32_t size, SurfaceType type)
             MEDIA_ERR_LOG("Path Assignment failed");
             return -1;
         }
+    } else if (type == SurfaceType::SECOND_PREVIEW) {
+        (void)system("mkdir -p /mnt/preview2");
+        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview2/%s_%lld.yuv", "preview2",
+                           GetCurrentLocalTimeStamp());
+        if (retVal < 0) {
+            MEDIA_ERR_LOG("Path Assignment failed");
+            return -1;
+        }
     } else {
         MEDIA_ERR_LOG("Unexpected flow!");
         return -1;
@@ -66,12 +74,12 @@ int32_t TestUtils::SaveYUV(const char *buffer, int32_t size, SurfaceType type)
     MEDIA_DEBUG_LOG("%s, saving file to %{public}s", __FUNCTION__, path);
     int imgFd = open(path, O_RDWR | O_CREAT, FILE_PERMISSIONS_FLAG);
     if (imgFd == -1) {
-        MEDIA_DEBUG_LOG("%s, open file failed, errno = %{public}s.", __FUNCTION__, strerror(errno));
+        MEDIA_ERR_LOG("%s, open file failed, errno = %{public}s.", __FUNCTION__, strerror(errno));
         return -1;
     }
     int ret = write(imgFd, buffer, size);
     if (ret == -1) {
-        MEDIA_DEBUG_LOG("%s, write file failed, error = %{public}s", __FUNCTION__, strerror(errno));
+        MEDIA_ERR_LOG("%s, write file failed, error = %{public}s", __FUNCTION__, strerror(errno));
         close(imgFd);
         return -1;
     }
@@ -243,6 +251,15 @@ void SurfaceListener::OnBufferAvailable()
                 previewIndex_++;
                 break;
 
+            case SurfaceType::SECOND_PREVIEW:
+                if (secondPreviewIndex_ % PREVIEW_SKIP_FRAMES == 0
+                    && TestUtils::SaveYUV(addr, size, surfaceType_) != CAMERA_OK) {
+                    MEDIA_ERR_LOG("Failed to save buffer");
+                    secondPreviewIndex_ = 0;
+                }
+                secondPreviewIndex_++;
+                break;
+
             case SurfaceType::PHOTO:
                 if (TestUtils::SaveYUV(addr, size, surfaceType_) != CAMERA_OK) {
                     MEDIA_ERR_LOG("Failed to save buffer");
@@ -264,7 +281,7 @@ void SurfaceListener::OnBufferAvailable()
         }
         surface_->ReleaseBuffer(buffer, -1);
     } else {
-        MEDIA_DEBUG_LOG("AcquireBuffer failed!");
+        MEDIA_ERR_LOG("AcquireBuffer failed!");
     }
 }
 } // namespace CameraStandard

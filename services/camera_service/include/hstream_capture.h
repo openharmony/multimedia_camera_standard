@@ -31,6 +31,7 @@ public:
     HStreamCapture(sptr<OHOS::IBufferProducer> surface);
     ~HStreamCapture();
 
+    static void ResetCaptureId();
     int32_t LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
         std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId);
     void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo);
@@ -42,11 +43,13 @@ public:
     int32_t OnCaptureEnded(int32_t captureId);
     int32_t OnCaptureError(int32_t captureId, int32_t errorType);
     int32_t OnFrameShutter(int32_t captureId, uint64_t timestamp);
+    int32_t GetStreamId();
 
 private:
+    static int32_t photoCaptureId_;
     bool IsValidCaptureID();
     sptr<Camera::IStreamOperator> streamOperator_;
-    int32_t photoStreamId_, photoCaptureId_;
+    int32_t photoStreamId_;
     sptr<OHOS::IBufferProducer> producer_;
     sptr<IStreamCaptureCallback> streamCaptureCallback_;
     std::shared_ptr<CameraMetadata> cameraAbility_;

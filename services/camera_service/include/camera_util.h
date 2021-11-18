@@ -41,11 +41,6 @@ static const std::int32_t PHOTO_CAPTURE_ID_END = (2 * (INT_MAX / CAPTURE_TYPE_CO
 static const std::int32_t VIDEO_CAPTURE_ID_START = PHOTO_CAPTURE_ID_END + 1;
 static const std::int32_t VIDEO_CAPTURE_ID_END = INT_MAX;
 
-enum CaptureType {
-    CAPTURE_TYPE_PREVIEW = 0,
-    CAPTURE_TYPE_PHOTO,
-    CAPTURE_TYPE_VIDEO
-};
 
 static const std::int32_t CAMERA_PHOTO_HEIGHT = 720;
 static const std::int32_t CAMERA_PHOTO_WIDTH = 1280;
@@ -57,19 +52,18 @@ enum CamServiceError {
     CAMERA_OK = 0,
     CAMERA_ALLOC_ERROR,
     CAMERA_INVALID_ARG,
+    CAMERA_UNSUPPORTED,
     CAMERA_DEVICE_BUSY,
     CAMERA_DEVICE_CLOSED,
     CAMERA_DEVICE_REQUEST_TIMEOUT,
     CAMERA_STREAM_BUFFER_LOST,
-    CAMERA_INVALID_OUTPUT_CFG,
+    CAMERA_INVALID_SESSION_CFG,
     CAMERA_CAPTURE_LIMIT_EXCEED,
     CAMERA_INVALID_STATE,
     CAMERA_UNKNOWN_ERROR
 };
 
-int HdiToServiceError(Camera::CamRetCode ret);
-
-CaptureType GetCaptureType(int32_t captureId);
+int32_t HdiToServiceError(Camera::CamRetCode ret);
 
 bool IsValidSize(int32_t width, int32_t height, std::vector<std::pair<int32_t, int32_t>> validSizes);
 } // namespace CameraStandard

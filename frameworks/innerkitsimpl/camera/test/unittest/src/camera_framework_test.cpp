@@ -253,6 +253,7 @@ void CameraFrameworkTest::TearDownTestCase(void) {}
 
 void CameraFrameworkTest::SetUp()
 {
+    MEDIA_DEBUG_LOG("Beginning of camera test case!");
     g_photoEvents.reset();
     g_previewEvents.reset();
     g_videoEvents.reset();
@@ -277,6 +278,7 @@ void CameraFrameworkTest::SetUp()
 void CameraFrameworkTest::TearDown()
 {
     session->Release();
+    MEDIA_DEBUG_LOG("End of camera test case");
 }
 
 /*
@@ -1046,10 +1048,10 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_024, TestSize.Level0)
     EXPECT_TRUE(intResult == 0);
 
     intResult = session->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_TRUE(intResult != 0);
 
     intResult = session->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_TRUE(intResult != 0);
 
     sleep(WAIT_TIME_AFTER_START);
     intResult = ((sptr<PhotoOutput> &)photoOutput1)->Capture();
@@ -1057,7 +1059,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_024, TestSize.Level0)
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
     intResult = ((sptr<PhotoOutput> &)photoOutput2)->Capture();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_TRUE(intResult != 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
     session->Stop();
@@ -1143,16 +1145,16 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_026, TestSize.Level0)
     EXPECT_TRUE(intResult == 0);
 
     intResult = session->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_TRUE(intResult != 0);
 
     intResult = session->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_TRUE(intResult != 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput1)->Start();
     EXPECT_TRUE(intResult != 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput2)->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_TRUE(intResult != 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
@@ -1160,7 +1162,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_026, TestSize.Level0)
     EXPECT_TRUE(intResult != 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput2)->Stop();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_TRUE(intResult != 0);
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 

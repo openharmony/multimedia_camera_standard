@@ -21,14 +21,14 @@
 
 namespace OHOS {
 namespace CameraStandard {
+int32_t HStreamRepeat::videoCaptureId_ = VIDEO_CAPTURE_ID_START;
+int32_t HStreamRepeat::previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
+
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer)
 {
     producer_ = producer;
     isVideo_ = false;
-    videoStreamId_ = 0;
-    videoCaptureId_ = 0;
-    previewStreamId_ = 0;
-    previewCaptureId_ = 0;
+    streamId_ = 0;
     customPreviewWidth_ = 0;
     customPreviewHeight_ = 0;
     curCaptureID_ = 0;
@@ -38,10 +38,7 @@ HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t width
 {
     producer_ = producer;
     isVideo_ = false;
-    videoStreamId_ = 0;
-    videoCaptureId_ = 0;
-    previewStreamId_ = 0;
-    previewCaptureId_ = 0;
+    streamId_ = 0;
     customPreviewWidth_ = width;
     customPreviewHeight_ = height;
     curCaptureID_ = 0;
@@ -51,10 +48,7 @@ HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo)
 {
     producer_ = producer;
     isVideo_ = isVideo;
-    videoStreamId_ = 0;
-    videoCaptureId_ = 0;
-    previewStreamId_ = 0;
-    previewCaptureId_ = 0;
+    streamId_ = 0;
     customPreviewWidth_ = 0;
     customPreviewHeight_ = 0;
     curCaptureID_ = 0;
@@ -75,19 +69,16 @@ int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
     }
     if (isVideo_) {
         if (!IsValidSize(producer_->GetDefaultWidth(), producer_->GetDefaultHeight(), validVideoSizes_)) {
-            return CAMERA_INVALID_OUTPUT_CFG;
+            return CAMERA_INVALID_SESSION_CFG;
         }
-        videoStreamId_ = streamId;
-        videoCaptureId_ = VIDEO_CAPTURE_ID_START;
     } else {
         previewWidth = (customPreviewWidth_ == 0) ? producer_->GetDefaultWidth() : customPreviewWidth_;
         previewHeight =  (customPreviewHeight_ == 0) ? producer_->GetDefaultHeight() : customPreviewHeight_;
         if (!IsValidSize(previewWidth, previewHeight, validPreviewSizes_)) {
-            return CAMERA_INVALID_OUTPUT_CFG;
+            return CAMERA_INVALID_SESSION_CFG;
         }
-        previewStreamId_ = streamId;
-        previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
     }
+    streamId_ = streamId;
     streamOperator_ = streamOperator;
     cameraAbility_ = cameraAbility;
     return CAMERA_OK;
@@ -105,12 +96,11 @@ void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
     streamInfo->bufferQueue_ = producer_;
     streamInfo->width_ = (customPreviewWidth_ == 0) ? producer_->GetDefaultWidth() : customPreviewWidth_;
     streamInfo->height_ = (customPreviewHeight_ == 0) ? producer_->GetDefaultHeight() : customPreviewHeight_;
+    streamInfo->streamId_ = streamId_;
     if (isVideo_) {
-        streamInfo->streamId_ = videoStreamId_;
         streamInfo->intent_ = Camera::VIDEO;
         streamInfo->encodeType_ = Camera::ENCODE_TYPE_H264;
     } else {
-        streamInfo->streamId_ = previewStreamId_;
         streamInfo->intent_ = Camera::PREVIEW;
     }
 }
@@ -119,6 +109,9 @@ int32_t HStreamRepeat::Start()
 {
     int32_t rc = CAMERA_OK;
 
+    if (streamOperator_ == nullptr) {
+        return CAMERA_INVALID_STATE;
+    }
     if (curCaptureID_ != 0) {
         MEDIA_ERR_LOG("HStreamRepeat::Start, Already started with captureID: %{public}d", curCaptureID_);
         return CAMERA_INVALID_STATE;
@@ -160,7 +153,7 @@ int32_t HStreamRepeat::StartVideo()
     curCaptureID_ = videoCaptureId_;
     videoCaptureId_++;
     std::shared_ptr<Camera::CaptureInfo> captureInfoVideo = std::make_shared<Camera::CaptureInfo>();
-    captureInfoVideo->streamIds_ = {videoStreamId_};
+    captureInfoVideo->streamIds_ = {streamId_};
     captureInfoVideo->captureSetting_ = cameraAbility_;
     captureInfoVideo->enableShutterCallback_ = false;
     MEDIA_INFO_LOG("HStreamCapture::StartVideo() Starting video with capture ID: %{public}d", curCaptureID_);
@@ -185,7 +178,7 @@ int32_t HStreamRepeat::StartPreview()
     curCaptureID_ = previewCaptureId_;
     previewCaptureId_++;
     std::shared_ptr<Camera::CaptureInfo> captureInfoPreview = std::make_shared<Camera::CaptureInfo>();
-    captureInfoPreview->streamIds_ = {previewStreamId_};
+    captureInfoPreview->streamIds_ = {streamId_};
     captureInfoPreview->captureSetting_ = cameraAbility_;
     captureInfoPreview->enableShutterCallback_ = false;
     MEDIA_INFO_LOG("HStreamCapture::StartPreview() Starting preview with capture ID: %{public}d", curCaptureID_);
@@ -203,6 +196,9 @@ int32_t HStreamRepeat::Stop()
     int32_t rc = NO_ERROR;
     Camera::CamRetCode hdiCode = Camera::NO_ERROR;
 
+    if (streamOperator_ == nullptr) {
+        return CAMERA_INVALID_STATE;
+    }
     if (curCaptureID_ == 0) {
         MEDIA_ERR_LOG("HStreamRepeat::Stop, Stream not started yet");
         return CAMERA_INVALID_STATE;
@@ -225,9 +221,10 @@ int32_t HStreamRepeat::SetFps(float Fps)
 int32_t HStreamRepeat::Release()
 {
     streamRepeatCallback_ = nullptr;
-    videoCaptureId_ = 0;
-    previewCaptureId_ = 0;
     curCaptureID_ = 0;
+    streamOperator_ = nullptr;
+    streamId_ = 0;
+    cameraAbility_ = nullptr;
     return CAMERA_OK;
 }
 
@@ -236,6 +233,7 @@ int32_t HStreamRepeat::IsStreamsSupported(Camera::OperationMode mode,
                                           const std::vector<std::shared_ptr<Camera::StreamInfo>> &pInfo)
 {
     Camera::StreamSupportType pType;
+
     Camera::CamRetCode rc = streamOperator_->IsStreamsSupported(mode, modeSetting,
         pInfo, pType);
     if (rc != Camera::NO_ERROR) {
@@ -245,7 +243,6 @@ int32_t HStreamRepeat::IsStreamsSupported(Camera::OperationMode mode,
         MEDIA_ERR_LOG("HStreamRepeat::IsStreamsSupported Not supported");
         return CAMERA_UNKNOWN_ERROR;
     }
-
     return CAMERA_OK;
 }
 
@@ -295,6 +292,17 @@ int32_t HStreamRepeat::OnFrameError(int32_t errorType)
         }
     }
     return CAMERA_OK;
+}
+
+int32_t HStreamRepeat::GetStreamId()
+{
+    return streamId_;
+}
+
+void HStreamRepeat::ResetCaptureIds()
+{
+    videoCaptureId_ = VIDEO_CAPTURE_ID_START;
+    previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
 }
 } // namespace Standard
 } // namespace OHOS

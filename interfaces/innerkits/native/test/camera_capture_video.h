@@ -22,7 +22,8 @@ namespace OHOS {
 namespace CameraStandard {
 enum class State {
     PHOTO_CAPTURE = 1,
-    VIDEO_RECORDING
+    VIDEO_RECORDING,
+    DOUBLE_PREVIEW
 };
 
 class CameraCaptureVideo {
@@ -35,6 +36,7 @@ public:
     int32_t InitCameraManager();
     int32_t InitCameraInput();
     int32_t InitPreviewOutput();
+    int32_t InitSecondPreviewOutput();
     int32_t InitPhotoOutput();
     int32_t InitVideoOutput();
     int32_t StartPreview();
@@ -42,6 +44,7 @@ public:
     int32_t RecordVideo();
     void Release();
 private:
+    int32_t AddOutputbyState();
     int32_t previewWidth_;
     int32_t previewHeight_;
     int32_t photoWidth_;
@@ -72,6 +75,11 @@ private:
     sptr<SurfaceListener> videoSurfaceListener_;
     sptr<CaptureOutput> videoOutput_;
     std::shared_ptr<TestVideoOutputCallback> videoOutputCallback_;
+
+    sptr<Surface> secondPreviewSurface_;
+    sptr<SurfaceListener> secondPreviewSurfaceListener_;
+    sptr<CaptureOutput> secondPreviewOutput_;
+    std::shared_ptr<TestPreviewOutputCallback> secondPreviewOutputCallback_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

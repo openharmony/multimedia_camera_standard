@@ -63,6 +63,8 @@ public:
     sptr<PreviewOutput> CreatePreviewOutput(sptr<Surface> surface);
     sptr<PreviewOutput> CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer);
     sptr<PreviewOutput> CreateCustomPreviewOutput(sptr<Surface> surface, int32_t width, int32_t height);
+    sptr<PreviewOutput> CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
+                                                  int32_t width, int32_t height);
     void SetCallback(std::shared_ptr<CameraManagerCallback> callback);
     std::shared_ptr<CameraManagerCallback> GetApplicationCallback();
 

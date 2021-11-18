@@ -21,11 +21,12 @@
 
 namespace OHOS {
 namespace CameraStandard {
+int32_t HStreamCapture::photoCaptureId_ = PHOTO_CAPTURE_ID_START;
+
 HStreamCapture::HStreamCapture(sptr<OHOS::IBufferProducer> producer)
 {
     producer_ = producer;
     photoStreamId_ = 0;
-    photoCaptureId_ = 0;
 }
 
 HStreamCapture::~HStreamCapture()
@@ -39,12 +40,11 @@ int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
         return CAMERA_INVALID_ARG;
     }
     if (!IsValidSize(producer_->GetDefaultWidth(), producer_->GetDefaultHeight(), validSizes_)) {
-        return CAMERA_INVALID_OUTPUT_CFG;
+        return CAMERA_INVALID_SESSION_CFG;
     }
     streamOperator_ = streamOperator;
     photoStreamId_ = streamId;
     cameraAbility_ = cameraAbility;
-    photoCaptureId_ = PHOTO_CAPTURE_ID_START;
     return CAMERA_OK;
 }
 
@@ -75,6 +75,9 @@ int32_t HStreamCapture::Capture()
     Camera::CamRetCode rc = Camera::NO_ERROR;
     int32_t CurCaptureId = 0;
 
+    if (streamOperator_ == nullptr) {
+        return CAMERA_INVALID_STATE;
+    }
     if (!IsValidCaptureID()) {
         MEDIA_ERR_LOG("HStreamCapture::Capture crossed the allowed limit, CurCaptureId: %{public}d", photoCaptureId_);
         return CAMERA_CAPTURE_LIMIT_EXCEED;
@@ -104,7 +107,9 @@ int32_t HStreamCapture::CancelCapture()
 int32_t HStreamCapture::Release()
 {
     streamCaptureCallback_ = nullptr;
-    photoCaptureId_ = 0;
+    streamOperator_ = nullptr;
+    photoStreamId_ = 0;
+    cameraAbility_ = nullptr;
     return CAMERA_OK;
 }
 
@@ -152,6 +157,16 @@ int32_t HStreamCapture::OnFrameShutter(int32_t captureId, uint64_t timestamp)
         streamCaptureCallback_->OnFrameShutter(captureId, timestamp);
     }
     return CAMERA_OK;
+}
+
+int32_t HStreamCapture::GetStreamId()
+{
+    return photoStreamId_;
+}
+
+void HStreamCapture::ResetCaptureId()
+{
+    photoCaptureId_ = PHOTO_CAPTURE_ID_START;
 }
 } // namespace CameraStandard
 } // namespace OHOS

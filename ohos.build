@@ -10,8 +10,6 @@
         "//foundation/multimedia/camera_standard/services/etc:camera_service.rc",
         "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
         "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera:camera_framework",
-        "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_napi",
-        "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_js",
         "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata"
       ],
       "test_list": [

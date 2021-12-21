@@ -1,0 +1,60 @@
+{
+    "name": "@ohos/multimedia_camera_standard",
+    "version": "",
+    "description": "提供相机预览、拍照、录像等接口能力，以及相机设备管理、相机流管理，相机并发管理等服务化能力；",
+    "homePage": "https://gitee.com/openharmony",
+    "license": "Apache V2",
+    "repository": "https://gitee.com/openharmony/multimedia_camera_standard",
+    "domain": "os",
+    "language": "",
+    "publishAs": "code-segment",
+    "private": false,
+    "scripts": {},
+    "tags": [
+        "foundation"
+    ],
+    "keywords": [
+        "multimedia",
+        "camera",
+        "standard"
+    ],
+    "envs": [],
+    "dirs": [],
+    "author": {
+        "name": "",
+        "email": "",
+        "url": ""
+    },
+    "contributors": [
+        {
+            "name": "",
+            "email": "",
+            "url": ""
+        }
+    ],
+    "segment": {
+        "destPath": "foundation/multimedia/camera_standard"
+    },
+    "component": {
+        "name": "camera",
+        "subsystem": "multimedia",
+        "syscap": [
+            "SystemCapability.Multimedia.Camera"
+        ],
+        "features": [],
+        "adated_system_type": [
+            "standard"
+        ],
+        "rom": "",
+        "ram": "",
+        "deps": {
+            "components": [],
+            "third_party": []
+        },
+        "build": {
+            "sub_component": [],
+            "inner_kits": [],
+            "test": []
+        }
+    }
+}

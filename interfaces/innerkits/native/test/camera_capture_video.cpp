@@ -23,19 +23,6 @@
 using namespace OHOS;
 using namespace OHOS::CameraStandard;
 
-namespace {
-    static const int32_t PREVIEW_WIDTH = 640;
-    static const int32_t PREVIEW_HEIGHT = 480;
-    static const int32_t SECOND_PREVIEW_WIDTH = 832;
-    static const int32_t SECOND_PREVIEW_HEIGHT = 480;
-    static const int32_t PHOTO_WIDTH = 1280;
-    static const int32_t PHOTO_HEIGHT = 960;
-    static const int32_t VIDEO_WIDTH = 640;
-    static const int32_t VIDEO_HEIGHT = 360;
-    static const int32_t GAP_AFTER_STOP = 1;
-    static const char *TEST_NAME = "Camera_capture_video";
-}
-
 static void PhotoModeUsage(FILE *fp)
 {
     int32_t result = 0;
@@ -222,26 +209,26 @@ int32_t CameraCaptureVideo::TakePhoto()
         MEDIA_ERR_LOG("Failed to capture, result: %{public}d", result);
         return result;
     }
-    sleep(gapAfterCapture_);
+    sleep(GAP_AFTER_CAPTURE);
     return result;
 }
 
 int32_t CameraCaptureVideo::RecordVideo()
 {
-    int32_t result = -1;
+    int32_t result;
 
     result = ((sptr<VideoOutput> &)videoOutput_)->Start();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to start recording, result: %{public}d", result);
         return result;
     }
-    sleep(videoCaptureDuration_);
+    sleep(VIDEO_CAPTURE_DURATION);
     result = ((sptr<VideoOutput> &)videoOutput_)->Stop();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to stop recording, result: %{public}d", result);
         return result;
     }
-    sleep(gapAfterCapture_);
+    sleep(GAP_AFTER_CAPTURE);
     result = TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, fd_);
     fd_ = -1;
     return result;
@@ -285,7 +272,7 @@ int32_t CameraCaptureVideo::InitCameraManager()
             MEDIA_ERR_LOG("Failed to get camera manager!");
             return result;
         }
-        cameraMngrCallback_ = std::make_shared<TestCameraMngerCallback>(TEST_NAME);
+        cameraMngrCallback_ = std::make_shared<TestCameraMngerCallback>(testName_);
         cameraManager_->SetCallback(cameraMngrCallback_);
     }
     result = CAMERA_OK;
@@ -307,7 +294,7 @@ int32_t CameraCaptureVideo::InitCameraInput()
             MEDIA_ERR_LOG("Failed to create CameraInput");
             return result;
         }
-        cameraInputCallback_ = std::make_shared<TestDeviceCallback>(TEST_NAME);
+        cameraInputCallback_ = std::make_shared<TestDeviceCallback>(testName_);
         ((sptr<CameraInput> &)cameraInput_)->SetErrorCallback(cameraInputCallback_);
     }
     result = CAMERA_OK;
@@ -321,14 +308,14 @@ int32_t CameraCaptureVideo::InitPreviewOutput()
     if (previewOutput_ == nullptr) {
         previewSurface_ = Surface::CreateSurfaceAsConsumer();
         previewSurface_->SetDefaultWidthAndHeight(previewWidth_, previewHeight_);
-        previewSurfaceListener_ = new SurfaceListener(TEST_NAME, SurfaceType::PREVIEW, fd_, previewSurface_);
+        previewSurfaceListener_ = new SurfaceListener(testName_, SurfaceType::PREVIEW, fd_, previewSurface_);
         previewSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)previewSurfaceListener_);
         previewOutput_ = cameraManager_->CreatePreviewOutput(previewSurface_);
         if (previewOutput_ == nullptr) {
             MEDIA_ERR_LOG("Failed to create previewOutput");
             return result;
         }
-        previewOutputCallback_ = std::make_shared<TestPreviewOutputCallback>(TEST_NAME);
+        previewOutputCallback_ = std::make_shared<TestPreviewOutputCallback>(testName_);
         ((sptr<PreviewOutput> &)previewOutput_)->SetCallback(previewOutputCallback_);
     }
     result = CAMERA_OK;
@@ -342,7 +329,7 @@ int32_t CameraCaptureVideo::InitSecondPreviewOutput()
     if (secondPreviewOutput_ == nullptr) {
         secondPreviewSurface_ = Surface::CreateSurfaceAsConsumer();
         secondPreviewSurface_->SetDefaultWidthAndHeight(previewWidth_, previewHeight_);
-        secondPreviewSurfaceListener_ = new SurfaceListener(TEST_NAME,
+        secondPreviewSurfaceListener_ = new SurfaceListener(testName_,
             SurfaceType::SECOND_PREVIEW, fd_, secondPreviewSurface_);
         secondPreviewSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)secondPreviewSurfaceListener_);
         secondPreviewOutput_ = cameraManager_->CreateCustomPreviewOutput(secondPreviewSurface_->GetProducer(),
@@ -351,7 +338,7 @@ int32_t CameraCaptureVideo::InitSecondPreviewOutput()
             MEDIA_ERR_LOG("Failed to create second previewOutput");
             return result;
         }
-        secondPreviewOutputCallback_ = std::make_shared<TestPreviewOutputCallback>(TEST_NAME);
+        secondPreviewOutputCallback_ = std::make_shared<TestPreviewOutputCallback>(testName_);
         ((sptr<PreviewOutput> &)secondPreviewOutput_)->SetCallback(secondPreviewOutputCallback_);
     }
     result = CAMERA_OK;
@@ -365,14 +352,14 @@ int32_t CameraCaptureVideo::InitPhotoOutput()
     if (photoOutput_ == nullptr) {
         photoSurface_ = Surface::CreateSurfaceAsConsumer();
         photoSurface_->SetDefaultWidthAndHeight(photoWidth_, photoHeight_);
-        photoSurfaceListener_ = new SurfaceListener(TEST_NAME, SurfaceType::PHOTO, fd_, photoSurface_);
+        photoSurfaceListener_ = new SurfaceListener(testName_, SurfaceType::PHOTO, fd_, photoSurface_);
         photoSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)photoSurfaceListener_);
         photoOutput_ = cameraManager_->CreatePhotoOutput(photoSurface_);
         if (photoOutput_ == nullptr) {
             MEDIA_ERR_LOG("Failed to create PhotoOutput");
             return result;
         }
-        photoOutputCallback_ = std::make_shared<TestPhotoOutputCallback>(TEST_NAME);
+        photoOutputCallback_ = std::make_shared<TestPhotoOutputCallback>(testName_);
         ((sptr<PhotoOutput> &)photoOutput_)->SetCallback(photoOutputCallback_);
     }
     result = CAMERA_OK;
@@ -386,14 +373,14 @@ int32_t CameraCaptureVideo::InitVideoOutput()
     if (videoOutput_ == nullptr) {
         videoSurface_ = Surface::CreateSurfaceAsConsumer();
         videoSurface_->SetDefaultWidthAndHeight(videoWidth_, videoHeight_);
-        videoSurfaceListener_ = new SurfaceListener(TEST_NAME, SurfaceType::VIDEO, fd_, videoSurface_);
+        videoSurfaceListener_ = new SurfaceListener(testName_, SurfaceType::VIDEO, fd_, videoSurface_);
         videoSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoSurfaceListener_);
         videoOutput_ = cameraManager_->CreateVideoOutput(videoSurface_);
         if (videoOutput_ == nullptr) {
             MEDIA_ERR_LOG("Failed to create VideoOutput");
             return result;
         }
-        videoOutputCallback_ = std::make_shared<TestVideoOutputCallback>(TEST_NAME);
+        videoOutputCallback_ = std::make_shared<TestVideoOutputCallback>(testName_);
         ((sptr<VideoOutput> &)videoOutput_)->SetCallback(videoOutputCallback_);
     }
     result = CAMERA_OK;
@@ -405,7 +392,7 @@ int32_t CameraCaptureVideo::AddOutputbyState()
     int32_t result = -1;
 
     switch (currentState_) {
-        case State::PHOTO_CAPTURE :
+        case State::PHOTO_CAPTURE:
             result = InitPhotoOutput();
             if (result == CAMERA_OK) {
                 result = captureSession_->AddOutput(photoOutput_);

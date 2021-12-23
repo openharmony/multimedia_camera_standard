@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include "camera_util.h"
 #include "hcapture_session.h"
+#include "camera_util.h"
 #include "media_log.h"
 
 namespace OHOS {
@@ -80,7 +79,7 @@ int32_t HCaptureSession::AddOutput(sptr<IStreamRepeat> streamRepeat)
     }
     localStreamRepeat = static_cast<HStreamRepeat *>(streamRepeat.GetRefPtr());
     if (std::find(tempStreamRepeats_.begin(), tempStreamRepeats_.end(), localStreamRepeat) != tempStreamRepeats_.end()
-            || std::find(streamRepeats_.begin(), streamRepeats_.end(), localStreamRepeat) != streamRepeats_.end()) {
+        || std::find(streamRepeats_.begin(), streamRepeats_.end(), localStreamRepeat) != streamRepeats_.end()) {
         MEDIA_ERR_LOG("HCaptureSession::AddOutput Adding same output multiple times");
         return CAMERA_INVALID_SESSION_CFG;
     }
@@ -102,7 +101,7 @@ int32_t HCaptureSession::AddOutput(sptr<IStreamCapture> streamCapture)
     }
     lStreamCapture = static_cast<HStreamCapture*>(streamCapture.GetRefPtr());
     if (std::find(tempStreamCaptures_.begin(), tempStreamCaptures_.end(), lStreamCapture) != tempStreamCaptures_.end()
-            || std::find(streamCaptures_.begin(), streamCaptures_.end(), lStreamCapture) != streamCaptures_.end()) {
+        || std::find(streamCaptures_.begin(), streamCaptures_.end(), lStreamCapture) != streamCaptures_.end()) {
         MEDIA_ERR_LOG("HCaptureSession::AddOutput Adding same output multiple times");
         return CAMERA_INVALID_SESSION_CFG;
     }

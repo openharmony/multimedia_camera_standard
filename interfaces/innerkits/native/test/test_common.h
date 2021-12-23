@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CAMERA_TEST_UTILS_H_
-#define CAMERA_TEST_UTILS_H_
+#ifndef CAMERA_TEST_COMMON_H
+#define CAMERA_TEST_COMMON_H
 
 #include "input/camera_manager.h"
 
@@ -36,6 +36,7 @@ enum class SurfaceType {
 class TestUtils {
 public:
     static const std::int32_t FILE_PERMISSIONS_FLAG = 00766;
+    static const std::int32_t PREVIEW_SKIP_FRAMES = 10;
 
     static uint64_t GetCurrentLocalTimeStamp();
     static int32_t SaveYUV(const char *buffer, int32_t size, SurfaceType type);
@@ -46,7 +47,6 @@ public:
 
 class TestCameraMngerCallback : public CameraManagerCallback {
 public:
-    TestCameraMngerCallback() = default;
     explicit TestCameraMngerCallback(const char *testName);
     virtual ~TestCameraMngerCallback() = default;
     virtual void OnCameraStatusChanged(const std::string &cameraID,
@@ -60,7 +60,6 @@ private:
 
 class TestDeviceCallback : public ErrorCallback {
 public:
-    TestDeviceCallback() = default;
     explicit TestDeviceCallback(const char *testName);
     virtual ~TestDeviceCallback() = default;
     virtual void OnError(const int32_t errorType, const int32_t errorMsg) const override;
@@ -71,7 +70,6 @@ private:
 
 class TestPhotoOutputCallback : public PhotoCallback {
 public:
-    TestPhotoOutputCallback() = default;
     explicit TestPhotoOutputCallback(const char *testName);
     virtual ~TestPhotoOutputCallback() = default;
     virtual void OnCaptureStarted(const int32_t captureID) const override;
@@ -85,7 +83,6 @@ private:
 
 class TestPreviewOutputCallback : public PreviewCallback {
 public:
-    TestPreviewOutputCallback() = default;
     explicit TestPreviewOutputCallback(const char *testName);
     virtual ~TestPreviewOutputCallback() = default;
     virtual void OnFrameStarted() const override;
@@ -98,7 +95,6 @@ private:
 
 class TestVideoOutputCallback : public VideoCallback {
 public:
-    TestVideoOutputCallback() = default;
     explicit TestVideoOutputCallback(const char *testName);
     virtual ~TestVideoOutputCallback() = default;
     virtual void OnFrameStarted() const override;
@@ -111,7 +107,7 @@ private:
 
 class SurfaceListener : public IBufferConsumerListener {
 public:
-    SurfaceListener(const char *testName, SurfaceType surfaceType, int32_t &fd, sptr<Surface> surface_);
+    SurfaceListener(const char *testName, SurfaceType surfaceType, int32_t &fd, sptr<Surface> surface);
     virtual ~SurfaceListener() = default;
     virtual void OnBufferAvailable() override;
 
@@ -125,4 +121,4 @@ private:
 };
 } // namespace CameraStandard
 } // namespace OHOS
-#endif // CAMERA_TEST_UTILS_H_
+#endif // CAMERA_TEST_COMMON_H

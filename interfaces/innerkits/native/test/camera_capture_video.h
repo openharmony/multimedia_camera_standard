@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef CAMERA_VIDEO_CAPTURE_H_
-#define CAMERA_VIDEO_CAPTURE_H_
+#ifndef CAMERA_VIDEO_CAPTURE_H
+#define CAMERA_VIDEO_CAPTURE_H
 
 #include <iostream>
 #include "test_common.h"
@@ -28,8 +28,18 @@ enum class State {
 
 class CameraCaptureVideo {
 public:
-    static const int32_t gapAfterCapture_ = 1;
-    static const int32_t videoCaptureDuration_ = 10;
+    static const int32_t GAP_AFTER_CAPTURE = 1;
+    static const int32_t VIDEO_CAPTURE_DURATION = 10;
+    static const int32_t PREVIEW_WIDTH = 640;
+    static const int32_t PREVIEW_HEIGHT = 480;
+    static const int32_t SECOND_PREVIEW_WIDTH = 832;
+    static const int32_t SECOND_PREVIEW_HEIGHT = 480;
+    static const int32_t PHOTO_WIDTH = 1280;
+    static const int32_t PHOTO_HEIGHT = 960;
+    static const int32_t VIDEO_WIDTH = 640;
+    static const int32_t VIDEO_HEIGHT = 360;
+    static const int32_t GAP_AFTER_STOP = 1;
+    const char *testName_ = "Camera_capture_video";
     State currentState_;
     CameraCaptureVideo();
     virtual ~CameraCaptureVideo() = default;
@@ -83,4 +93,4 @@ private:
 };
 } // namespace CameraStandard
 } // namespace OHOS
-#endif // CAMERA_VIDEO_CAPTURE_H_
+#endif // CAMERA_VIDEO_CAPTURE_H

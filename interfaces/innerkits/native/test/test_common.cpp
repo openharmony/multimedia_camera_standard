@@ -17,17 +17,13 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <securec.h>
-#include <unistd.h>
 #include <sys/time.h>
+#include <unistd.h>
 #include "camera_util.h"
 #include "media_log.h"
 
 namespace OHOS {
 namespace CameraStandard {
-namespace {
-    static const int32_t PREVIEW_SKIP_FRAMES = 10;
-}
-
 uint64_t TestUtils::GetCurrentLocalTimeStamp()
 {
     std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> tp =
@@ -243,7 +239,7 @@ void SurfaceListener::OnBufferAvailable()
 
         switch (surfaceType_) {
             case SurfaceType::PREVIEW:
-                if (previewIndex_ % PREVIEW_SKIP_FRAMES == 0
+                if (previewIndex_ % TestUtils::PREVIEW_SKIP_FRAMES == 0
                     && TestUtils::SaveYUV(addr, size, surfaceType_) != CAMERA_OK) {
                     MEDIA_ERR_LOG("Failed to save buffer");
                     previewIndex_ = 0;
@@ -252,7 +248,7 @@ void SurfaceListener::OnBufferAvailable()
                 break;
 
             case SurfaceType::SECOND_PREVIEW:
-                if (secondPreviewIndex_ % PREVIEW_SKIP_FRAMES == 0
+                if (secondPreviewIndex_ % TestUtils::PREVIEW_SKIP_FRAMES == 0
                     && TestUtils::SaveYUV(addr, size, surfaceType_) != CAMERA_OK) {
                     MEDIA_ERR_LOG("Failed to save buffer");
                     secondPreviewIndex_ = 0;

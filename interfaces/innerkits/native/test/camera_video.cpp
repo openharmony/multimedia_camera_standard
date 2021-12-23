@@ -29,7 +29,7 @@ using namespace OHOS::CameraStandard;
 using namespace OHOS::Media;
 
 namespace {
-    int32_t videoFd = -1;
+    int32_t g_videoFd = -1;
     class TestVideoRecorderCallback : public RecorderCallback {
     public:
         void OnError(RecorderErrorType errorType, int32_t errorCode)
@@ -42,7 +42,8 @@ namespace {
         }
     };
 
-    bool ConfigureVideoParams(std::shared_ptr<Recorder> &recorder, int32_t videoSourceId, int32_t width, int32_t height)
+    bool ConfigureVideoParams(const std::shared_ptr<Recorder> &recorder,
+                              int32_t videoSourceId, int32_t width, int32_t height)
     {
         int32_t encodingBitRate  = 48000;
         int32_t frameRate = 30;
@@ -76,7 +77,7 @@ namespace {
         return true;
     }
 
-    bool ConfigureAudioParams(std::shared_ptr<Recorder> &recorder, int32_t audioSourceId)
+    bool ConfigureAudioParams(const std::shared_ptr<Recorder> &recorder, int32_t audioSourceId)
     {
         int32_t channelCount = 2;
         int32_t sampleRate = 48000;
@@ -105,8 +106,8 @@ namespace {
         return true;
     }
 
-    bool CreateAndConfigureRecorder(std::shared_ptr<Recorder> &recorder, int32_t &videoSourceId, int32_t width,
-                                    int32_t height)
+    bool CreateAndConfigureRecorder(std::shared_ptr<Recorder> &recorder,
+                                    int32_t &videoSourceId, int32_t width, int32_t height)
     {
         int32_t maxDuration = 36000;
 
@@ -162,14 +163,14 @@ namespace {
 
 int main(int argc, char **argv)
 {
-    const int32_t PREVIEW_WIDTH_INDEX = 1;
-    const int32_t PREVIEW_HEIGHT_INDEX = 2;
-    const int32_t VIDEO_WIDTH_INDEX = 3;
-    const int32_t VIDEO_HEIGHT_INDEX = 4;
-    const int32_t VALID_ARG_COUNT = 5;
-    const int32_t VIDEO_CAPTURE_DURATION = 10; // Sleep for 10 sec
-    const int32_t VIDEO_PAUSE_DURATION = 5; // Sleep for 5 sec
-    const int32_t PREVIEW_VIDEO_GAP = 2; // Sleep for 2 sec
+    const int32_t previewWidthIndex = 1;
+    const int32_t previewHeightIndex = 2;
+    const int32_t videoWidthIndex = 3;
+    const int32_t videoHeightIndex = 4;
+    const int32_t validArgCount = 5;
+    const int32_t videoCaptureDuration = 10; // Sleep for 10 sec
+    const int32_t videoPauseDuration = 5; // Sleep for 5 sec
+    const int32_t previewVideoGap = 2; // Sleep for 2 sec
     const char *testName = "camera_video";
     int32_t ret = -1;
     int32_t previewFd = -1;
@@ -182,7 +183,7 @@ int main(int argc, char **argv)
 
     MEDIA_DEBUG_LOG("Camera new sample begin with recorder");
     // Update sizes if enough number of valid arguments are passed
-    if (argc == VALID_ARG_COUNT) {
+    if (argc == validArgCount) {
         // Validate arguments and consider if valid
         for (int counter = 1; counter < argc; counter++) {
             if (!TestUtils::IsNumber(argv[counter])) {
@@ -191,12 +192,12 @@ int main(int argc, char **argv)
                 return 0;
             }
         }
-        previewWidth = atoi(argv[PREVIEW_WIDTH_INDEX]);
-        previewHeight = atoi(argv[PREVIEW_HEIGHT_INDEX]);
-        videoWidth = atoi(argv[VIDEO_WIDTH_INDEX]);
-        videoHeight = atoi(argv[VIDEO_HEIGHT_INDEX]);
+        previewWidth = atoi(argv[previewWidthIndex]);
+        previewHeight = atoi(argv[previewHeightIndex]);
+        videoWidth = atoi(argv[videoWidthIndex]);
+        videoHeight = atoi(argv[videoHeightIndex]);
     } else if (argc != 1) {
-        cout << "Pass " << (VALID_ARG_COUNT - 1) << "arguments" << endl;
+        cout << "Pass " << (validArgCount - 1) << "arguments" << endl;
         cout << "PreviewWidth, PreviewHeight, VideoWidth, VideoHeight" << endl;
         return 0;
     }
@@ -279,7 +280,7 @@ int main(int argc, char **argv)
     } else {
         videoSurface = Surface::CreateSurfaceAsConsumer();
         videoSurface->SetDefaultWidthAndHeight(videoWidth, videoHeight);
-        sptr<SurfaceListener> videoListener = new SurfaceListener("Video", SurfaceType::VIDEO, videoFd, videoSurface);
+        sptr<SurfaceListener> videoListener = new SurfaceListener("Video", SurfaceType::VIDEO, g_videoFd, videoSurface);
         videoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoListener);
     }
 
@@ -310,7 +311,7 @@ int main(int argc, char **argv)
     }
 
     MEDIA_DEBUG_LOG("Preview started");
-    sleep(PREVIEW_VIDEO_GAP);
+    sleep(previewVideoGap);
     MEDIA_DEBUG_LOG("Start video recording");
 
     ret = ((sptr<VideoOutput> &)videoOutput)->Start();
@@ -329,7 +330,7 @@ int main(int argc, char **argv)
     }
 
     MEDIA_DEBUG_LOG("Wait for 10 seconds after start");
-    sleep(VIDEO_CAPTURE_DURATION);
+    sleep(videoCaptureDuration);
     MEDIA_DEBUG_LOG("Pause video recording for 5 sec");
     ret = ((sptr<VideoOutput> &)videoOutput)->Pause();
     if (ret != 0) {
@@ -344,7 +345,7 @@ int main(int argc, char **argv)
                 OHOS::Media::MSErrorToString(static_cast<OHOS::Media::MediaServiceErrCode>(ret)).c_str());
         }
     }
-    sleep(VIDEO_PAUSE_DURATION);
+    sleep(videoPauseDuration);
     MEDIA_DEBUG_LOG("Resume video recording");
     ret = ((sptr<VideoOutput> &)videoOutput)->Resume();
     if (ret != 0) {
@@ -360,7 +361,7 @@ int main(int argc, char **argv)
         }
     }
     MEDIA_DEBUG_LOG("Wait for 10 seconds before stop");
-    sleep(VIDEO_CAPTURE_DURATION);
+    sleep(videoCaptureDuration);
     MEDIA_DEBUG_LOG("Stop video recording");
     ret = ((sptr<VideoOutput> &)videoOutput)->Stop();
     if (ret != 0) {
@@ -399,7 +400,7 @@ int main(int argc, char **argv)
     captureSession->Release();
 
     // Close video file
-    TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, videoFd);
+    TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
     camManagerObj->SetCallback(nullptr);
 
     MEDIA_DEBUG_LOG("Camera new sample end.");

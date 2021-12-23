@@ -65,10 +65,10 @@ namespace {
     std::bitset<static_cast<unsigned int>(CAM_VIDEO_EVENTS::CAM_VIDEO_MAX_EVENT)> g_videoEvents;
     std::unordered_map<std::string, bool> g_camStatusMap;
     std::unordered_map<std::string, bool> g_camFlashMap;
-    sptr<CameraManager> manager;
+    sptr<CameraManager> g_manager;
     std::vector<sptr<CameraInfo>> cameras;
-    sptr<CaptureInput> input;
-    sptr<CaptureSession> session;
+    sptr<CaptureInput> g_input;
+    sptr<CaptureSession> g_session;
 
     class AppCallback : public CameraManagerCallback, public ErrorCallback, public PhotoCallback,
                         public PreviewCallback {
@@ -262,22 +262,22 @@ void CameraFrameworkTest::SetUp()
     g_camInputOnError = false;
     g_videoFd = -1;
 
-    manager = CameraManager::GetInstance();
-    manager->SetCallback(std::make_shared<AppCallback>());
+    g_manager = CameraManager::GetInstance();
+    g_manager->SetCallback(std::make_shared<AppCallback>());
 
-    cameras = manager->GetCameras();
+    cameras = g_manager->GetCameras();
     ASSERT_TRUE(cameras.size() != 0);
 
-    input = manager->CreateCameraInput(cameras[0]);
-    ASSERT_NE(input, nullptr);
+    g_input = g_manager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(g_input, nullptr);
 
-    session = manager->CreateCaptureSession();
-    ASSERT_NE(session, nullptr);
+    g_session = g_manager->CreateCaptureSession();
+    ASSERT_NE(g_session, nullptr);
 }
 
 void CameraFrameworkTest::TearDown()
 {
-    session->Release();
+    g_session->Release();
     MEDIA_DEBUG_LOG("End of camera test case");
 }
 
@@ -291,19 +291,19 @@ void CameraFrameworkTest::TearDown()
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_001, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(manager);
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(g_manager);
     ASSERT_NE(photoOutput, nullptr);
 
-    intResult = session->AddOutput(photoOutput);
+    intResult = g_session->AddOutput(photoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
     intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
@@ -321,28 +321,28 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_001, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(manager);
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(g_manager);
     ASSERT_NE(photoOutput, nullptr);
 
-    intResult = session->AddOutput(photoOutput);
+    intResult = g_session->AddOutput(photoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult == 0);
 
     sleep(WAIT_TIME_AFTER_START);
@@ -350,7 +350,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level0)
     EXPECT_TRUE(intResult == 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
-    session->Stop();
+    g_session->Stop();
 }
 
 /*
@@ -363,28 +363,28 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_002, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_003, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> videoOutput = CreateVideoOutput(manager);
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput(g_manager);
     ASSERT_NE(videoOutput, nullptr);
 
-    intResult = session->AddOutput(videoOutput);
+    intResult = g_session->AddOutput(videoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult == 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
@@ -396,7 +396,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_003, TestSize.Level0)
     EXPECT_TRUE(intResult == 0);
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
-    session->Stop();
+    g_session->Stop();
 }
 
 void SetCameraParameters(sptr<CameraInput> &camInput)
@@ -425,50 +425,50 @@ void SetCameraParameters(sptr<CameraInput> &camInput)
 
 void TestCallbacks(bool video)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
     // Register error callback
     std::shared_ptr<AppCallback> callback = std::make_shared<AppCallback>();
-    sptr<CameraInput> camInput = (sptr<CameraInput> &)input;
+    sptr<CameraInput> camInput = (sptr<CameraInput> &)g_input;
     camInput->SetErrorCallback(callback);
 
     SetCameraParameters(camInput);
 
     EXPECT_TRUE(g_camInputOnError == false);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureOutput> photoOutput = nullptr;
     sptr<CaptureOutput> videoOutput = nullptr;
     if (!video) {
-        photoOutput = CreatePhotoOutput(manager);
+        photoOutput = CreatePhotoOutput(g_manager);
         ASSERT_NE(photoOutput, nullptr);
 
         // Register photo callback
         ((sptr<PhotoOutput> &)photoOutput)->SetCallback(callback);
-        intResult = session->AddOutput(photoOutput);
+        intResult = g_session->AddOutput(photoOutput);
     } else {
-        videoOutput = CreateVideoOutput(manager);
+        videoOutput = CreateVideoOutput(g_manager);
         ASSERT_NE(videoOutput, nullptr);
 
         // Register video callback
         ((sptr<VideoOutput> &)videoOutput)->SetCallback(std::make_shared<AppVideoCallback>());
-        intResult = session->AddOutput(videoOutput);
+        intResult = g_session->AddOutput(videoOutput);
     }
 
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
     // Register preview callback
     ((sptr<PreviewOutput> &)previewOutput)->SetCallback(callback);
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
     EXPECT_TRUE(g_camFlashMap.count(cameras[0]->GetID()) != 0);
@@ -477,7 +477,7 @@ void TestCallbacks(bool video)
     EXPECT_TRUE(g_previewEvents.none());
     EXPECT_TRUE(g_videoEvents.none());
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult == 0);
 
     if (videoOutput != nullptr) {
@@ -497,7 +497,7 @@ void TestCallbacks(bool video)
     }
 
     sleep(WAIT_TIME_BEFORE_STOP);
-    session->Stop();
+    g_session->Stop();
 
     EXPECT_TRUE(g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_START)] == 1);
 
@@ -560,27 +560,27 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_005, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_006, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult == 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
-    session->Stop();
+    g_session->Stop();
 }
 
 /*
@@ -593,51 +593,51 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_006, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_007, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> videoOutput = CreateVideoOutput(manager);
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput(g_manager);
     ASSERT_NE(videoOutput, nullptr);
 
-    intResult = session->AddOutput(videoOutput);
+    intResult = g_session->AddOutput(videoOutput);
     EXPECT_TRUE(intResult == 0);
 
     // Video mode without preview is not supported
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 }
 
 void TestSupportedResolution(int32_t previewWidth, int32_t previewHeight, int32_t videoWidth = VIDEO_DEFAULT_WIDTH,
                              int32_t videoHeight = VIDEO_DEFAULT_HEIGHT)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager, true, previewWidth, previewHeight);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager, true, previewWidth, previewHeight);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureOutput> videoOutput = nullptr;
     if ((videoWidth != VIDEO_DEFAULT_WIDTH) || (videoHeight != VIDEO_DEFAULT_HEIGHT)) {
-        videoOutput = CreateVideoOutput(manager, videoWidth, videoHeight);
+        videoOutput = CreateVideoOutput(g_manager, videoWidth, videoHeight);
         ASSERT_NE(videoOutput, nullptr);
 
-        intResult = session->AddOutput(videoOutput);
+        intResult = g_session->AddOutput(videoOutput);
         EXPECT_TRUE(intResult == 0);
     }
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult == 0);
 
     if (videoOutput != nullptr) {
@@ -653,48 +653,48 @@ void TestSupportedResolution(int32_t previewWidth, int32_t previewHeight, int32_
         TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
     }
 
-    session->Stop();
+    g_session->Stop();
 }
 
 void TestUnSupportedResolution(int32_t previewWidth, int32_t previewHeight, int32_t videoWidth = VIDEO_DEFAULT_WIDTH,
                                int32_t videoHeight = VIDEO_DEFAULT_HEIGHT, int32_t photoWidth = PHOTO_DEFAULT_WIDTH,
                                int32_t photoHeight = PHOTO_DEFAULT_HEIGHT)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureOutput> previewOutput = nullptr;
     if ((previewWidth != PREVIEW_DEFAULT_WIDTH) || (previewHeight != PREVIEW_DEFAULT_HEIGHT)) {
-        previewOutput = CreatePreviewOutput(manager, true, previewWidth, previewHeight);
+        previewOutput = CreatePreviewOutput(g_manager, true, previewWidth, previewHeight);
     } else {
-        previewOutput = CreatePreviewOutput(manager);
+        previewOutput = CreatePreviewOutput(g_manager);
     }
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureOutput> output = nullptr;
     if ((videoWidth != VIDEO_DEFAULT_WIDTH) || (videoHeight != VIDEO_DEFAULT_HEIGHT)) {
-        output = CreateVideoOutput(manager, videoWidth, videoHeight);
+        output = CreateVideoOutput(g_manager, videoWidth, videoHeight);
         ASSERT_NE(output, nullptr);
     } else if ((photoWidth != PHOTO_DEFAULT_WIDTH) || (photoHeight != PHOTO_DEFAULT_HEIGHT)) {
-        output = CreatePhotoOutput(manager, photoWidth, photoHeight);
+        output = CreatePhotoOutput(g_manager, photoWidth, photoHeight);
         ASSERT_NE(output, nullptr);
     }
 
     if (output != nullptr) {
-        intResult = session->AddOutput(output);
+        intResult = g_session->AddOutput(output);
         EXPECT_TRUE(intResult == 0);
     }
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 
-    session->Stop();
+    g_session->Stop();
 }
 
 /*
@@ -746,7 +746,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_010, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_011, TestSize.Level0)
 {
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager, true, 0, 0);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager, true, 0, 0);
     EXPECT_TRUE(previewOutput == nullptr);
 }
 
@@ -834,24 +834,24 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_016, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 }
 
@@ -865,14 +865,14 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_017, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_018, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureInput> input1 = nullptr;
-    intResult = session->AddInput(input1);
+    intResult = g_session->AddInput(input1);
     EXPECT_TRUE(intResult != 0);
 
-    session->Stop();
+    g_session->Stop();
 }
 
 /*
@@ -885,14 +885,14 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_018, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_019, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureOutput> previewOutput = nullptr;
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult != 0);
 
-    session->Stop();
+    g_session->Stop();
 }
 
 /*
@@ -905,19 +905,19 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_019, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_020, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 
-    session->Stop();
+    g_session->Stop();
 }
 
 /*
@@ -930,16 +930,16 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_020, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_021, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 
-    session->Stop();
+    g_session->Stop();
 }
 
 /*
@@ -952,25 +952,25 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_021, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_022, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(manager);
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(g_manager);
     ASSERT_NE(photoOutput, nullptr);
 
-    intResult = session->AddOutput(photoOutput);
+    intResult = g_session->AddOutput(photoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult != 0);
 
-    intResult = session->Stop();
+    intResult = g_session->Stop();
     EXPECT_TRUE(intResult != 0);
 }
 
@@ -984,25 +984,25 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_022, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_023, TestSize.Level0)
 {
-    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(manager);
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput(g_manager);
     ASSERT_NE(photoOutput, nullptr);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    int32_t intResult = session->AddInput(input);
+    int32_t intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult != 0);
 
-    intResult = session->AddOutput(photoOutput);
+    intResult = g_session->AddOutput(photoOutput);
     EXPECT_TRUE(intResult != 0);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult != 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult != 0);
 
     sleep(WAIT_TIME_AFTER_START);
@@ -1010,7 +1010,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_023, TestSize.Level0)
     EXPECT_TRUE(intResult != 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
-    session->Stop();
+    g_session->Stop();
 }
 
 /*
@@ -1023,34 +1023,34 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_023, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_024, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> photoOutput1 = CreatePhotoOutput(manager);
+    sptr<CaptureOutput> photoOutput1 = CreatePhotoOutput(g_manager);
     ASSERT_NE(photoOutput1, nullptr);
 
-    intResult = session->AddOutput(photoOutput1);
+    intResult = g_session->AddOutput(photoOutput1);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> photoOutput2 = CreatePhotoOutput(manager);
+    sptr<CaptureOutput> photoOutput2 = CreatePhotoOutput(g_manager);
     ASSERT_NE(photoOutput2, nullptr);
 
-    intResult = session->AddOutput(photoOutput2);
+    intResult = g_session->AddOutput(photoOutput2);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult != 0);
 
     sleep(WAIT_TIME_AFTER_START);
@@ -1062,7 +1062,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_024, TestSize.Level0)
     EXPECT_TRUE(intResult != 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
-    session->Stop();
+    g_session->Stop();
 
     ((sptr<PhotoOutput> &)photoOutput1)->Release();
     ((sptr<PhotoOutput> &)photoOutput2)->Release();
@@ -1078,33 +1078,33 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_024, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_025, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput1 = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput1 = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput1, nullptr);
 
-    intResult = session->AddOutput(previewOutput1);
+    intResult = g_session->AddOutput(previewOutput1);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput2 = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput2 = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput2, nullptr);
 
-    intResult = session->AddOutput(previewOutput2);
+    intResult = g_session->AddOutput(previewOutput2);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult == 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
-    session->Stop();
+    g_session->Stop();
 
     ((sptr<PhotoOutput> &)previewOutput1)->Release();
     ((sptr<PhotoOutput> &)previewOutput2)->Release();
@@ -1120,34 +1120,34 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_025, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_026, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> videoOutput1 = CreateVideoOutput(manager);
+    sptr<CaptureOutput> videoOutput1 = CreateVideoOutput(g_manager);
     ASSERT_NE(videoOutput1, nullptr);
 
-    intResult = session->AddOutput(videoOutput1);
+    intResult = g_session->AddOutput(videoOutput1);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> videoOutput2 = CreateVideoOutput(manager);
+    sptr<CaptureOutput> videoOutput2 = CreateVideoOutput(g_manager);
     ASSERT_NE(videoOutput2, nullptr);
 
-    intResult = session->AddOutput(videoOutput2);
+    intResult = g_session->AddOutput(videoOutput2);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult != 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult != 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput1)->Start();
@@ -1166,7 +1166,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_026, TestSize.Level0)
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
-    session->Stop();
+    g_session->Stop();
 
     ((sptr<PhotoOutput> &)videoOutput1)->Release();
     ((sptr<PhotoOutput> &)videoOutput2)->Release();
@@ -1182,35 +1182,35 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_026, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_027, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->Start();
-    EXPECT_TRUE(intResult == 0);
-
-    sleep(WAIT_TIME_AFTER_START);
-
-    intResult = session->Stop();
-    EXPECT_TRUE(intResult == 0);
-
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult == 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
-    session->Stop();
+    intResult = g_session->Stop();
+    EXPECT_TRUE(intResult == 0);
+
+    intResult = g_session->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    g_session->Stop();
 }
 
 
@@ -1224,28 +1224,28 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_027, TestSize.Level0)
  */
 HWTEST_F(CameraFrameworkTest, media_camera_framework_test_028, TestSize.Level0)
 {
-    int32_t intResult = session->BeginConfig();
+    int32_t intResult = g_session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->AddInput(input);
+    intResult = g_session->AddInput(g_input);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(manager);
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput(g_manager);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session->AddOutput(previewOutput);
+    intResult = g_session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
-    sptr<CaptureOutput> videoOutput = CreateVideoOutput(manager);
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput(g_manager);
     ASSERT_NE(videoOutput, nullptr);
 
-    intResult = session->AddOutput(videoOutput);
+    intResult = g_session->AddOutput(videoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->CommitConfig();
+    intResult = g_session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session->Start();
+    intResult = g_session->Start();
     EXPECT_TRUE(intResult == 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
@@ -1266,7 +1266,7 @@ HWTEST_F(CameraFrameworkTest, media_camera_framework_test_028, TestSize.Level0)
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
-    session->Stop();
+    g_session->Stop();
 }
 } // CameraStandard
 } // OHOS

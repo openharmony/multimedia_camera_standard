@@ -25,11 +25,6 @@ namespace OHOS {
 namespace CameraStandard {
 class CameraInfo : public RefBase {
 public:
-    enum ConnectionType {
-        CONNECTION_BUILD_IN = 0,
-        CONNECTION_USB_PLUGIN,
-        CONNECTION_REMOTE
-    };
     CameraInfo() = default;
     CameraInfo(std::string cameraID, std::shared_ptr<CameraMetadata> metadata);
     ~CameraInfo();
@@ -38,14 +33,16 @@ public:
     void SetMetadata(std::shared_ptr<CameraMetadata> metadata);
     camera_position_enum_t GetPosition();
     camera_type_enum_t GetCameraType();
-    ConnectionType GetConnectionType();
+    camera_connection_type_t GetConnectionType();
+    bool IsMirrorSupported();
 
 private:
     std::string cameraID_;
     std::shared_ptr<CameraMetadata> metadata_;
     camera_position_enum_t cameraPosition_ = OHOS_CAMERA_POSITION_OTHER;
     camera_type_enum_t cameraType_ = OHOS_CAMERA_TYPE_UNSPECIFIED;
-    ConnectionType connectionType_ = CONNECTION_BUILD_IN;
+    camera_connection_type_t connectionType_ = OHOS_CAMERA_CONNECTION_TYPE_BUILTIN;
+    bool isMirrorSupported_ = false;
 
     void init(common_metadata_header_t *metadataHeader);
 };

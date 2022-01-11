@@ -39,24 +39,24 @@ int32_t TestUtils::SaveYUV(const char *buffer, int32_t size, SurfaceType type)
 
     MEDIA_DEBUG_LOG("TestUtils::SaveYUV(), type: %{public}d", type);
     if (type == SurfaceType::PREVIEW) {
-        (void)system("mkdir -p /mnt/preview");
-        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview/%s_%lld.yuv", "preview",
+        (void)system("mkdir -p /data/media/preview");
+        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/data/media/preview/%s_%lld.yuv", "preview",
                            GetCurrentLocalTimeStamp());
         if (retVal < 0) {
             MEDIA_ERR_LOG("Path Assignment failed");
             return -1;
         }
     } else if (type == SurfaceType::PHOTO) {
-        (void)system("mkdir -p /mnt/photo");
-        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/photo/%s_%lld.jpg", "photo",
+        (void)system("mkdir -p /data/media/photo");
+        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/data/media/photo/%s_%lld.jpg", "photo",
                            GetCurrentLocalTimeStamp());
         if (retVal < 0) {
             MEDIA_ERR_LOG("Path Assignment failed");
             return -1;
         }
     } else if (type == SurfaceType::SECOND_PREVIEW) {
-        (void)system("mkdir -p /mnt/preview2");
-        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/mnt/preview2/%s_%lld.yuv", "preview2",
+        (void)system("mkdir -p /data/media/preview2");
+        retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]), "/data/media/preview2/%s_%lld.yuv", "preview2",
                            GetCurrentLocalTimeStamp());
         if (retVal < 0) {
             MEDIA_ERR_LOG("Path Assignment failed");
@@ -100,9 +100,9 @@ int32_t TestUtils::SaveVideoFile(const char *buffer, int32_t size, VideoSaveMode
     if (operationMode == VideoSaveMode::CREATE) {
         char path[255] = {0};
 
-        (void)system("mkdir -p /mnt/video");
+        (void)system("mkdir -p /data/media/video");
         retVal = sprintf_s(path, sizeof(path) / sizeof(path[0]),
-                           "/mnt/video/%s_%lld.h264", "video", GetCurrentLocalTimeStamp());
+                           "/data/media/video/%s_%lld.h264", "video", GetCurrentLocalTimeStamp());
         if (retVal < 0) {
             MEDIA_ERR_LOG("Failed to create video file name");
             return -1;
@@ -132,11 +132,9 @@ int32_t TestUtils::SaveVideoFile(const char *buffer, int32_t size, VideoSaveMode
 TestCameraMngerCallback::TestCameraMngerCallback(const char *testName) : testName_(testName) {
 }
 
-void TestCameraMngerCallback::OnCameraStatusChanged(const std::string &cameraID,
-                                                    const CameraDeviceStatus cameraStatus) const
+void TestCameraMngerCallback::OnCameraStatusChanged(const CameraStatusInfo &cameraStatusInfo) const
 {
-    MEDIA_DEBUG_LOG("OnCameraStatusChanged(), testName_: %{public}s, cameraID: %{public}s, cameraStatus: %{public}d",
-                    testName_, cameraID.c_str(), cameraStatus);
+    MEDIA_DEBUG_LOG("OnCameraStatusChanged()");
     return;
 }
 

@@ -44,20 +44,25 @@ public:
     int32_t DisableResult(std::vector<int32_t> &results) override;
     int32_t GetStreamOperator(sptr<Camera::IStreamOperatorCallback> callback,
             sptr<Camera::IStreamOperator> &streamOperator);
+    sptr<Camera::IStreamOperator> GetStreamOperator();
     int32_t SetCallback(sptr<ICameraDeviceServiceCallback> &callback) override;
     int32_t OnError(const Camera::ErrorType type, const int32_t errorMsg);
     int32_t OnResult(const uint64_t timestamp, const std::shared_ptr<CameraStandard::CameraMetadata> &result);
     std::shared_ptr<CameraMetadata> GetSettings();
     std::string GetCameraId();
+    bool IsReleaseCameraDevice();
+    int32_t SetReleaseCameraDevice(bool isRelease);
 
 private:
     sptr<Camera::ICameraDevice> hdiCameraDevice_;
     sptr<HCameraHostManager> cameraHostManager_;
     std::string cameraID_;
+    bool isReleaseCameraDevice_;
     sptr<ICameraDeviceServiceCallback> deviceSvcCallback_;
     sptr<CameraDeviceCallback> deviceHDICallback_;
     std::shared_ptr<CameraMetadata> cameraAbility_;
     std::shared_ptr<CameraMetadata> updateSettings_;
+    sptr<Camera::IStreamOperator> streamOperator_;
 };
 
 class CameraDeviceCallback : public Camera::CameraDeviceCallbackStub {

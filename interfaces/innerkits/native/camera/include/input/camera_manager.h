@@ -42,11 +42,16 @@ enum FlashlightStatus {
     FLASHLIGHT_STATUS_UNAVAILABLE
 };
 
+struct CameraStatusInfo {
+    sptr<CameraInfo> cameraInfo;
+    CameraDeviceStatus cameraStatus;
+};
+
 class CameraManagerCallback {
 public:
     CameraManagerCallback() = default;
     virtual ~CameraManagerCallback() = default;
-    virtual void OnCameraStatusChanged(const std::string &cameraID, const CameraDeviceStatus cameraStatus) const = 0;
+    virtual void OnCameraStatusChanged(const CameraStatusInfo &cameraStatusInfo) const = 0;
     virtual void OnFlashlightStatusChanged(const std::string &cameraID, const FlashlightStatus flashStatus) const = 0;
 };
 
@@ -57,16 +62,22 @@ public:
     sptr<CameraInput> CreateCameraInput(sptr<CameraInfo> &camera);
     sptr<CaptureSession> CreateCaptureSession();
     sptr<PhotoOutput> CreatePhotoOutput(sptr<Surface> &surface);
-    sptr<PhotoOutput> CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer);
+    sptr<PhotoOutput> CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format);
     sptr<VideoOutput> CreateVideoOutput(sptr<Surface> &surface);
-    sptr<VideoOutput> CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer);
+    sptr<VideoOutput> CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format);
     sptr<PreviewOutput> CreatePreviewOutput(sptr<Surface> surface);
-    sptr<PreviewOutput> CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer);
+    sptr<PreviewOutput> CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format);
     sptr<PreviewOutput> CreateCustomPreviewOutput(sptr<Surface> surface, int32_t width, int32_t height);
-    sptr<PreviewOutput> CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
+    sptr<PreviewOutput> CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                                   int32_t width, int32_t height);
     void SetCallback(std::shared_ptr<CameraManagerCallback> callback);
     std::shared_ptr<CameraManagerCallback> GetApplicationCallback();
+    sptr<CameraInfo> GetCameraInfo(std::string cameraId);
+
+    static const std::string surfaceFormat;
+
+protected:
+    CameraManager(sptr<ICameraService> serviceProxy) : serviceProxy_(serviceProxy) {}
 
 private:
     CameraManager();
@@ -77,6 +88,7 @@ private:
     static sptr<CameraManager> cameraManager_;
     sptr<ICameraServiceCallback> cameraSvcCallback_;
     std::shared_ptr<CameraManagerCallback> cameraMngrCallback_;
+    std::vector<sptr<CameraInfo>> cameraObjList;
 };
 } // namespace CameraStandard
 } // namespace OHOS

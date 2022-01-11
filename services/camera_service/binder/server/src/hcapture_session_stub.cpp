@@ -84,7 +84,7 @@ int HCaptureSessionStub::HandleRemoveInput(MessageParcel &data)
 {
     sptr<IRemoteObject> remoteObj = data.ReadRemoteObject();
     if (remoteObj == nullptr) {
-        MEDIA_ERR_LOG("HCaptureSessionStub HandleAddInput CameraDevice is null");
+        MEDIA_ERR_LOG("HCaptureSessionStub HandleRemoveInput CameraDevice is null");
         return IPC_STUB_INVALID_DATA_ERR;
     }
 

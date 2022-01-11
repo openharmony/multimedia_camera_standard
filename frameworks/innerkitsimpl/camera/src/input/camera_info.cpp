@@ -37,20 +37,27 @@ void CameraInfo::init(common_metadata_header_t *metadata)
 {
     camera_metadata_item_t item;
 
-    int ret = find_camera_metadata_item(metadata, OHOS_ABILITY_CAMERA_POSITION, &item);
+    int ret = FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_POSITION, &item);
     if (ret == CAM_META_SUCCESS) {
         cameraPosition_ = static_cast<camera_position_enum_t>(item.data.u8[0]);
     }
 
-    ret = find_camera_metadata_item(metadata, OHOS_ABILITY_CAMERA_TYPE, &item);
+    ret = FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_TYPE, &item);
     if (ret == CAM_META_SUCCESS) {
         cameraType_ = static_cast<camera_type_enum_t>(item.data.u8[0]);
     }
 
-    ret = find_camera_metadata_item(metadata, OHOS_ABILITY_CAMERA_CONNECTION_TYPE, &item);
+    ret = FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_CONNECTION_TYPE, &item);
     if (ret == CAM_META_SUCCESS) {
-        connectionType_ = static_cast<CameraInfo::ConnectionType>(item.data.u8[0]);
+        connectionType_ = static_cast<camera_connection_type_t>(item.data.u8[0]);
     }
+
+    ret = FindCameraMetadataItem(metadata_->get(), OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED, &item);
+    if (ret == CAM_META_SUCCESS) {
+        isMirrorSupported_ = (item.data.u8[0] > 0) ? true : false;
+    }
+    MEDIA_INFO_LOG("camera position: %{public}d, camera type: %{public}d, camera connection type: %{public}d",
+                   cameraPosition_, cameraType_, connectionType_);
 }
 
 std::string CameraInfo::GetID()
@@ -78,9 +85,14 @@ camera_type_enum_t CameraInfo::GetCameraType()
     return cameraType_;
 }
 
-CameraInfo::ConnectionType CameraInfo::GetConnectionType()
+camera_connection_type_t CameraInfo::GetConnectionType()
 {
     return connectionType_;
+}
+
+bool CameraInfo::IsMirrorSupported()
+{
+    return isMirrorSupported_;
 }
 } // CameraStandard
 } // OHOS

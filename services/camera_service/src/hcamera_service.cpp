@@ -108,7 +108,7 @@ int32_t HCameraService::CreateCaptureSession(sptr<ICaptureSession> &session)
     return CAMERA_OK;
 }
 
-int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer,
+int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                           sptr<IStreamCapture> &photoOutput)
 {
     sptr<HStreamCapture> streamCapture;
@@ -117,7 +117,7 @@ int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &pro
         MEDIA_ERR_LOG("HCameraService::CreatePhotoOutput producer is null");
         return CAMERA_INVALID_ARG;
     }
-    streamCapture = new HStreamCapture(producer);
+    streamCapture = new HStreamCapture(producer, format);
     if (streamCapture == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreatePhotoOutput HStreamCapture allocation failed");
         return CAMERA_ALLOC_ERROR;
@@ -126,7 +126,7 @@ int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &pro
     return CAMERA_OK;
 }
 
-int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
+int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                             sptr<IStreamRepeat> &previewOutput)
 {
     sptr<HStreamRepeat> streamRepeatPreview;
@@ -135,7 +135,7 @@ int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &p
         MEDIA_ERR_LOG("HCameraService::CreatePreviewOutput producer is null");
         return CAMERA_INVALID_ARG;
     }
-    streamRepeatPreview = new HStreamRepeat(producer);
+    streamRepeatPreview = new HStreamRepeat(producer, format);
     if (streamRepeatPreview == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreatePreviewOutput HStreamRepeat allocation failed");
         return CAMERA_ALLOC_ERROR;
@@ -144,8 +144,8 @@ int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &p
     return CAMERA_OK;
 }
 
-int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t width,
-                                                  int32_t height, sptr<IStreamRepeat> &previewOutput)
+int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                                                  int32_t width, int32_t height, sptr<IStreamRepeat> &previewOutput)
 {
     sptr<HStreamRepeat> streamRepeatPreview;
 
@@ -153,7 +153,7 @@ int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProduc
         MEDIA_ERR_LOG("HCameraService::CreateCustomPreviewOutput producer is null or invalid custom size is set");
         return CAMERA_INVALID_ARG;
     }
-    streamRepeatPreview = new HStreamRepeat(producer, width, height);
+    streamRepeatPreview = new HStreamRepeat(producer, format, width, height);
     if (streamRepeatPreview == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreateCustomPreviewOutput HStreamRepeat allocation failed");
         return CAMERA_ALLOC_ERROR;
@@ -162,7 +162,8 @@ int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProduc
     return CAMERA_OK;
 }
 
-int32_t HCameraService::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamRepeat> &videoOutput)
+int32_t HCameraService::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                                          sptr<IStreamRepeat> &videoOutput)
 {
     sptr<HStreamRepeat> streamRepeatVideo;
 
@@ -170,7 +171,7 @@ int32_t HCameraService::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &pro
         MEDIA_ERR_LOG("HCameraService::CreateVideoOutput producer is null");
         return CAMERA_INVALID_ARG;
     }
-    streamRepeatVideo = new HStreamRepeat(producer, true);
+    streamRepeatVideo = new HStreamRepeat(producer, format, true);
     if (streamRepeatVideo == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreateVideoOutput HStreamRepeat allocation failed");
         return CAMERA_ALLOC_ERROR;

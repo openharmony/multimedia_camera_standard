@@ -39,7 +39,7 @@ static const int32_t STREAMID_BEGIN = 1;
 
 class HCaptureSession : public HCaptureSessionStub {
 public:
-    HCaptureSession(sptr<HCameraHostManager> cameraHostManager, sptr<StreamOperatorCallback> streamOperatorCallback);
+    HCaptureSession(sptr<HCameraHostManager> cameraHostManager, sptr<StreamOperatorCallback> streamOperatorCb);
     ~HCaptureSession();
 
     int32_t BeginConfig() override;
@@ -62,16 +62,21 @@ public:
 private:
     int32_t ValidateSessionInputs();
     int32_t ValidateSessionOutputs();
-    int32_t GetStreamOperator();
-    int32_t HandleCaptureOuputsConfig();
-    int32_t CheckAndCommitStreams(std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);
-    void UpdateSessionConfig();
-    void FindAndDeleteStream(int32_t deletedStreamID);
-    void RestorePreviousState();
+    int32_t GetCameraDevice(sptr<HCameraDevice> &device);
+    int32_t HandleCaptureOuputsConfig(sptr<HCameraDevice> &device);
+    int32_t CreateAndCommitStreams(sptr<HCameraDevice> &device,
+                                   std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);
+    int32_t CheckAndCommitStreams(sptr<HCameraDevice> &device,
+                                  std::vector<std::shared_ptr<Camera::StreamInfo>> &allStreamInfos,
+                                  std::vector<std::shared_ptr<Camera::StreamInfo>> &newStreamInfos);
+    int32_t GetCurrentStreamInfos(sptr<HCameraDevice> &device,
+                                  std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);
+    void UpdateSessionConfig(sptr<HCameraDevice> &device);
+    void DeleteReleasedStream();
+    void RestorePreviousState(bool isCreateReleaseStreams);
     void ReleaseStreams();
     CaptureSessionState curState_ = CaptureSessionState::SESSION_INIT;
     CaptureSessionState prevState_ = CaptureSessionState::SESSION_INIT;
-    sptr<Camera::IStreamOperator> streamOperator_;
     sptr<HCameraDevice> cameraDevice_;
     std::vector<sptr<HStreamRepeat>> streamRepeats_;
     std::vector<sptr<HStreamCapture>> streamCaptures_;
@@ -80,7 +85,6 @@ private:
     std::vector<sptr<HStreamCapture>> tempStreamCaptures_;
     std::vector<sptr<HCameraDevice>> tempCameraDevices_;
     std::vector<int32_t> deletedStreamIds_;
-    std::shared_ptr<CameraMetadata> cameraAbility_;
     sptr<HCameraHostManager> cameraHostManager_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;
     int32_t streamId_ = STREAMID_BEGIN;

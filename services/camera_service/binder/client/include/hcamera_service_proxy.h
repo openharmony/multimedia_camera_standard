@@ -37,15 +37,17 @@ public:
 
     int32_t CreateCaptureSession(sptr<ICaptureSession>& session) override;
 
-    int32_t CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamCapture>& photoOutput) override;
+    int32_t CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                              sptr<IStreamCapture>& photoOutput) override;
 
-    int32_t CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
+    int32_t CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                 sptr<IStreamRepeat>& previewOutput) override;
 
-    int32_t CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t width, int32_t height,
-                                sptr<IStreamRepeat>& previewOutput) override;
+    int32_t CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format, int32_t width,
+                                      int32_t height, sptr<IStreamRepeat>& previewOutput) override;
 
-    int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamRepeat>& videoOutput) override;
+    int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                              sptr<IStreamRepeat>& videoOutput) override;
 
 private:
     static inline BrokerDelegator<HCameraServiceProxy> delegator_;

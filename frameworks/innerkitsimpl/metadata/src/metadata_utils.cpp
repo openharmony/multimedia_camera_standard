@@ -28,13 +28,13 @@ bool MetadataUtils::EncodeCameraMetadata(const std::shared_ptr<CameraStandard::C
     uint32_t tagCount = 0;
     common_metadata_header_t *meta = metadata->get();
     if (meta != nullptr) {
-        tagCount = get_camera_metadata_item_count(meta);
+        tagCount = GetCameraMetadataItemCount(meta);
         bRet = bRet && data.WriteUint32(tagCount);
-        bRet = bRet && data.WriteUint32(get_camera_metadata_item_capacity(meta));
-        bRet = bRet && data.WriteUint32(get_camera_metadata_data_size(meta));
+        bRet = bRet && data.WriteUint32(GetCameraMetadataItemCapacity(meta));
+        bRet = bRet && data.WriteUint32(GetCameraMetadataDataSize(meta));
         for (uint32_t i = 0; i < tagCount; i++) {
             camera_metadata_item_t item;
-            int ret = get_camera_metadata_item(meta, i, &item);
+            int ret = GetCameraMetadataItem(meta, i, &item);
             if (ret != CAM_META_SUCCESS) {
                 return false;
             }
@@ -73,7 +73,7 @@ void MetadataUtils::DecodeCameraMetadata(MessageParcel &data, std::shared_ptr<Ca
     for (auto &item : items) {
         void *buffer = nullptr;
         MetadataUtils::ItemDataToBuffer(item, &buffer);
-        (void)add_camera_metadata_item(meta, item.item, buffer, item.count);
+        (void)AddCameraMetadataItem(meta, item.item, buffer, item.count);
     }
 }
 
@@ -191,7 +191,7 @@ bool MetadataUtils::ReadMetadata(camera_metadata_item_t &item, MessageParcel &da
         if (item.data.r != nullptr) {
             for (size_t i = 0, j = 0;
                     i < item.count && j < static_cast<size_t>(buffers.size());
-                    i++, j += 2) {
+                    i++, j += INDEX_COUNTER) {
                 item.data.r[i].numerator = buffers.at(j);
                 item.data.r[i].denominator = buffers.at(j + 1);
             }

@@ -24,9 +24,12 @@ namespace OHOS {
 namespace CameraStandard {
 sptr<CameraManager> CameraManager::cameraManager_;
 
+const std::string CameraManager::surfaceFormat = "CAMERA_SURFACE_FORMAT";
+
 CameraManager::CameraManager()
 {
     Init();
+    cameraObjList = {};
 }
 
 class CameraStatusServiceCallback : public HCameraServiceCallbackStub {
@@ -46,6 +49,7 @@ public:
     int32_t OnCameraStatusChanged(const std::string cameraId, const CameraStatus status) override
     {
         CameraDeviceStatus deviceStatus;
+        CameraStatusInfo cameraStatusInfo;
 
         MEDIA_INFO_LOG("OnCameraStatusChanged: cameraId: %{public}s, status: %{public}d", cameraId.c_str(), status);
         if (camMngr_ != nullptr && camMngr_->GetApplicationCallback() != nullptr) {
@@ -62,7 +66,9 @@ public:
                     MEDIA_ERR_LOG("Unknown camera status: %{public}d", status);
                     return CAMERA_INVALID_ARG;
             }
-            camMngr_->GetApplicationCallback()->OnCameraStatusChanged(cameraId, deviceStatus);
+            cameraStatusInfo.cameraInfo = camMngr_->GetCameraInfo(cameraId);
+            cameraStatusInfo.cameraStatus = deviceStatus;
+            camMngr_->GetApplicationCallback()->OnCameraStatusChanged(cameraStatusInfo);
         } else {
             MEDIA_INFO_LOG("CameraManager::Callback not registered!, Ignore the callback");
         }
@@ -129,7 +135,8 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(sptr<Surface> &surface)
         MEDIA_ERR_LOG("CameraManager::CreatePhotoOutput serviceProxy_ is null or surface is null");
         return nullptr;
     }
-    retCode = serviceProxy_->CreatePhotoOutput(surface->GetProducer(), streamCapture);
+    std::string format = surface->GetUserData(surfaceFormat);
+    retCode = serviceProxy_->CreatePhotoOutput(surface->GetProducer(), std::stoi(format), streamCapture);
     if (retCode == CAMERA_OK) {
         result = new PhotoOutput(streamCapture);
     } else {
@@ -138,7 +145,7 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(sptr<Surface> &surface)
     return result;
 }
 
-sptr<PhotoOutput> CameraManager::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer)
+sptr<PhotoOutput> CameraManager::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format)
 {
     sptr<IStreamCapture> streamCapture = nullptr;
     sptr<PhotoOutput> result = nullptr;
@@ -148,7 +155,7 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(const sptr<OHOS::IBufferProdu
         MEDIA_ERR_LOG("CameraManager::CreatePhotoOutput serviceProxy_ is null or producer is null");
         return nullptr;
     }
-    retCode = serviceProxy_->CreatePhotoOutput(producer, streamCapture);
+    retCode = serviceProxy_->CreatePhotoOutput(producer, format, streamCapture);
     if (retCode == CAMERA_OK) {
         result = new PhotoOutput(streamCapture);
     } else {
@@ -167,7 +174,8 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
         MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput serviceProxy_ is null or surface is null");
         return nullptr;
     }
-    retCode = serviceProxy_->CreatePreviewOutput(surface->GetProducer(), streamRepeat);
+    std::string format = surface->GetUserData(surfaceFormat);
+    retCode = serviceProxy_->CreatePreviewOutput(surface->GetProducer(), std::stoi(format), streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new PreviewOutput(streamRepeat);
     } else {
@@ -176,7 +184,7 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
     return result;
 }
 
-sptr<PreviewOutput> CameraManager::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer)
+sptr<PreviewOutput> CameraManager::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format)
 {
     sptr<IStreamRepeat> streamRepeat = nullptr;
     sptr<PreviewOutput> result = nullptr;
@@ -186,7 +194,7 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(const sptr<OHOS::IBufferP
         MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput serviceProxy_ is null or producer is null");
         return nullptr;
     }
-    retCode = serviceProxy_->CreatePreviewOutput(producer, streamRepeat);
+    retCode = serviceProxy_->CreatePreviewOutput(producer, format, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new PreviewOutput(streamRepeat);
     } else {
@@ -205,7 +213,9 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(sptr<Surface> surfa
         MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput serviceProxy_ is null or surface is null or invalid size");
         return nullptr;
     }
-    retCode = serviceProxy_->CreateCustomPreviewOutput(surface->GetProducer(), width, height, streamRepeat);
+    std::string format = surface->GetUserData(surfaceFormat);
+    retCode = serviceProxy_->CreateCustomPreviewOutput(surface->GetProducer(), std::stoi(format), width, height,
+                                                       streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new PreviewOutput(streamRepeat);
     } else {
@@ -215,7 +225,7 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(sptr<Surface> surfa
 }
 
 sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
-                                                             int32_t width, int32_t height)
+                                                             int32_t format, int32_t width, int32_t height)
 {
     sptr<IStreamRepeat> streamRepeat = nullptr;
     sptr<PreviewOutput> result = nullptr;
@@ -225,7 +235,7 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IB
         MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput serviceProxy_ is null or producer is null or invalid size");
         return nullptr;
     }
-    retCode = serviceProxy_->CreateCustomPreviewOutput(producer, width, height, streamRepeat);
+    retCode = serviceProxy_->CreateCustomPreviewOutput(producer, format, width, height, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new PreviewOutput(streamRepeat);
     } else {
@@ -244,7 +254,8 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
         MEDIA_ERR_LOG("CameraManager::CreateVideoOutput serviceProxy_ is null or surface is null");
         return nullptr;
     }
-    retCode = serviceProxy_->CreateVideoOutput(surface->GetProducer(), streamRepeat);
+    std::string format = surface->GetUserData(surfaceFormat);
+    retCode = serviceProxy_->CreateVideoOutput(surface->GetProducer(), std::stoi(format), streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new VideoOutput(streamRepeat);
     } else {
@@ -253,7 +264,7 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
     return result;
 }
 
-sptr<VideoOutput> CameraManager::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer)
+sptr<VideoOutput> CameraManager::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format)
 {
     sptr<IStreamRepeat> streamRepeat = nullptr;
     sptr<VideoOutput> result = nullptr;
@@ -263,7 +274,7 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(const sptr<OHOS::IBufferProdu
         MEDIA_ERR_LOG("CameraManager::CreateVideoOutput serviceProxy_ is null or producer is null");
         return nullptr;
     }
-    retCode = serviceProxy_->CreateVideoOutput(producer, streamRepeat);
+    retCode = serviceProxy_->CreateVideoOutput(producer, format, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new VideoOutput(streamRepeat);
     } else {
@@ -328,6 +339,19 @@ std::shared_ptr<CameraManagerCallback> CameraManager::GetApplicationCallback()
     return cameraMngrCallback_;
 }
 
+sptr<CameraInfo> CameraManager::GetCameraInfo(std::string cameraId)
+{
+    sptr<CameraInfo> cameraObj = nullptr;
+
+    for (size_t i = 0; i < cameraObjList.size(); i++) {
+        if (cameraObjList[i]->GetID() == cameraId) {
+            cameraObj = cameraObjList[i];
+            break;
+        }
+    }
+    return cameraObj;
+}
+
 sptr<CameraManager> &CameraManager::GetInstance()
 {
     if (CameraManager::cameraManager_ == nullptr) {
@@ -340,7 +364,6 @@ sptr<CameraManager> &CameraManager::GetInstance()
 std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
 {
     std::vector<std::string> cameraIds;
-    std::vector<sptr<CameraInfo>> cameraObjList = {};
     std::vector<std::shared_ptr<CameraMetadata>> cameraAbilityList;
     int32_t retCode = -1;
     sptr<CameraInfo> cameraObj = nullptr;

@@ -28,21 +28,18 @@ namespace OHOS {
 namespace CameraStandard {
 class HStreamRepeat : public HStreamRepeatStub {
 public:
-    HStreamRepeat(sptr<OHOS::IBufferProducer> producer);
-    HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t width, int32_t height);
-    HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo);
+    HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format);
+    HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, int32_t width, int32_t height);
+    HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, bool isVideo);
     ~HStreamRepeat();
 
     static void ResetCaptureIds();
-    int32_t LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
+    int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
     std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId);
     void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo);
     int32_t Release() override;
     int32_t Start() override;
     int32_t Stop() override;
-    int32_t IsStreamsSupported(Camera::OperationMode mode,
-                               const std::shared_ptr<CameraStandard::CameraMetadata> &modeSetting,
-                               const std::vector<std::shared_ptr<Camera::StreamInfo>> &pInfo);
     sptr<OHOS::IBufferProducer> GetBufferProducer();
     int32_t SetFps(float Fps) override;
     int32_t SetCallback(sptr<IStreamRepeatCallback> &callback) override;
@@ -50,6 +47,8 @@ public:
     int32_t OnFrameEnded(int32_t frameCount);
     int32_t OnFrameError(int32_t errorType);
     bool IsVideo();
+    bool IsReleaseStream();
+    int32_t SetReleaseStream(bool isReleaseStream);
     int32_t GetStreamId();
 
 private:
@@ -60,15 +59,15 @@ private:
     bool IsvalidCaptureID();
     int32_t curCaptureID_;
     bool isVideo_;
+    bool isReleaseStream_;
     int32_t customPreviewWidth_;
     int32_t customPreviewHeight_;
     sptr<Camera::IStreamOperator> streamOperator_;
     int32_t streamId_;
+    int32_t format_;
     sptr<OHOS::IBufferProducer> producer_;
     sptr<IStreamRepeatCallback> streamRepeatCallback_;
     std::shared_ptr<CameraMetadata> cameraAbility_;
-    std::vector<std::pair<int32_t, int32_t>> validPreviewSizes_ = {{640, 480}, {832, 480}};
-    std::vector<std::pair<int32_t, int32_t>> validVideoSizes_ = {{640, 360}, {1280, 720}};
 };
 } // namespace CameraStandard
 } // namespace OHOS

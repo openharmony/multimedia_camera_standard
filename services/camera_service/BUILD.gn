@@ -46,6 +46,7 @@ ohos_shared_library("camera_service") {
     "//drivers/framework/include/utils/",
     "//drivers/adapter/uhdf2/osal/include/",
     "//drivers/adapter/uhdf2/include/hdi/",
+    "//foundation/graphic/standard/frameworks/surface/include",
     "//drivers/peripheral/camera/interfaces/include",
     "//drivers/peripheral/camera/interfaces/hdi_ipc",
     "//drivers/peripheral/camera/interfaces/hdi_ipc/utils/include",
@@ -63,9 +64,14 @@ ohos_shared_library("camera_service") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
+
   if (device_name == "rk3566" || device_name == "rk3568") {
     cflags += [ "-DRK_CAMERA" ]
   }
+  if (device_name == "baltimore") {
+    cflags += [ "-DBALTIMORE_CAMERA" ]
+  }
+
   deps = [
     "//drivers/peripheral/camera/interfaces/hdi_ipc/client:libcamera_client",
     "//foundation/graphic/standard:libsurface",

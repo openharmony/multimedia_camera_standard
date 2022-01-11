@@ -23,23 +23,25 @@ namespace OHOS {
 namespace CameraStandard {
 int32_t HStreamCapture::photoCaptureId_ = PHOTO_CAPTURE_ID_START;
 
-HStreamCapture::HStreamCapture(sptr<OHOS::IBufferProducer> producer)
+HStreamCapture::HStreamCapture(sptr<OHOS::IBufferProducer> producer, int32_t format)
 {
     producer_ = producer;
+    format_ = format;
     photoStreamId_ = 0;
+    isReleaseStream_ = false;
 }
 
 HStreamCapture::~HStreamCapture()
 {}
 
-int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
+int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
     std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
 {
     if (streamOperator == nullptr || cameraAbility == nullptr) {
         MEDIA_ERR_LOG("HStreamCapture::LinkInput streamOperator is null");
         return CAMERA_INVALID_ARG;
     }
-    if (!IsValidSize(producer_->GetDefaultWidth(), producer_->GetDefaultHeight(), validSizes_)) {
+    if (!IsValidSize(cameraAbility, format_, producer_->GetDefaultWidth(), producer_->GetDefaultHeight())) {
         return CAMERA_INVALID_SESSION_CFG;
     }
     streamOperator_ = streamOperator;
@@ -50,14 +52,22 @@ int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
 
 void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfoPhoto)
 {
+    int32_t pixelFormat;
+    auto it = g_cameraToPixelFormat.find(format_);
+    if (it != g_cameraToPixelFormat.end()) {
+        pixelFormat = it->second;
+    } else {
+#ifdef RK_CAMERA
+        pixelFormat = PIXEL_FMT_RGBA_8888;
+#else
+        pixelFormat = PIXEL_FMT_YCRCB_420_SP;
+#endif
+    }
+    MEDIA_INFO_LOG("HStreamCapture::SetStreamInfo pixelFormat is %{public}d", pixelFormat);
     streamInfoPhoto->streamId_ = photoStreamId_;
     streamInfoPhoto->width_ = producer_->GetDefaultWidth();
     streamInfoPhoto->height_ = producer_->GetDefaultHeight();
-#ifdef RK_CAMERA
-    streamInfoPhoto->format_ = PIXEL_FMT_RGBA_8888;
-#else
-    streamInfoPhoto->format_ = PIXEL_FMT_YCRCB_420_SP;
-#endif
+    streamInfoPhoto->format_ = pixelFormat;
     streamInfoPhoto->datasapce_ = CAMERA_PHOTO_COLOR_SPACE;
     streamInfoPhoto->intent_ = Camera::STILL_CAPTURE;
     streamInfoPhoto->tunneledMode_ = true;
@@ -65,12 +75,23 @@ void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInf
     streamInfoPhoto->encodeType_ = Camera::ENCODE_TYPE_JPEG;
 }
 
+int32_t HStreamCapture::SetReleaseStream(bool isReleaseStream)
+{
+    isReleaseStream_ = isReleaseStream;
+    return CAMERA_OK;
+}
+
+bool HStreamCapture::IsReleaseStream()
+{
+    return isReleaseStream_;
+}
+
 bool HStreamCapture::IsValidCaptureID()
 {
     return (photoCaptureId_ >= PHOTO_CAPTURE_ID_START && photoCaptureId_ <= PHOTO_CAPTURE_ID_END);
 }
 
-int32_t HStreamCapture::Capture()
+int32_t HStreamCapture::Capture(const std::shared_ptr<CameraMetadata> &captureSettings)
 {
     Camera::CamRetCode rc = Camera::NO_ERROR;
     int32_t CurCaptureId = 0;
@@ -86,6 +107,7 @@ int32_t HStreamCapture::Capture()
     photoCaptureId_++;
     std::shared_ptr<Camera::CaptureInfo> captureInfoPhoto = std::make_shared<Camera::CaptureInfo>();
     captureInfoPhoto->streamIds_ = {photoStreamId_};
+    // temporarily ignore captureSettings to avoid host_restart on wagner
     captureInfoPhoto->captureSetting_ = cameraAbility_;
     captureInfoPhoto->enableShutterCallback_ = true;
 

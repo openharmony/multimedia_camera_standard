@@ -28,17 +28,16 @@ namespace CameraStandard {
 class HCameraHostManager : public RefBase {
 public:
     HCameraHostManager();
-    ~HCameraHostManager();
+    virtual ~HCameraHostManager();
 
     int32_t Init(void);
-    int32_t GetCameras(std::vector<std::string> &cameraIds);
-    int32_t GetCameraAbility(std::string &cameraId,
-                             std::shared_ptr<CameraMetadata> &ability);
-    int32_t OpenCameraDevice(std::string &cameraId,
-                             const sptr<Camera::ICameraDeviceCallback> &callback,
-                             sptr<Camera::ICameraDevice> &pDevice);
-    int32_t SetFlashlight(std::string cameraId, bool isEnable);
-    int32_t SetCallback(sptr<Camera::ICameraHostCallback> &callback);
+    virtual int32_t GetCameras(std::vector<std::string> &cameraIds);
+    virtual int32_t GetCameraAbility(std::string &cameraId, std::shared_ptr<CameraMetadata> &ability);
+    virtual int32_t OpenCameraDevice(std::string &cameraId,
+                                     const sptr<Camera::ICameraDeviceCallback> &callback,
+                                     sptr<Camera::ICameraDevice> &pDevice);
+    virtual int32_t SetFlashlight(std::string cameraId, bool isEnable);
+    virtual int32_t SetCallback(sptr<Camera::ICameraHostCallback> &callback);
 
 private:
     sptr<Camera::ICameraHost> GetICameraHost();

@@ -44,16 +44,21 @@ public:
         std::vector<std::shared_ptr<CameraMetadata>> &cameraAbilityList) override;
     int32_t CreateCameraDevice(std::string cameraId, sptr<ICameraDeviceService> &device) override;
     int32_t CreateCaptureSession(sptr<ICaptureSession> &session) override;
-    int32_t CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamCapture> &photoOutput) override;
-    int32_t CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
+    int32_t CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                              sptr<IStreamCapture> &photoOutput) override;
+    int32_t CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                 sptr<IStreamRepeat> &previewOutput) override;
-    int32_t CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t width, int32_t height,
-                                sptr<IStreamRepeat> &previewOutput) override;
-    int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, sptr<IStreamRepeat> &videoOutput) override;
+    int32_t CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format, int32_t width,
+                                      int32_t height, sptr<IStreamRepeat> &previewOutput) override;
+    int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                              sptr<IStreamRepeat> &videoOutput) override;
     int32_t SetCallback(sptr<ICameraServiceCallback> &callback) override;
     void OnDump() override;
     void OnStart() override;
     void OnStop() override;
+
+protected:
+    HCameraService(sptr<HCameraHostManager> cameraHostManager) : cameraHostManager_(cameraHostManager) {}
 
 private:
     sptr<HCameraHostManager> cameraHostManager_;

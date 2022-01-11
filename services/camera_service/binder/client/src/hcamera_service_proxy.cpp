@@ -127,7 +127,7 @@ int32_t HCameraServiceProxy::CreateCaptureSession(sptr<ICaptureSession>& session
     return error;
 }
 
-int32_t HCameraServiceProxy::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer,
+int32_t HCameraServiceProxy::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
     sptr<IStreamCapture>& photoOutput)
 {
     MessageParcel data;
@@ -141,6 +141,11 @@ int32_t HCameraServiceProxy::CreatePhotoOutput(const sptr<OHOS::IBufferProducer>
 
     if (!data.WriteRemoteObject(producer->AsObject())) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreatePhotoOutput write producer obj failed");
+        return IPC_PROXY_ERR;
+    }
+
+    if (!data.WriteInt32(format)) {
+        MEDIA_ERR_LOG("HCameraServiceCallbackProxy CreatePhotoOutput Write format failed");
         return IPC_PROXY_ERR;
     }
 
@@ -161,7 +166,7 @@ int32_t HCameraServiceProxy::CreatePhotoOutput(const sptr<OHOS::IBufferProducer>
     return error;
 }
 
-int32_t HCameraServiceProxy::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
+int32_t HCameraServiceProxy::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
     sptr<IStreamRepeat>& previewOutput)
 {
     MessageParcel data;
@@ -175,6 +180,11 @@ int32_t HCameraServiceProxy::CreatePreviewOutput(const sptr<OHOS::IBufferProduce
 
     if (!data.WriteRemoteObject(producer->AsObject())) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreatePreviewOutput write producer obj failed");
+        return IPC_PROXY_ERR;
+    }
+
+    if (!data.WriteInt32(format)) {
+        MEDIA_ERR_LOG("HCameraServiceCallbackProxy CreatePreviewOutput Write format failed");
         return IPC_PROXY_ERR;
     }
 
@@ -195,8 +205,9 @@ int32_t HCameraServiceProxy::CreatePreviewOutput(const sptr<OHOS::IBufferProduce
     return error;
 }
 
-int32_t HCameraServiceProxy::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t width,
-                                                       int32_t height, sptr<IStreamRepeat>& previewOutput)
+int32_t HCameraServiceProxy::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                                                       int32_t width, int32_t height,
+                                                       sptr<IStreamRepeat>& previewOutput)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -208,6 +219,10 @@ int32_t HCameraServiceProxy::CreateCustomPreviewOutput(const sptr<OHOS::IBufferP
     }
     if (!data.WriteRemoteObject(producer->AsObject())) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput write producer obj failed");
+        return IPC_PROXY_ERR;
+    }
+    if (!data.WriteInt32(format)) {
+        MEDIA_ERR_LOG("HCameraServiceCallbackProxy CreateCustomPreviewOutput Write format failed");
         return IPC_PROXY_ERR;
     }
     if (!data.WriteInt32(width)) {
@@ -233,7 +248,7 @@ int32_t HCameraServiceProxy::CreateCustomPreviewOutput(const sptr<OHOS::IBufferP
     return error;
 }
 
-int32_t HCameraServiceProxy::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer,
+int32_t HCameraServiceProxy::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                                sptr<IStreamRepeat>& videoOutput)
 {
     MessageParcel data;
@@ -247,6 +262,11 @@ int32_t HCameraServiceProxy::CreateVideoOutput(const sptr<OHOS::IBufferProducer>
 
     if (!data.WriteRemoteObject(producer->AsObject())) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreateVideoOutput write producer obj failed");
+        return IPC_PROXY_ERR;
+    }
+
+    if (!data.WriteInt32(format)) {
+        MEDIA_ERR_LOG("HCameraServiceCallbackProxy CreateVideoOutput Write format failed");
         return IPC_PROXY_ERR;
     }
 

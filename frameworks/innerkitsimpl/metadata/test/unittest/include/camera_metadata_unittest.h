@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef CAMERA_METADATA_TEST_H
-#define CAMERA_METADATA_TEST_H
+#ifndef CAMERA_METADATA_UNITTEST_H
+#define CAMERA_METADATA_UNITTEST_H
 
 
 #include "gtest/gtest.h"
 
 namespace OHOS {
 namespace CameraStandard {
-class CameraMetadataTest : public testing::Test {
+class CameraMetadataUnitTest : public testing::Test {
 public:
     /* SetUpTestCase:The preset action of the test suite is executed before the first TestCase */
     static void SetUpTestCase(void);
@@ -37,4 +37,4 @@ public:
 };
 } // CameraStandard
 } // OHOS
-#endif // CAMERA_METADATA_TEST_H
+#endif // CAMERA_METADATA_UNITTEST_H

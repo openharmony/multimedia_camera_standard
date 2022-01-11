@@ -18,6 +18,13 @@
 
 namespace OHOS {
 namespace CameraStandard {
+std::unordered_map<int32_t, int32_t> g_cameraToPixelFormat = {
+    {OHOS_CAMERA_FORMAT_RGBA_8888, PIXEL_FMT_RGBA_8888},
+    {OHOS_CAMERA_FORMAT_YCBCR_420_888, PIXEL_FMT_YCBCR_420_SP},
+    {OHOS_CAMERA_FORMAT_YCRCB_420_SP, PIXEL_FMT_YCRCB_420_SP},
+    {OHOS_CAMERA_FORMAT_JPEG, PIXEL_FMT_YCRCB_420_SP},
+};
+
 int32_t HdiToServiceError(Camera::CamRetCode ret)
 {
     enum CamServiceError err = CAMERA_UNKNOWN_ERROR;
@@ -42,19 +49,29 @@ int32_t HdiToServiceError(Camera::CamRetCode ret)
     return err;
 }
 
-bool IsValidSize(int32_t width, int32_t height, std::vector<std::pair<int32_t, int32_t>> validSizes)
+bool IsValidSize(std::shared_ptr<CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height)
 {
-    auto curPair = std::make_pair(width, height);
-    if (std::find(validSizes.begin(), validSizes.end(), curPair) != validSizes.end()) {
-        return true;
-    } else {
-        MEDIA_ERR_LOG("Width %{public}d and height %{public}d not found in suported sizes", width, height);
-    }
-#ifdef RK_CAMERA
+#ifndef BALTIMORE_CAMERA
     return true;
-#else
-    return false;
 #endif
+    camera_metadata_item_t item;
+    int ret = FindCameraMetadataItem(cameraAbility->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to find stream configuration in camera ability with return code %{public}d", ret);
+        return false;
+    }
+    for (uint32_t index = 0; index < item.count; index += 3) {
+        if (item.data.i32[index] == format) {
+            if (item.data.i32[index + 1] == width && item.data.i32[index + 2] == height) {
+                MEDIA_INFO_LOG("Format:%{public}d, width:%{public}d, height:%{public}d found in supported streams",
+                               format, width, height);
+                return true;
+            }
+        }
+    }
+    MEDIA_ERR_LOG("Format:%{public}d, width:%{public}d, height:%{public}d not found in supported streams",
+                  format, width, height);
+    return false;
 }
 } // namespace CameraStandard
 } // namespace OHOS

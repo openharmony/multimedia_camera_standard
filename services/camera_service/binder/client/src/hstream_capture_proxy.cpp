@@ -15,6 +15,7 @@
 
 #include "hstream_capture_proxy.h"
 #include "media_log.h"
+#include "metadata_utils.h"
 #include "remote_request_code.h"
 
 namespace OHOS {
@@ -22,11 +23,17 @@ namespace CameraStandard {
 HStreamCaptureProxy::HStreamCaptureProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStreamCapture>(impl) { }
 
-int32_t HStreamCaptureProxy::Capture()
+int32_t HStreamCaptureProxy::Capture(const std::shared_ptr<CameraMetadata> &captureSettings)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    bool bRet = MetadataUtils::EncodeCameraMetadata(captureSettings, data);
+    if (!bRet) {
+        MEDIA_ERR_LOG("HStreamCaptureProxy::Capture EncodeCameraMetadata failed");
+        return IPC_PROXY_ERR;
+    }
 
     int error = Remote()->SendRequest(CAMERA_STREAM_CAPTURE_START, data, reply, option);
     if (error != ERR_NONE) {

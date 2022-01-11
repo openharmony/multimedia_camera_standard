@@ -24,40 +24,35 @@ namespace CameraStandard {
 int32_t HStreamRepeat::videoCaptureId_ = VIDEO_CAPTURE_ID_START;
 int32_t HStreamRepeat::previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
 
-HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer)
+HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format)
 {
     producer_ = producer;
+    format_ = format;
     isVideo_ = false;
     streamId_ = 0;
     customPreviewWidth_ = 0;
     customPreviewHeight_ = 0;
     curCaptureID_ = 0;
+    isReleaseStream_ = false;
 }
 
-HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t width, int32_t height)
+HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, int32_t width, int32_t height)
+    : HStreamRepeat(producer, format)
 {
-    producer_ = producer;
-    isVideo_ = false;
-    streamId_ = 0;
     customPreviewWidth_ = width;
     customPreviewHeight_ = height;
-    curCaptureID_ = 0;
 }
 
-HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, bool isVideo)
+HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, bool isVideo)
+    : HStreamRepeat(producer, format)
 {
-    producer_ = producer;
     isVideo_ = isVideo;
-    streamId_ = 0;
-    customPreviewWidth_ = 0;
-    customPreviewHeight_ = 0;
-    curCaptureID_ = 0;
 }
 
 HStreamRepeat::~HStreamRepeat()
 {}
 
-int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
+int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
                                  std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
 {
     int32_t previewWidth = 0;
@@ -68,13 +63,13 @@ int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
         return CAMERA_INVALID_ARG;
     }
     if (isVideo_) {
-        if (!IsValidSize(producer_->GetDefaultWidth(), producer_->GetDefaultHeight(), validVideoSizes_)) {
+        if (!IsValidSize(cameraAbility, format_, producer_->GetDefaultWidth(), producer_->GetDefaultHeight())) {
             return CAMERA_INVALID_SESSION_CFG;
         }
     } else {
         previewWidth = (customPreviewWidth_ == 0) ? producer_->GetDefaultWidth() : customPreviewWidth_;
         previewHeight =  (customPreviewHeight_ == 0) ? producer_->GetDefaultHeight() : customPreviewHeight_;
-        if (!IsValidSize(previewWidth, previewHeight, validPreviewSizes_)) {
+        if (!IsValidSize(cameraAbility, format_, previewWidth, previewHeight)) {
             return CAMERA_INVALID_SESSION_CFG;
         }
     }
@@ -86,11 +81,19 @@ int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
 
 void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo)
 {
+    int32_t pixelFormat;
+    auto it = g_cameraToPixelFormat.find(format_);
+    if (it != g_cameraToPixelFormat.end()) {
+        pixelFormat = it->second;
+    } else {
 #ifdef RK_CAMERA
-    streamInfo->format_ = PIXEL_FMT_RGBA_8888;
+        pixelFormat = PIXEL_FMT_RGBA_8888;
 #else
-    streamInfo->format_ = PIXEL_FMT_YCRCB_420_SP;
+        pixelFormat = PIXEL_FMT_YCRCB_420_SP;
 #endif
+    }
+    MEDIA_INFO_LOG("HStreamRepeat::SetStreamInfo pixelFormat is %{public}d", pixelFormat);
+    streamInfo->format_ = pixelFormat;
     streamInfo->tunneledMode_ = true;
     streamInfo->datasapce_ = CAMERA_PREVIEW_COLOR_SPACE;
     streamInfo->bufferQueue_ = producer_;
@@ -103,6 +106,17 @@ void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
     } else {
         streamInfo->intent_ = Camera::PREVIEW;
     }
+}
+
+int32_t HStreamRepeat::SetReleaseStream(bool isReleaseStream)
+{
+    isReleaseStream_ = isReleaseStream;
+    return CAMERA_OK;
+}
+
+bool HStreamRepeat::IsReleaseStream()
+{
+    return isReleaseStream_;
 }
 
 int32_t HStreamRepeat::Start()
@@ -156,7 +170,7 @@ int32_t HStreamRepeat::StartVideo()
     captureInfoVideo->streamIds_ = {streamId_};
     captureInfoVideo->captureSetting_ = cameraAbility_;
     captureInfoVideo->enableShutterCallback_ = false;
-    MEDIA_INFO_LOG("HStreamCapture::StartVideo() Starting video with capture ID: %{public}d", curCaptureID_);
+    MEDIA_INFO_LOG("HStreamRepeat::StartVideo() Starting video with capture ID: %{public}d", curCaptureID_);
     rc = streamOperator_->Capture(curCaptureID_, captureInfoVideo, true);
     if (rc != Camera::NO_ERROR) {
         curCaptureID_ = 0;
@@ -181,7 +195,7 @@ int32_t HStreamRepeat::StartPreview()
     captureInfoPreview->streamIds_ = {streamId_};
     captureInfoPreview->captureSetting_ = cameraAbility_;
     captureInfoPreview->enableShutterCallback_ = false;
-    MEDIA_INFO_LOG("HStreamCapture::StartPreview() Starting preview with capture ID: %{public}d", curCaptureID_);
+    MEDIA_INFO_LOG("HStreamRepeat::StartPreview() Starting preview with capture ID: %{public}d", curCaptureID_);
     rc = streamOperator_->Capture(curCaptureID_, captureInfoPreview, true);
     if (rc != Camera::NO_ERROR) {
         MEDIA_ERR_LOG("HStreamRepeat::StartPreview failed with error Code:%{public}d", rc);
@@ -225,24 +239,6 @@ int32_t HStreamRepeat::Release()
     streamOperator_ = nullptr;
     streamId_ = 0;
     cameraAbility_ = nullptr;
-    return CAMERA_OK;
-}
-
-int32_t HStreamRepeat::IsStreamsSupported(Camera::OperationMode mode,
-                                          const std::shared_ptr<CameraStandard::CameraMetadata> &modeSetting,
-                                          const std::vector<std::shared_ptr<Camera::StreamInfo>> &pInfo)
-{
-    Camera::StreamSupportType pType;
-
-    Camera::CamRetCode rc = streamOperator_->IsStreamsSupported(mode, modeSetting,
-        pInfo, pType);
-    if (rc != Camera::NO_ERROR) {
-        MEDIA_ERR_LOG("HStreamRepeat::IsStreamsSupported failed with error Code:%{public}d", rc);
-        return HdiToServiceError(rc);
-    } else if (pType == Camera::NOT_SUPPORTED) {
-        MEDIA_ERR_LOG("HStreamRepeat::IsStreamsSupported Not supported");
-        return CAMERA_UNKNOWN_ERROR;
-    }
     return CAMERA_OK;
 }
 

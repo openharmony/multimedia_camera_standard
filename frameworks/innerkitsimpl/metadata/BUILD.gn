@@ -16,21 +16,17 @@ import("//build/ohos.gni")
 ohos_shared_library("metadata") {
   install_enable = true
   sources = [
-    "src/camera_metadata_operator.c",
     "src/camera_metadata_info.cpp",
-    "src/metadata_utils.cpp"
+    "src/camera_metadata_operator.cpp",
+    "src/metadata_utils.cpp",
   ]
   cflags = [
     "-fPIC",
     "-Wall",
   ]
   cflags_cc = cflags
-  include_dirs = [
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include"
-  ]
-  deps = [
-    "//utils/native/base:utils",
-  ]
+  include_dirs = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include" ]
+  deps = [ "//utils/native/base:utils" ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
@@ -41,20 +37,14 @@ ohos_shared_library("metadata") {
 
 ohos_executable("metadata_sample") {
   install_enable = false
-  sources = [ "src/metadata_sample.c" ]
+  sources = [ "src/metadata_sample.cpp" ]
   cflags = [ "-Wall" ]
   cflags_cc = cflags
-  include_dirs = [
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include"
-  ]
+  include_dirs = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include" ]
 
-  deps = [
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata"
-  ]
+  deps = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata" ]
 
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog"
-  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"

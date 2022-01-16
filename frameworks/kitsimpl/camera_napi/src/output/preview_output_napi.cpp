@@ -183,8 +183,8 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
             MEDIA_ERR_LOG("failed to get surface from SurfaceUtils");
             return result;
         }
-        MEDIA_ERR_LOG("surface width: %{public}d, height: %{public}d", surface->GetDefaultWidth(),
-                    surface->GetDefaultHeight());
+        MEDIA_INFO_LOG("surface width: %{public}d, height: %{public}d", surface->GetDefaultWidth(),
+                       surface->GetDefaultHeight());
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
         sPreviewOutput_ = CameraManager::GetInstance()->CreatePreviewOutput(surface);
         if (sPreviewOutput_ == nullptr) {

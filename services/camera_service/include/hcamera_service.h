@@ -73,6 +73,9 @@ public:
     virtual ~CameraHostCallback() = default;
     virtual void OnCameraStatus(const std::string &cameraId, Camera::CameraStatus status) override;
     virtual void OnFlashlightStatus(const std::string &cameraId, Camera::FlashlightStatus status) override;
+#ifdef BALTIMORE_CAMERA
+    virtual void OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event) override;
+#endif
 
 private:
     sptr<ICameraServiceCallback> cameraServiceCallback;

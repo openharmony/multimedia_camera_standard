@@ -119,7 +119,7 @@ int main(int argc, char **argv)
             != previewFormats.end()) {
             previewFormat = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
             MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is present in supported preview formats");
-        } else if(!previewFormats.empty()) {
+        } else if (!previewFormats.empty()) {
             previewFormat = previewFormats[0];
             MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported preview formats");
         }

@@ -67,8 +67,8 @@ static const std::int32_t VIDEO_DEFAULT_HEIGHT = 360;
 
 static const std::int32_t SURFACE_QUEUE_SIZE = 10;
 
-static const std::int32_t CAM_FORMAT_JPEG = 1003;
-static const std::int32_t CAM_FORMAT_YCRCb_420_SP = 2000;
+static const std::int32_t CAM_FORMAT_JPEG = 2000;
+static const std::int32_t CAM_FORMAT_YCRCb_420_SP = 1003;
 
 static const std::vector<std::string> vecFlashMode {
     "FLASHMODE_CLOSE", "FLASHMODE_OPEN", "FLASHMODE_AUTO", "FLASHMODE_ALWAYS_OPEN"
@@ -100,7 +100,7 @@ static const std::vector<std::string> vecCameraFormat {
 };
 
 static const std::vector<std::string> vecCameraStatus {
-  "CAMERA_STATUS_APPEAR", "CAMERA_STATUS_DISAPPEAR", "CAMERA_STATUS_AVAILABLE", "CAMERA_STATUS_UNAVAILABLE"
+    "CAMERA_STATUS_APPEAR", "CAMERA_STATUS_DISAPPEAR", "CAMERA_STATUS_AVAILABLE", "CAMERA_STATUS_UNAVAILABLE"
 };
 
 enum FlashMode {

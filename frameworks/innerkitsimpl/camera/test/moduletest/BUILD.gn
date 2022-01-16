@@ -22,9 +22,6 @@ ohos_moduletest("camera_framework_moduletest") {
     "//drivers/framework/include/utils",
     "//drivers/adapter/uhdf2/osal/include",
     "//drivers/adapter/uhdf2/include/hdi",
-    "//drivers/peripheral/camera/interfaces/include",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
     "//foundation/graphic/standard/frameworks/surface/include",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
@@ -34,12 +31,6 @@ ohos_moduletest("camera_framework_moduletest") {
     "//foundation/multimedia/camera_standard/interfaces/innerkits/native/camera/include",
     "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test",
   ]
-
-  cflags = [ "-fPIC" ]
-  if (device_name == "baltimore") {
-    cflags += [ "-DBALTIMORE_CAMERA" ]
-  }
-  cflags_cc = cflags
 
   sources = [
     "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test/test_common.cpp",
@@ -54,4 +45,21 @@ ohos_moduletest("camera_framework_moduletest") {
   ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  cflags = [ "-fPIC" ]
+  if (device_name == "baltimore") {
+    cflags += [ "-DBALTIMORE_CAMERA" ]
+    include_dirs +=
+        [ "//drivers/peripheral/hidl_adapter/camera/interfaces/include" ]
+  } else {
+    if (device_name == "rk3566" || device_name == "rk3568") {
+      cflags += [ "-DRK_CAMERA" ]
+    }
+    include_dirs += [
+      "//drivers/peripheral/camera/interfaces/include",
+      "//drivers/peripheral/camera/interfaces/hdi_ipc",
+      "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
+    ]
+  }
+  cflags_cc = cflags
 }

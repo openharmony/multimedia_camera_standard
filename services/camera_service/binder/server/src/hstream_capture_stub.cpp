@@ -15,6 +15,7 @@
 
 #include "hstream_capture_stub.h"
 #include "media_log.h"
+#include "metadata_utils.h"
 #include "remote_request_code.h"
 
 namespace OHOS {
@@ -26,7 +27,7 @@ int HStreamCaptureStub::OnRemoteRequest(
 
     switch (code) {
         case CAMERA_STREAM_CAPTURE_START:
-            errCode = Capture();
+            errCode = HStreamCaptureStub::HandleCapture(data);
             break;
         case CAMERA_STREAM_CAPTURE_CANCEL:
             errCode = CancelCapture();
@@ -44,6 +45,14 @@ int HStreamCaptureStub::OnRemoteRequest(
     }
 
     return errCode;
+}
+
+int HStreamCaptureStub::HandleCapture(MessageParcel &data)
+{
+    std::shared_ptr<CameraStandard::CameraMetadata> metadata = nullptr;
+    MetadataUtils::DecodeCameraMetadata(data, metadata);
+
+    return Capture(metadata);
 }
 
 int HStreamCaptureStub::HandleSetCallback(MessageParcel &data)

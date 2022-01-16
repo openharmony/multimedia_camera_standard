@@ -20,13 +20,13 @@ namespace OHOS {
 namespace CameraStandard {
 CameraMetadata::CameraMetadata(size_t itemCapacity, size_t dataCapacity)
 {
-    metadata_ = allocate_camera_metadata_buffer(itemCapacity, ALIGN_TO(dataCapacity, DATA_ALIGNMENT));
+    metadata_ = AllocateCameraMetadataBuffer(itemCapacity, AlignTo(dataCapacity, DATA_ALIGNMENT));
 }
 
 CameraMetadata::~CameraMetadata()
 {
     if (metadata_) {
-        free_camera_metadata_buffer(metadata_);
+        FreeCameraMetadataBuffer(metadata_);
         metadata_ = nullptr;
     }
 }
@@ -38,13 +38,13 @@ bool CameraMetadata::addEntry(uint32_t item, const void *data, size_t data_count
         return false;
     }
 
-    auto result = add_camera_metadata_item(metadata_, item, data, data_count);
+    auto result = AddCameraMetadataItem(metadata_, item, data, data_count);
     if (!result) {
         return true;
     }
 
     if (result != CAM_META_ITEM_CAP_EXCEED && result != CAM_META_DATA_CAP_EXCEED) {
-        const char *name = get_camera_metadata_item_name(item);
+        const char *name = GetCameraMetadataItemName(item);
         (void)name;
 
         if (name) {
@@ -62,35 +62,35 @@ bool CameraMetadata::resize_add_metadata(uint32_t item, const void *data, size_t
 {
     uint32_t data_type;
 
-    auto itemCapacity = get_camera_metadata_item_capacity(metadata_);
-    auto data_capacity = get_camera_metadata_data_size(metadata_);
+    auto itemCapacity = GetCameraMetadataItemCapacity(metadata_);
+    auto data_capacity = GetCameraMetadataDataSize(metadata_);
 
-    int32_t ret = get_camera_metadata_item_type(item, &data_type);
+    int32_t ret = GetCameraMetadataItemType(item, &data_type);
     if (ret != CAM_META_SUCCESS) {
-        METADATA_ERR_LOG("get_camera_metadata_item_type invalid item type");
+        METADATA_ERR_LOG("GetCameraMetadataItemType invalid item type");
         return false;
     }
-    size_t size = calculate_camera_metadata_item_data_size(data_type, data_count);
+    size_t size = CalculateCameraMetadataItemDataSize(data_type, data_count);
 
-    common_metadata_header_t *newMetadata = allocate_camera_metadata_buffer((itemCapacity + 1) * 2,
-        ALIGN_TO((data_capacity + size) * 2, DATA_ALIGNMENT));
+    common_metadata_header_t *newMetadata = AllocateCameraMetadataBuffer((itemCapacity + 1) * INDEX_COUNTER,
+        AlignTo((data_capacity + size) * INDEX_COUNTER, DATA_ALIGNMENT));
 
     if (newMetadata == nullptr) {
         METADATA_ERR_LOG("Failed to resize the metadata buffer");
         return false;
     }
 
-    auto result = copy_camera_metadata_items(newMetadata, metadata_);
+    auto result = CopyCameraMetadataItems(newMetadata, metadata_);
     if (result != CAM_META_SUCCESS) {
         METADATA_ERR_LOG("Failed to copy the old metadata to new metadata");
-        free_camera_metadata_buffer(newMetadata);
+        FreeCameraMetadataBuffer(newMetadata);
         return false;
     }
 
-    result = add_camera_metadata_item(newMetadata, item, data, data_count);
+    result = AddCameraMetadataItem(newMetadata, item, data, data_count);
     if (result != CAM_META_SUCCESS) {
         METADATA_ERR_LOG("Failed to add new entry");
-        free_camera_metadata_buffer(newMetadata);
+        FreeCameraMetadataBuffer(newMetadata);
         return false;
     }
     replace_metadata(newMetadata);
@@ -104,11 +104,11 @@ void CameraMetadata::replace_metadata(common_metadata_header_t *newMetadata)
         return;
     }
 
-    free_camera_metadata_buffer(metadata_);
+    FreeCameraMetadataBuffer(metadata_);
     metadata_ = newMetadata;
 }
 
-bool CameraMetadata::updateEntry(uint32_t tag, const void *data, size_t data_count)
+bool CameraMetadata::updateEntry(uint32_t tag, const void *data, size_t dataCount)
 {
     if (metadata_ == nullptr) {
         METADATA_ERR_LOG("metadata_ is null");
@@ -116,18 +116,17 @@ bool CameraMetadata::updateEntry(uint32_t tag, const void *data, size_t data_cou
     }
 
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(metadata_, tag, &item);
+    int ret = FindCameraMetadataItem(metadata_, tag, &item);
     if (ret) {
-        const char *name = get_camera_metadata_item_name(tag);
+        const char *name = GetCameraMetadataItemName(tag);
         (void)name;
         METADATA_ERR_LOG("Failed to update tag tagname = %{public}s : not present", (name ? name : "<unknown>"));
         return false;
     }
 
-    ret = update_camera_metadata_item_by_index(metadata_, item.index, data,
-                                               data_count, nullptr);
+    ret = UpdateCameraMetadataItemByIndex(metadata_, item.index, data, dataCount, nullptr);
     if (ret) {
-        const char *name = get_camera_metadata_item_name(tag);
+        const char *name = GetCameraMetadataItemName(tag);
         (void)name;
         METADATA_ERR_LOG("Failed to update tag tagname = %{public}s", (name ? name : "<unknown>"));
         return false;

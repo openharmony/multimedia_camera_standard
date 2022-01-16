@@ -21,29 +21,133 @@
 using namespace std;
 namespace OHOS {
 namespace CameraStandard {
+PhotoCaptureSetting::PhotoCaptureSetting()
+{
+    int32_t items = 10;
+    int32_t dataLength = 100;
+    captureMetadataSetting_ = std::make_shared<CameraMetadata>(items, dataLength);
+}
+
 PhotoCaptureSetting::QualityLevel PhotoCaptureSetting::GetQuaility()
 {
+    QualityLevel quality;
+    camera_metadata_item_t item;
+
+    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_QUALITY, &item);
+    if (ret == CAM_META_SUCCESS) {
+        quality = static_cast<QualityLevel>(item.data.u8[0]);
+        return quality;
+    }
     return QualityLevel::NORMAL_QUALITY;
 }
 
-void PhotoCaptureSetting::SetQuaility(PhotoCaptureSetting::QualityLevel quaility)
+void PhotoCaptureSetting::SetQuality(PhotoCaptureSetting::QualityLevel qualityLevel)
 {
+    bool status = false;
+    camera_metadata_item_t item;
+    uint8_t quality = qualityLevel;
+
+    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_QUALITY, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = captureMetadataSetting_->addEntry(OHOS_JPEG_QUALITY, &quality, 1);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = captureMetadataSetting_->updateEntry(OHOS_JPEG_QUALITY, &quality, 1);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("PhotoCaptureSetting::SetQuality Failed to set Quality");
+    }
     return;
 }
 
 PhotoCaptureSetting::RotationConfig PhotoCaptureSetting::GetRotation()
 {
+    RotationConfig rotation;
+    camera_metadata_item_t item;
+
+    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_ORIENTATION, &item);
+    if (ret == CAM_META_SUCCESS) {
+        rotation = static_cast<RotationConfig>(item.data.i32[0]);
+        return rotation;
+    }
+
     return RotationConfig::Rotation_0;
 }
 
-void PhotoCaptureSetting::SetRotation(PhotoCaptureSetting::RotationConfig ratationValue)
+void PhotoCaptureSetting::SetRotation(PhotoCaptureSetting::RotationConfig rotationValue)
 {
+    bool status = false;
+    camera_metadata_item_t item;
+
+    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_ORIENTATION, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = captureMetadataSetting_->addEntry(OHOS_JPEG_ORIENTATION, &rotationValue, 1);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = captureMetadataSetting_->updateEntry(OHOS_JPEG_ORIENTATION, &rotationValue, 1);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("PhotoCaptureSetting::SetRotation Failed to set Rotation");
+    }
+    return;
+}
+
+void PhotoCaptureSetting::SetGpsLocation(double latitude, double longitude)
+{
+    double gpsCoordinates[2];
+    gpsCoordinates[0] = latitude;
+    gpsCoordinates[1] = longitude;
+    bool status = false;
+    camera_metadata_item_t item;
+
+    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_GPS_COORDINATES, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = captureMetadataSetting_->addEntry(OHOS_JPEG_GPS_COORDINATES, gpsCoordinates,
+            sizeof(gpsCoordinates) / sizeof(gpsCoordinates[0]));
+    } else if (ret == CAM_META_SUCCESS) {
+        status = captureMetadataSetting_->updateEntry(OHOS_JPEG_GPS_COORDINATES, gpsCoordinates,
+            sizeof(gpsCoordinates) / sizeof(gpsCoordinates[0]));
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("PhotoCaptureSetting::SetGpsLocation Failed to set GPS co-ordinates");
+    }
     return;
 }
 
 bool PhotoCaptureSetting::IsMirrored()
 {
-    return false;
+    bool isMirrorEnabled = false;
+    camera_metadata_item_t item;
+    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_CONTROL_CAPTURE_MIRROR, &item);
+    if (ret == CAM_META_SUCCESS) {
+        isMirrorEnabled = (item.data.u8[0] > 0) ? true : false;
+    }
+    return isMirrorEnabled;
+}
+
+void PhotoCaptureSetting::SetMirror(bool enable)
+{
+    bool status = false;
+    camera_metadata_item_t item;
+    uint8_t mirror = enable;
+
+    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_CONTROL_CAPTURE_MIRROR, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = captureMetadataSetting_->addEntry(OHOS_CONTROL_CAPTURE_MIRROR, &mirror, 1);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = captureMetadataSetting_->updateEntry(OHOS_CONTROL_CAPTURE_MIRROR, &mirror, 1);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("PhotoCaptureSetting::SetMirror Failed to set mirroring in photo capture setting");
+    }
+    return;
+}
+
+std::shared_ptr<CameraMetadata> PhotoCaptureSetting::GetCaptureMetadataSetting()
+{
+    return captureMetadataSetting_;
 }
 
 class HStreamCaptureCallbackImpl : public HStreamCaptureCallbackStub {
@@ -101,14 +205,9 @@ public:
     }
 };
 
-void PhotoCaptureSetting::SetMirror(bool enable)
-{
-    return;
-}
-
 PhotoOutput::PhotoOutput(sptr<IStreamCapture> &streamCapture)
-    : CaptureOutput(CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT), streamCapture_(streamCapture) {
-}
+    : CaptureOutput(CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT), streamCapture_(streamCapture)
+{}
 
 void PhotoOutput::SetCallback(std::shared_ptr<PhotoCallback> callback)
 {
@@ -141,12 +240,16 @@ sptr<IStreamCapture> PhotoOutput::GetStreamCapture()
 
 int32_t PhotoOutput::Capture(std::shared_ptr<PhotoCaptureSetting> photoCaptureSettings)
 {
-    return -1;
+    return streamCapture_->Capture(photoCaptureSettings->GetCaptureMetadataSetting());
 }
 
 int32_t PhotoOutput::Capture()
 {
-    return streamCapture_->Capture();
+    int32_t items = 0;
+    int32_t dataLength = 0;
+    std::shared_ptr<CameraMetadata> captureMetadataSetting =
+        std::make_shared<CameraMetadata>(items, dataLength);
+    return streamCapture_->Capture(captureMetadataSetting);
 }
 
 int32_t PhotoOutput::CancelCapture()

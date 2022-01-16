@@ -30,6 +30,8 @@ HCameraDevice::HCameraDevice(sptr<HCameraHostManager> &cameraHostManager,
     deviceHDICallback_ = deviceCallback;
     cameraID_ = cameraID;
     cameraAbility_ = nullptr;
+    streamOperator_ = nullptr;
+    isReleaseCameraDevice_ = false;
 }
 
 HCameraDevice::~HCameraDevice()
@@ -38,6 +40,17 @@ HCameraDevice::~HCameraDevice()
 std::string HCameraDevice::GetCameraId()
 {
     return cameraID_;
+}
+
+int32_t HCameraDevice::SetReleaseCameraDevice(bool isRelease)
+{
+    isReleaseCameraDevice_ = isRelease;
+    return CAMERA_OK;
+}
+
+bool HCameraDevice::IsReleaseCameraDevice()
+{
+    return isReleaseCameraDevice_;
 }
 
 std::shared_ptr<CameraMetadata> HCameraDevice::GetSettings()
@@ -113,7 +126,7 @@ int32_t HCameraDevice::UpdateSetting(const std::shared_ptr<CameraMetadata> &sett
         MEDIA_ERR_LOG("HCameraDevice::UpdateSetting settings is null");
         return CAMERA_INVALID_ARG;
     }
-    if (get_camera_metadata_item_count(settings->get()) > 0) {
+    if (GetCameraMetadataItemCount(settings->get()) > 0) {
         updateSettings_ = settings;
     }
     return CAMERA_OK;
@@ -171,7 +184,13 @@ int32_t HCameraDevice::GetStreamOperator(sptr<Camera::IStreamOperatorCallback> c
         MEDIA_ERR_LOG("HCameraDevice::GetStreamOperator failed with error Code:%{public}d", rc);
         return HdiToServiceError(rc);
     }
+    streamOperator_ = streamOperator;
     return CAMERA_OK;
+}
+
+sptr<Camera::IStreamOperator> HCameraDevice::GetStreamOperator()
+{
+    return streamOperator_;
 }
 
 int32_t HCameraDevice::OnError(const Camera::ErrorType type, const int32_t errorMsg)

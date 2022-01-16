@@ -49,8 +49,7 @@ class TestCameraMngerCallback : public CameraManagerCallback {
 public:
     explicit TestCameraMngerCallback(const char *testName);
     virtual ~TestCameraMngerCallback() = default;
-    virtual void OnCameraStatusChanged(const std::string &cameraID,
-                                       const CameraDeviceStatus cameraStatus) const override;
+    virtual void OnCameraStatusChanged(const CameraStatusInfo &cameraStatusInfo) const override;
     virtual void OnFlashlightStatusChanged(const std::string &cameraID,
                                            const FlashlightStatus flashStatus) const override;
 

@@ -17,6 +17,7 @@
 #define OHOS_CAMERA_PHOTO_OUTPUT_H
 
 #include <iostream>
+#include "camera_metadata_info.h"
 #include "capture_output.h"
 #include "istream_capture.h"
 
@@ -44,14 +45,19 @@ public:
         Rotation_180 = 180,
         Rotation_270 = 270
     };
-    PhotoCaptureSetting() = default;
+    PhotoCaptureSetting();
     virtual ~PhotoCaptureSetting() = default;
     QualityLevel GetQuaility();
-    void SetQuaility(QualityLevel qualityLevel);
+    void SetQuality(QualityLevel qualityLevel);
     RotationConfig GetRotation();
     void SetRotation(RotationConfig rotationvalue);
+    void SetGpsLocation(double latitude, double longitude);
     bool IsMirrored();
     void SetMirror(bool enable);
+    std::shared_ptr<CameraMetadata> GetCaptureMetadataSetting();
+
+private:
+    std::shared_ptr<CameraMetadata> captureMetadataSetting_;
 };
 
 class PhotoOutput : public CaptureOutput {
@@ -59,7 +65,6 @@ public:
     PhotoOutput(sptr<IStreamCapture> &streamCapture);
     sptr<IStreamCapture> GetStreamCapture();
     void SetCallback(std::shared_ptr<PhotoCallback> callback);
-    PhotoCaptureSetting &GetCaptureSetting();
     int32_t Capture(std::shared_ptr<PhotoCaptureSetting> photoCaptureSettings);
     int32_t Capture();
     int32_t CancelCapture();

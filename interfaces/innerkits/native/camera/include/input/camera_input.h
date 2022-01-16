@@ -27,8 +27,8 @@
 namespace OHOS {
 namespace CameraStandard {
 typedef struct {
-    uint32_t width;
     uint32_t height;
+    uint32_t width;
 } CameraPicSize;
 
 class ErrorCallback {
@@ -63,33 +63,22 @@ public:
 
 class CameraInput : public CaptureInput {
 public:
-    enum PhotoFormat {
-        JPEG_FORMAT = 0
-    };
-    enum VideoFormat {
-        YUV_FORMAT = 0,
-        H264_FORMAT,
-        H265_FORMAT
-    };
-
     CameraInput(sptr<ICameraDeviceService> &deviceObj, sptr<CameraInfo> &camera);
     ~CameraInput() {};
     void LockForControl();
     int32_t UnlockForControl();
-    std::vector<PhotoFormat> GetSupportedPhotoFormats();
-    std::vector<VideoFormat> GetSupportedVideoFormats();
-    bool IsPhotoFormatSupported(PhotoFormat photoFormat);
-    bool IsVideoFormatSupported(VideoFormat videoFormat);
-    std::vector<CameraPicSize *> GetSupportedSizesForPhoto(PhotoFormat format);
-    std::vector<CameraPicSize *> GetSupportedSizesForVideo(VideoFormat format);
-    std::vector<camera_exposure_mode_enum_t> GetSupportedExposureModes();
-    void SetExposureMode(camera_exposure_mode_enum_t exposureMode);
-    camera_exposure_mode_enum_t GetExposureMode();
+    std::vector<camera_format_t> GetSupportedPhotoFormats();
+    std::vector<camera_format_t> GetSupportedVideoFormats();
+    std::vector<camera_format_t> GetSupportedPreviewFormats();
+    std::vector<CameraPicSize> getSupportedSizes(camera_format_t format);
+    std::vector<camera_ae_mode_t> GetSupportedExposureModes();
+    void SetExposureMode(camera_ae_mode_t exposureMode);
+    camera_ae_mode_t GetExposureMode();
     void SetExposureCallback(std::shared_ptr<ExposureCallback> exposureCallback);
-    std::vector<camera_focus_mode_enum_t> GetSupportedFocusModes();
+    std::vector<camera_af_mode_t> GetSupportedFocusModes();
     void SetFocusCallback(std::shared_ptr<FocusCallback> focusCallback);
-    void SetFocusMode(camera_focus_mode_enum_t focusMode);
-    camera_focus_mode_enum_t GetFocusMode();
+    void SetFocusMode(camera_af_mode_t focusMode);
+    camera_af_mode_t GetFocusMode();
     std::vector<float> GetSupportedZoomRatioRange();
     float GetZoomRatio();
     void SetZoomRatio(float zoomRatio);

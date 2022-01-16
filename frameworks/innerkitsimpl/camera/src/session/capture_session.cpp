@@ -64,6 +64,30 @@ int32_t CaptureSession::AddOutput(sptr<CaptureOutput> &output)
     }
 }
 
+int32_t CaptureSession::RemoveInput(sptr<CaptureInput> &input)
+{
+    if (input == nullptr) {
+        MEDIA_ERR_LOG("CaptureSession::RemoveInput input is null");
+        return CAMERA_INVALID_ARG;
+    }
+    return captureSession_->RemoveInput(((sptr<CameraInput> &)input)->GetCameraDevice());
+}
+
+int32_t CaptureSession::RemoveOutput(sptr<CaptureOutput> &output)
+{
+    if (output == nullptr) {
+        MEDIA_ERR_LOG("CaptureSession::RemoveOutput output is null");
+        return CAMERA_INVALID_ARG;
+    }
+    if (output->GetType() == CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT) {
+        return captureSession_->RemoveOutput(((sptr<PhotoOutput> &)output)->GetStreamCapture());
+    } else if (output->GetType() == CAPTURE_OUTPUT_TYPE::PREVIEW_OUTPUT) {
+        return captureSession_->RemoveOutput(((sptr<PreviewOutput> &)output)->GetStreamRepeat());
+    } else {
+        return captureSession_->RemoveOutput(((sptr<VideoOutput> &)output)->GetStreamRepeat());
+    }
+}
+
 int32_t CaptureSession::Start()
 {
     return captureSession_->Start();

@@ -16,6 +16,7 @@
 #ifndef OHOS_CAMERA_ISTREAM_CAPTURE_H
 #define OHOS_CAMERA_ISTREAM_CAPTURE_H
 
+#include "camera_metadata_info.h"
 #include "iremote_broker.h"
 #include "istream_capture_callback.h"
 
@@ -23,7 +24,7 @@ namespace OHOS {
 namespace CameraStandard {
 class IStreamCapture : public IRemoteBroker {
 public:
-    virtual int32_t Capture() = 0;
+    virtual int32_t Capture(const std::shared_ptr<CameraMetadata> &captureSettings) = 0;
 
     virtual int32_t CancelCapture() = 0;
 

@@ -114,6 +114,16 @@ int32_t HCaptureSessionProxy::RemoveInput(sptr<ICameraDeviceService> cameraDevic
     MessageParcel reply;
     MessageOption option;
 
+    if (cameraDevice == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy RemoveInput cameraDevice is null");
+        return IPC_PROXY_ERR;
+    }
+
+    if (!data.WriteRemoteObject(cameraDevice->AsObject())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy RemoveInput write cameraDevice obj failed");
+        return IPC_PROXY_ERR;
+    }
+
     int error = Remote()->SendRequest(CAMERA_CAPTURE_SESSION_REMOVE_INPUT, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCaptureSessionProxy RemoveInput failed, error: %{public}d", error);

@@ -16,10 +16,6 @@
 #ifndef CAMERA_DEVICE_ABILITY_ITEMS_H
 #define CAMERA_DEVICE_ABILITY_ITEMS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef enum camera_ability_section {
     // Camera attribute information: position(facing), type, connection, description, sensor, lens description
     OHOS_CAMERA_PROPERTIES = 0,
@@ -130,6 +126,8 @@ typedef enum camera_device_metadata_tag {
     OHOS_CONTROL_AE_COMPENSATION_STEP,
     OHOS_CONTROL_AF_AVAILABLE_MODES,
     OHOS_CONTROL_AWB_AVAILABLE_MODES,
+    OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED,
+    OHOS_CONTROL_CAPTURE_MIRROR,
     OHOS_DEVICE_CONTROL_END,
 
     // Camera device image acquisition related
@@ -151,6 +149,7 @@ typedef enum camera_device_metadata_tag {
 
     // Camera flow control related
     OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS = OHOS_STREAM_ABILITY_START,
+    OHOS_STREAM_AVAILABLE_FORMATS,
     OHOS_STREAM_ABILITY_END,
 
     OHOS_JPEG_GPS_COORDINATES = OHOS_STREAM_JPEG_START,
@@ -182,6 +181,13 @@ typedef enum camera_type_enum {
     OHOS_CAMERA_TYPE_LOGICAL,
     OHOS_CAMERA_TYPE_UNSPECIFIED,
 } camera_type_enum_t;
+
+// OHOS_CAMERA_CONNECTION_TYPE
+typedef enum camera_connection_type {
+    OHOS_CAMERA_CONNECTION_TYPE_BUILTIN = 0,
+    OHOS_CAMERA_CONNECTION_TYPE_USB_PLUGIN,
+    OHOS_CAMERA_CONNECTION_TYPE_REMOTE,
+} camera_connection_type_t;
 
 // OHOS_EXPOSURE_MODE
 typedef enum camera_exposure_mode_enum {
@@ -271,8 +277,12 @@ typedef enum camera_histogram_mode {
     OHOS_CAMERA_HISTOGRAM_MODE_ON,
 } camera_histogram_mode_t;
 
-#ifdef __cplusplus
-}
-#endif
+// OHOS_STREAM_AVAILABLE_FORMATS
+typedef enum camera_format {
+    OHOS_CAMERA_FORMAT_RGBA_8888 = 1,
+    OHOS_CAMERA_FORMAT_YCBCR_420_888,
+    OHOS_CAMERA_FORMAT_YCRCB_420_SP,
+    OHOS_CAMERA_FORMAT_JPEG,
+} camera_format_t;
 
 #endif

@@ -16,6 +16,7 @@
 #include "input/camera_input.h"
 
 #include <cinttypes>
+#include <set>
 #include "camera_device_ability_items.h"
 #include "camera_util.h"
 #include "hcamera_device_callback_stub.h"
@@ -87,7 +88,7 @@ int32_t CameraInput::UnlockForControl()
         return CAMERA_INVALID_ARG;
     }
 
-    if (!get_camera_metadata_item_count(changedMetadata_->get())) {
+    if (!GetCameraMetadataItemCount(changedMetadata_->get())) {
         MEDIA_INFO_LOG("CameraInput::UnlockForControl No configuration to update");
         return CAMERA_OK;
     }
@@ -99,15 +100,15 @@ int32_t CameraInput::UnlockForControl()
     }
 
     std::shared_ptr<CameraMetadata> baseMetadata = cameraObj_->GetMetadata();
-    camera_metadata_item_entry_t *itemEntry = get_metadata_items(changedMetadata_->get());
-    uint8_t *data = get_metadata_data(changedMetadata_->get());
+    camera_metadata_item_entry_t *itemEntry = GetMetadataItems(changedMetadata_->get());
+    uint8_t *data = GetMetadataData(changedMetadata_->get());
     int32_t count = changedMetadata_->get()->item_count;
     int32_t length;
     for (int32_t i = 0; i < count; i++, itemEntry++) {
         bool status = false;
         camera_metadata_item_t item;
-        length = calculate_camera_metadata_item_data_size(itemEntry->data_type, itemEntry->count);
-        ret = find_camera_metadata_item(baseMetadata->get(), itemEntry->item, &item);
+        length = CalculateCameraMetadataItemDataSize(itemEntry->data_type, itemEntry->count);
+        ret = FindCameraMetadataItem(baseMetadata->get(), itemEntry->item, &item);
         if (ret == CAM_META_SUCCESS) {
             status = baseMetadata->updateEntry(itemEntry->item,
                                                (length == 0) ? itemEntry->data.value : (data + itemEntry->data.offset),
@@ -134,93 +135,135 @@ void CameraInput::getVector(DataPtr data, size_t count, Vec &vect, VecType dataT
     }
 }
 
-std::vector<CameraInput::PhotoFormat> CameraInput::GetSupportedPhotoFormats()
+std::vector<camera_format_t> CameraInput::GetSupportedPhotoFormats()
 {
-    std::vector<CameraInput::PhotoFormat> formatList;
-    formatList.emplace_back(PhotoFormat::JPEG_FORMAT);
-    return formatList;
-}
-
-std::vector<CameraInput::VideoFormat> CameraInput::GetSupportedVideoFormats()
-{
-    std::vector<CameraInput::VideoFormat> formatList;
-    formatList.emplace_back(VideoFormat::YUV_FORMAT);
-    formatList.emplace_back(VideoFormat::H264_FORMAT);
-    formatList.emplace_back(VideoFormat::H265_FORMAT);
-    return formatList;
-}
-
-bool CameraInput::IsPhotoFormatSupported(CameraInput::PhotoFormat photoFormat)
-{
-    bool result = false;
-
-    switch (photoFormat) {
-        case PhotoFormat::JPEG_FORMAT:
-            result = true;
-            break;
-
-        default:
-            break;
-    }
-    return result;
-}
-
-bool CameraInput::IsVideoFormatSupported(CameraInput::VideoFormat videoFormat)
-{
-    bool result = false;
-
-    switch (videoFormat) {
-        case VideoFormat::YUV_FORMAT:
-        case VideoFormat::H264_FORMAT:
-        case VideoFormat::H265_FORMAT:
-            result = true;
-            break;
-
-        default:
-            break;
-    }
-    return result;
-}
-
-std::vector<CameraPicSize *> CameraInput::GetSupportedSizesForPhoto(CameraInput::PhotoFormat photoFormat)
-{
-    std::vector<CameraPicSize *> result = {};
-    CameraPicSize *cameraPicSize = (CameraPicSize *)malloc(sizeof(CameraPicSize));
-    if (cameraPicSize != nullptr) {
-        cameraPicSize->height = CAMERA_PHOTO_HEIGHT;
-        cameraPicSize->width = CAMERA_PHOTO_WIDTH;
-        result.emplace_back(cameraPicSize);
-    }
-    return result;
-}
-
-std::vector<CameraPicSize *> CameraInput::GetSupportedSizesForVideo(CameraInput::VideoFormat videoFormat)
-{
-    std::vector<CameraPicSize *> result = {};
-    CameraPicSize *cameraPicSize = (CameraPicSize *)malloc(sizeof(CameraPicSize));
-    if (cameraPicSize != nullptr) {
-        cameraPicSize->height = CAMERA_VIDEO_HEIGHT;
-        cameraPicSize->width = CAMERA_VIDEO_WIDTH;
-        result.emplace_back(cameraPicSize);
-    }
-    return result;
-}
-
-std::vector<camera_exposure_mode_enum_t> CameraInput::GetSupportedExposureModes()
-{
-    std::vector<camera_exposure_mode_enum_t> supportedExposureModes;
+    int32_t unitLen = 3;
+    camera_format_t format;
+    std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(metadata->get(), OHOS_ABILITY_DEVICE_AVAILABLE_EXPOSUREMODES, &item);
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to get stream configuration with return code %{public}d", ret);
+        return {};
+    }
+    if (item.count % unitLen != 0) {
+        MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
+        return {};
+    }
+    for (uint32_t index = 0; index < item.count; index += unitLen) {
+        format = static_cast<camera_format_t>(item.data.i32[index]);
+        if (format == OHOS_CAMERA_FORMAT_JPEG) {
+            formats.insert(format);
+        }
+    }
+    return std::vector<camera_format_t>(formats.begin(), formats.end());
+}
+
+std::vector<camera_format_t> CameraInput::GetSupportedVideoFormats()
+{
+    int32_t unitLen = 3;
+    camera_format_t format;
+    std::set<camera_format_t> formats;
+    std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
+    camera_metadata_item_t item;
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to get stream configuration with return code %{public}d", ret);
+        return {};
+    }
+    if (item.count % unitLen != 0) {
+        MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
+        return {};
+    }
+    for (uint32_t index = 0; index < item.count; index += unitLen) {
+        format = static_cast<camera_format_t>(item.data.i32[index]);
+        if (format != OHOS_CAMERA_FORMAT_JPEG) {
+            formats.insert(format);
+        }
+    }
+    return std::vector<camera_format_t>(formats.begin(), formats.end());
+}
+
+std::vector<camera_format_t> CameraInput::GetSupportedPreviewFormats()
+{
+    int32_t unitLen = 3;
+    camera_format_t format;
+    std::set<camera_format_t> formats;
+    std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
+    camera_metadata_item_t item;
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to get stream configuration with return code %{public}d", ret);
+        return {};
+    }
+    if (item.count % unitLen != 0) {
+        MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
+        return {};
+    }
+    for (uint32_t index = 0; index < item.count; index += unitLen) {
+        format = static_cast<camera_format_t>(item.data.i32[index]);
+        if (format != OHOS_CAMERA_FORMAT_JPEG) {
+            formats.insert(format);
+        }
+    }
+    return std::vector<camera_format_t>(formats.begin(), formats.end());
+}
+
+std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format)
+{
+    int32_t unitLen = 3;
+    int32_t widthOffset = 1;
+    int32_t heightOffset = 2;
+    camera_metadata_item_t item;
+    std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to get stream configuration with return code %{public}d", ret);
+        return {};
+    }
+    if (item.count % unitLen != 0) {
+        MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
+        return {};
+    }
+    int32_t count = 0;
+    for (uint32_t index = 0; index < item.count; index += unitLen) {
+        if (item.data.i32[index] == format) {
+            count++;
+        }
+    }
+    if (count == 0) {
+        MEDIA_ERR_LOG("Format: %{public}d is not found in stream configuration", format);
+        return {};
+    }
+
+    std::vector<CameraPicSize> sizes(count);
+    CameraPicSize *size = &sizes[0];
+    for (uint32_t index = 0; index < item.count; index += unitLen) {
+        if (item.data.i32[index] == format) {
+            size->width = item.data.i32[index + widthOffset];
+            size->height = item.data.i32[index + heightOffset];
+            size++;
+        }
+    }
+    return sizes;
+}
+
+std::vector<camera_ae_mode_t> CameraInput::GetSupportedExposureModes()
+{
+    std::vector<camera_ae_mode_t> supportedExposureModes;
+    std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
+    camera_metadata_item_t item;
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AE_AVAILABLE_MODES, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetSupportedExposureModes Failed with return code %{public}d", ret);
         return supportedExposureModes;
     }
-    getVector(item.data.u8, item.count, supportedExposureModes, camera_exposure_mode_enum_t(0));
+    getVector(item.data.u8, item.count, supportedExposureModes, camera_ae_mode_t(0));
     return supportedExposureModes;
 }
 
-void CameraInput::SetExposureMode(camera_exposure_mode_enum_t exposureMode)
+void CameraInput::SetExposureMode(camera_ae_mode_t exposureMode)
 {
     if (changedMetadata_ == nullptr) {
         MEDIA_ERR_LOG("CameraInput::SetExposureMode Need to call LockForControl() before setting camera properties");
@@ -230,11 +273,11 @@ void CameraInput::SetExposureMode(camera_exposure_mode_enum_t exposureMode)
     uint32_t count = 1;
     uint8_t exposure = exposureMode;
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(changedMetadata_->get(), OHOS_CONTROL_EXPOSUREMODE, &item);
+    int ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AE_MODE, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
-        status = changedMetadata_->addEntry(OHOS_CONTROL_EXPOSUREMODE, &exposure, count);
+        status = changedMetadata_->addEntry(OHOS_CONTROL_AE_MODE, &exposure, count);
     } else if (ret == CAM_META_SUCCESS) {
-        status = changedMetadata_->updateEntry(OHOS_CONTROL_EXPOSUREMODE, &exposure, count);
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_AE_MODE, &exposure, count);
     }
 
     if (!status) {
@@ -244,16 +287,16 @@ void CameraInput::SetExposureMode(camera_exposure_mode_enum_t exposureMode)
     return;
 }
 
-camera_exposure_mode_enum_t CameraInput::GetExposureMode()
+camera_ae_mode_t CameraInput::GetExposureMode()
 {
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(metadata->get(), OHOS_CONTROL_EXPOSUREMODE, &item);
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AE_MODE, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetExposureMode Failed with return code %{public}d", ret);
-        return OHOS_CAMERA_EXPOSURE_MODE_MANUAL;
+        return OHOS_CAMERA_AE_MODE_OFF;
     }
-    return static_cast<camera_exposure_mode_enum_t>(item.data.u8[0]);
+    return static_cast<camera_ae_mode_t>(item.data.u8[0]);
 }
 
 void CameraInput::SetExposureCallback(std::shared_ptr<ExposureCallback> exposureCallback)
@@ -262,17 +305,17 @@ void CameraInput::SetExposureCallback(std::shared_ptr<ExposureCallback> exposure
     return;
 }
 
-std::vector<camera_focus_mode_enum_t> CameraInput::GetSupportedFocusModes()
+std::vector<camera_af_mode_t> CameraInput::GetSupportedFocusModes()
 {
-    std::vector<camera_focus_mode_enum_t> supportedFocusModes;
+    std::vector<camera_af_mode_t> supportedFocusModes;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(metadata->get(), OHOS_ABILITY_DEVICE_AVAILABLE_FOCUSMODES, &item);
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AF_AVAILABLE_MODES, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetSupportedFocusModes Failed with return code %{public}d", ret);
         return supportedFocusModes;
     }
-    getVector(item.data.u8, item.count, supportedFocusModes, camera_focus_mode_enum_t(0));
+    getVector(item.data.u8, item.count, supportedFocusModes, camera_af_mode_t(0));
     return supportedFocusModes;
 }
 
@@ -282,7 +325,7 @@ void CameraInput::SetFocusCallback(std::shared_ptr<FocusCallback> focusCallback)
     return;
 }
 
-void CameraInput::SetFocusMode(camera_focus_mode_enum_t focusMode)
+void CameraInput::SetFocusMode(camera_af_mode_t focusMode)
 {
     if (changedMetadata_ == nullptr) {
         MEDIA_ERR_LOG("CameraInput::SetFocusMode Need to call LockForControl() before setting camera properties");
@@ -293,11 +336,11 @@ void CameraInput::SetFocusMode(camera_focus_mode_enum_t focusMode)
     uint32_t count = 1;
     uint8_t focus = focusMode;
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(changedMetadata_->get(), OHOS_CONTROL_FOCUSMODE, &item);
+    int ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AF_MODE, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
-        status = changedMetadata_->addEntry(OHOS_CONTROL_FOCUSMODE, &focus, count);
+        status = changedMetadata_->addEntry(OHOS_CONTROL_AF_MODE, &focus, count);
     } else if (ret == CAM_META_SUCCESS) {
-        status = changedMetadata_->updateEntry(OHOS_CONTROL_FOCUSMODE, &focus, count);
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_AF_MODE, &focus, count);
     }
 
     if (!status) {
@@ -306,16 +349,16 @@ void CameraInput::SetFocusMode(camera_focus_mode_enum_t focusMode)
     return;
 }
 
-camera_focus_mode_enum_t CameraInput::GetFocusMode()
+camera_af_mode_t CameraInput::GetFocusMode()
 {
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(metadata->get(), OHOS_CONTROL_FOCUSMODE, &item);
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AF_MODE, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetFocusMode Failed with return code %{public}d", ret);
-        return OHOS_CAMERA_FOCUS_MODE_MANUAL;
+        return OHOS_CAMERA_AF_MODE_OFF;
     }
-    return static_cast<camera_focus_mode_enum_t>(item.data.u8[0]);
+    return static_cast<camera_af_mode_t>(item.data.u8[0]);
 }
 
 std::vector<float> CameraInput::GetSupportedZoomRatioRange()
@@ -323,7 +366,7 @@ std::vector<float> CameraInput::GetSupportedZoomRatioRange()
     std::vector<float> zoomRatioRange;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(metadata->get(), OHOS_ABILITY_ZOOM_RATIO_RANGE, &item);
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_ZOOM_RATIO_RANGE, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetSupportedZoomRatioRange Failed with return code %{public}d", ret);
         return zoomRatioRange;
@@ -336,7 +379,7 @@ float CameraInput::GetZoomRatio()
 {
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(metadata->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetZoomRatio Failed with return code %{public}d", ret);
         return 0;
@@ -354,7 +397,7 @@ void CameraInput::SetZoomRatio(float zoomRatio)
     bool status = false;
     uint32_t count = 1;
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(changedMetadata_->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
+    int ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = changedMetadata_->addEntry(OHOS_CONTROL_ZOOM_RATIO, &zoomRatio, count);
     } else if (ret == CAM_META_SUCCESS) {
@@ -372,7 +415,7 @@ std::vector<camera_flash_mode_enum_t> CameraInput::GetSupportedFlashModes()
     std::vector<camera_flash_mode_enum_t> supportedFlashModes;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(metadata->get(), OHOS_ABILITY_DEVICE_AVAILABLE_FLASHMODES, &item);
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_DEVICE_AVAILABLE_FLASHMODES, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetSupportedFlashModes Failed with return code %{public}d", ret);
         return supportedFlashModes;
@@ -385,7 +428,7 @@ camera_flash_mode_enum_t CameraInput::GetFlashMode()
 {
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(metadata->get(), OHOS_CONTROL_FLASHMODE, &item);
+    int ret = FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_FLASHMODE, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetFlashMode Failed with return code %{public}d", ret);
         return OHOS_CAMERA_FLASH_MODE_CLOSE;
@@ -404,7 +447,7 @@ void CameraInput::SetFlashMode(camera_flash_mode_enum_t flashMode)
     uint32_t count = 1;
     uint8_t flash = flashMode;
     camera_metadata_item_t item;
-    int ret = find_camera_metadata_item(changedMetadata_->get(), OHOS_CONTROL_FLASHMODE, &item);
+    int ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_FLASHMODE, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = changedMetadata_->addEntry(OHOS_CONTROL_FLASHMODE, &flash, count);
     } else if (ret == CAM_META_SUCCESS) {

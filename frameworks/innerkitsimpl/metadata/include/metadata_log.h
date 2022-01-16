@@ -39,7 +39,12 @@
     } while (0)
 #endif
 
+#ifdef DEBUG_BUILD
 #define METADATA_DEBUG_LOG(fmt, ...) DECORATOR_HILOG(HILOG_DEBUG, fmt, ##__VA_ARGS__)
+#else
+#define METADATA_DEBUG_LOG(fmt, ...)
+#endif
+
 #define METADATA_ERR_LOG(fmt, ...) DECORATOR_HILOG(HILOG_ERROR, fmt, ##__VA_ARGS__)
 #define METADATA_WARNING_LOG(fmt, ...) DECORATOR_HILOG(HILOG_WARN, fmt, ##__VA_ARGS__)
 #define METADATA_INFO_LOG(fmt, ...) DECORATOR_HILOG(HILOG_INFO, fmt, ##__VA_ARGS__)

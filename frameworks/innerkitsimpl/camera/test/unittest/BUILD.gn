@@ -13,12 +13,22 @@
 
 import("//build/test.gni")
 
-module_output_path = "camera_standard/camera_framework"
+module_output_path = "camera_standard/camera_framework_unittest"
 
 ohos_unittest("camera_framework_unittest") {
   module_out_path = module_output_path
   include_dirs = [
     "./include",
+    "//drivers/adapter/uhdf2/osal/include",
+    "//drivers/adapter/uhdf2/include/hdi",
+    "//drivers/framework/include/utils",
+    "//drivers/peripheral/camera/interfaces/include",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/device/include",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/operator/include",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host/include",
+    "//foundation/graphic/standard/frameworks/surface/include",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
@@ -26,35 +36,17 @@ ohos_unittest("camera_framework_unittest") {
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include",
     "//foundation/multimedia/camera_standard/interfaces/innerkits/native/camera/include",
     "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test",
-    "//foundation/graphic/standard/frameworks/surface/include",
-    "//utils/system/safwk/native/include",
-    "//drivers/framework/include/utils",
-    "//drivers/adapter/uhdf2/osal/include",
-    "//drivers/adapter/uhdf2/include/hdi",
-    "//drivers/peripheral/display/interfaces/include",
-    "//drivers/peripheral/camera/interfaces/include",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/device",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/operator",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host",
-    "//drivers/peripheral/camera/hal/device_manager/include",
-    "//drivers/peripheral/camera/hal/include",
-    "//drivers/peripheral/camera/hal/hdi_impl/include",
-    "//drivers/peripheral/camera/hal/hdi_impl/include/camera_host",
-    "//drivers/peripheral/camera/hal/hdi_impl/include/camera_device",
-    "//drivers/peripheral/camera/hal/hdi_impl/include/stream_operator",
-    "//drivers/peripheral/camera/hal/hdi_impl/include/offline_stream_operator",
-    "//drivers/peripheral/camera/hal/pipeline_core/utils",
-    "//drivers/peripheral/camera/hal/pipeline_core/include",
-    "//drivers/peripheral/camera/hal/pipeline_core/pipeline_impl/include",
-    "//drivers/peripheral/camera/hal/pipeline_core/host_stream/include",
-    "//drivers/peripheral/camera/hal/pipeline_core/ipp/include",
   ]
+
+  cflags = [ "-fPIC" ]
+  if (device_name == "baltimore") {
+    cflags += [ "-DBALTIMORE_CAMERA" ]
+  }
+  cflags_cc = cflags
 
   sources = [
     "//foundation/multimedia/camera_standard/interfaces/innerkits/native/test/test_common.cpp",
-    "src/camera_framework_test.cpp",
+    "src/camera_framework_unittest.cpp",
   ]
 
   deps = [
@@ -62,11 +54,11 @@ ohos_unittest("camera_framework_unittest") {
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera:camera_framework",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
     "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
+    "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
-    "multimedia_media_standard:media_client",
+    "safwk:system_ability_fwk",
   ]
 }

@@ -16,6 +16,7 @@
 #ifndef OHOS_CAMERA_UTIL_H
 #define OHOS_CAMERA_UTIL_H
 
+#include "display_type.h"
 #include <limits.h>
 #include "types.h"
 
@@ -41,13 +42,6 @@ static const std::int32_t PHOTO_CAPTURE_ID_END = (2 * (INT_MAX / CAPTURE_TYPE_CO
 static const std::int32_t VIDEO_CAPTURE_ID_START = PHOTO_CAPTURE_ID_END + 1;
 static const std::int32_t VIDEO_CAPTURE_ID_END = INT_MAX;
 
-
-static const std::int32_t CAMERA_PHOTO_HEIGHT = 720;
-static const std::int32_t CAMERA_PHOTO_WIDTH = 1280;
-
-static const std::int32_t CAMERA_VIDEO_HEIGHT = 720;
-static const std::int32_t CAMERA_VIDEO_WIDTH = 1280;
-
 enum CamServiceError {
     CAMERA_OK = 0,
     CAMERA_ALLOC_ERROR,
@@ -63,9 +57,11 @@ enum CamServiceError {
     CAMERA_UNKNOWN_ERROR
 };
 
+extern std::unordered_map<int32_t, int32_t> g_cameraToPixelFormat;
+
 int32_t HdiToServiceError(Camera::CamRetCode ret);
 
-bool IsValidSize(int32_t width, int32_t height, std::vector<std::pair<int32_t, int32_t>> validSizes);
+bool IsValidSize(std::shared_ptr<CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height);
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_UTIL_H

@@ -15,7 +15,6 @@
 #ifndef CAMERA_VIDEO_CAPTURE_H
 #define CAMERA_VIDEO_CAPTURE_H
 
-#include <iostream>
 #include "test_common.h"
 
 namespace OHOS {
@@ -55,12 +54,18 @@ public:
     void Release();
 private:
     int32_t AddOutputbyState();
+    int32_t InitCameraFormatAndResolution(sptr<CameraInput> &cameraInput);
     int32_t previewWidth_;
     int32_t previewHeight_;
+    int32_t previewWidth2_;
+    int32_t previewHeight2_;
     int32_t photoWidth_;
     int32_t photoHeight_;
     int32_t videoWidth_;
     int32_t videoHeight_;
+    int32_t previewFormat_;
+    int32_t photoFormat_;
+    int32_t videoFormat_;
     int32_t fd_;
 
     sptr<CameraManager> cameraManager_;

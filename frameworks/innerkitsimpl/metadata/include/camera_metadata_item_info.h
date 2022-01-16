@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
+#ifndef CAMERA_METADATA_ITEM_INFO_H
+#define CAMERA_METADATA_ITEM_INFO_H
+
 #include "camera_metadata_operator.h"
 
-#include <stdint.h>
-
-const static size_t ohos_camera_metadata_type_size[META_NUM_TYPES] = {
+namespace OHOS {
+namespace CameraStandard {
+const static size_t OHOS_CAMERA_METADATA_TYPE_SIZE[META_NUM_TYPES] = {
     [META_TYPE_BYTE]     = sizeof(uint8_t),
     [META_TYPE_INT32]    = sizeof(int32_t),
     [META_TYPE_UINT32]   = sizeof(uint32_t),
@@ -27,7 +30,7 @@ const static size_t ohos_camera_metadata_type_size[META_NUM_TYPES] = {
     [META_TYPE_RATIONAL] = sizeof(camera_rational_t)
 };
 
-static uint32_t ohos_camera_section_bounds[OHOS_SECTION_COUNT][2] = {
+static uint32_t g_ohosCameraSectionBounds[OHOS_SECTION_COUNT][2] = {
     [OHOS_SECTION_CAMERA_PROPERTIES]  = {OHOS_CAMERA_PROPERTIES_START, OHOS_CAMERA_PROPERTIES_END},
     [OHOS_SECTION_CAMERA_SENSOR]      = {OHOS_CAMERA_SENSOR_START, OHOS_CAMERA_SENSOR_END},
     [OHOS_SECTION_CAMERA_SENSOR_INFO] = {OHOS_CAMERA_SENSOR_INFO_START, OHOS_CAMERA_SENSOR_INFO_END},
@@ -41,18 +44,18 @@ static uint32_t ohos_camera_section_bounds[OHOS_SECTION_COUNT][2] = {
     [OHOS_SECTION_STREAM_JPEG]        = {OHOS_STREAM_JPEG_START, OHOS_STREAM_JPEG_END},
 };
 
-static item_info_t ohos_camera_properties[OHOS_CAMERA_PROPERTIES_END - OHOS_CAMERA_PROPERTIES_START] = {
+static item_info_t g_ohosCameraProperties[OHOS_CAMERA_PROPERTIES_END - OHOS_CAMERA_PROPERTIES_START] = {
     [OHOS_ABILITY_CAMERA_POSITION - OHOS_CAMERA_PROPERTIES_START] = {"cameraPosition", META_TYPE_BYTE, 1},
     [OHOS_ABILITY_CAMERA_TYPE - OHOS_CAMERA_PROPERTIES_START] = {"cameraType", META_TYPE_BYTE, 1},
     [OHOS_ABILITY_CAMERA_CONNECTION_TYPE - OHOS_CAMERA_PROPERTIES_START] = {"cameraConnectionType", META_TYPE_BYTE, 1},
 };
 
-static item_info_t ohos_camera_sensor[OHOS_CAMERA_SENSOR_END - OHOS_CAMERA_SENSOR_START] = {
+static item_info_t g_ohosCameraSensor[OHOS_CAMERA_SENSOR_END - OHOS_CAMERA_SENSOR_START] = {
     [OHOS_SENSOR_EXPOSURE_TIME - OHOS_CAMERA_SENSOR_START] = {"exposureTime", META_TYPE_INT64, 1},
     [OHOS_SENSOR_COLOR_CORRECTION_GAINS - OHOS_CAMERA_SENSOR_START] = {"colorCorrectuonGain", META_TYPE_FLOAT, 1},
 };
 
-static item_info_t ohos_camera_sensor_info[OHOS_CAMERA_SENSOR_INFO_END - OHOS_CAMERA_SENSOR_INFO_START] = {
+static item_info_t g_ohosCameraSensorInfo[OHOS_CAMERA_SENSOR_INFO_END - OHOS_CAMERA_SENSOR_INFO_START] = {
     [OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE - OHOS_CAMERA_SENSOR_INFO_START] = {"activeArraySize", META_TYPE_INT32, -1},
     [OHOS_SENSOR_INFO_SENSITIVITY_RANGE - OHOS_CAMERA_SENSOR_INFO_START] = {"sensitivityRange", META_TYPE_INT32, -1},
     [OHOS_SENSOR_INFO_MAX_FRAME_DURATION - OHOS_CAMERA_SENSOR_INFO_START] = {"maxFrameDuration", META_TYPE_INT64, 1},
@@ -60,7 +63,7 @@ static item_info_t ohos_camera_sensor_info[OHOS_CAMERA_SENSOR_INFO_END - OHOS_CA
     [OHOS_SENSOR_INFO_PIXEL_ARRAY_SIZE - OHOS_CAMERA_SENSOR_INFO_START] = {"pixelArraySize", META_TYPE_INT32, -1},
 };
 
-static item_info_t ohos_camera_statistics[OHOS_CAMERA_STATISTICS_END - OHOS_CAMERA_STATISTICS_START] = {
+static item_info_t g_ohosCameraStatistics[OHOS_CAMERA_STATISTICS_END - OHOS_CAMERA_STATISTICS_START] = {
     [OHOS_STATISTICS_FACE_DETECT_MODE - OHOS_CAMERA_STATISTICS_START] = {"faceDetectMode", META_TYPE_BYTE, 1},
     [OHOS_STATISTICS_HISTOGRAM_MODE - OHOS_CAMERA_STATISTICS_START] = {"histogramMode", META_TYPE_BYTE, 1},
     [OHOS_STATISTICS_FACE_IDS - OHOS_CAMERA_STATISTICS_START] = {"faceIds", META_TYPE_INT32, -1},
@@ -69,7 +72,7 @@ static item_info_t ohos_camera_statistics[OHOS_CAMERA_STATISTICS_END - OHOS_CAME
     [OHOS_STATISTICS_FACE_SCORES - OHOS_CAMERA_STATISTICS_START] = {"faceScores", META_TYPE_BYTE, -1},
 };
 
-static item_info_t ohos_camera_control[OHOS_DEVICE_CONTROL_END - OHOS_DEVICE_CONTROL_START] = {
+static item_info_t g_ohosCameraControl[OHOS_DEVICE_CONTROL_END - OHOS_DEVICE_CONTROL_START] = {
     [OHOS_CONTROL_AE_ANTIBANDING_MODE - OHOS_DEVICE_CONTROL_START] = {"aeAntibandingMode", META_TYPE_BYTE, 1},
     [OHOS_CONTROL_AE_EXPOSURE_COMPENSATION - OHOS_DEVICE_CONTROL_START] =
         {"aeExposureCompensation", META_TYPE_INT32, 1},
@@ -91,35 +94,38 @@ static item_info_t ohos_camera_control[OHOS_DEVICE_CONTROL_END - OHOS_DEVICE_CON
     [OHOS_CONTROL_AE_COMPENSATION_STEP - OHOS_DEVICE_CONTROL_START] = {"aeCompensationStep", META_TYPE_RATIONAL, 1},
     [OHOS_CONTROL_AF_AVAILABLE_MODES - OHOS_DEVICE_CONTROL_START] = {"afAvailableModes", META_TYPE_BYTE, -1},
     [OHOS_CONTROL_AWB_AVAILABLE_MODES - OHOS_DEVICE_CONTROL_START] = {"awbAvailableModes", META_TYPE_BYTE, -1},
+    [OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED - OHOS_DEVICE_CONTROL_START] = {"mirrorSupported", META_TYPE_BYTE, 1},
+    [OHOS_CONTROL_CAPTURE_MIRROR - OHOS_DEVICE_CONTROL_START] = {"mirror", META_TYPE_BYTE, 1},
 };
 
-static item_info_t ohos_device_exposure[OHOS_DEVICE_EXPOSURE_END - OHOS_DEVICE_EXPOSURE_START] = {
+static item_info_t g_ohosDeviceExposure[OHOS_DEVICE_EXPOSURE_END - OHOS_DEVICE_EXPOSURE_START] = {
     [OHOS_ABILITY_DEVICE_AVAILABLE_EXPOSUREMODES - OHOS_DEVICE_EXPOSURE_START] =
         {"exposureAvailableModes", META_TYPE_BYTE, -1},
     [OHOS_CONTROL_EXPOSUREMODE - OHOS_DEVICE_EXPOSURE_START] = {"exposureMode", META_TYPE_BYTE, 1},
 };
 
-static item_info_t ohos_device_focus[OHOS_DEVICE_FOCUS_END - OHOS_DEVICE_FOCUS_START] = {
+static item_info_t g_ohosDeviceFocus[OHOS_DEVICE_FOCUS_END - OHOS_DEVICE_FOCUS_START] = {
     [OHOS_ABILITY_DEVICE_AVAILABLE_FOCUSMODES - OHOS_DEVICE_FOCUS_START] = {"focusAvailablesModes", META_TYPE_BYTE, -1},
     [OHOS_CONTROL_FOCUSMODE - OHOS_DEVICE_FOCUS_START] = {"focusMode", META_TYPE_BYTE, 1},
 };
 
-static item_info_t ohos_device_flash[OHOS_DEVICE_FLASH_END - OHOS_DEVICE_FLASH_START] = {
+static item_info_t g_ohosDeviceFlash[OHOS_DEVICE_FLASH_END - OHOS_DEVICE_FLASH_START] = {
     [OHOS_ABILITY_DEVICE_AVAILABLE_FLASHMODES - OHOS_DEVICE_FLASH_START] = {"flashAvailablesModes", META_TYPE_BYTE, -1},
     [OHOS_CONTROL_FLASHMODE - OHOS_DEVICE_FLASH_START] = {"flashMode", META_TYPE_BYTE, 1},
 };
 
-static item_info_t ohos_device_zoom[OHOS_DEVICE_ZOOM_END - OHOS_DEVICE_ZOOM_START] = {
+static item_info_t g_ohosDeviceZoom[OHOS_DEVICE_ZOOM_END - OHOS_DEVICE_ZOOM_START] = {
     [OHOS_ABILITY_ZOOM_RATIO_RANGE - OHOS_DEVICE_ZOOM_START] = {"zoomRange", META_TYPE_FLOAT, -1},
     [OHOS_CONTROL_ZOOM_RATIO - OHOS_DEVICE_ZOOM_START] = {"zoomRatio", META_TYPE_FLOAT, 1},
 };
 
-static item_info_t ohos_stream_ability[OHOS_STREAM_ABILITY_END - OHOS_STREAM_ABILITY_START] = {
+static item_info_t g_ohosStreamAbility[OHOS_STREAM_ABILITY_END - OHOS_STREAM_ABILITY_START] = {
     [OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS - OHOS_STREAM_ABILITY_START] =
         {"streamAvailableConfigurations", META_TYPE_INT32, -1},
+    [OHOS_STREAM_AVAILABLE_FORMATS - OHOS_STREAM_ABILITY_START] = {"streamAvailableFormats", META_TYPE_INT32, -1},
 };
 
-static item_info_t ohos_stream_jpeg[OHOS_STREAM_JPEG_END - OHOS_STREAM_JPEG_START] = {
+static item_info_t g_ohosStreamJpeg[OHOS_STREAM_JPEG_END - OHOS_STREAM_JPEG_START] = {
     [OHOS_JPEG_GPS_COORDINATES - OHOS_STREAM_JPEG_START] = {"gpsCoordinates", META_TYPE_DOUBLE, -1},
     [OHOS_JPEG_GPS_PROCESSING_METHOD - OHOS_STREAM_JPEG_START] = {"gpsProcessingMethod", META_TYPE_BYTE, 1},
     [OHOS_JPEG_GPS_TIMESTAMP - OHOS_STREAM_JPEG_START] = {"gpsTimestamp", META_TYPE_INT64, 1},
@@ -132,16 +138,19 @@ static item_info_t ohos_stream_jpeg[OHOS_STREAM_JPEG_END - OHOS_STREAM_JPEG_STAR
     [OHOS_JPEG_SIZE - OHOS_STREAM_JPEG_START] = {"size", META_TYPE_INT32, 1},
 };
 
-const static item_info_t *ohos_item_info[OHOS_SECTION_COUNT] = {
-    ohos_camera_properties,
-    ohos_camera_sensor,
-    ohos_camera_sensor_info,
-    ohos_camera_statistics,
-    ohos_camera_control,
-    ohos_device_exposure,
-    ohos_device_focus,
-    ohos_device_flash,
-    ohos_device_zoom,
-    ohos_stream_ability,
-    ohos_stream_jpeg,
+const static item_info_t *g_ohosItemInfo[OHOS_SECTION_COUNT] = {
+    g_ohosCameraProperties,
+    g_ohosCameraSensor,
+    g_ohosCameraSensorInfo,
+    g_ohosCameraStatistics,
+    g_ohosCameraControl,
+    g_ohosDeviceExposure,
+    g_ohosDeviceFocus,
+    g_ohosDeviceFlash,
+    g_ohosDeviceZoom,
+    g_ohosStreamAbility,
+    g_ohosStreamJpeg,
 };
+} // namespace CameraStandard
+} // namespace OHOS
+#endif /* CAMERA_METADATA_ITEM_INFO_H */

@@ -27,6 +27,7 @@ public:
                                 MessageParcel &reply, MessageOption &option) override;
 
 public:
+    int HandleCapture(MessageParcel &data);
     int HandleSetCallback(MessageParcel &data);
 };
 } // namespace CameraStandard

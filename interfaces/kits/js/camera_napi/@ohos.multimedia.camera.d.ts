@@ -1,567 +1,935 @@
 /*
-* Copyright (C) 2021 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
-import {Callback, ErrorCallback, AsyncCallback} from './basic';
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import {ErrorCallback, AsyncCallback} from './basic';
+import Context from './@ohos.ability';
 
 /**
  * @name camera
- * @since 6
- * @sysCap SystemCapability.Multimedia.Camera
- * @import import camera from '@ohos.Multimedia.Camera';
- * @permission
+ * @SysCap SystemCapability.Multimedia.Camera
+ * @devices phone, tablet, wearable, car
+ * @since 8
  */
 declare namespace camera {
-  /**
-   * Create the Camera instance to manage camera.
-   * @sysCap SystemCapability.Multimedia.Camera
-   * @devices
-   */
-  function createCamera(id: string): Camera;
 
   /**
-   * Gets the list of available Camera IDs.
-   * @sysCap SystemCapability.Multimedia.Camera
-   * @devices
+   * Creates a CameraManager instance.
+   * @param context Current application context.
+   * @return CameraManager instance.
+   * @since 8
    */
-  function getCameraIds(callback: AsyncCallback<CameraIdList>): void;
+  function getCameraManager(context: Context, callback: AsyncCallback<CameraManager>): void;
+  function getCameraManager(context: Context): Promise<CameraManager>;
 
   /**
-   * Gets the list of available Camera IDs.
-   * @sysCap SystemCapability.Multimedia.Camera
-   * @devices
+   * Enum for camera status.
+   * @since 8
    */
-  function getCameraIds(): Promise<CameraIdList>;
+  enum CameraStatus {
+    /**
+     * Appear status.
+     * @since 8
+     */
+    CAMERA_STATUS_APPEAR = 0,
+    /**
+     * Disappear status.
+     * @since 8
+     */
+    CAMERA_STATUS_DISAPPEAR,
+    /**
+     * Available status.
+     * @since 8
+     */
+    CAMERA_STATUS_AVAILABLE,
+    /**
+     * Unavailable status.
+     * @since 8
+     */
+    CAMERA_STATUS_UNAVAILABLE
+  }
 
+  /**
+   * Camera manager object.
+   * @since 8
+   */
+  interface CameraManager  {
+    /**
+     * Gets all camera descriptions.
+     * @return All camera descriptions.
+     * @since 8
+     */
+    getCameras(callback: AsyncCallback<Array<Camera>>): void;
+    getCameras(): Promise<Array<Camera>>;
+
+    /**
+     * Creates a CameraInput instance by camera id.
+     * @param cameraId Target camera id.
+     * @return CameraInput instance.
+     * @since 8
+     */
+    createCameraInput(cameraId: string, callback: AsyncCallback<CameraInput>): void;
+    createCameraInput(cameraId: string): Promise<CameraInput>;
+
+    /**
+     * Creates a CameraInput instance by camera position and type.
+     * @param position Target camera position.
+     * @param tupe Target camera type.
+     * @return CameraInput instance.
+     * @since 8
+     */
+     createCameraInput(position: CameraPosition, type: CameraType, callback: AsyncCallback<CameraInput>): void;
+     createCameraInput(position: CameraPosition, type: CameraType): Promise<CameraInput>;
+
+    /**
+     * Subscribes camera status change event callback.
+     * @param type Event type.
+     * @return CameraStatusInfo event callback.
+     * @since 8
+     */
+    on(type: "cameraStatus", callback: AsyncCallback<CameraStatusInfo>): void;
+  }
+
+  /**
+   * Camera status info.
+   * @since 8
+   */
+  interface CameraStatusInfo {
+  /**
+    * Camera instance.
+    * @since 8
+    */
+    camera: Camera;
+  /**
+   * Current camera status.
+   * @since 8
+   */
+    status: CameraStatus;
+  }
+
+  /**
+   * Enum for camera position.
+   * @since 8
+   */
   enum CameraPosition {
     /**
-     * 未指定位置
+     * Unspecified position.
+     * @since 8
      */
-    UNSPECIFIED = 1,
-
+    CAMERA_POSITION_UNSPECIFIED = 0,
     /**
-     * 后置摄像头
+     * Back position.
+     * @since 8
      */
-    BACK_CAMERA = 2,
-
+    CAMERA_POSITION_BACK,
     /**
-     * 前置摄像头
+     * Front position.
+     * @since 8
      */
-    FRONT_CAMERA = 3,
+    CAMERA_POSITION_FRONT
   }
 
+  /**
+   * Enum for camera type.
+   * @since 8
+   */
   enum CameraType {
-    /**
-     * 未指定类型
-     */
-    UNSPECIFIED = 1,
-
-    /**
-     * 广角摄像头
-     */
-    WIDE_ANGLE = 2,
-
-    /**
-     * 超广角摄像头
-     */
-    ULTRA_WIDE = 3,
-
-    /**
-     * 长焦摄像头
-     */
-    TELEPHOTO = 4,
-
-    /**
-     * 深度摄像头
-     */
-    TRUE_DEPTH = 5,
-
-    /**
-     * 逻辑摄像头
-     */
-    LOGICAL = 6,
+    CAMERA_TYPE_UNSPECIFIED = 0,
+    CAMERA_TYPE_WIDE_ANGLE,
+    CAMERA_TYPE_ULTRA_WIDE,
+    CAMERA_TYPE_TELEPHOTO,
+    CAMERA_TYPE_TRUE_DEAPTH
   }
 
-  enum ExposureMode {
-    /**
-     * 手动曝光，设备仅应根据用户提供的曝光时长调整曝光
-     */
-    MANUAL = 1,
-
-    /**
-     * 设备会连续监控曝光水平，并在必要时自动曝光
-     */
-    CONTINUOUS_AUTO_EXPOSURE = 2,
+  /**
+   * Enum for camera connection type.
+   * @since 8
+   */
+  enum ConnectionType {
+    CAMERA_CONNECTION_BUILD_IN = 0,
+    CAMERA_CONNECTION_USB_PLUGIN,
+    CAMERA_CONNECTION_REMOTE
   }
 
-  enum FocusMode {
+  /**
+   * Camera object.
+   * @since 8
+   */
+  interface Camera {
     /**
-     * 手动对焦
+     * Camera id attribute.
+     * @since 8
      */
-    MANUAL = 1,
-
+    readonly cameraId: string;
     /**
-     * 设备会连续监视焦点并在必要时自动聚焦
+     * Camera position attribute.
+     * @since 8
      */
-    CONTINUOUS_AUTO_FOCUS = 2,
-
+    readonly cameraPosition: CameraPosition;
     /**
-     * 设备会自动调整一次对焦
+     * Camera type attribute.
+     * @since 8
      */
-    AUTO_FOCUS = 3,
-
+    readonly cameraType: CameraType;
     /**
-     * 锁定对焦
+     * Camera connection type attribute.
+     * @since 8
      */
-    LOCKED = 4,
+    readonly connectionType: ConnectionType;
   }
 
+  /**
+   * Size parameter.
+   * @since 8
+   */
+  interface Size {
+    /**
+     * Height.
+     * @since 8
+     */
+    height: number;
+    /**
+     * Width.
+     * @since 8
+     */
+    width: number;
+  }
+
+  /**
+   * Enum for camera data format. Align to pixel format and image format value.
+   * @since 8
+   */
+  enum CameraFormat {
+    /**
+     * YCRCb 420 SP format.
+     * @since 8
+     */
+    CAMERA_FORMAT_YCRCb_420_SP = 1003,
+
+    /**
+     * JPEG format.
+     * @since 8
+     */
+    CAMERA_FORMAT_JPEG = 2000,
+  }
+
+  /**
+   * Camera input object.
+   * @since 8
+   */
+  interface CameraInput {
+    /**
+     * Gets camera id.
+     * @return Camera id.
+     * @since 8
+     */
+    getCameraId(callback: AsyncCallback<string>): void;
+    getCameraId(): Promise<string>;
+
+    /**
+     * Gets all supported sizes for current camera input.
+     * @return Supported size array.
+     * @since 8
+     */
+    getSupportedSizes(format: CameraFormat, callback: AsyncCallback<Array<Size>>): void;
+    getSupportedSizes(format: CameraFormat): Promise<Array<Size>>;
+
+    /**
+     * Gets all supported formats for current camera input.
+     * @return Supported format array.
+     * @since 8
+     */
+    getSupportedPreviewFormats(callback: AsyncCallback<Array<CameraFormat>>): void;
+    getSupportedPreviewFormats(): Promise<Array<CameraFormat>>;
+    getSupportedPhotoFormats(callback: AsyncCallback<Array<CameraFormat>>): void;
+    getSupportedPhotoFormats(): Promise<Array<CameraFormat>>;
+    getSupportedVideoFormats(callback: AsyncCallback<Array<CameraFormat>>): void;
+    getSupportedVideoFormats(): Promise<Array<CameraFormat>>;
+    /**
+     * Check if device has flash light.
+     * @return Flash light has or not.
+     * @since 8
+     */
+    hasFlash(callback: AsyncCallback<boolean>): void;
+    hasFlash(): Promise<boolean>;
+
+    /**
+     * Gets all supported flash modes for current camera input.
+     * @return Supported flash mode array.
+     * @since 8
+     */
+    isFlashModeSupported(flashMode: FlashMode, callback: AsyncCallback<boolean>): void;
+    isFlashModeSupported(flashMode: FlashMode): Promise<boolean>;
+
+    /**
+     * Gets current flash mode.
+     * @return Current flash mode.
+     * @since 8
+     */
+    getFlashMode(callback: AsyncCallback<FlashMode>): void;
+    getFlashMode(): Promise<FlashMode>;
+
+    /**
+     * Sets flash mode.
+     * @param flashMode Target flash mode.
+     * @since 8
+     */
+    setFlashMode(flashMode: FlashMode, callback: AsyncCallback<void>): void;
+    setFlashMode(flashMode: FlashMode): Promise<void>;
+
+    /**
+     * Gets all supported exposure modes for current camera input.
+     * @return Supported exposure mode array.
+     * @since 8
+     */
+    isExposureModeSupported(aeMode: ExposureMode, callback: AsyncCallback<boolean>): void;
+    isExposureModeSupported(aeMode: ExposureMode): Promise<boolean>;
+
+    /**
+     * Gets current exposure mode.
+     * @return Current exposure mode.
+     * @since 8
+     */
+    getExposureMode(callback: AsyncCallback<ExposureMode>): void;
+    getExposureMode(): Promise<ExposureMode>;
+
+    /**
+     * Sets exposure mode.
+     * @param aeMode Target exposure mode.
+     * @since 8
+     */
+    setExposureMode(aeMode: ExposureMode, callback: AsyncCallback<void>): void;
+    setExposureMode(aeMode: ExposureMode): Promise<void>;
+
+    /**
+     * Gets all supported focus modes for current camera input.
+     * @return Supported focus mode array.
+     * @since 8
+     */
+    isFocusModeSupported(afMode: FocusMode, callback: AsyncCallback<boolean>): void;
+    isFocusModeSupported(afMode: FocusMode): Promise<boolean>;
+
+    /**
+     * Gets current focus mode.
+     * @return Current focus mode.
+     * @since 8
+     */
+    getFocusMode(callback: AsyncCallback<FocusMode>): void;
+    getFocusMode(): Promise<FocusMode>;
+
+    /**
+     * Sets focus mode.
+     * @param afMode Target focus mode.
+     * @since 8
+     */
+    setFocusMode(afMode: FocusMode, callback: AsyncCallback<void>): void;
+    setFocusMode(afMode: FocusMode): Promise<void>;
+
+    /**
+     * Gets all supported zoom ratio range.
+     * @param afMode Target focus mode.
+     * @since 8
+     */
+    getZoomRatioRange(callback: AsyncCallback<Array<number>>): void;
+    getZoomRatioRange(): Promise<Array<number>>;
+
+    /**
+     * Gets zoom ratio.
+     * @return Current zoom ratio.
+     * @since 8
+     */
+    getZoomRatio(callback: AsyncCallback<number>): void;
+    getZoomRatio(): Promise<number>;
+
+    /**
+     * Sets zoom ratio.
+     * @param zoomRatio Target zoom ratio.
+     * @since 8
+     */
+    setZoomRatio(zoomRatio: number, callback: AsyncCallback<void>): void;
+    setZoomRatio(zoomRatio: number): Promise<void>;
+
+    /**
+     * Releases instance.
+     * @since 8
+     */
+    release(callback: AsyncCallback<void>): void;
+    release(): Promise<void>;
+
+    /**
+     * Subscribes focus status change event callback.
+     * @param type Event type.
+     * @return FocusState event callback.
+     * @since 8
+     */
+    on(type: "focusStateChange", callback: AsyncCallback<FocusState>): void;
+
+    /**
+     * Subscribes exposure status change event callback.
+     * @param type Event type.
+     * @return ExposureState event callback.
+     * @since 8
+     */
+    on(type: "exposureStateChange", callback: AsyncCallback<ExposureState>): void;
+
+    /**
+     * Subscribes error event callback.
+     * @param type Event type.
+     * @return Error event callback.
+     * @since 8
+     */
+    on(type: "error", callback: ErrorCallback<CameraInputError>): void;
+  }
+
+  enum CameraInputErrorCode {
+    ERROR_UNKNOWN = -1
+  }
+
+  interface CameraInputError extends Error {
+    code: CameraInputErrorCode;
+  }
+
+  /**
+   * Enum for flash mode.
+   * @since 8
+   */
   enum FlashMode {
     /**
-     * 关闭
+     * Close mode.
+     * @since 8
      */
-    CLOSE = 1,
-
+    FLASH_MODE_CLOSE = 0,
     /**
-     * 打开
+     * Open mode.
+     * @since 8
      */
-    OPEN = 2,
+    FLASH_MODE_OPEN,
+    /**
+     * Auto mode.
+     * @since 8
+     */
+    FLASH_MODE_AUTO,
+    /**
+     * Always open mode.
+     * @since 8
+     */
+    FLASH_MODE_ALWAYS_OPEN
   }
 
-  enum FileFormat {
+  /**
+   * Enum for exposure mode.
+   * @since 8
+   */
+  enum ExposureMode {
     /**
-     * MPEG4 format
+     * Manual mode.
+     * @since 8
      */
-    MP4 = 1,
+    EXPOSURE_MODE_MANUAL = 0,
+    /**
+     * Continuous auto mode.
+     * @since 8
+     */
+    EXPOSURE_MODE_CONTINUOUS_AUTO
   }
 
-  enum VideoEncoder {
+  /**
+   * Enum for focus mode.
+   * @since 8
+   */
+  enum FocusMode {
     /**
-     * H.264/MPEG-4 AVC
+     * Manual mode.
+     * @since 8
      */
-    H264 = 1,
+    FOCUS_MODE_MANUAL = 0,
+    /**
+     * Continuous auto mode.
+     * @since 8
+     */
+    FOCUS_MODE_CONTINUOUS_AUTO,
+    /**
+     * Auto mode.
+     * @since 8
+     */
+    FOCUS_MODE_AUTO,
+    /**
+     * Locked mode.
+     * @since 8
+     */
+    FOCUS_MODE_LOCKED
   }
 
-  enum AudioEncoder {
+  /**
+   * Enum for focus state.
+   * @since 8
+   */
+  enum FocusState {
     /**
-     * Advanced Audio Coding Low Complexity(AAC-LC)
+     * Scan state.
+     * @since 8
      */
-    AAC_LC = 1,
+    FOCUS_STATE_SCAN = 0,
+    /**
+     * Focused state.
+     * @since 8
+     */
+    FOCUS_STATE_FOCUSED,
+    /**
+     * Unfocused state.
+     * @since 8
+     */
+    FOCUS_STATE_UNFOCUSED
   }
 
-  interface RecorderConfig {
+  /**
+   * Enum for exposure state.
+   * @since 8
+   */
+  enum ExposureState {
     /**
-     * Output video file path.
-     * @devices
+     * Scan state.
+     * @since 8
      */
-    videoPath: string;
-
+    EXPOSURE_STATE_SCAN = 0,
     /**
-     * Video file thumbnail path.
-     * @devices
+     * Converged state.
+     * @since 8
      */
-    thumbPath: string;
-
-    /**
-     * Mute the voice.
-     * @devices
-     */
-    muted?: boolean;
-
-    /**
-     * RecorderProfile.
-     * @devices
-     */
-    profile: RecorderProfile;
+    EXPOSURE_STATE_CONVERGED
   }
 
-  interface PhotoConfig {
+  /**
+   * Gets a CaptureSession instance.
+   * @param context Current application context.
+   * @return CaptureSession instance.
+   * @since 8
+   */
+  function createCaptureSession(context: Context, callback: AsyncCallback<CaptureSession>): void;
+  function createCaptureSession(context: Context): Promise<CaptureSession>;
+
+  /**
+   * Capture session object.
+   * @since 8
+   */
+  interface CaptureSession {
     /**
-     * 生成照片的路径。
-     * @devices
+     * Begin capture session config.
+     * @since 8
      */
-    photoPath: string;
+    beginConfig(callback: AsyncCallback<void>): void;
+    beginConfig(): Promise<void>;
 
     /**
-     * 镜像模式。
-     * @devices
+     * Commit capture session config.
+     * @since 8
+     */
+    commitConfig(callback: AsyncCallback<void>): void;
+    commitConfig(): Promise<void>;
+
+    /**
+     * Adds a camera input.
+     * @param cameraInput Target camera input to add.
+     * @since 8
+     */
+    addInput(cameraInput: CameraInput, callback: AsyncCallback<void>): void;
+    addInput(cameraInput: CameraInput): Promise<void>;
+
+    /**
+     * Adds a camera preview output.
+     * @param previewOutput Target camera preview output to add.
+     * @since 8
+     */
+    addOutput(previewOutput: PreviewOutput, callback: AsyncCallback<void>): void;
+    addOutput(previewOutput: PreviewOutput): Promise<void>;
+
+    /**
+     * Adds a camera photo output.
+     * @param photoOutput Target camera photo output to add.
+     * @since 8
+     */
+    addOutput(photoOutput: PhotoOutput, callback: AsyncCallback<void>): void;
+    addOutput(photoOutput: PhotoOutput): Promise<void>;
+
+    /**
+     * Adds a camera video output.
+     * @param videoOutput Target camera video output to add.
+     * @since 8
+     */
+    addOutput(videoOutput: VideoOutput, callback: AsyncCallback<void>): void;
+    addOutput(videoOutput: VideoOutput): Promise<void>;
+
+    /**
+     * Removes a camera input.
+     * @param cameraInput Target camera input to remove.
+     * @since 8
+     */
+    removeInput(cameraInput: CameraInput, callback: AsyncCallback<void>): void;
+    removeInput(cameraInput: CameraInput): Promise<void>;
+
+    /**
+     * Removes a camera preview output.
+     * @param previewOutput Target camera preview output to remove.
+     * @since 8
+     */
+    removeOutput(previewOutput: PreviewOutput, callback: AsyncCallback<void>): void;
+    removeOutput(previewOutput: PreviewOutput): Promise<void>;
+
+    /**
+     * Removes a camera photo output.
+     * @param photoOutput Target camera photo output to remove.
+     * @since 8
+     */
+    removeOutput(photoOutput: PhotoOutput, callback: AsyncCallback<void>): void;
+    removeOutput(photoOutput: PhotoOutput): Promise<void>;
+
+    /**
+     * Removes a camera video output.
+     * @param videoOutput Target camera video output to remove.
+     * @since 8
+     */
+    removeOutput(videoOutput: VideoOutput, callback: AsyncCallback<void>): void;
+    removeOutput(videoOutput: VideoOutput): Promise<void>;
+
+    /**
+     * Starts capture session.
+     * @since 8
+     */
+    start(callback: AsyncCallback<void>): void;
+    start(): Promise<void>;
+
+    /**
+     * Stops capture session.
+     * @since 8
+     */
+    stop(callback: AsyncCallback<void>): void;
+    stop(): Promise<void>;
+
+    /**
+     * Release capture session instance.
+     * @since 8
+     */
+    release(callback: AsyncCallback<void>): void;
+    release(): Promise<void>;
+
+    /**
+     * Subscribes error event callback.
+     * @param type Event type.
+     * @return Error event callback.
+     * @since 8
+     */
+    on(type: "error", callback: ErrorCallback<CaptureSessionError>): void;
+  }
+
+  enum CaptureSessionErrorCode {
+    ERROR_UNKNOWN = -1
+  }
+
+  interface CaptureSessionError extends Error {
+    code: CaptureSessionErrorCode;
+  }
+
+  /**
+   * Creates a PreviewOutput instance.
+   * @param surfaceId Surface object id used in camera preview output.
+   * @return PreviewOutput instance.
+   * @since 8
+   */
+  function createPreviewOutput(surfaceId: string, callback: AsyncCallback<PreviewOutput>): void;
+  function createPreviewOutput(surfaceId: string): Promise<PreviewOutput>;
+
+  /**
+   * Preview output object.
+   * @since 8
+   */
+  interface PreviewOutput {
+    /**
+     * Release output instance.
+     * @since 8
+     */
+    release(callback: AsyncCallback<void>): void;
+    release(): Promise<void>;
+
+    /**
+     * Subscribes frame start event callback.
+     * @param type Event type.
+     * @return Frame start event callback.
+     * @since 8
+     */
+    on(type: "frameStart", callback: AsyncCallback<void>): void;
+
+    /**
+     * Subscribes frame end event callback.
+     * @param type Event type.
+     * @return Frame end event callback.
+     * @since 8
+     */
+    on(type: "frameEnd", callback: AsyncCallback<void>): void;
+
+    /**
+     * Subscribes error event callback.
+     * @param type Event type.
+     * @return Error event callback.
+     * @since 8
+     */
+    on(type: "error", callback: ErrorCallback<PreviewOutputError>): void;
+  }
+
+  enum PreviewOutputErrorCode {
+    ERROR_UNKNOWN = -1
+  }
+
+  interface PreviewOutputError extends Error {
+    code: PreviewOutputErrorCode;
+  }
+
+  /**
+   * Creates a PhotoOutput instance.
+   * @param surfaceId Surface object id used in camera photo output.
+   * @return PhotoOutput instance.
+   * @since 8
+   */
+  function createPhotoOutput(surfaceId: string, callback: AsyncCallback<PhotoOutput>): void;
+  function createPhotoOutput(surfaceId: string): Promise<PhotoOutput>;
+
+  enum ImageRotation {
+    ROTATION_0 = 0,
+    ROTATION_90 = 90,
+    ROTATION_180 = 180,
+    ROTATION_270 = 270
+  }
+
+  interface Location {
+    /**
+     * Latitude.
+     * @since 8
+     */
+    latitude: number;
+
+    /**
+     * Longitude.
+     * @since 8
+     */
+    longitude: number;
+  }
+
+  /**
+   * Enum for photo quality.
+   * @since 8
+   */
+  enum QualityLevel {
+    QUALITY_LEVEL_HIGH = 0,
+    QUALITY_LEVEL_MEDIUM,
+    QUALITY_LEVEL_LOW
+  }
+
+  /**
+   * Photo capture options to set.
+   * @since 8
+   */
+  interface PhotoCaptureSetting {
+    /**
+     * Photo image quality.
+     * @since 8
+     */
+    quality?: QualityLevel;
+    /**
+     * Photo rotation.
+     * @since 8
+     */
+    rotation?: ImageRotation;
+    /**
+     * Photo location.
+     * @since 8
+     */
+    location?: Location;
+    /**
+     * Mirror mode.
+     * @since 8
      */
     mirror?: boolean;
   }
 
   /**
-   * the List of Camera IDs
-   * @sysCap SystemCapability.Multimedia.Media
-   * @devices
+   * Photo output object.
+   * @since 8
    */
-  type CameraIdList = Array<string>;
-
-  /**
-   * the List of Supported Exposure Modes
-   * @sysCap SystemCapability.Multimedia.Media
-   * @devices
-   */
-  type SupportedExposureModesList = Array<ExposureMode>;
-
-  /**
-   * the List of Supported Focus Modes
-   * @sysCap SystemCapability.Multimedia.Media
-   * @devices
-   */
-  type SupportedFocusModesList = Array<FocusMode>; 
-
-  /**
-   * the List of Supported Flash Modes
-   * @sysCap SystemCapability.Multimedia.Media
-   * @devices
-   */
-  type SupportedFlashModesList = Array<FlashMode>;
-
-  /**
-   * the List of Supported Zoom Ranges
-   * @sysCap SystemCapability.Multimedia.Media
-   * @devices
-   */
-  type SupportedZoomRangeList = Array<number>;
-
-  enum AudioSourceType {
+  interface PhotoOutput {
     /**
-     * Microphone
+     * Start capture output.
+     * @since 8
      */
-     MIC = 1,
+    capture(callback: AsyncCallback<void>): void;
+    capture(setting: PhotoCaptureSetting, callback: AsyncCallback<void>): void;
+    capture(setting: PhotoCaptureSetting): Promise<void>;
+
+    /**
+     * Release output instance.
+     * @since 8
+     */
+    release(callback: AsyncCallback<void>): void;
+    release(): Promise<void>;
+
+    /**
+     * Check if mirror mode supported.
+     * @since 8
+     */
+    isMirrorSupported(callback: AsyncCallback<boolean>): void;
+    isMirrorSupported(): Promise<boolean>;
+
+    /**
+     * Subscribes capture start event callback.
+     * @param type Event type.
+     * @return Capture start event callback.
+     * @since 8
+     */
+    on(type: "captureStart", callback: AsyncCallback<number>): void;
+
+    /**
+     * Subscribes frame shutter event callback.
+     * @param type Event type.
+     * @return Frame shutter event callback.
+     * @since 8
+     */
+    on(type: "frameShutter", callback: AsyncCallback<FrameShutterInfo>): void;
+
+    /**
+     * Subscribes capture end event callback.
+     * @param type Event type.
+     * @return Capture end event callback.
+     * @since 8
+     */
+    on(type: "captureEnd", callback: AsyncCallback<CaptureEndInfo>): void;
+
+    /**
+     * Subscribes error event callback.
+     * @param type Event type.
+     * @return Error event callback.
+     * @since 8
+     */
+    on(type: "error", callback: ErrorCallback<PhotoOutputError>): void;
   }
 
-  enum VideoSourceType {
+  /**
+   * Frame shutter callback info.
+   * @since 8
+   */
+  interface FrameShutterInfo {
     /**
-     * Camera
+     * Capture id.
+     * @since 8
      */
-     CAMERA = 1,
+    captureId : number;
+    /**
+     * Timestamp for frame.
+     * @since 8
+     */
+    timestamp: number;
   }
 
-  interface RecorderProfile {
+  /**
+   * Capture end info.
+   * @since 8
+   */
+   interface CaptureEndInfo {
     /**
-     * Audio source type.
-     * @devices
+     * Capture id.
+     * @since 8
      */
-     readonly audioSourceType?: AudioSourceType;
-
-     /**
-     * Video source type.
-     * @devices
-     */
-      readonly videoSourceType?: VideoSourceType;
-
+    captureId : number;
     /**
-     * Indicates the audio bit rate.
-     * @devices
+     * Frame count.
+     * @since 8
      */
-    readonly aBitRate: number;
-
-    /**
-     * Indicates the number of audio channels.
-     * @devices
-     */
-    readonly aChannels: number;
-
-    /**
-     * Indicates the audio encoding format.
-     * @devices
-     */
-    readonly aCodec: AudioEncoder;
-
-    /**
-     * Indicates the audio sampling rate.
-     * @devices
-     */
-    readonly aSampleRate: number;
-
-    /**
-     * Indicates the default recording duration.
-     * @devices
-     */
-    readonly durationTime: number;
-
-    /**
-     * Indicates the output file format.
-     * @devices
-     */
-    readonly fileFormat: FileFormat;
-
-    /**
-     * Indicates the video bit rate.
-     * @devices
-     */
-    readonly vBitRate: number;
-
-    /**
-     * Indicates the video encoding format.
-     * @devices
-     */
-    readonly vCodec: VideoEncoder;
-
-    /**
-     * Indicates the video height.
-     * @devices
-     */
-    readonly vFrameHeight: number;
-
-    /**
-     * Indicates the video frame rate.
-     * @devices
-     */
-    readonly vFrameRate: number;
-
-    /**
-     * Indicates the video width.
-     * @devices
-     */
-    readonly vFrameWidth: number;
+    frameCount: number;
   }
 
-  interface Camera {
+  enum PhotoOutputErrorCode {
+    ERROR_UNKNOWN = -1
+  }
+
+  interface PhotoOutputError extends Error {
+    code: PhotoOutputErrorCode;
+  }
+
+  /**
+   * Creates a VideoOutput instance.
+   * @param surfaceId Surface object id used in camera video output.
+   * @return VideoOutput instance.
+   * @since 8
+   */
+  function createVideoOutput(surfaceId: string, callback: AsyncCallback<VideoOutput>): void;
+  function createVideoOutput(surfaceId: string): Promise<VideoOutput>;
+
+  /**
+   * Video output object.
+   * @since 8
+   */
+  interface VideoOutput {
     /**
-     * Camera position.
-     * @devices
+     * Start video output.
+     * @since 8
      */
-    readonly position: CameraPosition;
+    start(callback: AsyncCallback<void>): void;
+    start(): Promise<void>;
 
     /**
-     * Camera type.
-     * @devices
+     * Stop video output.
+     * @since 8
      */
-    readonly type: CameraType;
+    stop(callback: AsyncCallback<void>): void;
+    stop(): Promise<void>;
 
     /**
-     * Exposure Mmode.
-     * @devices
+     * Release output instance.
+     * @since 8
      */
-    readonly exposure: ExposureMode;
+    release(callback: AsyncCallback<void>): void;
+    release(): Promise<void>;
 
     /**
-     * Focus mode.
-     * @devices
+     * Subscribes frame start event callback.
+     * @param type Event type.
+     * @return Frame start event callback.
+     * @since 8
      */
-    readonly focus: FocusMode;
+    on(type: "frameStart", callback: AsyncCallback<void>): void;
 
     /**
-     * Flash mode.
-     * @devices
+     * Subscribes frame end event callback.
+     * @param type Event type.
+     * @return Frame end event callback.
+     * @since 8
      */
-    readonly flash: FlashMode;
+    on(type: "frameEnd", callback: AsyncCallback<void>): void;
 
     /**
-     * Zoom value.
-     * @devices
+     * Subscribes error event callback.
+     * @param type Event type.
+     * @return Error event callback.
+     * @since 8
      */
-    readonly zoom: number;
+    on(type: "error", callback: ErrorCallback<VideoOutputError>): void;
+  }
 
-    /**
-     * Preapre recording.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    prepare(flowTypeFlag: number, config: RecorderConfig): void;
+  enum VideoOutputErrorCode {
+    ERROR_UNKNOWN = -1
+  }
 
-    /**
-     * Start recording.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    startVideoRecording(): void;
-
-    /**
-     * Pause recording.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    pauseVideoRecording(): void;
-
-    /**
-     * Resume recording.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    resumeVideoRecording(): void;
-
-    /**
-     * Stop recording.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    stopVideoRecording(): void;
-
-    /**
-     * Reset recorder.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    resetVideoRecording(): void;
-
-    /**
-     * Starts the preview
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    startPreview(): void;
-
-    /**
-     * Stops the preview
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    stopPreview(): void;
-
-    /**
-     * Takes a photo.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    takePhoto(config: PhotoConfig, callback: AsyncCallback<void>): void;
-
-    /**
-     * Takes a photo.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    takePhoto(config: PhotoConfig): Promise<void>;
-
-    /**
-     * Gets the supported exposure mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    getSupportedExposureMode(callback: AsyncCallback<SupportedExposureModesList>): void;
-
-    /**
-     * Gets the supported exposure mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    getSupportedExposureMode(): Promise<SupportedExposureModesList>;
-
-    /**
-     * Sets the exposure mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    setExposureMode(mode: ExposureMode, callback: AsyncCallback<void>): void;
-
-    /**
-     * Sets the exposure mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    setExposureMode(mode: ExposureMode): Promise<void>;
-
-    /**
-     * Gets the supported focus mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    getSupportedFocusMode(callback: AsyncCallback<SupportedFocusModesList>): void;
-
-    /**
-     * Gets the supported focus mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    getSupportedFocusMode(): Promise<SupportedFocusModesList>;
-
-    /**
-     * Sets the focus mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    setFocusMode(mode: FocusMode, callback: AsyncCallback<void>): void;
-
-    /**
-     * Sets the focus mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    setFocusMode(mode: FocusMode): Promise<void>;
-
-    /**
-     * Gets the supported flash mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    getSupportedFlashMode(callback: AsyncCallback<SupportedFlashModesList>): void;
-
-    /**
-     * Gets the supported flash mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    getSupportedFlashMode(): Promise<SupportedFlashModesList>;
-
-    /**
-     * Sets the flash mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    setFlashMode(mode: FlashMode, callback: AsyncCallback<void>): void;
-
-    /**
-     * Sets the flash mode.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    setFlashMode(mode: FlashMode): Promise<void>;
-
-    /**
-     * Gets the zoom range supported by the camera.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    getSupportedZoomRange(callback: AsyncCallback<SupportedZoomRangeList>): void;
-
-    /**
-     * Gets the zoom range supported by the camera.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    getSupportedZoomRange(): Promise<SupportedZoomRangeList>;
-
-    /**
-     * Sets a zoom value.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    setZoom(value: number, callback: AsyncCallback<void>): void;
-
-    /**
-     * Sets a zoom value.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    setZoom(value: number): Promise<void>;
-
-    /**
-     * Called when prepare, start, pause, resume, stop or reset event complete.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    on(type: 'prepare' | 'start_video' | 'pause_video' | 'resume_video' | 'stop_video' | 'reset_video' | 'start_preview' | 'stop_preview', callback: ()=>{}): void;
-
-    /**
-     * Called when an error has occurred.
-     * @sysCap SystemCapability.Multimedia.Media
-     * @devices
-     */
-    on(type: 'error', callback: ErrorCallback): void;
+  interface VideoOutputError extends Error {
+    code: VideoOutputErrorCode;
   }
 }
 
 export default camera;
-

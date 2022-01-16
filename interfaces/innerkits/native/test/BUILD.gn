@@ -67,7 +67,10 @@ ohos_executable("camera_video") {
 
 ohos_executable("camera_capture") {
   install_enable = false
-  sources = [ "camera_capture.cpp" ]
+  sources = [
+    "camera_capture.cpp",
+    "test_common.cpp",
+  ]
   cflags = [ "-fPIC" ]
   cflags += [ "-Wall" ]
   cflags_cc = cflags

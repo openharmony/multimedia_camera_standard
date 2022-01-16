@@ -163,25 +163,29 @@ namespace {
 
 int main(int argc, char **argv)
 {
-    const int32_t previewWidthIndex = 1;
-    const int32_t previewHeightIndex = 2;
-    const int32_t videoWidthIndex = 3;
-    const int32_t videoHeightIndex = 4;
-    const int32_t validArgCount = 5;
-    const int32_t videoCaptureDuration = 10; // Sleep for 10 sec
-    const int32_t videoPauseDuration = 5; // Sleep for 5 sec
+    const int32_t previewFormatIndex = 1;
+    const int32_t previewWidthIndex = 2;
+    const int32_t previewHeightIndex = 3;
+    const int32_t videoFormatIndex = 4;
+    const int32_t videoWidthIndex = 5;
+    const int32_t videoHeightIndex = 6;
+    const int32_t validArgCount = 7;
+    const int32_t videoCaptureDuration = 5; // Sleep for 5 sec
+    const int32_t videoPauseDuration = 2; // Sleep for 2 sec
     const int32_t previewVideoGap = 2; // Sleep for 2 sec
     const char *testName = "camera_video";
     int32_t ret = -1;
     int32_t previewFd = -1;
-    // Default sizes for PreviewOutput and VideoOutput
+    int32_t previewFormat = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
     int32_t previewWidth = 640;
     int32_t previewHeight = 480;
+    int32_t videoFormat = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
     int32_t videoWidth = 640;
     int32_t videoHeight = 360;
-    bool isRecorder = true;
+    bool isResolutionConfigured = false;
+    bool isRecorder = false;
 
-    MEDIA_DEBUG_LOG("Camera new sample begin with recorder");
+    MEDIA_DEBUG_LOG("Camera new sample begin without recorder");
     // Update sizes if enough number of valid arguments are passed
     if (argc == validArgCount) {
         // Validate arguments and consider if valid
@@ -192,17 +196,18 @@ int main(int argc, char **argv)
                 return 0;
             }
         }
+        previewFormat = atoi(argv[previewFormatIndex]);
         previewWidth = atoi(argv[previewWidthIndex]);
         previewHeight = atoi(argv[previewHeightIndex]);
+        videoFormat = atoi(argv[videoFormatIndex]);
         videoWidth = atoi(argv[videoWidthIndex]);
         videoHeight = atoi(argv[videoHeightIndex]);
+        isResolutionConfigured = true;
     } else if (argc != 1) {
         cout << "Pass " << (validArgCount - 1) << "arguments" << endl;
-        cout << "PreviewWidth, PreviewHeight, VideoWidth, VideoHeight" << endl;
+        cout << "PreviewFormat, PreviewWidth, PreviewHeight, VideoFormat, VideoWidth, VideoHeight" << endl;
         return 0;
     }
-    MEDIA_DEBUG_LOG("previewWidth: %{public}d, previewHeight: %{public}d", previewWidth, previewHeight);
-    MEDIA_DEBUG_LOG("videoWidth: %{public}d, videoHeight: %{public}d", videoWidth, videoHeight);
 
     sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
     MEDIA_DEBUG_LOG("Setting callback to listen camera status and flash status");
@@ -232,6 +237,78 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    if (!isResolutionConfigured) {
+        std::vector<camera_format_t> previewFormats = ((sptr<CameraInput> &)cameraInput)->GetSupportedPreviewFormats();
+        if (previewFormats.empty()) {
+            MEDIA_DEBUG_LOG("No preview formats supported");
+        }
+        MEDIA_DEBUG_LOG("Supported preview formats:");
+        camera_format_t format;
+        for (auto item = previewFormats.begin(); item != previewFormats.end(); ++item) {
+            format = *item;
+            MEDIA_DEBUG_LOG("format : %{public}d", format);
+        }
+        if (std::find(previewFormats.begin(), previewFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP)
+            != previewFormats.end()) {
+            previewFormat = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
+            MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is present in supported preview formats");
+        } else if(!previewFormats.empty()) {
+            previewFormat = previewFormats[0];
+            MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported preview formats");
+        }
+        std::vector<camera_format_t> videoFormats = ((sptr<CameraInput> &)cameraInput)->GetSupportedVideoFormats();
+        if (videoFormats.empty()) {
+            MEDIA_DEBUG_LOG("No video formats supported");
+        }
+        MEDIA_DEBUG_LOG("Supported video formats:");
+        for (auto item = videoFormats.begin(); item != videoFormats.end(); ++item) {
+            format = *item;
+            MEDIA_DEBUG_LOG("format : %{public}d", format);
+        }
+        if (std::find(videoFormats.begin(), videoFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP)
+            != videoFormats.end()) {
+            videoFormat = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
+            MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is present in supported video formats");
+        } else if(!videoFormats.empty()) {
+            videoFormat = videoFormats[0];
+            MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported video formats");
+        }
+        std::vector<CameraPicSize> previewSizes
+            = ((sptr<CameraInput> &)cameraInput)->getSupportedSizes(static_cast<camera_format_t>(previewFormat));
+        if (previewSizes.empty()) {
+            MEDIA_DEBUG_LOG("No preview sizes supported");
+        }
+        MEDIA_DEBUG_LOG("Supported sizes for preview:");
+        CameraPicSize size;
+        for (auto item = previewSizes.begin(); item != previewSizes.end(); ++item) {
+            size = *item;
+            MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
+        }
+        std::vector<CameraPicSize> videoSizes
+            = ((sptr<CameraInput> &)cameraInput)->getSupportedSizes(static_cast<camera_format_t>(videoFormat));
+        if (videoSizes.empty()) {
+            MEDIA_DEBUG_LOG("No video sizes supported");
+        }
+        MEDIA_DEBUG_LOG("Supported sizes for video:");
+        for (auto item = videoSizes.begin(); item != videoSizes.end(); ++item) {
+            size = *item;
+            MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
+        }
+        if (!previewSizes.empty()) {
+            previewWidth = previewSizes[0].width;
+            previewHeight = previewSizes[0].height;
+        }
+        if (!videoSizes.empty()) {
+            videoWidth = videoSizes[0].width;
+            videoHeight = videoSizes[0].height;
+        }
+    }
+
+    MEDIA_DEBUG_LOG("previewFormat: %{public}d, previewWidth: %{public}d, previewHeight: %{public}d",
+                    previewFormat, previewWidth, previewHeight);
+    MEDIA_DEBUG_LOG("videoFormat: %{public}d, videoWidth: %{public}d, videoHeight: %{public}d",
+                    videoFormat, videoWidth, videoHeight);
+
     ((sptr<CameraInput> &)cameraInput)->SetErrorCallback(std::make_shared<TestDeviceCallback>(testName));
     ret = captureSession->AddInput(cameraInput);
     if (ret != 0) {
@@ -241,6 +318,7 @@ int main(int argc, char **argv)
 
     sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
     previewSurface->SetDefaultWidthAndHeight(previewWidth, previewHeight);
+    previewSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(previewFormat));
     sptr<SurfaceListener> listener = new SurfaceListener("Preview", SurfaceType::PREVIEW, previewFd, previewSurface);
     previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
 
@@ -277,9 +355,11 @@ int main(int argc, char **argv)
             MEDIA_DEBUG_LOG("Failed to get surface from recorder");
             return 0;
         }
+        videoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(videoFormat));
     } else {
         videoSurface = Surface::CreateSurfaceAsConsumer();
         videoSurface->SetDefaultWidthAndHeight(videoWidth, videoHeight);
+        videoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(videoFormat));
         sptr<SurfaceListener> videoListener = new SurfaceListener("Video", SurfaceType::VIDEO, g_videoFd, videoSurface);
         videoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoListener);
     }
@@ -329,9 +409,9 @@ int main(int argc, char **argv)
         }
     }
 
-    MEDIA_DEBUG_LOG("Wait for 10 seconds after start");
+    MEDIA_DEBUG_LOG("Wait for 5 seconds after start");
     sleep(videoCaptureDuration);
-    MEDIA_DEBUG_LOG("Pause video recording for 5 sec");
+    MEDIA_DEBUG_LOG("Pause video recording for 2 sec");
     ret = ((sptr<VideoOutput> &)videoOutput)->Pause();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to pause video output, ret: %{public}d", ret);
@@ -360,7 +440,7 @@ int main(int argc, char **argv)
                 OHOS::Media::MSErrorToString(static_cast<OHOS::Media::MediaServiceErrCode>(ret)).c_str());
         }
     }
-    MEDIA_DEBUG_LOG("Wait for 10 seconds before stop");
+    MEDIA_DEBUG_LOG("Wait for 5 seconds before stop");
     sleep(videoCaptureDuration);
     MEDIA_DEBUG_LOG("Stop video recording");
     ret = ((sptr<VideoOutput> &)videoOutput)->Stop();

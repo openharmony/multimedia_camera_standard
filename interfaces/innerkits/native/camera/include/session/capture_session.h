@@ -39,6 +39,8 @@ public:
     int32_t CommitConfig();
     int32_t AddInput(sptr<CaptureInput> &input);
     int32_t AddOutput(sptr<CaptureOutput> &output);
+    int32_t RemoveInput(sptr<CaptureInput> &input);
+    int32_t RemoveOutput(sptr<CaptureOutput> &output);
     int32_t Start();
     int32_t Stop();
     void SetCallback(std::shared_ptr<SessionCallback> callback);

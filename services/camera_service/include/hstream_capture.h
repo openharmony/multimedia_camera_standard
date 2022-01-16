@@ -28,14 +28,14 @@ namespace OHOS {
 namespace CameraStandard {
 class HStreamCapture : public HStreamCaptureStub {
 public:
-    HStreamCapture(sptr<OHOS::IBufferProducer> surface);
+    HStreamCapture(sptr<OHOS::IBufferProducer> surface, int32_t format);
     ~HStreamCapture();
 
     static void ResetCaptureId();
-    int32_t LinkInput(sptr<Camera::IStreamOperator> &streamOperator,
+    int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
         std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId);
     void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo);
-    int32_t Capture() override;
+    int32_t Capture(const std::shared_ptr<CameraMetadata> &captureSettings) override;
     int32_t CancelCapture() override;
     int32_t Release() override;
     int32_t SetCallback(sptr<IStreamCaptureCallback> &callback) override;
@@ -44,16 +44,19 @@ public:
     int32_t OnCaptureError(int32_t captureId, int32_t errorType);
     int32_t OnFrameShutter(int32_t captureId, uint64_t timestamp);
     int32_t GetStreamId();
+    bool IsReleaseStream();
+    int32_t SetReleaseStream(bool isReleaseStream);
 
 private:
     static int32_t photoCaptureId_;
     bool IsValidCaptureID();
     sptr<Camera::IStreamOperator> streamOperator_;
     int32_t photoStreamId_;
+    int32_t format_;
+    bool isReleaseStream_;
     sptr<OHOS::IBufferProducer> producer_;
     sptr<IStreamCaptureCallback> streamCaptureCallback_;
     std::shared_ptr<CameraMetadata> cameraAbility_;
-    std::vector<std::pair<int32_t, int32_t>> validSizes_ = {{1280, 960}};
 };
 } // namespace CameraStandard
 } // namespace OHOS

@@ -185,24 +185,26 @@ enum JSExposureState {
 /* Util class used by napi asynchronous methods for making call to js callback function */
 class CameraNapiUtils {
 public:
-    static void MapCameraPositionEnum(camera_position_enum_t nativeCamPos, int32_t &jsCameraPostion) {
+    static void MapCameraPositionEnum(camera_position_enum_t nativeCamPos, int32_t &jsCameraPosition)
+    {
         MEDIA_INFO_LOG("native cam pos = %{public}d", static_cast<int32_t>(nativeCamPos));
         switch (nativeCamPos) {
             case OHOS_CAMERA_POSITION_FRONT:
-                jsCameraPostion = CAMERA_POSITION_FRONT;
+                jsCameraPosition = CAMERA_POSITION_FRONT;
                 break;
             case OHOS_CAMERA_POSITION_BACK:
-                jsCameraPostion = CAMERA_POSITION_BACK;
+                jsCameraPosition = CAMERA_POSITION_BACK;
                 break;
             case OHOS_CAMERA_POSITION_OTHER:
             default:
-                jsCameraPostion = CAMERA_POSITION_UNSPECIFIED;
+                jsCameraPosition = CAMERA_POSITION_UNSPECIFIED;
         }
     }
 
-    static int32_t MapCameraPositionEnumFromJs(int32_t jsCameraPostion, camera_position_enum_t &nativeCamPos) {
-        MEDIA_INFO_LOG("js cam pos = %{public}d", static_cast<int32_t>(jsCameraPostion));
-        switch (jsCameraPostion) {
+    static int32_t MapCameraPositionEnumFromJs(int32_t jsCameraPosition, camera_position_enum_t &nativeCamPos)
+    {
+        MEDIA_INFO_LOG("js cam pos = %{public}d", static_cast<int32_t>(jsCameraPosition));
+        switch (jsCameraPosition) {
             case CAMERA_POSITION_FRONT:
                 nativeCamPos = OHOS_CAMERA_POSITION_FRONT;
                 break;
@@ -219,7 +221,8 @@ public:
         return 0;
     }
 
-    static void MapCameraFormatEnum(camera_format_t nativeCamFormat, int32_t &jsCameraFormat) {
+    static void MapCameraFormatEnum(camera_format_t nativeCamFormat, int32_t &jsCameraFormat)
+    {
         MEDIA_INFO_LOG("native cam format = %{public}d", static_cast<int32_t>(nativeCamFormat));
         switch (nativeCamFormat) {
             case OHOS_CAMERA_FORMAT_YCRCB_420_SP:
@@ -235,7 +238,8 @@ public:
         }
     }
 
-    static int32_t MapCameraFormatEnumFromJs(int32_t jsCameraFormat, camera_format_t &nativeCamFormat) {
+    static int32_t MapCameraFormatEnumFromJs(int32_t jsCameraFormat, camera_format_t &nativeCamFormat)
+    {
         MEDIA_INFO_LOG("js cam format = %{public}d", static_cast<int32_t>(jsCameraFormat));
         switch (jsCameraFormat) {
             case CAMERA_FORMAT_YCRCb_420_SP:
@@ -251,7 +255,8 @@ public:
         return 0;
     }
 
-    static void MapCameraTypeEnum(camera_type_enum_t nativeCamType, int32_t &jsCameraType) {
+    static void MapCameraTypeEnum(camera_type_enum_t nativeCamType, int32_t &jsCameraType)
+    {
         MEDIA_INFO_LOG("native cam type = %{public}d", static_cast<int32_t>(nativeCamType));
         switch (nativeCamType) {
             case OHOS_CAMERA_TYPE_WIDE_ANGLE:
@@ -275,7 +280,8 @@ public:
         }
     }
 
-    static int32_t MapCameraTypeEnumFromJs(int32_t jsCameraType, camera_type_enum_t &nativeCamType) {
+    static int32_t MapCameraTypeEnumFromJs(int32_t jsCameraType, camera_type_enum_t &nativeCamType)
+    {
         MEDIA_INFO_LOG("js cam type = %{public}d", static_cast<int32_t>(jsCameraType));
         switch (jsCameraType) {
             case CAMERA_TYPE_WIDE_ANGLE:
@@ -300,7 +306,8 @@ public:
         return 0;
     }
 
-    static void MapCameraConnectionTypeEnum(camera_connection_type_t nativeCamConnType, int32_t &jsCameraConnType) {
+    static void MapCameraConnectionTypeEnum(camera_connection_type_t nativeCamConnType, int32_t &jsCameraConnType)
+    {
         MEDIA_INFO_LOG("native cam connection type = %{public}d", static_cast<int32_t>(nativeCamConnType));
         switch (nativeCamConnType) {
             case OHOS_CAMERA_CONNECTION_TYPE_REMOTE:

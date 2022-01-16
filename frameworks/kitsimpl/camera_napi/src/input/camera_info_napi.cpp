@@ -211,6 +211,10 @@ napi_value CameraInfoNapi::GetCameraType(napi_env env, napi_callback_info info)
     if (status == napi_ok && obj != nullptr) {
         camera_type_enum_t nativeCameraType = obj->cameraInfo_->GetCameraType();
         CameraNapiUtils::MapCameraTypeEnum(nativeCameraType, jsCameraType);
+        if (jsCameraType == -1) {
+            MEDIA_ERR_LOG("Camera type is not a recognized camera type in JS");
+            return undefinedResult;
+        }
         status = napi_create_int32(env, jsCameraType, &jsResult);
         if (status == napi_ok) {
             return jsResult;

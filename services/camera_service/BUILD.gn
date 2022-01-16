@@ -41,19 +41,12 @@ ohos_shared_library("camera_service") {
     "-fPIC",
     "-Wall",
   ]
-  cflags_cc = cflags
+
   include_dirs = [
     "//drivers/framework/include/utils/",
     "//drivers/adapter/uhdf2/osal/include/",
     "//drivers/adapter/uhdf2/include/hdi/",
     "//foundation/graphic/standard/frameworks/surface/include",
-    "//drivers/peripheral/camera/interfaces/include",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/utils/include",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/server/include",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/device/include",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/operator/include",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host/include",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
@@ -65,24 +58,51 @@ ohos_shared_library("camera_service") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  if (device_name == "rk3566" || device_name == "rk3568") {
-    cflags += [ "-DRK_CAMERA" ]
-  }
-  if (device_name == "baltimore") {
-    cflags += [ "-DBALTIMORE_CAMERA" ]
-  }
-
   deps = [
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/client:libcamera_client",
     "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata",
   ]
+
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
   ]
+
+  if (device_name == "baltimore") {
+    cflags += [ "-DBALTIMORE_CAMERA" ]
+    include_dirs += [
+      "//drivers/peripheral/hidl_adapter/camera/interfaces/include",
+      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/server",
+      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/device",
+      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/operator",
+      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/host",
+    ]
+    deps += [
+      "//drivers/peripheral/hidl_adapter/camera/buffer_manager:camera_adapter_buffer_manager",
+      "//drivers/peripheral/hidl_adapter/camera/hdi_impl:camera_hidl_adapter",
+      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/client:libcamera_client",
+    ]
+  } else {
+    if (device_name == "rk3566" || device_name == "rk3568") {
+      cflags += [ "-DRK_CAMERA" ]
+    }
+    include_dirs += [
+      "//drivers/peripheral/camera/interfaces/include",
+      "//drivers/peripheral/camera/interfaces/hdi_ipc",
+      "//drivers/peripheral/camera/interfaces/hdi_ipc/utils/include",
+      "//drivers/peripheral/camera/interfaces/hdi_ipc/server/include",
+      "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/device/include",
+      "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/operator/include",
+      "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host/include",
+    ]
+    deps += [
+      "//drivers/peripheral/camera/interfaces/hdi_ipc/client:libcamera_client",
+    ]
+  }
+  cflags_cc = cflags
+
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"
 }

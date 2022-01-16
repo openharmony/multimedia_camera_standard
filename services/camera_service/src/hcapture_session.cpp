@@ -16,6 +16,7 @@
 #include "hcapture_session.h"
 #include "camera_util.h"
 #include "media_log.h"
+#include "surface.h"
 
 namespace OHOS {
 namespace CameraStandard {

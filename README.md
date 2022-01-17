@@ -7,6 +7,7 @@
     - [To Capture a Photo](#to-capture-a-photo)
     - [To Start and Stop Preview](#to-start-and-stop-preview)
     - [To Record Video](#to-record-video)
+    - [To Switch Between Camera Devices](#to-switch-between-camera-devices)
 - [Repositories Involved<a name="section16511040154318"></a>](#repositories-involved)
 
 ## Introduction<a name="section11660541593"></a>
@@ -300,6 +301,135 @@ Steps to record Video:
     ```
 
 11. Release the Capture Session resources.
+
+    ```
+    captureSession->Release();
+    ```
+
+### To Switch Between Camera Devices
+
+Below steps demonstrate how to switch between the camera devices. Initially a video output is added to the capture session. If user wish to switch between cameras, existing input and output have to be removed first and then add a new input and output(i.e., photo output in this case).
+
+1. Get the Camera Manager Instance and retrieve the camera object list.
+
+    ```
+    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
+    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
+    ```
+
+2. Create the Capture Session
+
+    ```
+    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
+    ```
+
+3. Begin configuring the Capture Session.
+
+    ```
+    int32_t result = captureSession->BeginConfig();
+    ```
+
+4. Create the Camera Input using the Camera Object.
+
+    ```
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    ```
+
+5. Add the Camera Input to the Capture Session.
+
+    ```
+    result = captureSession->AddInput(cameraInput);
+    ```
+
+6. Create a Video Output with Surface
+
+    ```
+    sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
+    ```
+
+7. Add the Video Output to the Capture Session.
+
+    ```
+    result = captureSession->AddOutput(videoOutput);
+    ```
+
+8. Commit the configuration to Capture Session.
+
+    ```
+    result = captureSession->CommitConfig();
+    ```
+
+9. Start the Video Recording.
+
+    ```
+    result = ((sptr<VideoOutput> &)videoOutput)->Start();
+    ```
+
+10. Stop the recording when needed.
+
+    ```
+    result = ((sptr<VideoOutput> &)videoOutput)->Stop();
+    ```
+
+11. In order to remove camera input and output, configure the Capture Session again.
+
+    ```
+    int32_t result = captureSession->BeginConfig();
+    ```
+
+12. Remove the Camera Input in the new capture session configuration.
+
+    ```
+    int32_t result = captureSession->RemoveInput(cameraInput);
+    ```
+
+13. Remove the Camera Output as well.
+
+    ```
+    int32_t result = captureSession->RemoveOutut(videoOutput);
+    ```
+
+14. Create new camera input, add it to capture session
+
+    ```
+    sptr<CaptureInput> cameraInput2 = camManagerObj->CreateCameraInput(cameraObjList[1]);
+    result = captureSession->AddInput(cameraInput2);
+    ```
+
+15. For PhotoOutput, create the Consumer Surface and register listerner for buffer updates. The surface will be used for creation of photo output. Add the photo output to the capture session once it is successfully created.
+
+    ```
+    // Get the surface
+    sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
+    int32_t photoWidth = 1280;
+    int32_t photoHeight = 960;
+    photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
+    sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
+    capturelistener->mode_ = MODE_PHOTO;
+    capturelistener->surface_ = photoSurface;
+    photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);
+
+    // Create the Photo Output
+    sptr<CaptureOutput> photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
+
+    // Add the output to the capture session
+    result = captureSession->AddOutput(photoOutput);
+    ```
+
+16. Commit the configuration to Capture Session.
+
+    ```
+    result = captureSession->CommitConfig();
+    ```
+
+17. Capture the Photo.
+
+    ```
+    result = ((sptr<PhotoOutput> &)photoOutput)->Capture();
+    ```
+
+
+18. Release the Capture Session resources.
 
     ```
     captureSession->Release();

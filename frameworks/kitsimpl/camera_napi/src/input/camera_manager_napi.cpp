@@ -154,7 +154,7 @@ static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_va
             } else {
                 MEDIA_INFO_LOG("Camera position : %{public}d", context->cameraPosition);
             }
-        } else if (i == PARAM1 && valueType == napi_number) {
+        } else if (i == PARAM1) {
             numValue = 0;
             if ((CameraNapiUtils::MapCameraTypeEnumFromJs(numValue, context->cameraType) == -1)
                 || (context->cameraType != OHOS_CAMERA_TYPE_UNSPECIFIED)) {
@@ -304,7 +304,7 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
     napi_value thisVar = nullptr;
 
     CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
-    NAPI_ASSERT(env, (argc >= ARGS_ONE && argc <= ARGS_THREE), "requires 2 parameters maximum");
+    NAPI_ASSERT(env, (argc >= ARGS_ONE && argc <= ARGS_THREE), "requires 3 parameters maximum");
 
     napi_get_undefined(env, &result);
     auto asyncContext = std::make_unique<CameraManagerNapiAsyncContext>();
@@ -319,7 +319,6 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
                 auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
                 context->cameraObjList = CameraManager::GetInstance()->GetCameras();
                 sptr<CameraInfo> camInfo = nullptr;
-                MEDIA_INFO_LOG("context->cameraId : %{public}s", context->cameraId.c_str());
                 for (size_t i = 0; i < context->cameraObjList.size(); i += 1) {
                     camInfo = context->cameraObjList[i];
                     if (context->cameraId.empty()) {

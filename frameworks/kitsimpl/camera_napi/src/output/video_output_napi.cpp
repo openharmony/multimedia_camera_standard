@@ -24,7 +24,7 @@ using OHOS::HiviewDFX::HiLogLabel;
 
 napi_ref VideoOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> VideoOutputNapi::sVideoOutput_ = nullptr;
-long VideoOutputNapi::sSurfaceId_ = 0;
+uint64_t VideoOutputNapi::sSurfaceId_ = 0;
 sptr<SurfaceListener> VideoOutputNapi::listener = nullptr;
 
 class VideoCallbackListener : public VideoCallback {
@@ -252,7 +252,7 @@ bool VideoOutputNapi::IsVideoOutput(napi_env env, napi_value obj)
     return result;
 }
 
-napi_value VideoOutputNapi::CreateVideoOutput(napi_env env, long surfaceId)
+napi_value VideoOutputNapi::CreateVideoOutput(napi_env env, uint64_t surfaceId)
 {
     napi_status status;
     napi_value result = nullptr;
@@ -261,19 +261,21 @@ napi_value VideoOutputNapi::CreateVideoOutput(napi_env env, long surfaceId)
     status = napi_get_reference_value(env, sConstructor_, &constructor);
     if (status == napi_ok) {
         sSurfaceId_ = surfaceId;
-        MEDIA_INFO_LOG("surfaceId in create Video : %{public}ld", surfaceId);
+        MEDIA_INFO_LOG("surfaceId in create video : %{public}" PRIu64, surfaceId);
         sptr<Surface> surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
         if (surface == nullptr) {
             MEDIA_ERR_LOG("failed to get surface from SurfaceUtils");
             return result;
         }
-        MEDIA_ERR_LOG("surface width: %{public}d, height: %{public}d", surface->GetDefaultWidth(),
-                    surface->GetDefaultHeight());
-        surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_JPEG));
+        MEDIA_INFO_LOG("surface width: %{public}d, height: %{public}d", surface->GetDefaultWidth(),
+                       surface->GetDefaultHeight());
+        surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
         sVideoOutput_ = CameraManager::GetInstance()->CreateVideoOutput(surface);
         if (sVideoOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create VideoOutput");
             return result;
+        } else {
+            MEDIA_INFO_LOG("Video output create success");
         }
         status = napi_new_instance(env, constructor, 0, nullptr, &result);
         sSurfaceId_ = 0;

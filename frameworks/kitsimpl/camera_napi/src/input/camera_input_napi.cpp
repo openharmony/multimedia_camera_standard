@@ -115,7 +115,7 @@ napi_value CameraInputNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getFocusMode", GetFocusMode),
         DECLARE_NAPI_FUNCTION("setFocusMode", SetFocusMode),
 
-        DECLARE_NAPI_FUNCTION("getSupportedPhotoSizes", GetSupportedSizes),
+        DECLARE_NAPI_FUNCTION("getSupportedSizes", GetSupportedSizes),
 
         DECLARE_NAPI_FUNCTION("getSupportedPhotoFormats", GetSupportedPhotoFormats),
         DECLARE_NAPI_FUNCTION("getSupportedVideoFormats", GetSupportedVideoFormats),
@@ -789,7 +789,7 @@ void GetSupportedPhotoFormatsAsyncCallbackComplete(napi_env env, napi_status sta
                 CameraNapiUtils::MapCameraFormatEnum(context->vecSupportedPhotoFormatList[i], iProp);
                 napi_value value;
                 if (iProp != -1 && napi_create_int32(env, iProp, &value) == napi_ok) {
-                    napi_set_element(env, photoFormats, i, value);
+                    napi_set_element(env, photoFormats, j, value);
                     j++;
                 }
             }
@@ -869,7 +869,7 @@ void GetSupportedVideoFormatsAsyncCallbackComplete(napi_env env, napi_status sta
                 CameraNapiUtils::MapCameraFormatEnum(context->vecSupportedVideoFormatList[i], iProp);
                 napi_value value;
                 if (iProp != -1 && napi_create_int32(env, iProp, &value) == napi_ok) {
-                    napi_set_element(env, videoFormats, i, value);
+                    napi_set_element(env, videoFormats, j, value);
                     j++;
                 }
             }
@@ -944,10 +944,10 @@ void GetSupportedPreviewFormatsAsyncCallbackComplete(napi_env env, napi_status s
             size_t j = 0;
             for (i = 0; i < len; i++) {
                 int32_t iProp;
-                CameraNapiUtils::MapCameraFormatEnum(context->vecSupportedPhotoFormatList[i], iProp);
+                CameraNapiUtils::MapCameraFormatEnum(context->vecSupportedPreviewFormatList[i], iProp);
                 napi_value value;
                 if (iProp != -1 && napi_create_int32(env, iProp, &value) == napi_ok) {
-                    napi_set_element(env, previewFormats, i, value);
+                    napi_set_element(env, previewFormats, j, value);
                     j++;
                 }
             }
@@ -1146,7 +1146,7 @@ void GetSupportedSizesAsyncCallbackComplete(napi_env env, napi_status status, vo
             napi_get_undefined(env, &jsContext->data);
         }
     } else {
-        HiLog::Error(LABEL, "No supported Video size found!");
+        HiLog::Error(LABEL, "No supported size found!");
         napi_get_undefined(env, &jsContext->data);
     }
 

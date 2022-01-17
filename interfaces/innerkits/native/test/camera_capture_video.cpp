@@ -300,7 +300,7 @@ int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cam
         != previewFormats.end()) {
         previewFormat_ = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
         MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is present in supported preview formats");
-    } else if(!previewFormats.empty()) {
+    } else if (!previewFormats.empty()) {
         previewFormat_ = previewFormats[0];
         MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported preview formats");
     }
@@ -327,7 +327,7 @@ int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cam
     if (std::find(videoFormats.begin(), videoFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP) != videoFormats.end()) {
         videoFormat_ = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
         MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is present in supported video formats");
-    } else if(!videoFormats.empty()) {
+    } else if (!videoFormats.empty()) {
         videoFormat_ = videoFormats[0];
         MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported video formats");
     }

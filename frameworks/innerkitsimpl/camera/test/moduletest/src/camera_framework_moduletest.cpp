@@ -530,8 +530,7 @@ void CameraFrameworkModuleTest::SetUp()
     ASSERT_TRUE(photoSizes.size() != 0);
     std::vector<CameraPicSize> videoSizes = camInput->getSupportedSizes(videoFormat_);
     ASSERT_TRUE(videoSizes.size() != 0);
-    CameraPicSize size;
-    size = previewSizes.back();
+    CameraPicSize size = previewSizes.back();
     previewWidth_ = size.width;
     previewHeight_ = size.height;
     size = photoSizes.back();
@@ -1611,6 +1610,5 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_034, TestSize.Le
     intResult = session_->RemoveInput(input);
     EXPECT_TRUE(intResult != 0);
 }
-
 } // CameraStandard
 } // OHOS

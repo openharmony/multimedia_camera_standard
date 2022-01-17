@@ -232,6 +232,7 @@ void FetchOptionsParam(napi_env env, napi_value arg, const CameraInputAsyncConte
             return;
         }
     } else if (asyncContext->enumType.compare("FlashMode") == 0) {
+        MEDIA_INFO_LOG("Camera flashMode : %{public}d", value);
         asyncContext->flashMode = value;
     } else if (asyncContext->enumType.compare("ExposureMode") == 0) {
         asyncContext->exposureMode = value;
@@ -340,6 +341,19 @@ napi_value CameraInputNapi::GetCameraId(napi_env env, napi_callback_info info)
     return result;
 }
 
+bool CameraInputNapi::IsFlashSupported(sptr<CameraInput> cameraInput, int flash)
+{
+    std::vector<camera_flash_mode_enum_t> list = cameraInput->GetSupportedFlashModes();
+    camera_flash_mode_enum_t flashMode = static_cast<camera_flash_mode_enum_t>(flash);
+    for (size_t i = 0; i < list.size(); ++i) {
+        if (flashMode == list[i]) {
+            return true;
+        }
+    }
+    MEDIA_ERR_LOG("FlashMode : %{public}d, does not supported", flash);
+    return false;
+}
+
 napi_value CameraInputNapi::HasFlash(napi_env env, napi_callback_info info)
 {
     napi_status status;
@@ -363,12 +377,12 @@ napi_value CameraInputNapi::HasFlash(napi_env env, napi_callback_info info)
 
         CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
         CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "HasFlash");
-
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                // HasFlash api not available at framework
-                context->status = true;
+                std::vector<camera_flash_mode_enum_t> list;
+                list = context->objectInfo->cameraInput_->GetSupportedFlashModes();
+                context->status = !(list.empty());
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -378,7 +392,6 @@ napi_value CameraInputNapi::HasFlash(napi_env env, napi_callback_info info)
             asyncContext.release();
         }
     }
-
     return result;
 }
 
@@ -407,8 +420,7 @@ napi_value CameraInputNapi::IsFlashModeSupported(napi_env env, napi_callback_inf
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                // IsFlashModeSupported api is not available at framework
-                context->status = true;
+                context->status = IsFlashSupported(context->objectInfo->cameraInput_, context->flashMode);
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -465,9 +477,13 @@ napi_value CameraInputNapi::SetFlashMode(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->objectInfo->cameraInput_->SetFlashMode(static_cast<camera_flash_mode_enum_t>
-                    (context->flashMode));
-                context->status = true;
+                sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
+                if (IsFlashSupported(cameraInput, context->flashMode)) {
+                    cameraInput->LockForControl();
+                    cameraInput->SetFlashMode(static_cast<camera_flash_mode_enum_t>(context->flashMode));
+                    cameraInput->SetExposureMode(OHOS_CAMERA_AE_MODE_ON_ALWAYS_FLASH);
+                    cameraInput->UnlockForControl();
+                }
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {

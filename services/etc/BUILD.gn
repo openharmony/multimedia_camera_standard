@@ -14,12 +14,8 @@
 import("//build/ohos.gni")
 
 ohos_prebuilt_etc("camera_service.rc") {
-   if (use_musl) {
-     source = "camera_service.cfg"
-   } else {
-     source = "camera_service.rc"
-   }
-   relative_install_dir = "init"
-   part_name = "multimedia_camera_standard"
-   subsystem_name = "multimedia"
+  source = "camera_service.cfg"
+  relative_install_dir = "init"
+  part_name = "multimedia_camera_standard"
+  subsystem_name = "multimedia"
 }

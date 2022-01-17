@@ -26,6 +26,7 @@
 #include "camera_napi_utils.h"
 #include "input/camera_manager.h"
 
+#include <cinttypes>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -55,7 +56,7 @@ private:
 class VideoOutputNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
-    static napi_value CreateVideoOutput(napi_env env, long surfaceId);
+    static napi_value CreateVideoOutput(napi_env env, uint64_t surfaceId);
     static bool IsVideoOutput(napi_env env, napi_value obj);
     VideoOutputNapi();
     ~VideoOutputNapi();
@@ -70,7 +71,7 @@ private:
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
 
-    static long sSurfaceId_;
+    static uint64_t sSurfaceId_;
     static napi_ref sConstructor_;
     static sptr<CaptureOutput> sVideoOutput_;
     static sptr<SurfaceListener> listener;
@@ -80,7 +81,7 @@ private:
 
     napi_env env_;
     napi_ref wrapper_;
-    long surfaceId_;
+    uint64_t surfaceId_;
     sptr<CaptureOutput> videoOutput_;
 };
 

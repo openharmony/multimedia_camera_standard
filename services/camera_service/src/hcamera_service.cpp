@@ -233,6 +233,26 @@ void CameraHostCallback::OnFlashlightStatus(const std::string &cameraId, Camera:
     }
 }
 
+#ifdef BALTIMORE_CAMERA
+void CameraHostCallback::OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event)
+{
+    MEDIA_INFO_LOG("CameraHostCallback::OnCameraEvent called");
+    switch (event) {
+        case Camera::CAMERA_EVENT_DEVICE_ADD:
+            MEDIA_INFO_LOG("CAMERA_EVENT_DEVICE_ADD event with cameraID:%{public}s", cameraId.c_str());
+            break;
+
+        case Camera::CAMERA_EVENT_DEVICE_RMV:
+            MEDIA_INFO_LOG("CAMERA_EVENT_DEVICE_RMV event with cameraID:%{public}s", cameraId.c_str());
+            break;
+
+        default:
+            MEDIA_ERR_LOG("Unknown Camera event: %{public}d", event);
+            return;
+    }
+}
+#endif
+
 int32_t HCameraService::SetCallback(sptr<ICameraServiceCallback> &callback)
 {
     if (callback == nullptr) {

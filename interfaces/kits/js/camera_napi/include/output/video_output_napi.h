@@ -53,6 +53,25 @@ private:
     std::string photoPath;
 };
 
+class VideoCallbackListener : public VideoCallback {
+public:
+    VideoCallbackListener(napi_env env);
+    ~VideoCallbackListener() = default;
+
+    void OnFrameStarted() const override;
+    void OnFrameEnded(const int32_t frameCount) const override;
+    void OnError(const int32_t errorCode) const override;
+    void SetCallbackRef(const std::string &eventType, const napi_ref &callbackRef);
+
+private:
+    void UpdateJSCallback(std::string propName, const int32_t value) const;
+
+    napi_env env_;
+    napi_ref frameStartCallbackRef_ = nullptr;
+    napi_ref frameEndCallbackRef_ = nullptr;
+    napi_ref errorCallbackRef_ = nullptr;
+};
+
 class VideoOutputNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -83,6 +102,7 @@ private:
     napi_ref wrapper_;
     uint64_t surfaceId_;
     sptr<CaptureOutput> videoOutput_;
+    std::shared_ptr<VideoCallbackListener> videoCallback_;
 };
 
 struct VideoOutputAsyncContext {
@@ -91,7 +111,7 @@ struct VideoOutputAsyncContext {
     napi_deferred deferred;
     napi_ref callbackRef;
     VideoOutputNapi* objectInfo;
-    bool status;
+    int32_t status;
 };
 } // namespace CameraStandard
 } // namespace OHOS

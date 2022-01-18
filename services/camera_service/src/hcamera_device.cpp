@@ -129,6 +129,13 @@ int32_t HCameraDevice::UpdateSetting(const std::shared_ptr<CameraMetadata> &sett
     if (GetCameraMetadataItemCount(settings->get()) > 0) {
         updateSettings_ = settings;
     }
+    if (hdiCameraDevice_ != nullptr) {
+        Camera::CamRetCode rc = hdiCameraDevice_->UpdateSettings(updateSettings_);
+        if (rc != Camera::NO_ERROR) {
+            MEDIA_ERR_LOG("HCameraDevice::UpdateSetting failed with error Code: %{public}d", rc);
+            return HdiToServiceError(rc);
+        }
+    }
     return CAMERA_OK;
 }
 

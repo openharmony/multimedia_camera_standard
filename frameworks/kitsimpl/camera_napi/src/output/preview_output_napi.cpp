@@ -22,55 +22,77 @@ using namespace std;
 using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
 
+namespace {
+    constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PreviewOutputNapi"};
+}
+
 napi_ref PreviewOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> PreviewOutputNapi::sPreviewOutput_ = nullptr;
 uint64_t PreviewOutputNapi::sSurfaceId_ = 0;
 
-class PreviewOutputCallback : public PreviewCallback {
-public:
-    PreviewOutputCallback(napi_env env, napi_ref callbackRef):env_(env), callbackRef_(callbackRef)
-    {
+PreviewOutputCallback::PreviewOutputCallback(napi_env env) : env_(env) {}
+
+void PreviewOutputCallback::OnFrameStarted() const
+{
+    MEDIA_INFO_LOG("PreviewOutputCallback:OnFrameStarted() is called!");
+    UpdateJSCallback("OnFrameStarted", -1);
+}
+
+void PreviewOutputCallback::OnFrameEnded(const int32_t frameCount) const
+{
+    MEDIA_INFO_LOG("PreviewOutputCallback:OnFrameEnded() is called!, frameCount: %{public}d", frameCount);
+    UpdateJSCallback("OnFrameEnded", -1);
+}
+
+void PreviewOutputCallback::OnError(const int32_t errorCode) const
+{
+    MEDIA_INFO_LOG("PreviewOutputCallback:OnError() is called!, errorCode: %{public}d", errorCode);
+    UpdateJSCallback("OnError", errorCode);
+}
+
+void PreviewOutputCallback::SetCallbackRef(const std::string &eventType, const napi_ref &callbackRef)
+{
+    if (eventType.compare("frameStart") == 0) {
+        frameStartCallbackRef_ = callbackRef;
+    } else if (eventType.compare("frameEnd") == 0) {
+        frameEndCallbackRef_ = callbackRef;
+    } else if (eventType.compare("error") == 0) {
+        errorCallbackRef_ = callbackRef;
+    } else {
+        MEDIA_ERR_LOG("Incorrect preview callback event type received from JS");
     }
+}
 
-private:
-    napi_env env_;
-    napi_ref callbackRef_;
+void PreviewOutputCallback::UpdateJSCallback(std::string propName, const int32_t value) const
+{
+    napi_value result[ARGS_TWO];
+    napi_value callback = nullptr;
+    napi_value retVal;
+    napi_value propValue;
 
-    void UpdateJSCallback(std::string propName, const int32_t value) const
-    {
-        napi_value result[ARGS_TWO];
-        napi_value callback = nullptr;
-        napi_value retVal;
-        napi_value propValue;
+    napi_get_undefined(env_, &result[PARAM0]);
 
-        napi_get_undefined(env_, &result[PARAM0]);
-
+    if (propName.compare("OnFrameStarted") == 0) {
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(frameStartCallbackRef_,
+            "OnFrameStart callback is not registered by JS");
+        napi_get_undefined(env_, &result[PARAM1]);
+        napi_get_reference_value(env_, frameStartCallbackRef_, &callback);
+    } else if (propName.compare("OnFrameEnded") == 0) {
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(frameEndCallbackRef_,
+            "OnFrameEnd callback is not registered by JS");
+        napi_get_undefined(env_, &result[PARAM1]);
+        napi_get_reference_value(env_, frameEndCallbackRef_, &callback);
+    } else {
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(errorCallbackRef_,
+            "OnError callback is not registered by JS");
         napi_create_object(env_, &result[PARAM1]);
         napi_create_int32(env_, value, &propValue);
-        napi_set_named_property(env_, result[PARAM1], propName.c_str(), propValue);
-
-        napi_get_reference_value(env_, callbackRef_, &callback);
-        napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+        napi_set_named_property(env_, result[PARAM1], "code", propValue);
+        napi_get_reference_value(env_, errorCallbackRef_, &callback); // should errorcode be valued as -1
     }
 
-    void OnFrameStarted() const override
-    {
-        MEDIA_INFO_LOG("PreviewOutputCallback:OnFrameStarted() is called!");
-        UpdateJSCallback("OnFrameStarted", -1);
-    }
-
-    void OnFrameEnded(const int32_t frameCount) const override
-    {
-        MEDIA_INFO_LOG("PreviewOutputCallback:OnFrameEnded() is called!, frameCount: %{public}d", frameCount);
-        UpdateJSCallback("OnFrameEnded", frameCount);
-    }
-
-    void OnError(const int32_t errorCode) const override
-    {
-        MEDIA_INFO_LOG("PreviewOutputCallback:OnError() is called!, errorCode: %{public}d", errorCode);
-        UpdateJSCallback("OnError", errorCode);
-    }
-};
+    napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+}
 
 PreviewOutputNapi::PreviewOutputNapi() : env_(nullptr), wrapper_(nullptr)
 {
@@ -133,6 +155,12 @@ napi_value PreviewOutputNapi::PreviewOutputNapiConstructor(napi_env env, napi_ca
             obj->env_ = env;
             obj->surfaceId_ = sSurfaceId_;
             obj->previewOutput_ = sPreviewOutput_;
+
+            std::shared_ptr<PreviewOutputCallback> callback =
+                std::make_shared<PreviewOutputCallback>(PreviewOutputCallback(env));
+            ((sptr<PreviewOutput> &)(obj->previewOutput_))->SetCallback(callback);
+            obj->previewCallback_ = callback;
+
             status = napi_wrap(env, thisVar, reinterpret_cast<void*>(obj.get()),
                                PreviewOutputNapi::PreviewOutputNapiDestructor, nullptr, &(obj->wrapper_));
             if (status == napi_ok) {
@@ -159,7 +187,7 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
-    napi_get_boolean(env, context->status, &jsContext->data);
+    napi_get_undefined(env, &jsContext->data);
 
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
@@ -177,14 +205,11 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
     status = napi_get_reference_value(env, sConstructor_, &constructor);
     if (status == napi_ok) {
         sSurfaceId_ = surfaceId;
-        MEDIA_INFO_LOG("surfaceId in create preview : %{public}" PRIu64, surfaceId);
         sptr<Surface> surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
         if (surface == nullptr) {
             MEDIA_ERR_LOG("failed to get surface from SurfaceUtils");
             return result;
         }
-        MEDIA_INFO_LOG("surface width: %{public}d, height: %{public}d", surface->GetDefaultWidth(),
-                       surface->GetDefaultHeight());
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
         sPreviewOutput_ = CameraManager::GetInstance()->CreatePreviewOutput(surface);
         if (sPreviewOutput_ == nullptr) {
@@ -239,7 +264,7 @@ napi_value PreviewOutputNapi::Release(napi_env env, napi_callback_info info)
     napi_value thisVar = nullptr;
 
     CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
-    NAPI_ASSERT(env, argc <= 1, "requires 1 parameter maximum");
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
 
     napi_get_undefined(env, &result);
     std::unique_ptr<PreviewOutputAsyncContext> asyncContext = std::make_unique<PreviewOutputAsyncContext>();
@@ -270,24 +295,6 @@ napi_value PreviewOutputNapi::Release(napi_env env, napi_callback_info info)
     return result;
 }
 
-void PreviewOutputNapi::RegisterCallback(napi_env env, napi_ref callbackRef)
-{
-    if (callbackList_.empty()) {
-        MEDIA_ERR_LOG("Failed to Register Callback callbackList is empty!");
-        return;
-    }
-
-    for (std::string type : callbackList_) {
-        if (type.compare("frameStart") || type.compare("frameEnd") || type.compare("frameShutter")) {
-            std::shared_ptr<PreviewOutputCallback> callback =
-                            std::make_shared<PreviewOutputCallback>(PreviewOutputCallback(env, callbackRef));
-            ((sptr<PreviewOutput> &)(previewOutput_))->SetCallback(callback);
-            MEDIA_INFO_LOG("Preview callback register successfully");
-            break;
-        }
-    }
-}
-
 napi_value PreviewOutputNapi::JSonFunc(napi_env env, napi_callback_info info)
 {
     napi_value undefinedResult = nullptr;
@@ -295,11 +302,9 @@ napi_value PreviewOutputNapi::JSonFunc(napi_env env, napi_callback_info info)
     napi_value argv[ARGS_TWO] = {nullptr};
     napi_value thisVar = nullptr;
     size_t res = 0;
-    uint32_t len = 0;
     char buffer[SIZE];
-    std::string strItem;
+    std::string eventType;
     const int32_t refCount = 1;
-    napi_value stringItem = nullptr;
     PreviewOutputNapi *obj = nullptr;
     napi_status status;
 
@@ -316,26 +321,22 @@ napi_value PreviewOutputNapi::JSonFunc(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&obj));
     if (status == napi_ok && obj != nullptr) {
         napi_valuetype valueType = napi_undefined;
-        bool boolResult = false;
-        if (napi_is_array(env, argv[PARAM0], &boolResult) != napi_ok || boolResult == false
+        if (napi_typeof(env, argv[PARAM0], &valueType) != napi_ok || valueType != napi_string
             || napi_typeof(env, argv[PARAM1], &valueType) != napi_ok || valueType != napi_function) {
             return undefinedResult;
         }
-        napi_get_array_length(env, argv[PARAM0], &len);
-        for (size_t i = 0; i < len; i++) {
-            napi_get_element(env, argv[PARAM0], i, &stringItem);
-            napi_get_value_string_utf8(env, stringItem, buffer, SIZE, &res);
-            strItem = std::string(buffer);
-            obj->callbackList_.push_back(strItem);
-            if (memset_s(buffer, SIZE, 0, sizeof(buffer)) != 0) {
-                MEDIA_ERR_LOG("Memset for buffer failed");
-                return undefinedResult;
-            }
-        }
+
+        napi_get_value_string_utf8(env, argv[PARAM0], buffer, SIZE, &res);
+        eventType = std::string(buffer);
 
         napi_ref callbackRef;
         napi_create_reference(env, argv[PARAM1], refCount, &callbackRef);
-        obj->RegisterCallback(env, callbackRef);
+
+        if (!eventType.empty()) {
+            obj->previewCallback_->SetCallbackRef(eventType, callbackRef);
+        } else {
+            MEDIA_ERR_LOG("Failed to Register Callback: event type is empty!");
+        }
     }
 
     return undefinedResult;

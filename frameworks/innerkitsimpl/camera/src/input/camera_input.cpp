@@ -53,6 +53,23 @@ public:
     int32_t OnResult(const uint64_t timestamp, const std::shared_ptr<CameraMetadata> &result) override
     {
         MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, timestamp: %{public}" PRIu64, timestamp);
+        camera_metadata_item_t item;
+        int ret = FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASH_STATE, &item);
+        if (ret == 0) {
+            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASH_STATE is %{public}d",
+                           item.data.u8[0]);
+        }
+        ret = FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASHMODE, &item);
+        if (ret == 0) {
+            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASHMODE is %{public}d",
+                           item.data.u8[0]);
+        }
+        ret = FindCameraMetadataItem(result->get(), OHOS_CONTROL_AE_MODE, &item);
+        if (ret == 0) {
+            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_AE_MODEis %{public}d",
+                           item.data.u8[0]);
+        }
+
         return CAMERA_OK;
     }
 };

@@ -141,6 +141,7 @@ typedef enum camera_device_metadata_tag {
 
     OHOS_ABILITY_DEVICE_AVAILABLE_FLASHMODES = OHOS_DEVICE_FLASH_START,
     OHOS_CONTROL_FLASHMODE,
+    OHOS_CONTROL_FLASH_STATE,
     OHOS_DEVICE_FLASH_END,
 
     OHOS_ABILITY_ZOOM_RATIO_RANGE = OHOS_DEVICE_ZOOM_START,
@@ -203,13 +204,22 @@ typedef enum camera_focus_mode_enum {
     OHOS_CAMERA_FOCUS_MODE_LOCKED
 } camera_focus_mode_enum_t;
 
-// OHOS_FOCUS_MODE
+// OHOS_FLASH_MODE
 typedef enum camera_flash_mode_enum {
     OHOS_CAMERA_FLASH_MODE_CLOSE = 0,
     OHOS_CAMERA_FLASH_MODE_OPEN,
     OHOS_CAMERA_FLASH_MODE_AUTO,
     OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN
 } camera_flash_mode_enum_t;
+
+// OHOS_CONTROL_FLASH_STATE
+typedef enum camera_flash_state_enum {
+    OHOS_CAMERA_FLASH_STATE_UNAVAILABLE = 0,
+    OHOS_CAMERA_FLASH_STATE_CHARGING,
+    OHOS_CAMERA_FLASH_STATE_READY,
+    OHOS_CAMERA_FLASH_STATE_FLASHING,
+    OHOS_CAMERA_FLASH_STATE_UNKNOWN
+} camera_flash_state_enum_t;
 
 // OHOS_CONTROL_AE_ANTIBANDING_MODE
 typedef enum camera_ae_antibanding_mode {

@@ -44,6 +44,25 @@ namespace OHOS {
 namespace CameraStandard {
 static const std::string CAMERA_PREVIEW_OUTPUT_NAPI_CLASS_NAME = "PreviewOutput";
 
+class PreviewOutputCallback : public PreviewCallback {
+public:
+    PreviewOutputCallback(napi_env env);
+    ~PreviewOutputCallback() = default;
+
+    void OnFrameStarted() const override;
+    void OnFrameEnded(const int32_t frameCount) const override;
+    void OnError(const int32_t errorCode) const override;
+    void SetCallbackRef(const std::string &eventType, const napi_ref &callbackRef);
+
+private:
+    void UpdateJSCallback(std::string propName, const int32_t value) const;
+
+    napi_env env_;
+    napi_ref frameStartCallbackRef_ = nullptr;
+    napi_ref frameEndCallbackRef_ = nullptr;
+    napi_ref errorCallbackRef_ = nullptr;
+};
+
 class PreviewOutputNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -71,6 +90,7 @@ private:
     static napi_ref sConstructor_;
     static uint64_t sSurfaceId_;
     static sptr<CaptureOutput> sPreviewOutput_;
+    std::shared_ptr<PreviewOutputCallback> previewCallback_;
 };
 
 struct PreviewOutputAsyncContext {

@@ -16,6 +16,7 @@
 #ifndef PHOTO_OUTPUT_NAPI_H_
 #define PHOTO_OUTPUT_NAPI_H_
 
+#include <cinttypes>
 #include <securec.h>
 
 #include "media_log.h"
@@ -42,6 +43,34 @@
 namespace OHOS {
 namespace CameraStandard {
 static const std::string CAMERA_PHOTO_OUTPUT_NAPI_CLASS_NAME = "PhotoOutput";
+
+struct CallbackInfo {
+    int32_t captureID;
+    uint64_t timestamp = 0;
+    int32_t frameCount = 0;
+    int32_t errorCode;
+};
+
+class PhotoOutputCallback : public PhotoCallback {
+public:
+    PhotoOutputCallback(napi_env env);
+    ~PhotoOutputCallback() = default;
+
+    void OnCaptureStarted(const int32_t captureID) const override;
+    void OnCaptureEnded(const int32_t captureID) const override;
+    void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const override;
+    void OnCaptureError(const int32_t captureId, const int32_t errorCode) const override;
+    void SetCallbackRef(const std::string &eventType, const napi_ref &callbackRef);
+
+private:
+    void UpdateJSCallback(std::string propName, const CallbackInfo &info) const;
+
+    napi_env env_;
+    napi_ref captureStartCallbackRef_ = nullptr;
+    napi_ref captureEndCallbackRef_ = nullptr;
+    napi_ref frameShutterCallbackRef_ = nullptr;
+    napi_ref errorCallbackRef_ = nullptr;
+};
 
 class PhotoSurfaceListener : public IBufferConsumerListener {
 public:
@@ -76,7 +105,7 @@ private:
     static napi_ref sConstructor_;
     static long sSurfaceId_;
     static sptr<CaptureOutput> sPhotoOutput_;
-    static sptr<PhotoSurfaceListener> listener;
+    static sptr<PhotoSurfaceListener> listener_;
 
     std::vector<std::string> callbackList_;
     void RegisterCallback(napi_env env, napi_ref callbackRef);
@@ -85,6 +114,7 @@ private:
     napi_ref wrapper_;
     long surfaceId_;
     sptr<CaptureOutput> photoOutput_;
+    std::shared_ptr<PhotoOutputCallback> photoCallback_ = nullptr;
 };
 
 struct PhotoOutputAsyncContext {
@@ -95,12 +125,12 @@ struct PhotoOutputAsyncContext {
     long surfaceId;
     int32_t quality = -1;
     int32_t mirror = -1;
-    double latitude;
-    double longitude;
-    int32_t rotaion = -1;
+    double latitude = -1.0;
+    double longitude = -1.0;
+    int32_t rotation = -1;
     PhotoOutputNapi* objectInfo;
-    bool status;
-    bool hasPhotoSettings;
+    int32_t status;
+    bool hasPhotoSettings = false;
 };
 } // namespace CameraStandard
 } // namespace OHOS

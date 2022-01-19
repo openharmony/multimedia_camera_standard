@@ -18,6 +18,7 @@
 
 #include <vector>
 #include "camera_device_ability_items.h"
+#include "output/photo_output.h"
 #include "media_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -119,7 +120,6 @@ const int32_t ARGS_ONE = 1;
 const int32_t ARGS_TWO = 2;
 const int32_t ARGS_THREE = 3;
 const int32_t SIZE = 100;
-const int32_t REFERENCE_COUNT_ONE = 1;
 
 struct JSAsyncContextOutput {
     napi_value error;
@@ -182,6 +182,19 @@ enum JSExposureState {
     EXPOSURE_STATE_CONVERGED
 };
 
+enum QualityLevel {
+    QUALITY_LEVEL_HIGH = 0,
+    QUALITY_LEVEL_MEDIUM,
+    QUALITY_LEVEL_LOW
+};
+
+enum ImageRotation {
+    ROTATION_0 = 0,
+    ROTATION_90 = 90,
+    ROTATION_180 = 180,
+    ROTATION_270 = 270
+};
+
 /* Util class used by napi asynchronous methods for making call to js callback function */
 class CameraNapiUtils {
 public:
@@ -203,7 +216,7 @@ public:
 
     static int32_t MapCameraPositionEnumFromJs(int32_t jsCameraPosition, camera_position_enum_t &nativeCamPos)
     {
-        MEDIA_INFO_LOG("js cam pos = %{public}d", static_cast<int32_t>(jsCameraPosition));
+        MEDIA_INFO_LOG("js cam pos = %{public}d", jsCameraPosition);
         switch (jsCameraPosition) {
             case CAMERA_POSITION_FRONT:
                 nativeCamPos = OHOS_CAMERA_POSITION_FRONT;
@@ -215,6 +228,7 @@ public:
                 nativeCamPos = OHOS_CAMERA_POSITION_OTHER;
                 break;
             default:
+                MEDIA_ERR_LOG("Invalid camera position value received from application");
                 return -1;
         }
 
@@ -235,12 +249,13 @@ public:
             case OHOS_CAMERA_FORMAT_YCBCR_420_888:
             default:
                 jsCameraFormat = -1;
+                MEDIA_ERR_LOG("The native camera format is not supported with JS");
         }
     }
 
     static int32_t MapCameraFormatEnumFromJs(int32_t jsCameraFormat, camera_format_t &nativeCamFormat)
     {
-        MEDIA_INFO_LOG("js cam format = %{public}d", static_cast<int32_t>(jsCameraFormat));
+        MEDIA_INFO_LOG("js cam format = %{public}d", jsCameraFormat);
         switch (jsCameraFormat) {
             case CAMERA_FORMAT_YCRCb_420_SP:
                 nativeCamFormat = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
@@ -249,6 +264,7 @@ public:
                 nativeCamFormat = OHOS_CAMERA_FORMAT_JPEG;
                 break;
             default:
+                MEDIA_ERR_LOG("Invalid camera format value received from application");
                 return -1;
         }
 
@@ -272,6 +288,7 @@ public:
                 jsCameraType = CAMERA_TYPE_TRUE_DEAPTH;
                 break;
             case OHOS_CAMERA_TYPE_LOGICAL:
+                MEDIA_ERR_LOG("Logical camera type is not supported with JS");
                 jsCameraType = -1;
                 break;
             case OHOS_CAMERA_TYPE_UNSPECIFIED:
@@ -282,7 +299,7 @@ public:
 
     static int32_t MapCameraTypeEnumFromJs(int32_t jsCameraType, camera_type_enum_t &nativeCamType)
     {
-        MEDIA_INFO_LOG("js cam type = %{public}d", static_cast<int32_t>(jsCameraType));
+        MEDIA_INFO_LOG("js cam type = %{public}d", jsCameraType);
         switch (jsCameraType) {
             case CAMERA_TYPE_WIDE_ANGLE:
                 nativeCamType = OHOS_CAMERA_TYPE_WIDE_ANGLE;
@@ -300,6 +317,7 @@ public:
                 nativeCamType = OHOS_CAMERA_TYPE_UNSPECIFIED;
                 break;
             default:
+                MEDIA_ERR_LOG("Invalid camera type value received from application");
                 return -1;
         }
 
@@ -320,6 +338,51 @@ public:
             default:
                 jsCameraConnType = CAMERA_CONNECTION_BUILD_IN;
         }
+    }
+
+    static int32_t MapQualityLevelFromJs(int32_t jsQuality, PhotoCaptureSetting::QualityLevel &nativeQuality)
+    {
+        MEDIA_INFO_LOG("js quality level = %{public}d", jsQuality);
+        switch (jsQuality) {
+            case QUALITY_LEVEL_HIGH:
+                nativeQuality = PhotoCaptureSetting::HIGH_QUALITY;
+                break;
+            case QUALITY_LEVEL_MEDIUM:
+                nativeQuality = PhotoCaptureSetting::NORMAL_QUALITY;
+                break;
+            case QUALITY_LEVEL_LOW:
+                nativeQuality = PhotoCaptureSetting::LOW_QUALITY;
+                break;
+            default:
+                MEDIA_ERR_LOG("Invalid quality value received from application");
+                return -1;
+        }
+
+        return 0;
+    }
+
+    static int32_t MapImageRotationFromJs(int32_t jsRotation, PhotoCaptureSetting::RotationConfig &nativeRotation)
+    {
+        MEDIA_INFO_LOG("js rotation = %{public}d", jsRotation);
+        switch (jsRotation) {
+            case ROTATION_0:
+                nativeRotation = PhotoCaptureSetting::Rotation_0;
+                break;
+            case ROTATION_90:
+                nativeRotation = PhotoCaptureSetting::Rotation_90;
+                break;
+            case ROTATION_180:
+                nativeRotation = PhotoCaptureSetting::Rotation_180;
+                break;
+            case ROTATION_270:
+                nativeRotation = PhotoCaptureSetting::Rotation_270;
+                break;
+            default:
+                MEDIA_ERR_LOG("Invalid rotation value received from application");
+                return -1;
+        }
+
+        return 0;
     }
 
     static void CreateNapiErrorObject(napi_env env, napi_value &errorObj,

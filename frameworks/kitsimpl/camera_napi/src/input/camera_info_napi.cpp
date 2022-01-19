@@ -45,7 +45,6 @@ void CameraInfoNapi::CameraInfoNapiDestructor(napi_env env, void *nativeObject, 
 
 napi_value CameraInfoNapi::Init(napi_env env, napi_value exports)
 {
-    MEDIA_INFO_LOG("CameraInfoNapi::Init called()");
     napi_status status;
     napi_value ctorObj;
     int32_t refCount = 1;
@@ -105,7 +104,6 @@ napi_value CameraInfoNapi::CameraInfoNapiConstructor(napi_env env, napi_callback
 
 napi_value CameraInfoNapi::CreateCameraObj(napi_env env, sptr<CameraInfo> cameraInfo)
 {
-    MEDIA_INFO_LOG("CreateCameraObj called");
     napi_status status;
     napi_value result = nullptr;
     napi_value constructor;

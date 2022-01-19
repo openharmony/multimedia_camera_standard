@@ -22,72 +22,113 @@ using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
 
 namespace {
-    constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CameraNapi"};
+    constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PhotoOutputNapi"};
 }
 
 napi_ref PhotoOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> PhotoOutputNapi::sPhotoOutput_ = nullptr;
 long PhotoOutputNapi::sSurfaceId_ = 0;
-sptr<PhotoSurfaceListener> PhotoOutputNapi::listener = nullptr;
+sptr<PhotoSurfaceListener> PhotoOutputNapi::listener_ = nullptr;
 
-class PhotoOutputCallback : public PhotoCallback {
-public:
-    PhotoOutputCallback(napi_env env, napi_ref callbackRef)
-    {
-        env_ = env;
-        callbackRef_ = callbackRef;
+PhotoOutputCallback::PhotoOutputCallback(napi_env env) : env_(env) {}
+
+void PhotoOutputCallback::OnCaptureStarted(const int32_t captureID) const
+{
+    MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureStarted() is called!, captureID: %{public}d", captureID);
+    CallbackInfo info;
+    info.captureID = captureID;
+    UpdateJSCallback("OnCaptureStarted", info);
+}
+
+void PhotoOutputCallback::OnCaptureEnded(const int32_t captureID) const
+{
+    MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureEnded() is called!, captureID: %{public}d", captureID);
+    CallbackInfo info;
+    info.captureID = captureID;
+    UpdateJSCallback("OnCaptureEnded", info);
+}
+
+void PhotoOutputCallback::OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const
+{
+    MEDIA_INFO_LOG("PhotoOutputCallback:OnFrameShutter() called, captureID: %{public}d, timestamp: %{public}" PRIu64,
+        captureId, timestamp);
+    CallbackInfo info;
+    info.captureID = captureId;
+    info.timestamp = timestamp;
+    UpdateJSCallback("OnFrameShutter", info);
+}
+
+void PhotoOutputCallback::OnCaptureError(const int32_t captureId, const int32_t errorCode) const
+{
+    MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureError() is called!, captureID: %{public}d, errorCode: %{public}d",
+        captureId, errorCode);
+    CallbackInfo info;
+    info.captureID = captureId;
+    info.errorCode = errorCode;
+    UpdateJSCallback("OnCaptureError", info);
+}
+
+void PhotoOutputCallback::SetCallbackRef(const std::string &eventType, const napi_ref &callbackRef)
+{
+    if (eventType.compare("captureStart") == 0) {
+        captureStartCallbackRef_ = callbackRef;
+    } else if (eventType.compare("captureEnd") == 0) {
+        captureEndCallbackRef_ = callbackRef;
+    } else if (eventType.compare("frameShutter") == 0) {
+        frameShutterCallbackRef_ = callbackRef;
+    } else if (eventType.compare("error") == 0) {
+        errorCallbackRef_ = callbackRef;
+    } else {
+        MEDIA_ERR_LOG("Incorrect photo callback event type received from JS");
     }
+}
 
-private:
-    napi_env env_;
-    napi_ref callbackRef_;
+void PhotoOutputCallback::UpdateJSCallback(std::string propName, const CallbackInfo &info) const
+{
+    napi_value result[ARGS_TWO];
+    napi_value callback = nullptr;
+    napi_value retVal;
+    napi_value propValue;
 
-    void UpdateJSCallback(std::string propName, const int32_t value) const
-    {
-        napi_value result[ARGS_TWO];
-        napi_value callback = nullptr;
-        napi_value retVal;
-        napi_value propValue;
+    napi_get_undefined(env_, &result[PARAM0]);
 
-        napi_get_undefined(env_, &result[PARAM0]);
-
+    if (propName.compare("OnCaptureStarted") == 0) {
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(captureStartCallbackRef_,
+            "OnCaptureStart callback is not registered by JS");
+        napi_create_int32(env_, info.captureID, &result[PARAM1]);
+        napi_get_reference_value(env_, captureStartCallbackRef_, &callback);
+    } else if (propName.compare("OnCaptureEnded") == 0) {
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(captureEndCallbackRef_,
+            "OnCaptureEnd callback is not registered by JS");
         napi_create_object(env_, &result[PARAM1]);
-        napi_create_int32(env_, value, &propValue);
-
-        napi_set_named_property(env_, result[PARAM1], propName.c_str(), propValue);
-
-        napi_get_reference_value(env_, callbackRef_, &callback);
-        napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+        napi_create_int32(env_, info.captureID, &propValue);
+        napi_set_named_property(env_, result[PARAM1], "captureId", propValue);
+        napi_create_int32(env_, info.frameCount, &propValue);
+        napi_set_named_property(env_, result[PARAM1], "frameCount", propValue);
+        napi_get_reference_value(env_, captureEndCallbackRef_, &callback);
+    } else if (propName.compare("OnFrameShutter") == 0) {
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(frameShutterCallbackRef_,
+            "OnFrameShutter callback is not registered by JS");
+        napi_create_object(env_, &result[PARAM1]);
+        napi_create_int32(env_, info.captureID, &propValue);
+        napi_set_named_property(env_, result[PARAM1], "captureId", propValue);
+        napi_create_int64(env_, info.timestamp, &propValue);
+        napi_set_named_property(env_, result[PARAM1], "timestamp", propValue);
+        napi_get_reference_value(env_, frameShutterCallbackRef_, &callback);
+    } else {
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(errorCallbackRef_,
+            "OnError callback is not registered by JS");
+        napi_create_object(env_, &result[PARAM1]);
+        napi_create_int32(env_, info.errorCode, &propValue);
+        napi_set_named_property(env_, result[PARAM1], "code", propValue);
+        napi_get_reference_value(env_, errorCallbackRef_, &callback);
     }
 
-    void OnCaptureStarted(const int32_t captureID) const override
-    {
-        MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureStarted() is called!, captureID: %{public}d", captureID);
-        UpdateJSCallback("OnCaptureStarted", captureID);
-    }
-
-    void OnCaptureEnded(const int32_t captureID) const override
-    {
-        MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureEnded() is called!, captureID: %{public}d", captureID);
-        UpdateJSCallback("OnCaptureEnded", captureID);
-    }
-
-    void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const override
-    {
-        UpdateJSCallback("OnFrameShutter", captureId);
-    }
-
-    void OnCaptureError(const int32_t captureId, const int32_t errorCode) const override
-    {
-        MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureError() is called!, captureID: %{public}d, errorCode: %{public}d",
-                       captureId, errorCode);
-        UpdateJSCallback("OnCaptureError", captureId);
-    }
-};
+    napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+}
 
 void PhotoSurfaceListener::OnBufferAvailable()
 {
-    MEDIA_INFO_LOG("OnBufferAvailable called!");
     int32_t flushFence = 0;
     int64_t timestamp = 0;
     OHOS::Rect damage;
@@ -119,6 +160,7 @@ int32_t PhotoSurfaceListener::SaveData(const char *buffer, int32_t size)
         if (photoPath.empty()) {
             photoPath = "/data/media/";
         }
+
         path = photoPath + ss.str();
         std::ofstream pic(path, std::ofstream::out | std::ofstream::trunc);
         pic.write(buffer, size);
@@ -129,6 +171,7 @@ int32_t PhotoSurfaceListener::SaveData(const char *buffer, int32_t size)
         }
         pic.close();
     }
+
     return 0;
 }
 
@@ -201,6 +244,12 @@ napi_value PhotoOutputNapi::PhotoOutputNapiConstructor(napi_env env, napi_callba
             obj->env_ = env;
             obj->photoOutput_ = sPhotoOutput_;
             obj->surfaceId_ = sSurfaceId_;
+
+            std::shared_ptr<PhotoOutputCallback> callback =
+                std::make_shared<PhotoOutputCallback>(PhotoOutputCallback(env));
+            ((sptr<PhotoOutput> &)(obj->photoOutput_))->SetCallback(callback);
+            obj->photoCallback_ = callback;
+
             status = napi_wrap(env, thisVar, reinterpret_cast<void*>(obj.get()),
                                PhotoOutputNapi::PhotoOutputNapiDestructor, nullptr, &(obj->wrapper_));
             if (status == napi_ok) {
@@ -259,14 +308,14 @@ napi_value PhotoOutputNapi::CreatePhotoOutput(napi_env env, long surfaceId)
             return result;
         }
         surface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
-        listener = new PhotoSurfaceListener();
-        if (listener == nullptr) {
+        listener_ = new PhotoSurfaceListener();
+        if (listener_ == nullptr) {
             MEDIA_ERR_LOG("Create Listener failed");
             return result;
         }
-        listener->SetConsumerSurface(surface);
+        listener_->SetConsumerSurface(surface);
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
-        surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
+        surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener_);
         sPhotoOutput_ = CameraManager::GetInstance()->CreatePhotoOutput(surface);
         if (sPhotoOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create previewOutput");
@@ -298,13 +347,59 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
-    napi_get_boolean(env, context->status, &jsContext->data);
+    napi_get_undefined(env, &jsContext->data);
 
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
                                              context->work, *jsContext);
     }
     delete context;
+}
+
+int32_t QueryAndGetProperty(napi_env env, napi_value arg, const string &propertyName, napi_value &property)
+{
+    bool present = false;
+    int32_t retval = 1;
+    if (napi_has_named_property(env, arg, propertyName.c_str(), &present) == napi_ok) {
+        if (present) {
+            if (napi_get_named_property(env, arg, propertyName.c_str(), &property) != napi_ok) {
+                HiLog::Error(LABEL, "Failed to obtain property: %{public}s", propertyName.c_str());
+                retval = -1;
+            }
+        } else {
+            HiLog::Info(LABEL, "The property (%{public}s) is not provided from application", propertyName.c_str());
+            retval = 0;
+        }
+    } else {
+        HiLog::Error(LABEL, "Failed to check property: %{public}s", propertyName.c_str());
+        retval = -1;
+    }
+
+    return retval;
+}
+
+int32_t GetLocationProperties(napi_env env, napi_value locationObj, const PhotoOutputAsyncContext &context)
+{
+    PhotoOutputAsyncContext *asyncContext = const_cast<PhotoOutputAsyncContext *>(&context);
+    napi_value property = nullptr;
+    double doubleValue = 0;
+
+    if (QueryAndGetProperty(env, locationObj, "latitude", property) != 1
+        || napi_get_value_double(env, property, &doubleValue) != napi_ok) {
+        return -1;
+    } else {
+        asyncContext->latitude = doubleValue;
+    }
+
+    if (QueryAndGetProperty(env, locationObj, "longitude", property) != 1
+        || napi_get_value_double(env, property, &doubleValue) != napi_ok) {
+        return -1;
+    } else {
+        asyncContext->longitude = doubleValue;
+    }
+
+    // Return 0 after location properties are successfully obtained
+    return 0;
 }
 
 static void GetFetchOptionsParam(napi_env env, napi_value arg, const PhotoOutputAsyncContext &context, bool &err)
@@ -314,57 +409,39 @@ static void GetFetchOptionsParam(napi_env env, napi_value arg, const PhotoOutput
     std::string strValue;
     bool boolValue;
     napi_value property = nullptr;
-    napi_value location = nullptr;
-    bool present = false;
+    PhotoCaptureSetting::QualityLevel quality;
+    PhotoCaptureSetting::RotationConfig rotation;
 
-    napi_has_named_property(env, arg, "quality", &present);
-    if (present) {
-        if (napi_get_named_property(env, arg, "quality", &property) != napi_ok
-            || napi_get_value_int32(env, property, &intValue) != napi_ok) {
-            HiLog::Error(LABEL, "Could not get the string argument!");
-            err = true;
-            asyncContext->quality = -1;
-            return;
-        } else {
-            asyncContext->quality = intValue;
-        }
-        present = false;
-    }
-
-    napi_has_named_property(env, arg, "rotaion", &present);
-    if (present) {
-        intValue = 0;
-        if (napi_get_named_property(env, arg, "rotaion", &property) != napi_ok
-            || napi_get_value_int32(env, property, &intValue) != napi_ok) {
-            HiLog::Error(LABEL, "Could not get the string argument!");
-            err = true;
-            asyncContext->rotaion = -1;
-            return;
-        } else {
-            asyncContext->rotaion = intValue;
-        }
-        present = false;
-    }
-
-    napi_has_named_property(env, arg, "mirror", &present);
-    if (present) {
-        if (napi_get_named_property(env, arg, "mirror", &property) != napi_ok
-            || napi_get_value_bool(env, property, &boolValue) != napi_ok) {
-            HiLog::Error(LABEL, "Could not get the string argument!");
-            err = true;
-            asyncContext->mirror = -1;
-            return;
-        } else {
-            asyncContext->mirror = boolValue ? 1 : 0;
-        }
-        present = false;
-    }
-
-    napi_has_named_property(env, arg, "location", &present);
-    if (present && napi_get_named_property(env, arg, "location", &location) == napi_ok) {
-    } else {
-        HiLog::Error(LABEL, "Could not get the string argument!");
+    if (QueryAndGetProperty(env, arg, "quality", property) == -1
+        || napi_get_value_int32(env, property, &intValue) != napi_ok
+        || CameraNapiUtils::MapQualityLevelFromJs(intValue, quality) == -1) {
         err = true;
+        return;
+    } else {
+        asyncContext->quality = intValue;
+    }
+
+    if (QueryAndGetProperty(env, arg, "rotation", property) == -1
+        || napi_get_value_int32(env, property, &intValue) != napi_ok
+        || CameraNapiUtils::MapImageRotationFromJs(intValue, rotation) == -1) {
+        err = true;
+        return;
+    } else {
+        asyncContext->rotation = intValue;
+    }
+
+    if (QueryAndGetProperty(env, arg, "mirror", property) == -1
+        || napi_get_value_bool(env, property, &boolValue) != napi_ok) {
+        err = true;
+        return;
+    } else {
+        asyncContext->mirror = boolValue ? 1 : 0;
+    }
+
+    if (QueryAndGetProperty(env, arg, "location", property) == -1
+        || GetLocationProperties(env, property, context) == -1) {
+        err = true;
+        return;
     }
 }
 
@@ -387,6 +464,7 @@ static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_va
                 HiLog::Error(LABEL, "fetch options retrieval failed");
                 NAPI_ASSERT(env, false, "type mismatch");
             }
+            asyncContext.hasPhotoSettings = true;
         } else if (i == PARAM0 && valueType == napi_function) {
             napi_create_reference(env, argv[i], refCount, &context->callbackRef);
             break;
@@ -413,6 +491,7 @@ napi_value PhotoOutputNapi::Capture(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
 
     CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, (argc == ARGS_ONE || argc == ARGS_TWO), "requires 2 parameters maximum");
 
     napi_get_undefined(env, &result);
     unique_ptr<PhotoOutputAsyncContext> asyncContext = make_unique<PhotoOutputAsyncContext>();
@@ -431,21 +510,24 @@ napi_value PhotoOutputNapi::Capture(napi_env env, napi_callback_info info)
                     if (context->mirror != -1) {
                         capSettings->SetMirror(context->mirror);
                     }
+
                     if (context->quality != -1) {
                         capSettings->SetQuality(static_cast<PhotoCaptureSetting::QualityLevel>(context->quality));
                     }
-                    if (context->rotaion != -1) {
-                        capSettings->SetRotation(static_cast<PhotoCaptureSetting::RotationConfig>(context->rotaion));
+
+                    if (context->rotation != -1) {
+                        capSettings->SetRotation(static_cast<PhotoCaptureSetting::RotationConfig>(context->rotation));
                     }
-                    if (context->latitude != -1 && context->longitude != -1) {
+
+                    if (context->latitude != -1.0 && context->longitude != 1.0) {
                         capSettings->SetGpsLocation(context->latitude, context->longitude);
                     }
+
                     context->status = photoOutput->Capture(capSettings);
                 } else {
                     context->status = photoOutput->Capture();
                 }
-            },
-            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            }, CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             napi_get_undefined(env, &result);
         } else {
@@ -468,7 +550,7 @@ napi_value PhotoOutputNapi::Release(napi_env env, napi_callback_info info)
     napi_value thisVar = nullptr;
 
     CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
-    NAPI_ASSERT(env, argc <= 1, "requires 1 parameter maximum");
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
 
     napi_get_undefined(env, &result);
     std::unique_ptr<PhotoOutputAsyncContext> asyncContext = std::make_unique<PhotoOutputAsyncContext>();
@@ -485,7 +567,7 @@ napi_value PhotoOutputNapi::Release(napi_env env, napi_callback_info info)
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<PhotoOutputAsyncContext*>(data);
                 ((sptr<PhotoOutput> &)(context->objectInfo->photoOutput_))->Release();
-                context->status = true;
+                context->status = 0;
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -499,24 +581,6 @@ napi_value PhotoOutputNapi::Release(napi_env env, napi_callback_info info)
     return result;
 }
 
-void PhotoOutputNapi::RegisterCallback(napi_env env, napi_ref callbackRef)
-{
-    if (callbackList_.empty()) {
-        MEDIA_ERR_LOG("Failed to Register Callback callbackList is empty!");
-        return;
-    }
-
-    for (std::string type : callbackList_) {
-        if (type.compare("captureStart") || type.compare("captureEnd") || type.compare("frameShutter")) {
-            std::shared_ptr<PhotoOutputCallback> callback =
-                            std::make_shared<PhotoOutputCallback>(PhotoOutputCallback(env, callbackRef));
-            ((sptr<PhotoOutput> &)(photoOutput_))->SetCallback(callback);
-            MEDIA_INFO_LOG("Photo callback register successfully");
-            break;
-        }
-    }
-}
-
 napi_value PhotoOutputNapi::On(napi_env env, napi_callback_info info)
 {
     napi_value undefinedResult = nullptr;
@@ -524,11 +588,9 @@ napi_value PhotoOutputNapi::On(napi_env env, napi_callback_info info)
     napi_value argv[ARGS_TWO] = {nullptr};
     napi_value thisVar = nullptr;
     size_t res = 0;
-    uint32_t len = 0;
     char buffer[SIZE];
-    std::string strItem;
+    std::string eventType;
     const int32_t refCount = 1;
-    napi_value stringItem = nullptr;
     PhotoOutputNapi *obj = nullptr;
     napi_status status;
 
@@ -545,28 +607,22 @@ napi_value PhotoOutputNapi::On(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&obj));
     if (status == napi_ok && obj != nullptr) {
         napi_valuetype valueType = napi_undefined;
-        bool boolResult = false;
-        if (napi_is_array(env, argv[PARAM0], &boolResult) != napi_ok || boolResult == false
+        if (napi_typeof(env, argv[PARAM0], &valueType) != napi_ok || valueType != napi_string
             || napi_typeof(env, argv[PARAM1], &valueType) != napi_ok || valueType != napi_function) {
             return undefinedResult;
         }
 
-        napi_get_array_length(env, argv[PARAM0], &len);
-        for (size_t i = 0; i < len; i++) {
-            napi_get_element(env, argv[PARAM0], i, &stringItem);
-            napi_get_value_string_utf8(env, stringItem, buffer, SIZE, &res);
-            strItem = std::string(buffer);
-            obj->callbackList_.push_back(strItem);
-            if (memset_s(buffer, SIZE, 0, sizeof(buffer)) != 0) {
-                MEDIA_ERR_LOG("Memset for buffer failed");
-                return undefinedResult;
-            }
-        }
+        napi_get_value_string_utf8(env, argv[PARAM0], buffer, SIZE, &res);
+        eventType = std::string(buffer);
 
         napi_ref callbackRef;
         napi_create_reference(env, argv[PARAM1], refCount, &callbackRef);
 
-        obj->RegisterCallback(env, callbackRef);
+        if (!eventType.empty()) {
+            obj->photoCallback_->SetCallbackRef(eventType, callbackRef);
+        } else {
+            MEDIA_ERR_LOG("Failed to Register Callback: event type is empty!");
+        }
     }
 
     return undefinedResult;

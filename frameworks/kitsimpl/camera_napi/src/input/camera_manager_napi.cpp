@@ -154,8 +154,8 @@ static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_va
             } else {
                 MEDIA_INFO_LOG("Camera position : %{public}d", context->cameraPosition);
             }
-        } else if (i == PARAM1) {
-            numValue = 0;
+        } else if (i == PARAM1 && valueType == napi_number) {
+            napi_get_value_int32(env, argv[i], &numValue);
             if ((CameraNapiUtils::MapCameraTypeEnumFromJs(numValue, context->cameraType) == -1)
                 || (context->cameraType != OHOS_CAMERA_TYPE_UNSPECIFIED)) {
                 MEDIA_ERR_LOG("Unsupported camera type found");
@@ -204,7 +204,6 @@ static napi_value CreateCameraJSArray(napi_env env, napi_status status,
 
 void GetCamerasAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    MEDIA_INFO_LOG("GetCamerasAsyncCallbackComplete called");
     auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
 
     CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
@@ -213,7 +212,6 @@ void GetCamerasAsyncCallbackComplete(napi_env env, napi_status status, void* dat
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
 
-    MEDIA_INFO_LOG("GetCameras creating cameras");
     jsContext->data = CreateCameraJSArray(env, status, context->cameraObjList);
     if (jsContext->data == nullptr) {
         napi_get_undefined(env, &jsContext->data);
@@ -229,7 +227,6 @@ void GetCamerasAsyncCallbackComplete(napi_env env, napi_status status, void* dat
 
 napi_value CameraManagerNapi::GetCameras(napi_env env, napi_callback_info info)
 {
-    MEDIA_INFO_LOG("GetCameras called");
     napi_status status;
     napi_value result = nullptr;
     napi_value resource = nullptr;
@@ -261,7 +258,6 @@ napi_value CameraManagerNapi::GetCameras(napi_env env, napi_callback_info info)
             MEDIA_ERR_LOG("GetCameras napi_create_async_work failed ");
             napi_get_undefined(env, &result);
         } else {
-            MEDIA_INFO_LOG("GetCameras napi_create_async_work success");
             napi_queue_async_work(env, asyncContext->work);
             asyncContext.release();
         }
@@ -272,7 +268,6 @@ napi_value CameraManagerNapi::GetCameras(napi_env env, napi_callback_info info)
 
 void CreateCameraInputAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-    MEDIA_INFO_LOG("CreateCameraInputAsyncCallbackComplete called");
     auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
     CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
 
@@ -295,7 +290,6 @@ void CreateCameraInputAsyncCallbackComplete(napi_env env, napi_status status, vo
 
 napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callback_info info)
 {
-    MEDIA_INFO_LOG("CreateCameraInputInstance called");
     napi_status status;
     napi_value result = nullptr;
     napi_value resource = nullptr;

@@ -476,7 +476,7 @@ napi_value CameraNapi::CreateFlashModeObject(napi_env env)
     if (status == napi_ok) {
         for (unsigned int i = 0; i <= vecFlashMode.size(); i++) {
             propName = vecFlashMode[i];
-            status = AddNamedProperty(env, result, propName, (i + 1));
+            status = AddNamedProperty(env, result, propName, i);
             if (status != napi_ok) {
                 MEDIA_ERR_LOG("Failed to add named prop for FlashMode!");
                 break;

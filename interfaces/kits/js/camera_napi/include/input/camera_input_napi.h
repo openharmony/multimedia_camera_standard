@@ -74,6 +74,8 @@ private:
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
 
+    static bool IsFlashSupported(sptr<CameraInput> cameraInput, int flash);
+
     napi_env env_;
     napi_ref wrapper_;
     std::string cameraId_;

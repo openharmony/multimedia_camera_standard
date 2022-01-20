@@ -71,7 +71,7 @@ static const std::int32_t CAM_FORMAT_JPEG = 2000;
 static const std::int32_t CAM_FORMAT_YCRCb_420_SP = 1003;
 
 static const std::vector<std::string> vecFlashMode {
-    "FLASHMODE_CLOSE", "FLASHMODE_OPEN", "FLASHMODE_AUTO", "FLASHMODE_ALWAYS_OPEN"
+    "FLASH_MODE_CLOSE", "FLASH_MODE_OPEN", "FLASH_MODE_AUTO", "FLASH_MODE_ALWAYS_OPEN"
 };
 
 static const std::vector<std::string> vecExposureMode {

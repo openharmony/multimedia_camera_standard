@@ -37,6 +37,7 @@
 #include <cinttypes>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
 #include <fcntl.h>
@@ -175,6 +176,7 @@ struct CameraNapiAsyncContext {
     napi_ref callbackRef;
     bool status;
     CameraNapi *objectInfo;
+    std::string photoSurfaceId;
     uint64_t surfaceId;
     sptr<CameraManager> cameraManager;
     sptr<CaptureSession> cameraSession;

@@ -55,6 +55,7 @@ ohos_shared_library("camera_napi") {
     "//foundation/ace/napi:ace_napi",
     "//foundation/graphic/standard/frameworks/surface:surface",
     "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/camera:camera_framework",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   relative_install_dir = "module/multimedia"

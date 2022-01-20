@@ -39,6 +39,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include "image_receiver.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -72,27 +73,16 @@ private:
     napi_ref errorCallbackRef_ = nullptr;
 };
 
-class PhotoSurfaceListener : public IBufferConsumerListener {
-public:
-    void OnBufferAvailable() override;
-    int32_t SaveData(const char *buffer, int32_t size);
-    void SetConsumerSurface(sptr<Surface> captureSurface);
-
-private:
-    sptr<Surface> captureSurface_;
-    std::string photoPath;
-};
-
 class PhotoOutputNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
-    static napi_value CreatePhotoOutput(napi_env env, long surfaceId);
+    static napi_value CreatePhotoOutput(napi_env env, std::string surfaceId);
     static bool IsPhotoOutput(napi_env env, napi_value obj);
     PhotoOutputNapi();
     ~PhotoOutputNapi();
 
     sptr<CaptureOutput> GetPhotoOutput();
-    long GetSurfaceId();
+    std::string GetSurfaceId();
 
 private:
     static void PhotoOutputNapiDestructor(napi_env env, void* nativeObject, void* finalize_hint);
@@ -103,16 +93,15 @@ private:
     static napi_value On(napi_env env, napi_callback_info info);
 
     static napi_ref sConstructor_;
-    static long sSurfaceId_;
+    static std::string sSurfaceId_;
     static sptr<CaptureOutput> sPhotoOutput_;
-    static sptr<PhotoSurfaceListener> listener_;
 
     std::vector<std::string> callbackList_;
     void RegisterCallback(napi_env env, napi_ref callbackRef);
 
     napi_env env_;
     napi_ref wrapper_;
-    long surfaceId_;
+    std::string surfaceId_;
     sptr<CaptureOutput> photoOutput_;
     std::shared_ptr<PhotoOutputCallback> photoCallback_ = nullptr;
 };
@@ -122,7 +111,7 @@ struct PhotoOutputAsyncContext {
     napi_async_work work;
     napi_deferred deferred;
     napi_ref callbackRef;
-    long surfaceId;
+    std::string surfaceId;
     int32_t quality = -1;
     int32_t mirror = -1;
     double latitude = -1.0;

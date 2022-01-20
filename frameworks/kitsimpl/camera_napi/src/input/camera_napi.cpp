@@ -260,6 +260,45 @@ napi_value CameraNapi::CreateCameraSessionInstance(napi_env env, napi_callback_i
     return result;
 }
 
+static napi_value ConvertPhotoOutputJSArgsToNative(napi_env env, size_t argc, const napi_value argv[],
+    CameraNapiAsyncContext &asyncContext)
+{
+    char buffer[PATH_MAX];
+    const int32_t refCount = 1;
+    napi_value result;
+    size_t length = 0;
+    auto context = &asyncContext;
+
+    NAPI_ASSERT(env, argv != nullptr, "Argument list is empty");
+
+    for (size_t i = PARAM0; i < argc; i++) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[i], &valueType);
+
+        if (i == PARAM0 && valueType == napi_string) {
+            if (napi_get_value_string_utf8(env, argv[PARAM0], buffer, PATH_MAX, &length) == napi_ok) {
+                MEDIA_INFO_LOG("surfaceId buffer : %{public}s", buffer);
+                context->photoSurfaceId.append(buffer);
+                MEDIA_INFO_LOG("context->photoSurfaceId after convert : %{public}s", context->photoSurfaceId.c_str());
+            } else {
+                MEDIA_ERR_LOG("Could not able to read surfaceId argument!");
+            }
+        } else if (i == PARAM0 && valueType == napi_function) {
+            napi_create_reference(env, argv[i], refCount, &context->callbackRef);
+            break;
+        } else if (i == PARAM1 && valueType == napi_function) {
+            napi_create_reference(env, argv[i], refCount, &context->callbackRef);
+            break;
+        } else {
+            NAPI_ASSERT(env, false, "type mismatch");
+        }
+    }
+
+    // Return true napi_value if params are successfully obtained
+    napi_get_boolean(env, true, &result);
+    return result;
+}
+
 static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_value argv[],
     CameraNapiAsyncContext &asyncContext)
 {
@@ -366,8 +405,8 @@ void CreatePhotoOutputAsyncCallbackComplete(napi_env env, napi_status status, vo
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
 
-    MEDIA_ERR_LOG("context->surfaceId : %{public}" PRIu64, context->surfaceId);
-    jsContext->data = PhotoOutputNapi::CreatePhotoOutput(env, context->surfaceId);
+    MEDIA_ERR_LOG("context->photoSurfaceId : %{public}s", context->photoSurfaceId.c_str());
+    jsContext->data = PhotoOutputNapi::CreatePhotoOutput(env, context->photoSurfaceId);
 
     if (jsContext->data == nullptr) {
         napi_get_undefined(env, &jsContext->data);
@@ -395,7 +434,7 @@ napi_value CameraNapi::CreatePhotoOutputInstance(napi_env env, napi_callback_inf
 
     napi_get_undefined(env, &result);
     auto asyncContext = std::make_unique<CameraNapiAsyncContext>();
-    result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
+    result = ConvertPhotoOutputJSArgsToNative(env, argc, argv, *asyncContext);
     CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
     CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
     CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "CreatePhotoOutput");

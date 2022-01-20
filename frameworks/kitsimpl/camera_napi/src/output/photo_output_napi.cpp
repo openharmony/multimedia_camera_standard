@@ -27,8 +27,7 @@ namespace {
 
 napi_ref PhotoOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> PhotoOutputNapi::sPhotoOutput_ = nullptr;
-long PhotoOutputNapi::sSurfaceId_ = 0;
-sptr<PhotoSurfaceListener> PhotoOutputNapi::listener_ = nullptr;
+std::string PhotoOutputNapi::sSurfaceId_ = "invalid";
 
 PhotoOutputCallback::PhotoOutputCallback(napi_env env) : env_(env) {}
 
@@ -127,59 +126,6 @@ void PhotoOutputCallback::UpdateJSCallback(std::string propName, const CallbackI
     napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
 }
 
-void PhotoSurfaceListener::OnBufferAvailable()
-{
-    int32_t flushFence = 0;
-    int64_t timestamp = 0;
-    OHOS::Rect damage;
-    OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
-    captureSurface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
-    if (buffer != nullptr) {
-        const char *addr = static_cast<char *>(buffer->GetVirAddr());
-        uint32_t size = buffer->GetSize();
-        int32_t intResult = 0;
-        intResult = SaveData(addr, size);
-        if (intResult != 0) {
-            MEDIA_ERR_LOG("Save Data Failed!");
-        }
-        captureSurface_->ReleaseBuffer(buffer, -1);
-    } else {
-        MEDIA_ERR_LOG("AcquireBuffer failed!");
-    }
-}
-
-int32_t PhotoSurfaceListener::SaveData(const char *buffer, int32_t size)
-{
-    struct timeval tv = {};
-    gettimeofday(&tv, nullptr);
-    struct tm *ltm = localtime(&tv.tv_sec);
-    if (ltm != nullptr) {
-        std::ostringstream ss("Capture_");
-        std::string path;
-        ss << "Capture" << ltm->tm_hour << "-" << ltm->tm_min << "-" << ltm->tm_sec << ".jpg";
-        if (photoPath.empty()) {
-            photoPath = "/data/media/";
-        }
-
-        path = photoPath + ss.str();
-        std::ofstream pic(path, std::ofstream::out | std::ofstream::trunc);
-        pic.write(buffer, size);
-        if (pic.fail()) {
-            MEDIA_ERR_LOG("Write Picture failed!");
-            pic.close();
-            return -1;
-        }
-        pic.close();
-    }
-
-    return 0;
-}
-
-void PhotoSurfaceListener::SetConsumerSurface(sptr<Surface> captureSurface)
-{
-    captureSurface_ = captureSurface;
-}
-
 PhotoOutputNapi::PhotoOutputNapi() : env_(nullptr), wrapper_(nullptr)
 {
 }
@@ -269,7 +215,7 @@ sptr<CaptureOutput> PhotoOutputNapi::GetPhotoOutput()
     return photoOutput_;
 }
 
-long PhotoOutputNapi::GetSurfaceId()
+std::string PhotoOutputNapi::GetSurfaceId()
 {
     return surfaceId_;
 }
@@ -291,38 +237,30 @@ bool PhotoOutputNapi::IsPhotoOutput(napi_env env, napi_value obj)
     return result;
 }
 
-napi_value PhotoOutputNapi::CreatePhotoOutput(napi_env env, long surfaceId)
+napi_value PhotoOutputNapi::CreatePhotoOutput(napi_env env, std::string surfaceId)
 {
     napi_status status;
     napi_value result = nullptr;
     napi_value constructor;
-    int32_t photoWidth = 4160;
-    int32_t photoHeight = 3120;
 
     status = napi_get_reference_value(env, sConstructor_, &constructor);
     if (status == napi_ok) {
         sSurfaceId_ = surfaceId;
-        sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
+        MEDIA_INFO_LOG("CreatePhotoOutput surfaceId: %{public}s", surfaceId.c_str());
+        sptr<Surface> surface = Media::ImageReceiver::getSurfaceById(surfaceId);
         if (surface == nullptr) {
-            MEDIA_ERR_LOG("failed to get surface from XComponentManager");
+            MEDIA_ERR_LOG("failed to get surface from ImageReceiver");
             return result;
         }
-        surface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
-        listener_ = new PhotoSurfaceListener();
-        if (listener_ == nullptr) {
-            MEDIA_ERR_LOG("Create Listener failed");
-            return result;
-        }
-        listener_->SetConsumerSurface(surface);
+        MEDIA_INFO_LOG("surface width: %{public}d, height: %{public}d", surface->GetDefaultWidth(),
+                       surface->GetDefaultHeight());
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
-        surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener_);
         sPhotoOutput_ = CameraManager::GetInstance()->CreatePhotoOutput(surface);
         if (sPhotoOutput_ == nullptr) {
-            MEDIA_ERR_LOG("failed to create previewOutput");
+            MEDIA_ERR_LOG("failed to create CreatePhotoOutput");
             return result;
         }
         status = napi_new_instance(env, constructor, 0, nullptr, &result);
-        sSurfaceId_ = 0;
         sPhotoOutput_ = nullptr;
         if (status == napi_ok && result != nullptr) {
             return result;

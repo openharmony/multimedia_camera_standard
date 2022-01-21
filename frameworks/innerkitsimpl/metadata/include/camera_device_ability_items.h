@@ -149,6 +149,9 @@ typedef enum camera_device_metadata_tag {
 
     OHOS_ABILITY_ZOOM_RATIO_RANGE = OHOS_DEVICE_ZOOM_START,
     OHOS_CONTROL_ZOOM_RATIO,
+    OHOS_CONTROL_ZOOM_CROP_REGION,
+    OHOS_ABILITY_ZOOM_CAP,
+    OHOS_ABILITY_SCENE_ZOOM_CAP,
     OHOS_DEVICE_ZOOM_END,
 
     // Camera flow control related

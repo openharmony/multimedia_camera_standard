@@ -1,14 +1,16 @@
 # Camera<a name="EN-US_TOPIC_0000001101564782"></a>
 
-- [Introduction<a name="section11660541593"></a>](#introduction)
+- [Camera<a name="EN-US_TOPIC_0000001101564782"></a>](#camera)
+  - [Introduction<a name="section11660541593"></a>](#introduction)
     - [Basic Concepts<a name="sectionbasicconcepts"></a>](#basic-concepts)
-- [Directory Structure<a name="section176641621345"></a>](#directory-structure)
-- [Usage Guidelines<a name="usage-guidelines"></a>](#usage-guidelines)
+  - [Directory Structure<a name="section176641621345"></a>](#directory-structure)
+  - [Usage Guidelines<a name="usage-guidelines"></a>](#usage-guidelines)
     - [To Capture a Photo](#to-capture-a-photo)
     - [To Start and Stop Preview](#to-start-and-stop-preview)
     - [To Record Video](#to-record-video)
     - [To Switch Between Camera Devices](#to-switch-between-camera-devices)
-- [Repositories Involved<a name="section16511040154318"></a>](#repositories-involved)
+    - [To configure flash mode](#to-configure-flash-mode)
+  - [Repositories Involved<a name="section16511040154318"></a>](#repositories-involved)
 
 ## Introduction<a name="section11660541593"></a>
 
@@ -68,21 +70,21 @@ Steps to capture a photo:
     public:
         int32_t mode_;
         sptr<Surface> surface_;
-    
+
         void OnBufferAvailable() override
         {
             int32_t flushFence = 0;
             int64_t timestamp = 0;
             OHOS::Rect damage; // initialize the damage
-    
+
             OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
             surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
             if (buffer != nullptr) {
                 void *addr = buffer->GetVirAddr();
                 int32_t size = buffer->GetSize();
-    
+
                 // Save the buffer(addr) to a file.
-    
+
                 surface_->ReleaseBuffer(buffer, -1);
             }
         }
@@ -127,6 +129,7 @@ Steps to capture a photo:
     int32_t photoWidth = 1280;
     int32_t photoHeight = 960;
     photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
+    photoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_JPEG));
     sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
     capturelistener->mode_ = MODE_PHOTO;
     capturelistener->surface_ = photoSurface;
@@ -170,7 +173,7 @@ Steps to start and stop preview:
 1. Get the Camera Manager Instance and retrieve the camera object list.
 
     ```
-    sptr<CameraManager> camManagerObj = CameraManager::GetInstance(); 
+    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     ```
 
@@ -195,7 +198,7 @@ Steps to start and stop preview:
 5. Add the Camera Input to the Capture Session.
 
     ```
-    result = captureSession->AddInput(cameraInput); 
+    result = captureSession->AddInput(cameraInput);
     ```
 
 6. Create a Preview Output with Surface obtained from Window Manager to render on display. The preview width and Height can be configured as per the supported resolutions which are 640x480 or 832x480. And to save to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo.
@@ -203,6 +206,7 @@ Steps to start and stop preview:
     ```
     int32_t previewWidth = 640;
     int32_t previewHeight = 480;
+    previewSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
     sptr<CaptureOutput> previewOutput = camManagerObj->CreateCustomPreviewOutput(previewSurface, previewWidth, previewHeight);
     ```
 
@@ -273,6 +277,7 @@ Steps to record Video:
 6. Create a Video Output with Surface obtained from Recoder to MUX with audio and save the file. And to save just Video buffer to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo. The video resolution can be configured from supported resolutions which are 1280x720 or 640x360 while setting the recorder configurations.
 
     ```
+    videoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
     sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
     ```
 
@@ -404,6 +409,7 @@ Below steps demonstrate how to switch between the camera devices. Initially a vi
     int32_t photoWidth = 1280;
     int32_t photoHeight = 960;
     photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
+    photoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_JPEG));
     sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
     capturelistener->mode_ = MODE_PHOTO;
     capturelistener->surface_ = photoSurface;
@@ -433,6 +439,33 @@ Below steps demonstrate how to switch between the camera devices. Initially a vi
 
     ```
     captureSession->Release();
+    ```
+
+### To configure flash mode
+
+Flash mode can be configured on the Camera Input before capturing a photo or recording a video.
+
+1.  Set the flash mode for photo capture:
+
+    ```
+    cameraInput->LockForControl();
+    cameraInput->SetFlashMode(OHOS_CAMERA_FLASH_MODE_OPEN);
+    cameraInput->UnlockForControl();
+    ```
+2.  Set the flash mode for video recording:
+
+    ```
+    cameraInput->LockForControl();
+    cameraInput->SetFlashMode(OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN);
+    cameraInput->UnlockForControl();
+    ```
+
+3.  Turnoff the flash:
+
+    ```
+    cameraInput->LockForControl();
+    cameraInput->SetFlashMode(OHOS_CAMERA_FLASH_MODE_CLOSE);
+    cameraInput->UnlockForControl();
     ```
 
 ## Repositories Involved<a name="section16511040154318"></a>

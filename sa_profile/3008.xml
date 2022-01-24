@@ -16,11 +16,11 @@
 <info>
     <process>camera_service</process>
     <loadlibs>
-        <libpath>/system/lib/libcamera_service.z.so</libpath>
+        <libpath>libcamera_service.z.so</libpath>
     </loadlibs>
     <systemability>
        <name>3008</name>
-       <libpath>/system/lib/libcamera_service.z.so</libpath>
+       <libpath>libcamera_service.z.so</libpath>
        <run-on-create>true</run-on-create>
        <distributed>false</distributed>
        <dump-level>1</dump-level>

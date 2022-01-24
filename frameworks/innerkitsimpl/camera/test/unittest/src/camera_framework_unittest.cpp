@@ -552,8 +552,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_020, TestSize.Level0
 
     input->LockForControl();
 
-    float zoom = 4.0;
-    input->SetZoomRatio(zoom);
+    std::vector<float> zoomRatioRange = input->GetSupportedZoomRatioRange();
+    if (!zoomRatioRange.empty()) {
+        input->SetZoomRatio(zoomRatioRange[0]);
+    }
 
     camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
     input->SetFlashMode(flash);
@@ -566,7 +568,9 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_020, TestSize.Level0
 
     input->UnlockForControl();
 
-    EXPECT_TRUE(input->GetZoomRatio() == zoom);
+    if (!zoomRatioRange.empty()) {
+        EXPECT_TRUE(input->GetZoomRatio() == zoomRatioRange[0]);
+    }
     EXPECT_TRUE(input->GetFlashMode() == flash);
     EXPECT_TRUE(input->GetFocusMode() == focus);
     EXPECT_TRUE(input->GetExposureMode() == exposure);
@@ -947,12 +951,12 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_032, TestSize.Level0
 
     sptr<CameraInput> camInput = (sptr<CameraInput> &)input;
 
-    camInput->LockForControl();
-
-    float zoom = 4.0;
-    camInput->SetZoomRatio(zoom);
-
-    camInput->UnlockForControl();
+    std::vector<float> zoomRatioRange = camInput->GetSupportedZoomRatioRange();
+    if (!zoomRatioRange.empty()) {
+        camInput->LockForControl();
+        camInput->SetZoomRatio(zoomRatioRange[0]);
+        camInput->UnlockForControl();
+    }
 
     sptr<CaptureOutput> preview = CreatePreviewOutput();
     ASSERT_NE(preview, nullptr);
@@ -976,7 +980,9 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_032, TestSize.Level0
     EXPECT_TRUE(ret == 0);
 
     EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, UpdateSettings(_));
+    if (!zoomRatioRange.empty()) {
+        EXPECT_CALL(*mockCameraDevice, UpdateSettings(_));
+    }
     EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
     EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));

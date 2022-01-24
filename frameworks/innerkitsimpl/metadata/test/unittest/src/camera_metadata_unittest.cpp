@@ -323,7 +323,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_007, TestSize.Level0)
     result = AddCameraMetadataItem(metadata, OHOS_CONTROL_FLASHMODE, &flashMode, 1);
     EXPECT_TRUE(result == CAM_META_SUCCESS);
 
-    uint8_t focusMode = OHOS_CAMERA_FOCUS_MODE_LOCKED;
+    uint8_t focusMode = OHOS_CAMERA_AF_MODE_OFF;
     result = AddCameraMetadataItem(metadata, OHOS_CONTROL_AF_MODE, &focusMode, 1);
     EXPECT_TRUE(result == CAM_META_SUCCESS);
 
@@ -347,7 +347,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_007, TestSize.Level0)
     // Verify if flash mode is deleted from metadata
     camera_metadata_item_entry_t *base_item = GetMetadataItems(metadata);
     uint32_t items[2] = {OHOS_ABILITY_CAMERA_TYPE, OHOS_CONTROL_AF_MODE};
-    uint8_t values[2] = {OHOS_CAMERA_TYPE_TELTPHOTO, OHOS_CAMERA_FOCUS_MODE_LOCKED};
+    uint8_t values[2] = {OHOS_CAMERA_TYPE_TELTPHOTO, OHOS_CAMERA_AF_MODE_OFF};
     for (int i = 0; i < 2; i++, base_item++) {
         EXPECT_TRUE(base_item->item == items[i]);
         EXPECT_TRUE(base_item->data_type == META_TYPE_BYTE);
@@ -497,7 +497,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_010, TestSize.Level0)
     camera_metadata_item_t item;
 
     // byte
-    uint8_t connectionType = 3;
+    uint8_t connectionType = OHOS_CAMERA_CONNECTION_TYPE_REMOTE;
     bool ret = cameraMetadata->addEntry(OHOS_ABILITY_CAMERA_CONNECTION_TYPE, &connectionType, 1);
     EXPECT_TRUE(ret == true);
 
@@ -507,7 +507,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_010, TestSize.Level0)
     EXPECT_TRUE(item.item == OHOS_ABILITY_CAMERA_CONNECTION_TYPE);
     EXPECT_TRUE(item.data_type == META_TYPE_BYTE);
     EXPECT_TRUE(item.count == 1);
-    EXPECT_TRUE(item.data.u8[0] == 3);
+    EXPECT_TRUE(item.data.u8[0] == OHOS_CAMERA_CONNECTION_TYPE_REMOTE);
 
     // byte array
     uint8_t scores[4] = {1, 2, 3, 0xFF};
@@ -536,7 +536,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_010, TestSize.Level0)
     EXPECT_TRUE(item.data.i32[0] == exposureCompensation);
 
     // int32 array
-    int32_t activeArray[3] = {1, 2, 0xFFFFFFFF};
+    int32_t activeArray[4] = {0, 0, 2000, 1500};
     ret = cameraMetadata->addEntry(OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE, activeArray,
                                    sizeof(activeArray)/sizeof(activeArray[0]));
     EXPECT_TRUE(ret == true);
@@ -653,7 +653,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_010, TestSize.Level0)
     EXPECT_TRUE(item.item == OHOS_ABILITY_CAMERA_CONNECTION_TYPE);
     EXPECT_TRUE(item.data_type == META_TYPE_BYTE);
     EXPECT_TRUE(item.count == 1);
-    EXPECT_TRUE(item.data.u8[0] == 3);
+    EXPECT_TRUE(item.data.u8[0] == OHOS_CAMERA_CONNECTION_TYPE_REMOTE);
 
     result = FindCameraMetadataItem(metadata, OHOS_STATISTICS_FACE_SCORES, &item);
     EXPECT_TRUE(result == CAM_META_SUCCESS);
@@ -718,7 +718,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_010, TestSize.Level0)
 * SubFunction: NA
 * FunctionPoints: NA
 * EnvConditions: NA
-* CaseDescription: Test operations(add/find) on metadata items with all data types
+* CaseDescription: Test operations(add/find) on mirroring metadata tags
 */
 HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_011, TestSize.Level0)
 {
@@ -761,7 +761,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_011, TestSize.Level0)
 * SubFunction: NA
 * FunctionPoints: NA
 * EnvConditions: NA
-* CaseDescription: Test operations(add/find) on metadata items with all data types
+* CaseDescription: Test operations(add/find) on flash metadata tags
 */
 HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_012, TestSize.Level0)
 {
@@ -806,7 +806,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_012, TestSize.Level0)
 * SubFunction: NA
 * FunctionPoints: NA
 * EnvConditions: NA
-* CaseDescription: Test operations(add/find) on metadata items with all data types
+* CaseDescription: Test operations(add/find) on stream configuration metadata tags
 */
 HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_013, TestSize.Level0)
 {
@@ -835,6 +835,93 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_013, TestSize.Level0)
     EXPECT_TRUE(item.data_type == META_TYPE_INT32);
     EXPECT_TRUE(item.count == sizeof(availBasicConfig)/sizeof(availBasicConfig[0]));
     EXPECT_TRUE(memcmp(item.data.i32, availBasicConfig, sizeof(availBasicConfig)) == 0);
+}
+
+/*
+* Feature: Metadata
+* Function: Sensor active array, zoom cap and scene zoom cap tags
+* SubFunction: NA
+* FunctionPoints: NA
+* EnvConditions: NA
+* CaseDescription: Test operations(add/find) on sensor active array, zoom cap and scene zoom cap tags
+*/
+HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_014, TestSize.Level0)
+{
+    std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(3, 0);
+
+    camera_metadata_item_t item;
+
+    int32_t activeArray[4] = {0, 0, 2000, 1500};
+    bool ret = cameraMetadata->addEntry(OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE, activeArray,
+                                        sizeof(activeArray) / sizeof(activeArray[0]));
+    EXPECT_TRUE(ret == true);
+
+    int32_t zoomCap[] = {100, 600};
+    ret = cameraMetadata->addEntry(OHOS_ABILITY_ZOOM_CAP, zoomCap, sizeof(zoomCap) / sizeof(zoomCap[0]));
+    EXPECT_TRUE(ret == true);
+
+    int32_t zoomSceneCap[] = {100, 1000};
+    ret = cameraMetadata->addEntry(OHOS_ABILITY_SCENE_ZOOM_CAP, zoomSceneCap,
+                                   sizeof(zoomSceneCap) / sizeof(zoomSceneCap[0]));
+    EXPECT_TRUE(ret == true);
+
+    common_metadata_header_t *metadata = cameraMetadata->get();
+    ASSERT_NE(metadata, nullptr);
+
+    int32_t result = FindCameraMetadataItem(metadata, OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 0);
+    EXPECT_TRUE(item.item == OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+    EXPECT_TRUE(item.data_type == META_TYPE_INT32);
+    EXPECT_TRUE(item.count == sizeof(activeArray)/sizeof(activeArray[0]));
+    EXPECT_TRUE(memcmp(item.data.i32, activeArray, sizeof(activeArray)) == 0);
+
+    result = FindCameraMetadataItem(metadata, OHOS_ABILITY_ZOOM_CAP, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 1);
+    EXPECT_TRUE(item.item == OHOS_ABILITY_ZOOM_CAP);
+    EXPECT_TRUE(item.data_type == META_TYPE_INT32);
+    EXPECT_TRUE(item.count == sizeof(zoomCap)/sizeof(zoomCap[0]));
+    EXPECT_TRUE(memcmp(item.data.i32, zoomCap, sizeof(zoomCap)) == 0);
+
+    result = FindCameraMetadataItem(metadata, OHOS_ABILITY_SCENE_ZOOM_CAP, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 2);
+    EXPECT_TRUE(item.item == OHOS_ABILITY_SCENE_ZOOM_CAP);
+    EXPECT_TRUE(item.data_type == META_TYPE_INT32);
+    EXPECT_TRUE(item.count == sizeof(zoomSceneCap)/sizeof(zoomSceneCap[0]));
+    EXPECT_TRUE(memcmp(item.data.i32, zoomSceneCap, sizeof(zoomSceneCap)) == 0);
+}
+
+/*
+* Feature: Metadata
+* Function: Crop region tag
+* SubFunction: NA
+* FunctionPoints: NA
+* EnvConditions: NA
+* CaseDescription: Test operations(add/find) on crop region tag
+*/
+HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_015, TestSize.Level0)
+{
+    std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(3, 0);
+
+    camera_metadata_item_t item;
+
+    int32_t cropRegion[4] = {0, 0, 2000, 1500};
+    bool ret = cameraMetadata->addEntry(OHOS_CONTROL_ZOOM_CROP_REGION, cropRegion,
+                                   sizeof(cropRegion) / sizeof(cropRegion[0]));
+    EXPECT_TRUE(ret == true);
+
+    common_metadata_header_t *metadata = cameraMetadata->get();
+    ASSERT_NE(metadata, nullptr);
+
+    int32_t result = FindCameraMetadataItem(metadata, OHOS_CONTROL_ZOOM_CROP_REGION, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 0);
+    EXPECT_TRUE(item.item == OHOS_CONTROL_ZOOM_CROP_REGION);
+    EXPECT_TRUE(item.data_type == META_TYPE_INT32);
+    EXPECT_TRUE(item.count == sizeof(cropRegion) / sizeof(cropRegion[0]));
+    EXPECT_TRUE(memcmp(item.data.i32, cropRegion, sizeof(cropRegion)) == 0);
 }
 } // CameraStandard
 } // OHOS

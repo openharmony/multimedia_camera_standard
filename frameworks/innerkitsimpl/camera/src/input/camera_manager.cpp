@@ -369,6 +369,9 @@ std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
     sptr<CameraInfo> cameraObj = nullptr;
     int32_t index = 0;
 
+    if (cameraObjList.size() > 0) {
+        cameraObjList.clear();
+    }
     if (serviceProxy_ == nullptr) {
         MEDIA_ERR_LOG("CameraManager::SetCallback serviceProxy_ is null, returning empty list!");
         return cameraObjList;

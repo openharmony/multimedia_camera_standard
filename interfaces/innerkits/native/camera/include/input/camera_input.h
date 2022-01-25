@@ -82,7 +82,6 @@ public:
     std::vector<float> GetSupportedZoomRatioRange();
     float GetZoomRatio();
     void SetZoomRatio(float zoomRatio);
-    void SetCropRegion(float zoomRatio);
     std::vector<camera_flash_mode_enum_t> GetSupportedFlashModes();
     camera_flash_mode_enum_t GetFlashMode();
     void SetFlashMode(camera_flash_mode_enum_t flashMode);
@@ -90,6 +89,7 @@ public:
     void Release() override;
     sptr<ICameraDeviceService> GetCameraDevice();
     std::shared_ptr<ErrorCallback> GetErrorCallback();
+    void ProcessAutoFocusUpdates(const std::shared_ptr<CameraMetadata> &result);
 
 private:
     std::shared_ptr<CameraMetadata> changedMetadata_;
@@ -99,9 +99,12 @@ private:
     sptr<ICameraDeviceServiceCallback> CameraDeviceSvcCallback_;
     std::shared_ptr<ExposureCallback> exposurecallback_;
     std::shared_ptr<FocusCallback> focusCallback_;
+    static const std::unordered_map<camera_af_state_t, FocusCallback::FocusState> mapFromMetadataFocus_;
 
     template<typename DataPtr, typename Vec, typename VecType>
     static void getVector(DataPtr data, size_t count, Vec &vect, VecType dataType);
+    int32_t SetCropRegion(float zoomRatio);
+    int32_t StartFocus(camera_af_mode_t focusMode);
 };
 } // namespace CameraStandard
 } // namespace OHOS

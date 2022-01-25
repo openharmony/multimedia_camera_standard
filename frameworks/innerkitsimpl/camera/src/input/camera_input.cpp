@@ -66,12 +66,21 @@ public:
         }
         ret = FindCameraMetadataItem(result->get(), OHOS_CONTROL_AE_MODE, &item);
         if (ret == 0) {
-            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_AE_MODEis %{public}d",
+            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_AE_MODE is %{public}d",
                            item.data.u8[0]);
         }
-
+        camInput_->ProcessAutoFocusUpdates(result);
         return CAMERA_OK;
     }
+};
+
+const std::unordered_map<camera_af_state_t, FocusCallback::FocusState> CameraInput::mapFromMetadataFocus_ = {
+    {OHOS_CAMERA_AF_STATE_PASSIVE_SCAN, FocusCallback::SCAN},
+    {OHOS_CAMERA_AF_STATE_ACTIVE_SCAN, FocusCallback::SCAN},
+    {OHOS_CAMERA_AF_STATE_PASSIVE_FOCUSED, FocusCallback::FOCUSED},
+    {OHOS_CAMERA_AF_STATE_FOCUSED_LOCKED, FocusCallback::FOCUSED},
+    {OHOS_CAMERA_AF_STATE_PASSIVE_UNFOCUSED, FocusCallback::UNFOCUSED},
+    {OHOS_CAMERA_AF_STATE_NOT_FOCUSED_LOCKED, FocusCallback::UNFOCUSED},
 };
 
 CameraInput::CameraInput(sptr<ICameraDeviceService> &deviceObj,
@@ -342,6 +351,46 @@ void CameraInput::SetFocusCallback(std::shared_ptr<FocusCallback> focusCallback)
     return;
 }
 
+int32_t CameraInput::StartFocus(camera_af_mode_t focusMode)
+{
+    bool status = false;
+    int32_t ret;
+    static int32_t triggerId = 0;
+    uint32_t count = 1;
+    uint8_t trigger = OHOS_CAMERA_AF_TRIGGER_START;
+    camera_metadata_item_t item;
+
+    if (focusMode == OHOS_CAMERA_AF_MODE_OFF) {
+        return CAM_META_SUCCESS;
+    }
+
+    ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AF_TRIGGER, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_AF_TRIGGER, &trigger, count);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_AF_TRIGGER, &trigger, count);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::StartFocus Failed to set trigger");
+        return CAM_META_FAILURE;
+    }
+
+    triggerId++;
+    ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AF_TRIGGER_ID, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_AF_TRIGGER_ID, &triggerId, count);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_AF_TRIGGER_ID, &triggerId, count);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::SetFocusMode Failed to set trigger Id");
+        return CAM_META_FAILURE;
+    }
+    return CAM_META_SUCCESS;
+}
+
 void CameraInput::SetFocusMode(camera_af_mode_t focusMode)
 {
     if (changedMetadata_ == nullptr) {
@@ -350,10 +399,21 @@ void CameraInput::SetFocusMode(camera_af_mode_t focusMode)
     }
 
     bool status = false;
+    int32_t ret;
     uint32_t count = 1;
     uint8_t focus = focusMode;
     camera_metadata_item_t item;
-    int ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AF_MODE, &item);
+
+    MEDIA_DEBUG_LOG("CameraInput::SetFocusMode Focus mode: %{public}d", focusMode);
+
+#ifdef BALTIMORE_CAMERA
+    ret = StartFocus(focusMode);
+    if (ret != CAM_META_SUCCESS) {
+        return;
+    }
+#endif
+
+    ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AF_MODE, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = changedMetadata_->addEntry(OHOS_CONTROL_AF_MODE, &focus, count);
     } else if (ret == CAM_META_SUCCESS) {
@@ -395,7 +455,7 @@ float CameraInput::GetZoomRatio()
     return static_cast<float>(item.data.f[0]);
 }
 
-void CameraInput::SetCropRegion(float zoomRatio)
+int32_t CameraInput::SetCropRegion(float zoomRatio)
 {
     bool status = false;
     int32_t ret;
@@ -412,18 +472,18 @@ void CameraInput::SetCropRegion(float zoomRatio)
 
     if (zoomRatio == 0) {
         MEDIA_ERR_LOG("CameraInput::SetCropRegion Invaid zoom ratio");
-        return;
+        return CAM_META_FAILURE;
     }
 
     ret = FindCameraMetadataItem(cameraObj_->GetMetadata()->get(), OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::SetCropRegion Failed to get sensor active array size with return code %{public}d",
                       ret);
-        return;
+        return ret;
     }
     if (item.count != arrayCount) {
         MEDIA_ERR_LOG("CameraInput::SetCropRegion Invalid sensor active array size count: %{public}d", item.count);
-        return;
+        return CAM_META_FAILURE;
     }
 
     MEDIA_DEBUG_LOG("CameraInput::SetCropRegion Sensor active array left: %{public}d, top: %{public}d, "
@@ -450,8 +510,9 @@ void CameraInput::SetCropRegion(float zoomRatio)
 
     if (!status) {
         MEDIA_ERR_LOG("CameraInput::SetCropRegion Failed to set zoom crop region");
-        return;
+        return CAM_META_FAILURE;
     }
+    return CAM_META_SUCCESS;
 }
 
 void CameraInput::SetZoomRatio(float zoomRatio)
@@ -491,7 +552,10 @@ void CameraInput::SetZoomRatio(float zoomRatio)
     }
 
 #ifdef BALTIMORE_CAMERA
-    SetCropRegion(zoomRatio);
+    ret = SetCropRegion(zoomRatio);
+    if (ret != CAM_META_SUCCESS) {
+        return;
+    }
 #endif
 
     ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
@@ -574,6 +638,27 @@ sptr<ICameraDeviceService> CameraInput::GetCameraDevice()
 std::shared_ptr<ErrorCallback> CameraInput::GetErrorCallback()
 {
     return errorCallback_;
+}
+
+void CameraInput::ProcessAutoFocusUpdates(const std::shared_ptr<CameraMetadata> &result)
+{
+    camera_metadata_item_t item;
+    common_metadata_header_t *metadata = result->get();
+    int ret = FindCameraMetadataItem(metadata, OHOS_CONTROL_AF_MODE, &item);
+    if (ret == CAM_META_SUCCESS) {
+        MEDIA_DEBUG_LOG("Focus mode: %{public}d", item.data.u8[0]);
+    }
+    ret = FindCameraMetadataItem(metadata, OHOS_CONTROL_AF_STATE, &item);
+    if (ret == CAM_META_SUCCESS) {
+        MEDIA_INFO_LOG("Focus state: %{public}d", item.data.u8[0]);
+        if (focusCallback_ != nullptr) {
+            camera_af_state_t focusState = static_cast<camera_af_state_t>(item.data.u8[0]);
+            auto itr = mapFromMetadataFocus_.find(focusState);
+            if (itr != mapFromMetadataFocus_.end()) {
+                focusCallback_->OnFocusState(itr->second);
+            }
+        }
+    }
 }
 } // CameraStandard
 } // OHOS

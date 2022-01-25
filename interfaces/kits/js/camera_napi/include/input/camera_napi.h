@@ -76,11 +76,11 @@ static const std::vector<std::string> vecFlashMode {
 };
 
 static const std::vector<std::string> vecExposureMode {
-    "EXPOSUREMODE_MANUAL", "EXPOSUREMODE_CONTINUOUS_AUTO"
+    "EXPOSURE_MODE_MANUAL", "EXPOSURE_MODE_CONTINUOUS_AUTO"
 };
 
 static const std::vector<std::string> vecFocusMode {
-    "FOCUSMODE_MANUAL", "FOCUSMODE_CONTINUOUS_AUTO_FOCUS", "FOCUSMODE_AUTO_FOCUS", "FOCUSMODE_LOCKED"
+    "FOCUS_MODE_MANUAL", "FOCUS_MODE_CONTINUOUS_AUTO", "FOCUS_MODE_AUTO", "FOCUS_MODE_LOCKED"
 };
 
 static const std::vector<std::string> vecCameraPositionMode {

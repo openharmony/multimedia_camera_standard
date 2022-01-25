@@ -513,7 +513,7 @@ napi_value CameraNapi::CreateFlashModeObject(napi_env env)
 
     status = napi_create_object(env, &result);
     if (status == napi_ok) {
-        for (unsigned int i = 0; i <= vecFlashMode.size(); i++) {
+        for (unsigned int i = 0; i < vecFlashMode.size(); i++) {
             propName = vecFlashMode[i];
             status = AddNamedProperty(env, result, propName, i);
             if (status != napi_ok) {
@@ -543,9 +543,9 @@ napi_value CameraNapi::CreateExposureModeObject(napi_env env)
 
     status = napi_create_object(env, &result);
     if (status == napi_ok) {
-        for (unsigned int i = 0; i <= vecExposureMode.size(); i++) {
+        for (unsigned int i = 0; i < vecExposureMode.size(); i++) {
             propName = vecExposureMode[i];
-            status = AddNamedProperty(env, result, propName, (i + 1));
+            status = AddNamedProperty(env, result, propName, i);
             if (status != napi_ok) {
                 MEDIA_ERR_LOG("Failed to add named prop for ExposureMode!");
                 break;
@@ -573,9 +573,9 @@ napi_value CameraNapi::CreateFocusModeObject(napi_env env)
 
     status = napi_create_object(env, &result);
     if (status == napi_ok) {
-        for (unsigned int i = 0; i <= vecFocusMode.size(); i++) {
+        for (unsigned int i = 0; i < vecFocusMode.size(); i++) {
             propName = vecFocusMode[i];
-            status = AddNamedProperty(env, result, propName, (i + 1));
+            status = AddNamedProperty(env, result, propName, i);
             if (status != napi_ok) {
                 MEDIA_ERR_LOG("Failed to add named prop for FocusMode!");
                 break;

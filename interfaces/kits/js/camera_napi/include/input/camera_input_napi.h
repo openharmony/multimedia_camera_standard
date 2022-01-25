@@ -128,6 +128,7 @@ struct CameraInputAsyncContext {
     int32_t flashMode;
     int32_t exposureMode;
     camera_af_mode_t focusMode;
+    bool focusModeLocked;
     float zoomRatio;
     bool hasFlash;
     std::vector<camera_ae_mode_t> vecSupportedExposureModeList;

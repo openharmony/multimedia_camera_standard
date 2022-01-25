@@ -237,9 +237,12 @@ void FetchOptionsParam(napi_env env, napi_value arg, const CameraInputAsyncConte
     } else if (asyncContext->enumType.compare("ExposureMode") == 0) {
         asyncContext->exposureMode = value;
     } else if (asyncContext->enumType.compare("FocusMode") == 0) {
-        if (CameraNapiUtils::MapFocusModeEnumFromJs(value, asyncContext->focusMode) == -1) {
+        int32_t retVal = CameraNapiUtils::MapFocusModeEnumFromJs(value, asyncContext->focusMode);
+        if (retVal == -1) {
             err = true;
             return;
+        } else if (retVal == 1) {
+            asyncContext->focusModeLocked = true;
         }
     } else {
         err = true;
@@ -731,6 +734,12 @@ napi_value CameraInputNapi::IsFocusModeSupported(napi_env env, napi_callback_inf
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                if (context->focusModeLocked) {
+                    MEDIA_INFO_LOG("FOCUS_MODE_LOCKED is supported");
+                    context->status = true;
+                    return;
+                }
+
                 vector<camera_af_mode_t> vecSupportedFocusModeList;
                 vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
                 if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),
@@ -1086,10 +1095,15 @@ napi_value CameraInputNapi::SetFocusMode(napi_env env, napi_callback_info info)
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
                 sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
+                context->status = true;
+                if (context->focusModeLocked) {
+                    MEDIA_INFO_LOG("Focus mode set is FOCUS_MODE_LOCKED");
+                    return;
+                }
+
                 cameraInput->LockForControl();
                 context->objectInfo->cameraInput_->SetFocusMode(context->focusMode);
                 cameraInput->UnlockForControl();
-                context->status = true;
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -1382,17 +1396,17 @@ void CameraInputNapi::RegisterCallback(napi_env env, const string &eventType, na
         return;
     }
 
-    if (eventType.compare("exposureStateChange")) {
+    if (eventType.compare("exposureStateChange") == 0) {
         // Set callback for exposureStateChange
         shared_ptr<ExposureCallbackListener> callback = make_shared<ExposureCallbackListener>(env, callbackRef);
         cameraInput_->SetExposureCallback(callback);
         exposureCallback_ = callback;
-    } else if (eventType.compare("focusStateChange")) {
+    } else if (eventType.compare("focusStateChange") == 0) {
         // Set callback for focusStateChange
         shared_ptr<FocusCallbackListener> callback = make_shared<FocusCallbackListener>(env, callbackRef);
         cameraInput_->SetFocusCallback(callback);
         focusCallback_ = callback;
-    } else if (eventType.compare("error")) {
+    } else if (eventType.compare("error") == 0) {
         // Set callback for error
     } else {
         MEDIA_ERR_LOG("Incorrect callback event type provided for camera input!");

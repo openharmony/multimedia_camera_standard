@@ -213,8 +213,8 @@ public:
                 nativeFocusMode = OHOS_CAMERA_AF_MODE_AUTO;
                 break;
             case FOCUS_MODE_LOCKED:
-                MEDIA_ERR_LOG("FOCUS_MODE_LOCKED is not supported with native");
-                return -1;
+                MEDIA_INFO_LOG("FOCUS_MODE_LOCKED is supported");
+                return 1;
             default:
                 MEDIA_ERR_LOG("Invalid focus mode value received from application");
                 return -1;

@@ -44,6 +44,28 @@ namespace OHOS {
 namespace CameraStandard {
 static const std::string CAMERA_INPUT_NAPI_CLASS_NAME = "CameraInput";
 
+class ExposureCallbackListener : public ExposureCallback {
+public:
+    ExposureCallbackListener(napi_env env, napi_ref ref) : env_(env), callbackRef_(ref) {}
+    ~ExposureCallbackListener() = default;
+    void OnExposureState(const ExposureState state) override;
+
+private:
+    napi_env env_;
+    napi_ref callbackRef_ = nullptr;
+};
+
+class FocusCallbackListener : public FocusCallback {
+public:
+    FocusCallbackListener(napi_env env, napi_ref ref) : env_(env), callbackRef_(ref) {}
+    ~FocusCallbackListener() = default;
+    void OnFocusState(FocusState state) override;
+
+private:
+    napi_env env_;
+    napi_ref callbackRef_ = nullptr;
+};
+
 class CameraInputNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -64,7 +86,7 @@ private:
     static napi_value IsExposureModeSupported(napi_env env, napi_callback_info info);
     static napi_value GetExposureMode(napi_env env, napi_callback_info info);
     static napi_value SetExposureMode(napi_env env, napi_callback_info info);
-    static napi_value GetSupportedFocusModes(napi_env env, napi_callback_info info);
+    static napi_value IsFocusModeSupported(napi_env env, napi_callback_info info);
     static napi_value GetFocusMode(napi_env env, napi_callback_info info);
     static napi_value SetFocusMode(napi_env env, napi_callback_info info);
     static napi_value GetSupportedSizes(napi_env env, napi_callback_info info);
@@ -83,9 +105,10 @@ private:
     napi_ref wrapper_;
     std::string cameraId_;
     sptr<CameraInput> cameraInput_;
+    std::shared_ptr<ExposureCallbackListener> exposureCallback_ = nullptr;
+    std::shared_ptr<FocusCallbackListener> focusCallback_ = nullptr;
 
-    std::vector<std::string> callbackList_;
-    void RegisterCallback(napi_env env, napi_ref callbackRef);
+    void RegisterCallback(napi_env env, const std::string &eventType, napi_ref callbackRef);
 
     static napi_ref sConstructor_;
     static std::string sCameraId_;
@@ -104,11 +127,10 @@ struct CameraInputAsyncContext {
     camera_format_t cameraFormat;
     int32_t flashMode;
     int32_t exposureMode;
-    int32_t focusMode;
+    camera_af_mode_t focusMode;
     float zoomRatio;
     bool hasFlash;
     std::vector<camera_ae_mode_t> vecSupportedExposureModeList;
-    std::vector<camera_af_mode_t> vecSupportedFocusModeList;
     std::vector<camera_flash_mode_enum_t> vecSupportedFlashModeList;
     std::vector<camera_format_t> vecSupportedPhotoFormatList;
     std::vector<camera_format_t> vecSupportedVideoFormatList;

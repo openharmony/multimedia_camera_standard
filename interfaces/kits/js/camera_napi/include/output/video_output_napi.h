@@ -95,9 +95,6 @@ private:
     static sptr<CaptureOutput> sVideoOutput_;
     static sptr<SurfaceListener> listener;
 
-    std::vector<std::string> callbackList_;
-    void RegisterCallback(napi_env env, napi_ref callbackRef);
-
     napi_env env_;
     napi_ref wrapper_;
     uint64_t surfaceId_;

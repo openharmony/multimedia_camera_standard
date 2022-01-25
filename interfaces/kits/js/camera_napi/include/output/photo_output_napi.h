@@ -96,9 +96,6 @@ private:
     static std::string sSurfaceId_;
     static sptr<CaptureOutput> sPhotoOutput_;
 
-    std::vector<std::string> callbackList_;
-    void RegisterCallback(napi_env env, napi_ref callbackRef);
-
     napi_env env_;
     napi_ref wrapper_;
     std::string surfaceId_;

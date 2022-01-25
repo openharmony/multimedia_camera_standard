@@ -79,9 +79,6 @@ private:
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value JSonFunc(napi_env env, napi_callback_info info);
 
-    std::vector<std::string> callbackList_;
-    void RegisterCallback(napi_env env, napi_ref callbackRef);
-
     napi_env env_;
     napi_ref wrapper_;
     uint64_t surfaceId_;

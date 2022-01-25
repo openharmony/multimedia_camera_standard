@@ -85,12 +85,12 @@ declare namespace camera {
     /**
      * Creates a CameraInput instance by camera position and type.
      * @param position Target camera position.
-     * @param tupe Target camera type.
+     * @param type Target camera type.
      * @return CameraInput instance.
      * @since 8
      */
-     createCameraInput(position: CameraPosition, type: CameraType, callback: AsyncCallback<CameraInput>): void;
-     createCameraInput(position: CameraPosition, type: CameraType): Promise<CameraInput>;
+    createCameraInput(position: CameraPosition, type: CameraType, callback: AsyncCallback<CameraInput>): void;
+    createCameraInput(position: CameraPosition, type: CameraType): Promise<CameraInput>;
 
     /**
      * Subscribes camera status change event callback.
@@ -106,15 +106,15 @@ declare namespace camera {
    * @since 8
    */
   interface CameraStatusInfo {
-  /**
-    * Camera instance.
-    * @since 8
-    */
+    /**
+     * Camera instance.
+     * @since 8
+     */
     camera: Camera;
-  /**
-   * Current camera status.
-   * @since 8
-   */
+    /**
+     * Current camera status.
+     * @since 8
+     */
     status: CameraStatus;
   }
 
@@ -256,6 +256,7 @@ declare namespace camera {
     getSupportedPhotoFormats(): Promise<Array<CameraFormat>>;
     getSupportedVideoFormats(callback: AsyncCallback<Array<CameraFormat>>): void;
     getSupportedVideoFormats(): Promise<Array<CameraFormat>>;
+
     /**
      * Check if device has flash light.
      * @return Flash light has or not.
@@ -772,7 +773,7 @@ declare namespace camera {
      */
     capture(callback: AsyncCallback<void>): void;
     capture(setting: PhotoCaptureSetting, callback: AsyncCallback<void>): void;
-    capture(setting: PhotoCaptureSetting): Promise<void>;
+    capture(setting?: PhotoCaptureSetting): Promise<void>;
 
     /**
      * Release output instance.
@@ -830,7 +831,7 @@ declare namespace camera {
      * Capture id.
      * @since 8
      */
-    captureId : number;
+    captureId: number;
     /**
      * Timestamp for frame.
      * @since 8
@@ -842,12 +843,12 @@ declare namespace camera {
    * Capture end info.
    * @since 8
    */
-   interface CaptureEndInfo {
+  interface CaptureEndInfo {
     /**
      * Capture id.
      * @since 8
      */
-    captureId : number;
+    captureId: number;
     /**
      * Frame count.
      * @since 8

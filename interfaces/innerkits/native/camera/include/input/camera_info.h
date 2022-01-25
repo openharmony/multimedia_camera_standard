@@ -35,6 +35,7 @@ public:
     camera_type_enum_t GetCameraType();
     camera_connection_type_t GetConnectionType();
     bool IsMirrorSupported();
+    std::vector<float> GetZoomRatioRange();
 
 private:
     std::string cameraID_;
@@ -43,8 +44,10 @@ private:
     camera_type_enum_t cameraType_ = OHOS_CAMERA_TYPE_UNSPECIFIED;
     camera_connection_type_t connectionType_ = OHOS_CAMERA_CONNECTION_TYPE_BUILTIN;
     bool isMirrorSupported_ = false;
+    std::vector<float> zoomRatioRange_;
 
     void init(common_metadata_header_t *metadataHeader);
+    std::vector<float> CalculateZoomRange();
 };
 } // namespace CameraStandard
 } // namespace OHOS

@@ -360,7 +360,8 @@ int32_t CameraInput::StartFocus(camera_af_mode_t focusMode)
     uint8_t trigger = OHOS_CAMERA_AF_TRIGGER_START;
     camera_metadata_item_t item;
 
-    if (focusMode == OHOS_CAMERA_AF_MODE_OFF) {
+    if ((focusMode == OHOS_CAMERA_AF_MODE_OFF) || (focusMode == OHOS_CAMERA_AF_MODE_CONTINUOUS_VIDEO)
+        || (focusMode == OHOS_CAMERA_AF_MODE_CONTINUOUS_PICTURE)) {
         return CAM_META_SUCCESS;
     }
 

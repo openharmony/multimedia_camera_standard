@@ -34,6 +34,7 @@ ohos_shared_library("camera_framework") {
   cflags = [
     "-fPIC",
     "-Wall",
+    "-DSUPPORT_CAMERA_AUTH",
   ]
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -51,6 +52,7 @@ ohos_shared_library("camera_framework") {
     "//drivers/framework/include/utils",
     "//drivers/adapter/uhdf2/osal/include",
     "//drivers/adapter/uhdf2/include/hdi",
+    "//base/security/access_token/interfaces/innerkits/accesstoken/include",
   ]
 
   deps = [
@@ -64,6 +66,8 @@ ohos_shared_library("camera_framework") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
+    "ipc:ipc_single",
+    "access_token:libaccesstoken_sdk",
   ]
 
   if (device_name == "baltimore") {

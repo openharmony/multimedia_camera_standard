@@ -29,51 +29,39 @@ napi_ref CameraInputNapi::sConstructor_ = nullptr;
 std::string CameraInputNapi::sCameraId_ = "invalid";
 sptr<CameraInput> CameraInputNapi::sCameraInput_ = nullptr;
 
-class ExposureCallbackListener : public ExposureCallback {
-public:
-    ExposureCallbackListener(napi_env env, napi_ref callbackRef):env_(env), callbackRef_(callbackRef)
-    {
-    }
+void ExposureCallbackListener::OnExposureState(const ExposureState state)
+{
+    MEDIA_INFO_LOG("ExposureCallbackListener:OnExposureState() is called!, captureID: %{public}d", state);
+    int32_t jsExposureState;
+    napi_value result[ARGS_TWO];
+    napi_value callback = nullptr;
+    napi_value retVal;
 
-private:
-    napi_env env_;
-    napi_ref callbackRef_;
+    CameraNapiUtils::MapExposureStateEnum(state, jsExposureState);
 
-    std::string GetExposureStateValue(ExposureState state) const
-    {
-        switch (state) {
-            case ExposureState::SCAN:
-                return "SCAN";
-            case ExposureState::CONVERGED:
-                return "CONVERGED";
-            default:
-                return "SCAN";
-        }
-    }
+    napi_get_undefined(env_, &result[PARAM0]);
+    napi_create_int32(env_, jsExposureState, &result[PARAM1]);
 
-    void UpdateJSCallback(std::string propName, ExposureState state) const
-    {
-        napi_value result[ARGS_TWO];
-        napi_value callback = nullptr;
-        napi_value retVal;
-        napi_value propValue;
+    napi_get_reference_value(env_, callbackRef_, &callback);
+    napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+}
 
-        napi_get_undefined(env_, &result[PARAM0]);
+void FocusCallbackListener::OnFocusState(FocusState state)
+{
+    MEDIA_INFO_LOG("FocusCallbackListener:OnFocusState() is called!, state: %{public}d", state);
+    int32_t jsFocusState;
+    napi_value result[ARGS_TWO];
+    napi_value callback = nullptr;
+    napi_value retVal;
 
-        napi_create_object(env_, &result[PARAM1]);
-        napi_create_string_utf8(env_, GetExposureStateValue(state).c_str(), NAPI_AUTO_LENGTH, &propValue);
-        napi_set_named_property(env_, result[PARAM1], propName.c_str(), propValue);
+    CameraNapiUtils::MapFocusStateEnum(state, jsFocusState);
 
-        napi_get_reference_value(env_, callbackRef_, &callback);
-        napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
-    }
+    napi_get_undefined(env_, &result[PARAM0]);
+    napi_create_int32(env_, jsFocusState, &result[PARAM1]);
 
-    void OnExposureState(const ExposureState state) override
-    {
-        MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureStarted() is called!, captureID: %{public}d", state);
-        UpdateJSCallback("OnExposureState", state);
-    }
-};
+    napi_get_reference_value(env_, callbackRef_, &callback);
+    napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+}
 
 CameraInputNapi::CameraInputNapi() : env_(nullptr), wrapper_(nullptr)
 {
@@ -111,7 +99,7 @@ napi_value CameraInputNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getExposureMode", GetExposureMode),
         DECLARE_NAPI_FUNCTION("setExposureMode", SetExposureMode),
 
-        DECLARE_NAPI_FUNCTION("getSupportedFocusModes", GetSupportedFocusModes),
+        DECLARE_NAPI_FUNCTION("isFocusModeSupported", IsFocusModeSupported),
         DECLARE_NAPI_FUNCTION("getFocusMode", GetFocusMode),
         DECLARE_NAPI_FUNCTION("setFocusMode", SetFocusMode),
 
@@ -249,7 +237,10 @@ void FetchOptionsParam(napi_env env, napi_value arg, const CameraInputAsyncConte
     } else if (asyncContext->enumType.compare("ExposureMode") == 0) {
         asyncContext->exposureMode = value;
     } else if (asyncContext->enumType.compare("FocusMode") == 0) {
-        asyncContext->focusMode = value;
+        if (CameraNapiUtils::MapFocusModeEnumFromJs(value, asyncContext->focusMode) == -1) {
+            err = true;
+            return;
+        }
     } else {
         err = true;
     }
@@ -404,6 +395,7 @@ napi_value CameraInputNapi::HasFlash(napi_env env, napi_callback_info info)
             asyncContext.release();
         }
     }
+
     return result;
 }
 
@@ -714,79 +706,41 @@ napi_value CameraInputNapi::SetExposureMode(napi_env env, napi_callback_info inf
     return result;
 }
 
-void GetSupportedFocusModesAsyncCallbackComplete(napi_env env, napi_status status, void *data)
-{
-    auto context = static_cast<CameraInputAsyncContext*>(data);
-    napi_value focusModes = nullptr;
-
-    CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
-
-    std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
-    jsContext->status = true;
-    napi_get_undefined(env, &jsContext->error);
-    if (!context->vecSupportedFocusModeList.empty()) {
-        size_t len = context->vecSupportedFocusModeList.size();
-        if (napi_create_array(env, &focusModes) == napi_ok) {
-            size_t i;
-            for (i = 0; i < len; i++) {
-                int32_t  iProp = context->vecSupportedFocusModeList[i];
-                napi_value value;
-                status = napi_create_int32(env, iProp, &value);
-                if (status != napi_ok) {
-                    continue;
-                }
-                napi_set_element(env, focusModes, i, value);
-            }
-            if (i == len) {
-                jsContext->data = focusModes;
-            }
-        } else {
-            MEDIA_ERR_LOG("Failed to get the focusModes");
-            napi_get_undefined(env, &jsContext->data);
-        }
-    } else {
-        MEDIA_ERR_LOG("vecSupportedFocusModeList is empty!");
-        napi_get_undefined(env, &jsContext->data);
-    }
-
-    if (context->work != nullptr) {
-        CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
-                                             context->work, *jsContext);
-    }
-    delete context;
-}
-
-napi_value CameraInputNapi::GetSupportedFocusModes(napi_env env, napi_callback_info info)
+napi_value CameraInputNapi::IsFocusModeSupported(napi_env env, napi_callback_info info)
 {
     napi_status status;
     napi_value result = nullptr;
-    const int32_t refCount = 1;
     napi_value resource = nullptr;
     size_t argc = ARGS_ONE;
     napi_value argv[ARGS_ONE] = {0};
     napi_value thisVar = nullptr;
 
     CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
-    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+    NAPI_ASSERT(env, (argc == ARGS_ONE || argc == ARGS_TWO), "requires 2 parameters maximum");
 
     napi_get_undefined(env, &result);
     std::unique_ptr<CameraInputAsyncContext> asyncContext = std::make_unique<CameraInputAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
-        if (argc == ARGS_ONE) {
-            CAMERA_NAPI_GET_JS_ASYNC_CB_REF(env, argv[PARAM0], refCount, asyncContext->callbackRef);
-        }
-
+        asyncContext->enumType = "FocusMode";
+        result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
         CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
-        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "GetSupportedFocusModes");
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "IsFocusModeSupported");
 
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
-                context->status = true;
+                vector<camera_af_mode_t> vecSupportedFocusModeList;
+                vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
+                if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),
+                    context->focusMode) != vecSupportedFocusModeList.end()) {
+                    context->status = true;
+                } else {
+                    context->status = false;
+                }
             },
-            GetSupportedFocusModesAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             napi_get_undefined(env, &result);
         } else {
@@ -1048,7 +1002,9 @@ void GetFocusModeAsyncCallbackComplete(napi_env env, napi_status status, void *d
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
 
-    status = napi_create_int32(env, context->focusMode, &jsContext->data);
+    int32_t jsFocusMode;
+    CameraNapiUtils::MapFocusModeEnum(context->focusMode, jsFocusMode);
+    status = napi_create_int32(env, jsFocusMode, &jsContext->data);
     if (status != napi_ok) {
         napi_get_undefined(env, &jsContext->data);
         MEDIA_ERR_LOG("Failed to get focusMode");
@@ -1129,7 +1085,10 @@ napi_value CameraInputNapi::SetFocusMode(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->objectInfo->cameraInput_->SetFocusMode(static_cast<camera_af_mode_t>(context->focusMode));
+                sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
+                cameraInput->LockForControl();
+                context->objectInfo->cameraInput_->SetFocusMode(context->focusMode);
+                cameraInput->UnlockForControl();
                 context->status = true;
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -1409,7 +1368,6 @@ napi_value CameraInputNapi::SetZoomRatio(napi_env env, napi_callback_info info)
     return result;
 }
 
-
 napi_value CameraInputNapi::Release(napi_env env, napi_callback_info info)
 {
     napi_value undefinedResult = nullptr;
@@ -1417,21 +1375,27 @@ napi_value CameraInputNapi::Release(napi_env env, napi_callback_info info)
     return undefinedResult;
 }
 
-void CameraInputNapi::RegisterCallback(napi_env env, napi_ref callbackRef)
+void CameraInputNapi::RegisterCallback(napi_env env, const string &eventType, napi_ref callbackRef)
 {
-    if (callbackList_.empty()) {
-        MEDIA_ERR_LOG("Failed to Register Callback callbackList is empty!");
+    if (eventType.empty()) {
+        MEDIA_ERR_LOG("Failed to Register Callback callback name is empty!");
         return;
     }
 
-    for (std::string type : callbackList_) {
-        if (type.compare("exposureStateChange")) {
-            std::shared_ptr<ExposureCallbackListener> callback =
-                        std::make_shared<ExposureCallbackListener>(ExposureCallbackListener(env, callbackRef));
-            cameraInput_->SetExposureCallback(callback);
-            break;
-        } else if (type.compare("focusStateChange")) {
-        }
+    if (eventType.compare("exposureStateChange")) {
+        // Set callback for exposureStateChange
+        shared_ptr<ExposureCallbackListener> callback = make_shared<ExposureCallbackListener>(env, callbackRef);
+        cameraInput_->SetExposureCallback(callback);
+        exposureCallback_ = callback;
+    } else if (eventType.compare("focusStateChange")) {
+        // Set callback for focusStateChange
+        shared_ptr<FocusCallbackListener> callback = make_shared<FocusCallbackListener>(env, callbackRef);
+        cameraInput_->SetFocusCallback(callback);
+        focusCallback_ = callback;
+    } else if (eventType.compare("error")) {
+        // Set callback for error
+    } else {
+        MEDIA_ERR_LOG("Incorrect callback event type provided for camera input!");
     }
 }
 
@@ -1442,11 +1406,9 @@ napi_value CameraInputNapi::On(napi_env env, napi_callback_info info)
     napi_value argv[ARGS_TWO] = {nullptr};
     napi_value thisVar = nullptr;
     size_t res = 0;
-    uint32_t len = 0;
     char buffer[SIZE];
-    std::string strItem;
+    std::string eventType;
     const int32_t refCount = 1;
-    napi_value stringItem = nullptr;
     CameraInputNapi *obj = nullptr;
     napi_status status;
 
@@ -1463,27 +1425,18 @@ napi_value CameraInputNapi::On(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&obj));
     if (status == napi_ok && obj != nullptr) {
         napi_valuetype valueType = napi_undefined;
-        bool boolResult = false;
-        if (napi_is_array(env, argv[PARAM0], &boolResult) != napi_ok || boolResult == false
+        if (napi_typeof(env, argv[PARAM0], &valueType) != napi_ok || valueType != napi_string
             || napi_typeof(env, argv[PARAM1], &valueType) != napi_ok || valueType != napi_function) {
             return undefinedResult;
         }
 
-        napi_get_array_length(env, argv[PARAM0], &len);
-        for (size_t i = 0; i < len; i++) {
-            napi_get_element(env, argv[PARAM0], i, &stringItem);
-            napi_get_value_string_utf8(env, stringItem, buffer, SIZE, &res);
-            strItem = std::string(buffer);
-            obj->callbackList_.push_back(strItem);
-            if (memset_s(buffer, SIZE, 0, sizeof(buffer)) != 0) {
-                MEDIA_ERR_LOG("Memset for buffer failed");
-                return undefinedResult;
-            }
-        }
+        napi_get_value_string_utf8(env, argv[PARAM0], buffer, SIZE, &res);
+        eventType = std::string(buffer);
 
         napi_ref callbackRef;
         napi_create_reference(env, argv[PARAM1], refCount, &callbackRef);
-        obj->RegisterCallback(env, callbackRef);
+
+        obj->RegisterCallback(env, eventType, callbackRef);
     }
 
     return undefinedResult;

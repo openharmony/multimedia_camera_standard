@@ -18,10 +18,11 @@
 
 #include <vector>
 #include "camera_device_ability_items.h"
-#include "output/photo_output.h"
+#include "input/camera_input.h"
 #include "media_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "output/photo_output.h"
 
 #define CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar)                 \
     do {                                                                        \
@@ -182,13 +183,13 @@ enum JSExposureState {
     EXPOSURE_STATE_CONVERGED
 };
 
-enum QualityLevel {
+enum JSQualityLevel {
     QUALITY_LEVEL_HIGH = 0,
     QUALITY_LEVEL_MEDIUM,
     QUALITY_LEVEL_LOW
 };
 
-enum ImageRotation {
+enum JSImageRotation {
     ROTATION_0 = 0,
     ROTATION_90 = 90,
     ROTATION_180 = 180,
@@ -198,6 +199,81 @@ enum ImageRotation {
 /* Util class used by napi asynchronous methods for making call to js callback function */
 class CameraNapiUtils {
 public:
+    static int32_t MapFocusModeEnumFromJs(int32_t jsFocusMode, camera_af_mode_t &nativeFocusMode)
+    {
+        MEDIA_INFO_LOG("js focus mode = %{public}d", jsFocusMode);
+        switch (jsFocusMode) {
+            case FOCUS_MODE_MANUAL:
+                nativeFocusMode = OHOS_CAMERA_AF_MODE_OFF;
+                break;
+            case FOCUS_MODE_CONTINUOUS_AUTO:
+                nativeFocusMode = OHOS_CAMERA_AF_MODE_CONTINUOUS_VIDEO;
+                break;
+            case FOCUS_MODE_AUTO:
+                nativeFocusMode = OHOS_CAMERA_AF_MODE_AUTO;
+                break;
+            case FOCUS_MODE_LOCKED:
+                MEDIA_ERR_LOG("FOCUS_MODE_LOCKED is not supported with native");
+                return -1;
+            default:
+                MEDIA_ERR_LOG("Invalid focus mode value received from application");
+                return -1;
+        }
+
+        return 0;
+    }
+
+    static void MapFocusModeEnum(camera_af_mode_t nativeFocusMode, int32_t &jsFocusMode)
+    {
+        MEDIA_INFO_LOG("native focus mode = %{public}d", static_cast<int32_t>(nativeFocusMode));
+        switch (nativeFocusMode) {
+            case OHOS_CAMERA_AF_MODE_OFF:
+                jsFocusMode = FOCUS_MODE_MANUAL;
+                break;
+            case OHOS_CAMERA_AF_MODE_AUTO:
+                jsFocusMode = FOCUS_MODE_AUTO;
+                break;
+            case OHOS_CAMERA_AF_MODE_CONTINUOUS_VIDEO:
+                jsFocusMode = FOCUS_MODE_CONTINUOUS_AUTO;
+                break;
+            case OHOS_CAMERA_AF_MODE_MACRO:
+            case OHOS_CAMERA_AF_MODE_CONTINUOUS_PICTURE:
+            case OHOS_CAMERA_AF_MODE_EDOF:
+            default:
+                MEDIA_ERR_LOG("Received native focus mode is not supported with JS");
+                jsFocusMode = -1;
+        }
+    }
+
+    static void MapFocusStateEnum(FocusCallback::FocusState nativeFocusState, int32_t &jsFocusState)
+    {
+        MEDIA_INFO_LOG("native focus state = %{public}d", static_cast<int32_t>(nativeFocusState));
+        switch (nativeFocusState) {
+            case FocusCallback::SCAN:
+                jsFocusState = FOCUS_STATE_SCAN;
+                break;
+            case FocusCallback::FOCUSED:
+                jsFocusState = FOCUS_STATE_FOCUSED;
+                break;
+            case FocusCallback::UNFOCUSED:
+            default:
+                jsFocusState = FOCUS_STATE_UNFOCUSED;
+        }
+    }
+
+    static void MapExposureStateEnum(ExposureCallback::ExposureState nativeExposureState, int32_t &jsExposureState)
+    {
+        MEDIA_INFO_LOG("native exposure state = %{public}d", static_cast<int32_t>(nativeExposureState));
+        switch (nativeExposureState) {
+            case ExposureCallback::SCAN:
+                jsExposureState = EXPOSURE_STATE_SCAN;
+                break;
+            case ExposureCallback::CONVERGED:
+            default:
+                jsExposureState = EXPOSURE_STATE_CONVERGED;
+        }
+    }
+
     static void MapCameraPositionEnum(camera_position_enum_t nativeCamPos, int32_t &jsCameraPosition)
     {
         MEDIA_INFO_LOG("native cam pos = %{public}d", static_cast<int32_t>(nativeCamPos));

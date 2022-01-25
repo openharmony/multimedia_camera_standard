@@ -121,6 +121,10 @@ napi_value CameraInputNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getSupportedVideoFormats", GetSupportedVideoFormats),
         DECLARE_NAPI_FUNCTION("getSupportedPreviewFormats", GetSupportedPreviewFormats),
 
+        DECLARE_NAPI_FUNCTION("getZoomRatioRange", GetZoomRatioRange),
+        DECLARE_NAPI_FUNCTION("getZoomRatio", GetZoomRatio),
+        DECLARE_NAPI_FUNCTION("setZoomRatio", SetZoomRatio),
+
         DECLARE_NAPI_FUNCTION("release", Release),
         DECLARE_NAPI_FUNCTION("on", On)
     };
@@ -223,6 +227,14 @@ void GetCameraIdAsyncCallbackComplete(napi_env env, napi_status status, void *da
 void FetchOptionsParam(napi_env env, napi_value arg, const CameraInputAsyncContext &context, bool &err)
 {
     CameraInputAsyncContext *asyncContext = const_cast<CameraInputAsyncContext *>(&context);
+    if (asyncContext->enumType.compare("ZoomRatio") == 0) {
+        double zoom;
+        napi_get_value_double(env, arg, &zoom);
+        MEDIA_INFO_LOG("Camera ZoomRatio : %{public}f", zoom);
+        asyncContext->zoomRatio = zoom;
+        return;
+    }
+
     int32_t value;
     napi_get_value_int32(env, arg, &value);
 
@@ -1212,6 +1224,191 @@ napi_value CameraInputNapi::GetSupportedSizes(napi_env env, napi_callback_info i
 
     return result;
 }
+
+void GetZoomRatioRangeAsyncCallbackComplete(napi_env env, napi_status status, void *data)
+{
+    auto context = static_cast<CameraInputAsyncContext*>(data);
+    napi_value zoomRatioRange = nullptr;
+
+    CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
+
+    std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
+    jsContext->status = true;
+    napi_get_undefined(env, &jsContext->error);
+    if (!context->vecZoomRatioList.empty() && napi_create_array(env, &zoomRatioRange) == napi_ok) {
+        int32_t j = 0;
+        for (size_t i = 0; i < context->vecZoomRatioList.size(); i++) {
+            int32_t  zoomRatio = context->vecZoomRatioList[i];
+            napi_value value;
+            if (napi_create_double(env, zoomRatio, &value) == napi_ok) {
+                napi_set_element(env, zoomRatioRange, j, value);
+                j++;
+            }
+        }
+        jsContext->data = zoomRatioRange;
+    } else {
+        MEDIA_ERR_LOG("vecSupportedZoomRatioList is empty or failed to create array!");
+        napi_get_undefined(env, &jsContext->data);
+    }
+
+    if (context->work != nullptr) {
+        CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
+                                             context->work, *jsContext);
+    }
+    delete context;
+}
+
+napi_value CameraInputNapi::GetZoomRatioRange(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    const int32_t refCount = 1;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+
+    napi_get_undefined(env, &result);
+    std::unique_ptr<CameraInputAsyncContext> asyncContext = std::make_unique<CameraInputAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        if (argc == ARGS_ONE) {
+            CAMERA_NAPI_GET_JS_ASYNC_CB_REF(env, argv[PARAM0], refCount, asyncContext->callbackRef);
+        }
+
+        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "GetSupportedZoomRatioRange");
+
+        status = napi_create_async_work(
+            env, nullptr, resource, [](napi_env env, void* data) {
+                auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->vecZoomRatioList = context->objectInfo->cameraInput_->GetSupportedZoomRatioRange();
+                context->status = true;
+            },
+            GetZoomRatioRangeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
+}
+
+void GetZoomRatioAsyncCallbackComplete(napi_env env, napi_status status, void *data)
+{
+    auto context = static_cast<CameraInputAsyncContext*>(data);
+
+    CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
+
+    std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
+    jsContext->status = true;
+    napi_get_undefined(env, &jsContext->error);
+
+    status = napi_create_double(env, context->zoomRatio, &jsContext->data);
+    if (status != napi_ok) {
+        napi_get_undefined(env, &jsContext->data);
+        MEDIA_ERR_LOG("Failed to get zoomRatio");
+    }
+
+    if (context->work != nullptr) {
+        CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
+                                             context->work, *jsContext);
+    }
+    delete context;
+}
+
+napi_value CameraInputNapi::GetZoomRatio(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    const int32_t refCount = 1;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+
+    napi_get_undefined(env, &result);
+    std::unique_ptr<CameraInputAsyncContext> asyncContext = std::make_unique<CameraInputAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        if (argc == ARGS_ONE) {
+            CAMERA_NAPI_GET_JS_ASYNC_CB_REF(env, argv[PARAM0], refCount, asyncContext->callbackRef);
+        }
+
+        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "GetZoomRatio");
+
+        status = napi_create_async_work(
+            env, nullptr, resource, [](napi_env env, void* data) {
+                auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->zoomRatio = context->objectInfo->cameraInput_->GetZoomRatio();
+                context->status = true;
+            },
+            GetZoomRatioAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetFocusMode");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
+}
+
+napi_value CameraInputNapi::SetZoomRatio(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_TWO;
+    napi_value argv[ARGS_TWO] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, (argc == ARGS_ONE || argc == ARGS_TWO), "requires 2 parameters maximum");
+
+    napi_get_undefined(env, &result);
+    auto asyncContext = std::make_unique<CameraInputAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        asyncContext->enumType = "ZoomRatio";
+        result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
+        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "SetZoomRatio");
+        status = napi_create_async_work(
+            env, nullptr, resource,
+            [](napi_env env, void* data) {
+                auto context = static_cast<CameraInputAsyncContext*>(data);
+                sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
+                cameraInput->LockForControl();
+                cameraInput->SetZoomRatio(context->zoomRatio);
+                cameraInput->UnlockForControl();
+            },
+            ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for SetZoomRatio");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
+}
+
 
 napi_value CameraInputNapi::Release(napi_env env, napi_callback_info info)
 {

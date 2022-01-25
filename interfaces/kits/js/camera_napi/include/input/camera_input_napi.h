@@ -71,6 +71,9 @@ private:
     static napi_value GetSupportedPhotoFormats(napi_env env, napi_callback_info info);
     static napi_value GetSupportedVideoFormats(napi_env env, napi_callback_info info);
     static napi_value GetSupportedPreviewFormats(napi_env env, napi_callback_info info);
+    static napi_value GetZoomRatioRange(napi_env env, napi_callback_info info);
+    static napi_value GetZoomRatio(napi_env env, napi_callback_info info);
+    static napi_value SetZoomRatio(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
 
@@ -102,6 +105,7 @@ struct CameraInputAsyncContext {
     int32_t flashMode;
     int32_t exposureMode;
     int32_t focusMode;
+    float zoomRatio;
     bool hasFlash;
     std::vector<camera_ae_mode_t> vecSupportedExposureModeList;
     std::vector<camera_af_mode_t> vecSupportedFocusModeList;
@@ -110,6 +114,7 @@ struct CameraInputAsyncContext {
     std::vector<camera_format_t> vecSupportedVideoFormatList;
     std::vector<camera_format_t> vecSupportedPreviewFormatList;
     std::vector<CameraPicSize> vecSupportedSizeList;
+    std::vector<float> vecZoomRatioList;
 };
 } // namespace CameraStandard
 } // namespace OHOS

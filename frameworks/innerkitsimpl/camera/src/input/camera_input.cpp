@@ -380,16 +380,7 @@ camera_af_mode_t CameraInput::GetFocusMode()
 
 std::vector<float> CameraInput::GetSupportedZoomRatioRange()
 {
-    std::vector<float> zoomRatioRange;
-    std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
-    camera_metadata_item_t item;
-    int ret = FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_ZOOM_RATIO_RANGE, &item);
-    if (ret != CAM_META_SUCCESS) {
-        MEDIA_ERR_LOG("CameraInput::GetSupportedZoomRatioRange Failed with return code %{public}d", ret);
-        return zoomRatioRange;
-    }
-    getVector(item.data.f, item.count, zoomRatioRange, float(0));
-    return zoomRatioRange;
+    return cameraObj_->GetZoomRatioRange();
 }
 
 float CameraInput::GetZoomRatio()
@@ -404,6 +395,65 @@ float CameraInput::GetZoomRatio()
     return static_cast<float>(item.data.f[0]);
 }
 
+void CameraInput::SetCropRegion(float zoomRatio)
+{
+    bool status = false;
+    int32_t ret;
+    int32_t leftIndex = 0;
+    int32_t topIndex = 1;
+    int32_t rightIndex = 2;
+    int32_t bottomIndex = 3;
+    int32_t factor = 2;
+    int32_t sensorRight;
+    int32_t sensorBottom;
+    const uint32_t arrayCount = 4;
+    int32_t cropRegion[arrayCount] = {};
+    camera_metadata_item_t item;
+
+    if (zoomRatio == 0) {
+        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invaid zoom ratio");
+        return;
+    }
+
+    ret = FindCameraMetadataItem(cameraObj_->GetMetadata()->get(), OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("CameraInput::SetCropRegion Failed to get sensor active array size with return code %{public}d",
+                      ret);
+        return;
+    }
+    if (item.count != arrayCount) {
+        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invalid sensor active array size count: %{public}d", item.count);
+        return;
+    }
+
+    MEDIA_DEBUG_LOG("CameraInput::SetCropRegion Sensor active array left: %{public}d, top: %{public}d, "
+                    "right: %{public}d, bottom: %{public}d", item.data.i32[leftIndex], item.data.i32[topIndex],
+                    item.data.i32[rightIndex], item.data.i32[bottomIndex]);
+
+    sensorRight = item.data.i32[rightIndex];
+    sensorBottom = item.data.i32[bottomIndex];
+    cropRegion[leftIndex] = (sensorRight - (sensorRight / zoomRatio)) / factor;
+    cropRegion[topIndex] = (sensorBottom - (sensorBottom / zoomRatio)) / factor;
+    cropRegion[rightIndex] = cropRegion[leftIndex] + (sensorRight / zoomRatio);
+    cropRegion[bottomIndex] = cropRegion[topIndex] + (sensorBottom / zoomRatio);
+
+    MEDIA_DEBUG_LOG("CameraInput::SetCropRegion Crop region left: %{public}d, top: %{public}d, "
+                    "right: %{public}d, bottom: %{public}d", cropRegion[leftIndex], cropRegion[topIndex],
+                    cropRegion[rightIndex], cropRegion[bottomIndex]);
+
+    ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_ZOOM_CROP_REGION, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_ZOOM_CROP_REGION, cropRegion, arrayCount);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_ZOOM_CROP_REGION, cropRegion, arrayCount);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::SetCropRegion Failed to set zoom crop region");
+        return;
+    }
+}
+
 void CameraInput::SetZoomRatio(float zoomRatio)
 {
     if (changedMetadata_ == nullptr) {
@@ -412,9 +462,39 @@ void CameraInput::SetZoomRatio(float zoomRatio)
     }
 
     bool status = false;
-    uint32_t count = 1;
+    int32_t ret;
+    int32_t minIndex = 0;
+    int32_t maxIndex = 1;
+    int32_t count = 1;
     camera_metadata_item_t item;
-    int ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
+
+    MEDIA_DEBUG_LOG("CameraInput::SetZoomRatio Zoom ratio: %{public}f", zoomRatio);
+
+    std::vector<float> zoomRange = cameraObj_->GetZoomRatioRange();
+    if (zoomRange.empty()) {
+        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Zoom range is empty");
+        return;
+    }
+    if (zoomRatio < zoomRange[minIndex]) {
+        MEDIA_DEBUG_LOG("CameraInput::SetZoomRatio Zoom ratio: %{public}f is lesser than minumum zoom: %{public}f",
+                        zoomRatio, zoomRange[minIndex]);
+        zoomRatio = zoomRange[minIndex];
+    } else if (zoomRatio > zoomRange[maxIndex]) {
+        MEDIA_DEBUG_LOG("CameraInput::SetZoomRatio Zoom ratio: %{public}f is greater than maximum zoom: %{public}f",
+                        zoomRatio, zoomRange[maxIndex]);
+        zoomRatio = zoomRange[maxIndex];
+    }
+
+    if (zoomRatio == 0) {
+        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Invaid zoom ratio");
+        return;
+    }
+
+#ifdef BALTIMORE_CAMERA
+    SetCropRegion(zoomRatio);
+#endif
+
+    ret = FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = changedMetadata_->addEntry(OHOS_CONTROL_ZOOM_RATIO, &zoomRatio, count);
     } else if (ret == CAM_META_SUCCESS) {

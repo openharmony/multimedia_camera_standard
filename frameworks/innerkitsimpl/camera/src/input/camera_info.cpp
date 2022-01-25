@@ -94,5 +94,92 @@ bool CameraInfo::IsMirrorSupported()
 {
     return isMirrorSupported_;
 }
+
+std::vector<float> CameraInfo::CalculateZoomRange()
+{
+    int32_t ret;
+    int32_t minIndex = 0;
+    int32_t maxIndex = 1;
+    uint32_t zoomRangeCount = 2;
+    float factor = 100.0;
+    float minZoom;
+    float maxZoom;
+    camera_metadata_item_t item;
+
+    ret = FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_ZOOM_CAP, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to get zoom cap with return code %{public}d", ret);
+        return {};
+    }
+    if (item.count != zoomRangeCount) {
+        MEDIA_ERR_LOG("Invalid zoom cap count: %{public}d", item.count);
+        return {};
+    }
+    MEDIA_DEBUG_LOG("Zoom cap min: %{public}d, max: %{public}d",
+                    item.data.i32[minIndex], item.data.i32[maxIndex]);
+    minZoom = item.data.i32[minIndex] / factor;
+    maxZoom = item.data.i32[maxIndex] / factor;
+
+    ret = FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_SCENE_ZOOM_CAP, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to get scene zoom cap with return code %{public}d", ret);
+        return {};
+    }
+    if (item.count != zoomRangeCount) {
+        MEDIA_ERR_LOG("Invalid zoom cap count: %{public}d", item.count);
+        return {};
+    }
+    MEDIA_DEBUG_LOG("Scene zoom cap min: %{public}d, max: %{public}d",
+                    item.data.i32[minIndex], item.data.i32[maxIndex]);
+    if (minZoom < item.data.i32[minIndex] / factor) {
+        minZoom = item.data.i32[minIndex] / factor;
+    }
+    if (maxZoom > item.data.i32[maxIndex] / factor) {
+        maxZoom = item.data.i32[maxIndex] / factor;
+    }
+    return {minZoom, maxZoom};
+}
+
+std::vector<float> CameraInfo::GetZoomRatioRange()
+{
+    int32_t minIndex = 0;
+    int32_t maxIndex = 1;
+    std::vector<float> range;
+
+    if (!zoomRatioRange_.empty()) {
+        return zoomRatioRange_;
+    }
+
+#ifndef BALTIMORE_CAMERA
+    int ret;
+    uint32_t zoomRangeCount = 2;
+    camera_metadata_item_t item;
+
+    ret = FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_ZOOM_RATIO_RANGE, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to get zoom ratio range with return code %{public}d", ret);
+        return {};
+    }
+    if (item.count != zoomRangeCount) {
+        MEDIA_ERR_LOG("Invalid zoom ratio range count: %{public}d", item.count);
+        return {};
+    }
+    range = {item.data.f[minIndex], item.data.f[maxIndex]};
+#else
+    range = CalculateZoomRange();
+    if (range.empty()) {
+        return {};
+    }
+#endif
+
+    if (range[minIndex] > range[maxIndex]) {
+        MEDIA_ERR_LOG("Invalid zoom range. min: %{public}f, max: %{public}f", range[minIndex], range[maxIndex]);
+        return {};
+    }
+    MEDIA_DEBUG_LOG("Zoom range min: %{public}f, max: %{public}f", range[minIndex], range[maxIndex]);
+
+    zoomRatioRange_ = range;
+    return zoomRatioRange_;
+}
 } // CameraStandard
 } // OHOS

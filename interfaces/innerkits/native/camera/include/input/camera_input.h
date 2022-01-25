@@ -82,6 +82,7 @@ public:
     std::vector<float> GetSupportedZoomRatioRange();
     float GetZoomRatio();
     void SetZoomRatio(float zoomRatio);
+    void SetCropRegion(float zoomRatio);
     std::vector<camera_flash_mode_enum_t> GetSupportedFlashModes();
     camera_flash_mode_enum_t GetFlashMode();
     void SetFlashMode(camera_flash_mode_enum_t flashMode);

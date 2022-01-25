@@ -903,7 +903,7 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_014, TestSize.Level0)
 */
 HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_015, TestSize.Level0)
 {
-    std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(3, 0);
+    std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(1, 0);
 
     camera_metadata_item_t item;
 
@@ -922,6 +922,47 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_015, TestSize.Level0)
     EXPECT_TRUE(item.data_type == META_TYPE_INT32);
     EXPECT_TRUE(item.count == sizeof(cropRegion) / sizeof(cropRegion[0]));
     EXPECT_TRUE(memcmp(item.data.i32, cropRegion, sizeof(cropRegion)) == 0);
+}
+
+/*
+* Feature: Metadata
+* Function: Auto focus trigger and trigger Id
+* SubFunction: NA
+* FunctionPoints: NA
+* EnvConditions: NA
+* CaseDescription: Test operations(add/find) on auto focus trigger and trigger Id tags
+*/
+HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_016, TestSize.Level0)
+{
+    std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(2, 0);
+    camera_metadata_item_t item;
+
+    uint8_t trigger = OHOS_CAMERA_AF_TRIGGER_START;
+    bool ret = cameraMetadata->addEntry(OHOS_CONTROL_AF_TRIGGER, &trigger, 1);
+    EXPECT_TRUE(ret == true);
+
+    int32_t triggerId = 10;
+    ret = cameraMetadata->addEntry(OHOS_CONTROL_AF_TRIGGER_ID, &triggerId, 1);
+    EXPECT_TRUE(ret == true);
+
+    common_metadata_header_t *metadata = cameraMetadata->get();
+    ASSERT_NE(metadata, nullptr);
+
+    int32_t result = FindCameraMetadataItem(metadata, OHOS_CONTROL_AF_TRIGGER, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 0);
+    EXPECT_TRUE(item.item == OHOS_CONTROL_AF_TRIGGER);
+    EXPECT_TRUE(item.data_type == META_TYPE_BYTE);
+    EXPECT_TRUE(item.count == 1);
+    EXPECT_TRUE(item.data.u8[0] == trigger);
+
+    result = FindCameraMetadataItem(metadata, OHOS_CONTROL_AF_TRIGGER_ID, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 1);
+    EXPECT_TRUE(item.item == OHOS_CONTROL_AF_TRIGGER_ID);
+    EXPECT_TRUE(item.data_type == META_TYPE_INT32);
+    EXPECT_TRUE(item.count == 1);
+    EXPECT_TRUE(item.data.i32[0] == triggerId);
 }
 } // CameraStandard
 } // OHOS

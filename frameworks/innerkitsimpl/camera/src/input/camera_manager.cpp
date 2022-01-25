@@ -18,6 +18,11 @@
 #include "iservice_registry.h"
 #include "media_log.h"
 #include "system_ability_definition.h"
+#ifdef SUPPORT_CAMERA_AUTH
+#include "ipc_skeleton.h"
+#include "accesstoken_kit.h"
+#include <string.h>
+#endif
 
 using namespace std;
 namespace OHOS {
@@ -392,6 +397,22 @@ sptr<CameraInput> CameraManager::CreateCameraInput(sptr<CameraInfo> &camera)
 {
     sptr<CameraInput> cameraInput = nullptr;
     sptr<ICameraDeviceService> deviceObj = nullptr;
+
+#ifdef SUPPORT_CAMERA_AUTH
+    MEDIA_DEBUG_LOG("CameraManager::CreateCameraInput: Verifying permission to access the camera");
+    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    std::string permissionName = "ohos.permission.CAMERA";
+
+    /* Currently AccessToken fetch is incorrect and hence  permission verification is failing
+     * hence error is not handled here. Once issue resolved by dependent team, error handling
+     * needs to be done here */
+    int permission_result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
+    if (permission_result != Security::AccessToken::TypePermissionState::PERMISSION_GRANTED) {
+        MEDIA_ERR_LOG("CameraManager::CreateCameraInput: Permission to Access Camera Denied!!!!");
+    } else {
+        MEDIA_DEBUG_LOG("CameraManager::CreateCameraInput: Permission to Access Camera Granted!!!!");
+    }
+#endif
 
     if (camera != nullptr) {
         deviceObj = CreateCameraDevice(camera->GetID());

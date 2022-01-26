@@ -25,7 +25,7 @@ ohos_shared_library("metadata") {
     "-Wall",
   ]
   cflags_cc = cflags
-  include_dirs = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include" ]
+  include_dirs = [ "//foundation/multimedia/camera_standard/frameworks/native/metadata/include" ]
   deps = [ "//utils/native/base:utils" ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
@@ -40,9 +40,9 @@ ohos_executable("metadata_sample") {
   sources = [ "src/metadata_sample.cpp" ]
   cflags = [ "-Wall" ]
   cflags_cc = cflags
-  include_dirs = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include" ]
+  include_dirs = [ "//foundation/multimedia/camera_standard/frameworks/native/metadata/include" ]
 
-  deps = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata" ]
+  deps = [ "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata" ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 

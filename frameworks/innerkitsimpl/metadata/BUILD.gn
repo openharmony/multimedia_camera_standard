@@ -29,7 +29,7 @@ ohos_shared_library("metadata") {
   deps = [ "//utils/native/base:utils" ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
   ]
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"

@@ -26,5 +26,5 @@ ohos_unittest("camera_metadata_unittest") {
 
   deps = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata" ]
 
-  external_deps = [ "ipc:ipc_core" ]
+  external_deps = [ "ipc:ipc_single" ]
 }

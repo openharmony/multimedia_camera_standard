@@ -54,10 +54,10 @@ ohos_unittest("camera_framework_unittest") {
   if (device_name == "baltimore") {
     cflags += [ "-DBALTIMORE_CAMERA" ]
     include_dirs += [
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/device",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/operator",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/host",
+      "//drivers/peripheral/adapter/camera/interfaces/include",
+      "//drivers/peripheral/adapter/camera/interfaces/include/callback/device",
+      "//drivers/peripheral/adapter/camera/interfaces/include/callback/operator",
+      "//drivers/peripheral/adapter/camera/interfaces/include/callback/host",
     ]
   } else {
     if (device_name == "rk3566" || device_name == "rk3568") {

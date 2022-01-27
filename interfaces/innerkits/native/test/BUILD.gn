@@ -32,11 +32,11 @@ config("camera_config") {
 
   if (device_name == "baltimore") {
     include_dirs += [
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/server",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/device",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/operator",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/host",
+      "//drivers/peripheral/adapter/camera/interfaces/include",
+      "//drivers/peripheral/adapter/camera/interfaces/include/server",
+      "//drivers/peripheral/adapter/camera/interfaces/include/callback/device",
+      "//drivers/peripheral/adapter/camera/interfaces/include/callback/operator",
+      "//drivers/peripheral/adapter/camera/interfaces/include/callback/host",
     ]
   } else {
     include_dirs += [

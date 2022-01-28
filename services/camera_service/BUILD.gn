@@ -73,16 +73,16 @@ ohos_shared_library("camera_service") {
   if (device_name == "baltimore") {
     cflags += [ "-DBALTIMORE_CAMERA" ]
     include_dirs += [
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/server",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/device",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/operator",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/callback/host",
+      "//drivers/peripheral/adapter/camera/interfaces/include",
+      "//drivers/peripheral/adapter/camera/interfaces/include/server",
+      "//drivers/peripheral/adapter/camera/interfaces/include/callback/device",
+      "//drivers/peripheral/adapter/camera/interfaces/include/callback/operator",
+      "//drivers/peripheral/adapter/camera/interfaces/include/callback/host",
     ]
     deps += [
-      "//drivers/peripheral/hidl_adapter/camera/buffer_manager:camera_adapter_buffer_manager",
-      "//drivers/peripheral/hidl_adapter/camera/hdi_impl:camera_hidl_adapter",
-      "//drivers/peripheral/hidl_adapter/camera/interfaces/include/client:libcamera_client",
+      "//drivers/peripheral/adapter/camera/buffer_manager:camera_adapter_buffer_manager",
+      "//drivers/peripheral/adapter/camera/hdi_impl:camera_hidl_adapter",
+      "//drivers/peripheral/adapter/camera/interfaces/include/client:libcamera_client",
     ]
   } else {
     if (device_name == "rk3566" || device_name == "rk3568") {

@@ -72,8 +72,7 @@ ohos_shared_library("camera_framework") {
 
   if (device_name == "baltimore") {
     cflags += [ "-DBALTIMORE_CAMERA" ]
-    include_dirs +=
-        [ "//drivers/peripheral/hidl_adapter/camera/interfaces/include" ]
+    include_dirs += [ "//drivers/peripheral/adapter/camera/interfaces/include" ]
   } else {
     if (device_name == "rk3566" || device_name == "rk3568") {
       cflags += [ "-DRK_CAMERA" ]

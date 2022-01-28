@@ -49,8 +49,7 @@ ohos_moduletest("camera_framework_moduletest") {
   cflags = [ "-fPIC" ]
   if (device_name == "baltimore") {
     cflags += [ "-DBALTIMORE_CAMERA" ]
-    include_dirs +=
-        [ "//drivers/peripheral/adapter/camera/interfaces/include" ]
+    include_dirs += [ "//drivers/peripheral/adapter/camera/interfaces/include" ]
   } else {
     if (device_name == "rk3566" || device_name == "rk3568") {
       cflags += [ "-DRK_CAMERA" ]

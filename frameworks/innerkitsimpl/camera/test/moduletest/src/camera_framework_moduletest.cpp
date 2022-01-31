@@ -261,8 +261,10 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput)
 {
     camInput->LockForControl();
 
-    float zoom = 4.0;
-    camInput->SetZoomRatio(zoom);
+    std::vector<float> zoomRatioRange = camInput->GetSupportedZoomRatioRange();
+    if (!zoomRatioRange.empty()) {
+        camInput->SetZoomRatio(zoomRatioRange[0]);
+    }
 
     camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
     camInput->SetFlashMode(flash);
@@ -275,7 +277,9 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput)
 
     camInput->UnlockForControl();
 
-    EXPECT_TRUE(camInput->GetZoomRatio() == zoom);
+    if (!zoomRatioRange.empty()) {
+        EXPECT_TRUE(camInput->GetZoomRatio() == zoomRatioRange[0]);
+    }
     EXPECT_TRUE(camInput->GetFlashMode() == flash);
     EXPECT_TRUE(camInput->GetFocusMode() == focus);
     EXPECT_TRUE(camInput->GetExposureMode() == exposure);
@@ -1360,6 +1364,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_028, TestSize.Le
     session_->Stop();
 }
 
+#ifdef BALTIMORE_CAMERA
 /*
  * Feature: Framework
  * Function: Test remove video output and commit when preview + video outputs were committed
@@ -1407,6 +1412,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_029, TestSize.Le
 
     session_->Stop();
 }
+#endif
 
 /*
  * Feature: Framework
@@ -1465,6 +1471,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_030, TestSize.Le
     session_->Stop();
 }
 
+#ifdef BALTIMORE_CAMERA
 /*
  * Feature: Framework
  * Function: Test remove photo output and commit when preview + photo outputs were committed
@@ -1512,6 +1519,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_031, TestSize.Le
 
     session_->Stop();
 }
+#endif
 
 /*
  * Feature: Framework

@@ -66,7 +66,7 @@ public:
     sptr<CaptureOutput> CreatePhotoOutput();
     sptr<CaptureOutput> CreateVideoOutput(int32_t width, int32_t height);
     sptr<CaptureOutput> CreateVideoOutput();
-    void SetCameraParameters(sptr<CameraInput> &camInput);
+    void SetCameraParameters(sptr<CameraInput> &camInput, bool video);
     void TestCallbacks(sptr<CameraInfo> &cameraInfo, bool video);
     void TestSupportedResolution(int32_t previewWidth, int32_t previewHeight, int32_t photoWidth,
                                  int32_t photoHeight, int32_t videoWidth, int32_t videoHeight);

@@ -31,6 +31,35 @@ napi_ref CameraNapi::cameraStatusRef_ = nullptr;
 napi_ref CameraNapi::connectionTypeRef_ = nullptr;
 napi_ref CameraNapi::cameraPositionRef_ = nullptr;
 napi_ref CameraNapi::cameraTypeRef_ = nullptr;
+napi_ref CameraNapi::imageRotationRef_ = nullptr;
+napi_ref CameraNapi::errorUnknownRef_ = nullptr;
+napi_ref CameraNapi::exposureStateRef_ = nullptr;
+napi_ref CameraNapi::focusStateRef_ = nullptr;
+napi_ref CameraNapi::qualityLevelRef_ = nullptr;
+
+std::unordered_map<std::string, int32_t> mapImageRotation = {
+    {"ROTATION_0", 0},
+    {"ROTATION_90", 90},
+    {"ROTATION_180", 180},
+    {"ROTATION_270", 270},
+};
+
+std::unordered_map<std::string, int32_t> mapQualityLevel = {
+    {"QUALITY_LEVEL_HIGH", 0},
+    {"QUALITY_LEVEL_MEDIUM", 1},
+    {"QUALITY_LEVEL_LOW", 2},
+};
+
+std::unordered_map<std::string, int32_t> mapFocusState = {
+    {"FOCUS_STATE_SCAN", 0},
+    {"FOCUS_STATE_FOCUSED", 1},
+    {"FOCUS_STATE_UNFOCUSED", 2},
+};
+
+std::unordered_map<std::string, int32_t> mapExposureState = {
+    {"EXPOSURE_STATE_SCAN", 0},
+    {"EXPOSURE_STATE_CONVERGED", 1},
+};
 
 namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CameraNapi"};
@@ -101,12 +130,21 @@ napi_value CameraNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_FUNCTION("createVideoOutput", CreateVideoOutputInstance),
         DECLARE_NAPI_PROPERTY("FlashMode", CreateFlashModeObject(env)),
         DECLARE_NAPI_PROPERTY("ExposureMode", CreateExposureModeObject(env)),
+        DECLARE_NAPI_PROPERTY("ExposureState", CreateExposureStateEnum(env)),
         DECLARE_NAPI_PROPERTY("FocusMode", CreateFocusModeObject(env)),
+        DECLARE_NAPI_PROPERTY("FocusState", CreateFocusStateEnum(env)),
         DECLARE_NAPI_PROPERTY("CameraPosition", CreateCameraPositionEnum(env)),
         DECLARE_NAPI_PROPERTY("CameraType", CreateCameraTypeEnum(env)),
         DECLARE_NAPI_PROPERTY("ConnectionType", CreateConnectionTypeEnum(env)),
         DECLARE_NAPI_PROPERTY("CameraFormat", CreateCameraFormatObject(env)),
-        DECLARE_NAPI_PROPERTY("CameraStatus", CreateCameraStatusObject(env))
+        DECLARE_NAPI_PROPERTY("CameraStatus", CreateCameraStatusObject(env)),
+        DECLARE_NAPI_PROPERTY("ImageRotation", CreateImageRotationEnum(env)),
+        DECLARE_NAPI_PROPERTY("QualityLevel", CreateQualityLevelEnum(env)),
+        DECLARE_NAPI_PROPERTY("CameraInputErrorCode", CreateErrorUnknownEnum(env)),
+        DECLARE_NAPI_PROPERTY("CaptureSessionErrorCode", CreateErrorUnknownEnum(env)),
+        DECLARE_NAPI_PROPERTY("PreviewOutputErrorCode", CreateErrorUnknownEnum(env)),
+        DECLARE_NAPI_PROPERTY("PhotoOutputErrorCode", CreateErrorUnknownEnum(env)),
+        DECLARE_NAPI_PROPERTY("VideoOutputErrorCode", CreateErrorUnknownEnum(env))
     };
 
     status = napi_define_class(env, CAMERA_LIB_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, CameraNapiConstructor,
@@ -565,6 +603,36 @@ napi_value CameraNapi::CreateExposureModeObject(napi_env env)
     return result;
 }
 
+napi_value CameraNapi::CreateExposureStateEnum(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status;
+    std::string propName;
+
+    status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        for (auto itr = mapExposureState.begin(); itr != mapExposureState.end(); ++itr) {
+            propName = itr->first;
+            status = AddNamedProperty(env, result, propName, itr->second);
+            if (status != napi_ok) {
+                MEDIA_ERR_LOG("Failed to add FocusState prop!");
+                break;
+            }
+            propName.clear();
+        }
+    }
+    if (status == napi_ok) {
+        status = napi_create_reference(env, result, 1, &exposureStateRef_);
+        if (status == napi_ok) {
+            return result;
+        }
+    }
+    MEDIA_ERR_LOG("CreateExposureStateEnum is Failed!");
+    napi_get_undefined(env, &result);
+
+    return result;
+}
+
 napi_value CameraNapi::CreateFocusModeObject(napi_env env)
 {
     napi_value result = nullptr;
@@ -590,6 +658,36 @@ napi_value CameraNapi::CreateFocusModeObject(napi_env env)
         }
     }
     MEDIA_ERR_LOG("CreateFocusModeObject is Failed!");
+    napi_get_undefined(env, &result);
+
+    return result;
+}
+
+napi_value CameraNapi::CreateFocusStateEnum(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status;
+    std::string propName;
+
+    status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        for (auto itr = mapFocusState.begin(); itr != mapFocusState.end(); ++itr) {
+            propName = itr->first;
+            status = AddNamedProperty(env, result, propName, itr->second);
+            if (status != napi_ok) {
+                MEDIA_ERR_LOG("Failed to add FocusState prop!");
+                break;
+            }
+            propName.clear();
+        }
+    }
+    if (status == napi_ok) {
+        status = napi_create_reference(env, result, 1, &focusStateRef_);
+        if (status == napi_ok) {
+            return result;
+        }
+    }
+    MEDIA_ERR_LOG("CreateFocusStateEnum is Failed!");
     napi_get_undefined(env, &result);
 
     return result;
@@ -741,6 +839,91 @@ napi_value CameraNapi::CreateCameraStatusObject(napi_env env)
         }
     }
     MEDIA_ERR_LOG("CreateCameraStatusObject is Failed!");
+    napi_get_undefined(env, &result);
+
+    return result;
+}
+
+napi_value CameraNapi::CreateImageRotationEnum(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status;
+    std::string propName;
+
+    status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        for (auto itr = mapImageRotation.begin(); itr != mapImageRotation.end(); ++itr) {
+            propName = itr->first;
+            status = AddNamedProperty(env, result, propName, itr->second);
+            if (status != napi_ok) {
+                MEDIA_ERR_LOG("Failed to add ImageRotation prop!");
+                break;
+            }
+            propName.clear();
+        }
+    }
+    if (status == napi_ok) {
+        status = napi_create_reference(env, result, 1, &imageRotationRef_);
+        if (status == napi_ok) {
+            return result;
+        }
+    }
+    MEDIA_ERR_LOG("CreateImageRotationEnum is Failed!");
+    napi_get_undefined(env, &result);
+
+    return result;
+}
+
+napi_value CameraNapi::CreateQualityLevelEnum(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status;
+    std::string propName;
+
+    status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        for (auto itr = mapQualityLevel.begin(); itr != mapQualityLevel.end(); ++itr) {
+            propName = itr->first;
+            status = AddNamedProperty(env, result, propName, itr->second);
+            if (status != napi_ok) {
+                MEDIA_ERR_LOG("Failed to add QualityLevel prop!");
+                break;
+            }
+            propName.clear();
+        }
+    }
+    if (status == napi_ok) {
+        status = napi_create_reference(env, result, 1, &qualityLevelRef_);
+        if (status == napi_ok) {
+            return result;
+        }
+    }
+    MEDIA_ERR_LOG("CreateQualityLevelEnum is Failed!");
+    napi_get_undefined(env, &result);
+
+    return result;
+}
+
+napi_value CameraNapi::CreateErrorUnknownEnum(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status;
+    std::string propName = "ERROR_UNKNOWN";
+
+    status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        status = AddNamedProperty(env, result, propName, -1);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to add ERROR_UNKNOWN prop!");
+        }
+    }
+    if (status == napi_ok) {
+        status = napi_create_reference(env, result, 1, &errorUnknownRef_);
+        if (status == napi_ok) {
+            return result;
+        }
+    }
+    MEDIA_ERR_LOG("CreateErrorUnknownEnum is Failed!");
     napi_get_undefined(env, &result);
 
     return result;

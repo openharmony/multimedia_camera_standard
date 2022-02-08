@@ -201,6 +201,11 @@ void CameraFrameworkUnitTest::TearDown()
     Mock::AllowLeak(mockStreamOperator);
 }
 
+MATCHER_P(matchCaptureSetting, captureSetting, "Match Capture Setting")
+{
+    return (arg->captureSetting_ == captureSetting);
+}
+
 /*
  * Feature: Framework
  * Function: Test get cameras
@@ -1168,6 +1173,67 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_037, TestSize.Level0
 
     ret = session->RemoveInput(input);
     EXPECT_TRUE(ret == 0);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test photo capture with photo settings
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test photo capture with photo settings
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_038, TestSize.Level0)
+{
+    InSequence s;
+    EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+    std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+    sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    sptr<CaptureOutput> photo = CreatePhotoOutput();
+    ASSERT_NE(photo, nullptr);
+
+    sptr<CaptureSession> session = cameraManager->CreateCaptureSession();
+    ASSERT_NE(session, nullptr);
+
+    int32_t ret = session->BeginConfig();
+    EXPECT_TRUE(ret == 0);
+
+    ret = session->AddInput(input);
+    EXPECT_TRUE(ret == 0);
+
+    ret = session->AddOutput(photo);
+    EXPECT_TRUE(ret == 0);
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+#ifndef BALTIMORE_CAMERA
+    EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
+        A<const std::vector<std::shared_ptr<Camera::StreamInfo>> &>(), _));
+#endif
+    EXPECT_CALL(*mockStreamOperator, CreateStreams(_));
+    EXPECT_CALL(*mockStreamOperator, CommitStreams(_, _));
+    ret = session->CommitConfig();
+    EXPECT_TRUE(ret == 0);
+
+    std::shared_ptr<PhotoCaptureSetting> photoSetting = std::make_shared<PhotoCaptureSetting>();
+    photoSetting->SetRotation(PhotoCaptureSetting::Rotation_90);
+    photoSetting->SetQuality(PhotoCaptureSetting::NORMAL_QUALITY);
+    EXPECT_TRUE(photoSetting->GetRotation() == PhotoCaptureSetting::Rotation_90);
+    EXPECT_TRUE(photoSetting->GetQuality() == PhotoCaptureSetting::NORMAL_QUALITY);
+
+    EXPECT_CALL(*mockStreamOperator, Capture(PHOTO_CAPTURE_ID_START,
+        matchCaptureSetting(photoSetting->GetCaptureMetadataSetting()), false));
+    ret = ((sptr<PhotoOutput> &)photo)->Capture(photoSetting);
+    EXPECT_TRUE(ret == 0);
+
+    EXPECT_CALL(*mockStreamOperator, ReleaseStreams(_));
+    EXPECT_CALL(*mockCameraDevice, Close());
+    session->Release();
 }
 } // CameraStandard
 } // OHOS

@@ -35,7 +35,7 @@ public:
 class PhotoCaptureSetting {
 public:
     enum QualityLevel {
-        HIGH_QUALITY = 1,
+        HIGH_QUALITY = 0,
         NORMAL_QUALITY,
         LOW_QUALITY
     };
@@ -47,7 +47,7 @@ public:
     };
     PhotoCaptureSetting();
     virtual ~PhotoCaptureSetting() = default;
-    QualityLevel GetQuaility();
+    QualityLevel GetQuality();
     void SetQuality(QualityLevel qualityLevel);
     RotationConfig GetRotation();
     void SetRotation(RotationConfig rotationvalue);

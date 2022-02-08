@@ -288,6 +288,34 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput,
     EXPECT_TRUE(camInput->GetExposureMode() == exposure);
 }
 
+void CameraFrameworkModuleTest::TestCallbacksSession(sptr<CaptureOutput> photoOutput,
+    sptr<CaptureOutput> videoOutput)
+{
+    int32_t intResult;
+
+    intResult = session_->Start();
+    EXPECT_TRUE(intResult == 0);
+
+    if (videoOutput != nullptr) {
+        intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
+        EXPECT_TRUE(intResult == 0);
+        sleep(WAIT_TIME_AFTER_START);
+    }
+
+    if (photoOutput != nullptr) {
+        intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
+        EXPECT_TRUE(intResult == 0);
+    }
+
+    if (videoOutput != nullptr) {
+        intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
+        EXPECT_TRUE(intResult == 0);
+    }
+
+    sleep(WAIT_TIME_BEFORE_STOP);
+    session_->Stop();
+}
+
 void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool video)
 {
     int32_t intResult = session_->BeginConfig();
@@ -342,27 +370,7 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
     EXPECT_TRUE(g_previewEvents.none());
     EXPECT_TRUE(g_videoEvents.none());
 
-    intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
-
-    if (videoOutput != nullptr) {
-        intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
-        EXPECT_TRUE(intResult == 0);
-        sleep(WAIT_TIME_AFTER_START);
-    }
-
-    if (photoOutput != nullptr) {
-        intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
-        EXPECT_TRUE(intResult == 0);
-    }
-
-    if (videoOutput != nullptr) {
-        intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
-        EXPECT_TRUE(intResult == 0);
-    }
-
-    sleep(WAIT_TIME_BEFORE_STOP);
-    session_->Stop();
+    TestCallbacksSession(photoOutput, videoOutput);
 
     EXPECT_TRUE(g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_START)] == 1);
 
@@ -497,7 +505,7 @@ void CameraFrameworkModuleTest::TestUnSupportedResolution(int32_t previewWidth, 
 void CameraFrameworkModuleTest::SetUpTestCase(void) {}
 void CameraFrameworkModuleTest::TearDownTestCase(void) {}
 
-void CameraFrameworkModuleTest::SetUp()
+void CameraFrameworkModuleTest::SetUpInit()
 {
     MEDIA_DEBUG_LOG("Beginning of camera test case!");
     g_photoEvents.reset();
@@ -507,6 +515,23 @@ void CameraFrameworkModuleTest::SetUp()
     g_camFlashMap.clear();
     g_camInputOnError = false;
     g_videoFd = -1;
+
+#ifndef BALTIMORE_CAMERA
+    previewFormat_ = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
+    videoFormat_ = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
+    photoFormat_ = OHOS_CAMERA_FORMAT_JPEG;
+    previewWidth_ = PREVIEW_DEFAULT_WIDTH;
+    previewHeight_ = PREVIEW_DEFAULT_HEIGHT;
+    photoWidth_ = PHOTO_DEFAULT_WIDTH;
+    photoHeight_ = PHOTO_DEFAULT_HEIGHT;
+    videoWidth_ = VIDEO_DEFAULT_WIDTH;
+    videoHeight_ = VIDEO_DEFAULT_HEIGHT;
+#endif
+}
+
+void CameraFrameworkModuleTest::SetUp()
+{
+    SetUpInit();
 
     manager_ = CameraManager::GetInstance();
     manager_->SetCallback(std::make_shared<AppCallback>());
@@ -553,16 +578,6 @@ void CameraFrameworkModuleTest::SetUp()
     size = videoSizes.back();
     videoWidth_ = size.width;
     videoHeight_ = size.height;
-#else
-    previewFormat_ = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
-    videoFormat_ = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
-    photoFormat_ = OHOS_CAMERA_FORMAT_JPEG;
-    previewWidth_ = PREVIEW_DEFAULT_WIDTH;
-    previewHeight_ = PREVIEW_DEFAULT_HEIGHT;
-    photoWidth_ = PHOTO_DEFAULT_WIDTH;
-    photoHeight_ = PHOTO_DEFAULT_HEIGHT;
-    videoWidth_ = VIDEO_DEFAULT_WIDTH;
-    videoHeight_ = VIDEO_DEFAULT_HEIGHT;
 #endif
     session_ = manager_->CreateCaptureSession();
     ASSERT_NE(session_, nullptr);

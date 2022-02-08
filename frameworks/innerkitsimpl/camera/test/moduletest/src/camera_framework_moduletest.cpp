@@ -257,7 +257,7 @@ sptr<CaptureOutput> CameraFrameworkModuleTest::CreateVideoOutput()
     return videoOutput;
 }
 
-void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput)
+void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput, bool video)
 {
     camInput->LockForControl();
 
@@ -266,7 +266,10 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput)
         camInput->SetZoomRatio(zoomRatioRange[0]);
     }
 
-    camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
+    camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_OPEN;
+    if (video) {
+        flash = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
+    }
     camInput->SetFlashMode(flash);
 
     camera_af_mode_t focus = OHOS_CAMERA_AF_MODE_AUTO;
@@ -295,7 +298,7 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
     sptr<CameraInput> camInput = (sptr<CameraInput> &)input_;
     camInput->SetErrorCallback(callback);
 
-    SetCameraParameters(camInput);
+    SetCameraParameters(camInput, video);
 
     EXPECT_TRUE(g_camInputOnError == false);
 
@@ -390,16 +393,22 @@ void CameraFrameworkModuleTest::TestSupportedResolution(int32_t previewWidth, in
                                                         int32_t photoWidth, int32_t photoHeight,
                                                         int32_t videoWidth, int32_t videoHeight)
 {
-    int32_t intResult = session_->BeginConfig();
+    sptr<CaptureInput> input = manager_->CreateCameraInput(cameras_[0]);
+    ASSERT_NE(input, nullptr);
+
+    sptr<CaptureSession> session = manager_->CreateCaptureSession();
+    ASSERT_NE(session, nullptr);
+
+    int32_t intResult = session->BeginConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session_->AddInput(input_);
+    intResult = session->AddInput(input);
     EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput(true, previewWidth, previewHeight);
     ASSERT_NE(previewOutput, nullptr);
 
-    intResult = session_->AddOutput(previewOutput);
+    intResult = session->AddOutput(previewOutput);
     EXPECT_TRUE(intResult == 0);
 
     sptr<CaptureOutput> videoOutput = nullptr;
@@ -407,19 +416,19 @@ void CameraFrameworkModuleTest::TestSupportedResolution(int32_t previewWidth, in
     if ((videoWidth != videoWidth_) || (videoHeight != videoHeight_)) {
         videoOutput = CreateVideoOutput(videoWidth, videoHeight);
         ASSERT_NE(videoOutput, nullptr);
-        intResult = session_->AddOutput(videoOutput);
+        intResult = session->AddOutput(videoOutput);
         EXPECT_TRUE(intResult == 0);
     } else if ((photoWidth != photoWidth_) || (photoHeight != photoHeight_)) {
         photoOutput = CreatePhotoOutput(photoWidth, photoHeight);
         ASSERT_NE(photoOutput, nullptr);
-        intResult = session_->AddOutput(videoOutput);
+        intResult = session->AddOutput(photoOutput);
         EXPECT_TRUE(intResult == 0);
     }
 
-    intResult = session_->CommitConfig();
+    intResult = session->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
-    intResult = session_->Start();
+    intResult = session->Start();
     EXPECT_TRUE(intResult == 0);
 
     if (photoOutput != nullptr) {
@@ -440,7 +449,8 @@ void CameraFrameworkModuleTest::TestSupportedResolution(int32_t previewWidth, in
         TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
     }
 
-    session_->Stop();
+    session->Stop();
+    session->Release();
 }
 
 void CameraFrameworkModuleTest::TestUnSupportedResolution(int32_t previewWidth, int32_t previewHeight,
@@ -763,9 +773,13 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_007, TestSize.Le
     intResult = session_->AddOutput(videoOutput);
     EXPECT_TRUE(intResult == 0);
 
-    // Video mode without preview is not supported
     intResult = session_->CommitConfig();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
+    // Video mode without preview is not supported
     EXPECT_TRUE(intResult != 0);
+#endif
 }
 
 #ifdef BALTIMORE_CAMERA
@@ -1144,18 +1158,34 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_024, TestSize.Le
     EXPECT_TRUE(intResult == 0);
 
     intResult = session_->CommitConfig();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
 
     intResult = session_->Start();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
 
     sleep(WAIT_TIME_AFTER_START);
     intResult = ((sptr<PhotoOutput> &)photoOutput1)->Capture();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
     intResult = ((sptr<PhotoOutput> &)photoOutput2)->Capture();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
     session_->Stop();
@@ -1241,24 +1271,48 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_026, TestSize.Le
     EXPECT_TRUE(intResult == 0);
 
     intResult = session_->CommitConfig();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
 
     intResult = session_->Start();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
 
     intResult = ((sptr<VideoOutput> &)videoOutput1)->Start();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
 
     intResult = ((sptr<VideoOutput> &)videoOutput2)->Start();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
 
     sleep(WAIT_TIME_AFTER_START);
 
     intResult = ((sptr<VideoOutput> &)videoOutput1)->Stop();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
 
     intResult = ((sptr<VideoOutput> &)videoOutput2)->Stop();
+#ifdef BALTIMORE_CAMERA
+    EXPECT_TRUE(intResult == 0);
+#else
     EXPECT_TRUE(intResult != 0);
+#endif
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 

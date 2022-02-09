@@ -147,8 +147,7 @@ static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_va
             }
         } else if (i == PARAM0 && valueType == napi_number) {
             napi_get_value_int32(env, argv[i], &numValue);
-            if ((CameraNapiUtils::MapCameraPositionEnumFromJs(numValue, context->cameraPosition) == -1)
-                || (context->cameraPosition == OHOS_CAMERA_POSITION_OTHER)) {
+            if (CameraNapiUtils::MapCameraPositionEnumFromJs(numValue, context->cameraPosition) == -1) {
                 MEDIA_ERR_LOG("Unsupported camera position found");
                 NAPI_ASSERT(env, false, "Type mismatch");
             } else {
@@ -156,8 +155,7 @@ static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_va
             }
         } else if (i == PARAM1 && valueType == napi_number) {
             napi_get_value_int32(env, argv[i], &numValue);
-            if ((CameraNapiUtils::MapCameraTypeEnumFromJs(numValue, context->cameraType) == -1)
-                || (context->cameraType != OHOS_CAMERA_TYPE_UNSPECIFIED)) {
+            if (CameraNapiUtils::MapCameraTypeEnumFromJs(numValue, context->cameraType) == -1) {
                 MEDIA_ERR_LOG("Unsupported camera type found");
                 NAPI_ASSERT(env, false, "Type mismatch");
             } else {
@@ -167,7 +165,7 @@ static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_va
             napi_create_reference(env, argv[i], refCount, &context->callbackRef);
             break;
         } else {
-            MEDIA_ERR_LOG("Failed to get arguments!");
+            MEDIA_ERR_LOG("Failed to get create camera input arguments!");
             NAPI_ASSERT(env, false, "type mismatch");
         }
     }
@@ -233,6 +231,7 @@ napi_value CameraManagerNapi::GetCameras(napi_env env, napi_callback_info info)
     size_t argc = ARGS_ONE;
     napi_value argv[ARGS_ONE] = {0};
     napi_value thisVar = nullptr;
+    const int32_t refCount = 1;
 
     CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
     NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameters maximum");
@@ -241,8 +240,9 @@ napi_value CameraManagerNapi::GetCameras(napi_env env, napi_callback_info info)
     auto asyncContext = std::make_unique<CameraManagerNapiAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
     if (status == napi_ok && asyncContext->objectInfo != nullptr) {
-        result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
-        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
+        if (argc == ARGS_ONE) {
+            CAMERA_NAPI_GET_JS_ASYNC_CB_REF(env, argv[PARAM0], refCount, asyncContext->callbackRef);
+        }
         CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
         CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "GetCameras");
         status = napi_create_async_work(
@@ -274,8 +274,13 @@ void CreateCameraInputAsyncCallbackComplete(napi_env env, napi_status status, vo
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
-    jsContext->data = CameraInputNapi::CreateCameraInput(env, context->cameraId,
-        context->cameraInput);
+    if (context->status) {
+        jsContext->data = CameraInputNapi::CreateCameraInput(env, context->cameraId,
+            context->cameraInput);
+    } else {
+        jsContext->data = nullptr;
+    }
+
     if (jsContext->data == nullptr) {
         napi_get_undefined(env, &jsContext->data);
         MEDIA_ERR_LOG("Failed to create camera input instance");
@@ -293,8 +298,8 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
     napi_status status;
     napi_value result = nullptr;
     napi_value resource = nullptr;
-    size_t argc = ARGS_ONE;
-    napi_value argv[ARGS_TWO] = {0};
+    size_t argc = ARGS_THREE;
+    napi_value argv[ARGS_THREE] = {0};
     napi_value thisVar = nullptr;
 
     CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
@@ -313,7 +318,8 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
                 auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
                 context->cameraObjList = CameraManager::GetInstance()->GetCameras();
                 sptr<CameraInfo> camInfo = nullptr;
-                for (size_t i = 0; i < context->cameraObjList.size(); i += 1) {
+                size_t i;
+                for (i = 0; i < context->cameraObjList.size(); i += 1) {
                     camInfo = context->cameraObjList[i];
                     if (context->cameraId.empty()) {
                         if (camInfo->GetPosition() == context->cameraPosition &&
@@ -322,11 +328,9 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
                         }
                     } else if (camInfo->GetID() == context->cameraId) {
                         break;
-                    } else {
-                        MEDIA_ERR_LOG("Error: unable to get camera Info!");
                     }
                 }
-                if (camInfo != nullptr) {
+                if (camInfo != nullptr && i < context->cameraObjList.size()) {
                     context->cameraInput = context->objectInfo->cameraManager_->CreateCameraInput(camInfo);
                     context->status = true;
                 } else {

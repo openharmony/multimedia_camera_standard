@@ -964,5 +964,111 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_016, TestSize.Level0)
     EXPECT_TRUE(item.count == 1);
     EXPECT_TRUE(item.data.i32[0] == triggerId);
 }
+
+/*
+* Feature: Metadata
+* Function: JPEG quality
+* SubFunction: NA
+* FunctionPoints: NA
+* EnvConditions: NA
+* CaseDescription: Test operations(add/update/find) on JPEG quality tag
+*/
+HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_017, TestSize.Level0)
+{
+    std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(1, 0);
+    camera_metadata_item_t item;
+
+    uint8_t quality = 100;
+    bool ret = cameraMetadata->addEntry(OHOS_JPEG_QUALITY, &quality, 1);
+    EXPECT_TRUE(ret == true);
+
+    common_metadata_header_t *metadata = cameraMetadata->get();
+    ASSERT_NE(metadata, nullptr);
+
+    int32_t result = FindCameraMetadataItem(metadata, OHOS_JPEG_QUALITY, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 0);
+    EXPECT_TRUE(item.item == OHOS_JPEG_QUALITY);
+    EXPECT_TRUE(item.data_type == META_TYPE_BYTE);
+    EXPECT_TRUE(item.count == 1);
+    EXPECT_TRUE(item.data.u8[0] == quality);
+
+    quality = 90;
+    ret = cameraMetadata->updateEntry(OHOS_JPEG_QUALITY, &quality, 1);
+    EXPECT_TRUE(ret == true);
+
+    result = FindCameraMetadataItem(metadata, OHOS_JPEG_QUALITY, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 0);
+    EXPECT_TRUE(item.item == OHOS_JPEG_QUALITY);
+    EXPECT_TRUE(item.data_type == META_TYPE_BYTE);
+    EXPECT_TRUE(item.count == 1);
+    EXPECT_TRUE(item.data.u8[0] == quality);
+}
+
+/*
+* Feature: Metadata
+* Function: JPEG orientation
+* SubFunction: NA
+* FunctionPoints: NA
+* EnvConditions: NA
+* CaseDescription: Test operations(add/update/find) on JPEG orientation tag
+*/
+HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_018, TestSize.Level0)
+{
+    std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(1, 0);
+    camera_metadata_item_t item;
+
+    int32_t orientation = 0;
+    bool ret = cameraMetadata->addEntry(OHOS_JPEG_ORIENTATION, &orientation, 1);
+    EXPECT_TRUE(ret == true);
+
+    common_metadata_header_t *metadata = cameraMetadata->get();
+    ASSERT_NE(metadata, nullptr);
+
+    int32_t result = FindCameraMetadataItem(metadata, OHOS_JPEG_ORIENTATION, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 0);
+    EXPECT_TRUE(item.item == OHOS_JPEG_ORIENTATION);
+    EXPECT_TRUE(item.data_type == META_TYPE_INT32);
+    EXPECT_TRUE(item.count == 1);
+    EXPECT_TRUE(item.data.i32[0] == orientation);
+
+    orientation = 90;
+    ret = cameraMetadata->updateEntry(OHOS_JPEG_ORIENTATION, &orientation, 1);
+    EXPECT_TRUE(ret == true);
+
+    result = FindCameraMetadataItem(metadata, OHOS_JPEG_ORIENTATION, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 0);
+    EXPECT_TRUE(item.item == OHOS_JPEG_ORIENTATION);
+    EXPECT_TRUE(item.data_type == META_TYPE_INT32);
+    EXPECT_TRUE(item.count == 1);
+    EXPECT_TRUE(item.data.i32[0] == orientation);
+
+    orientation = 180;
+    ret = cameraMetadata->updateEntry(OHOS_JPEG_ORIENTATION, &orientation, 1);
+    EXPECT_TRUE(ret == true);
+
+    result = FindCameraMetadataItem(metadata, OHOS_JPEG_ORIENTATION, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 0);
+    EXPECT_TRUE(item.item == OHOS_JPEG_ORIENTATION);
+    EXPECT_TRUE(item.data_type == META_TYPE_INT32);
+    EXPECT_TRUE(item.count == 1);
+    EXPECT_TRUE(item.data.i32[0] == orientation);
+
+    orientation = 270;
+    ret = cameraMetadata->updateEntry(OHOS_JPEG_ORIENTATION, &orientation, 1);
+    EXPECT_TRUE(ret == true);
+
+    result = FindCameraMetadataItem(metadata, OHOS_JPEG_ORIENTATION, &item);
+    EXPECT_TRUE(result == CAM_META_SUCCESS);
+    EXPECT_TRUE(item.index == 0);
+    EXPECT_TRUE(item.item == OHOS_JPEG_ORIENTATION);
+    EXPECT_TRUE(item.data_type == META_TYPE_INT32);
+    EXPECT_TRUE(item.count == 1);
+    EXPECT_TRUE(item.data.i32[0] == orientation);
+}
 } // CameraStandard
 } // OHOS

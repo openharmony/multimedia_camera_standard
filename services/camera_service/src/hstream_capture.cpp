@@ -107,8 +107,7 @@ int32_t HStreamCapture::Capture(const std::shared_ptr<CameraMetadata> &captureSe
     photoCaptureId_++;
     std::shared_ptr<Camera::CaptureInfo> captureInfoPhoto = std::make_shared<Camera::CaptureInfo>();
     captureInfoPhoto->streamIds_ = {photoStreamId_};
-    // temporarily ignore captureSettings to avoid host_restart on wagner
-    captureInfoPhoto->captureSetting_ = cameraAbility_;
+    captureInfoPhoto->captureSetting_ = captureSettings;
     captureInfoPhoto->enableShutterCallback_ = true;
 
     MEDIA_INFO_LOG("HStreamCapture::Capture() Starting photo capture with capture ID: %{public}d", CurCaptureId);

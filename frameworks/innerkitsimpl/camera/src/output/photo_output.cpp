@@ -28,25 +28,38 @@ PhotoCaptureSetting::PhotoCaptureSetting()
     captureMetadataSetting_ = std::make_shared<CameraMetadata>(items, dataLength);
 }
 
-PhotoCaptureSetting::QualityLevel PhotoCaptureSetting::GetQuaility()
+PhotoCaptureSetting::QualityLevel PhotoCaptureSetting::GetQuality()
 {
-    QualityLevel quality;
+    uint8_t normalQuality = 90;
+    uint8_t lowQuality = 50;
+    QualityLevel quality = LOW_QUALITY;
     camera_metadata_item_t item;
 
     int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_QUALITY, &item);
-    if (ret == CAM_META_SUCCESS) {
-        quality = static_cast<QualityLevel>(item.data.u8[0]);
-        return quality;
+    if (ret != CAM_META_SUCCESS) {
+        return NORMAL_QUALITY;
     }
-    return QualityLevel::NORMAL_QUALITY;
+    if (item.data.u8[0] > normalQuality) {
+        quality = HIGH_QUALITY;
+    } else if (item.data.u8[0] > lowQuality) {
+        quality = NORMAL_QUALITY;
+    }
+    return quality;
 }
 
 void PhotoCaptureSetting::SetQuality(PhotoCaptureSetting::QualityLevel qualityLevel)
 {
     bool status = false;
     camera_metadata_item_t item;
-    uint8_t quality = qualityLevel;
+    uint8_t highQuality = 100;
+    uint8_t normalQuality = 90;
+    uint8_t quality = 50;
 
+    if (qualityLevel == HIGH_QUALITY) {
+        quality = highQuality;
+    } else if (qualityLevel == NORMAL_QUALITY) {
+        quality = normalQuality;
+    }
     int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_QUALITY, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = captureMetadataSetting_->addEntry(OHOS_JPEG_QUALITY, &quality, 1);
@@ -70,7 +83,6 @@ PhotoCaptureSetting::RotationConfig PhotoCaptureSetting::GetRotation()
         rotation = static_cast<RotationConfig>(item.data.i32[0]);
         return rotation;
     }
-
     return RotationConfig::Rotation_0;
 }
 
@@ -78,12 +90,13 @@ void PhotoCaptureSetting::SetRotation(PhotoCaptureSetting::RotationConfig rotati
 {
     bool status = false;
     camera_metadata_item_t item;
+    int32_t rotation = rotationValue;
 
     int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_ORIENTATION, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
-        status = captureMetadataSetting_->addEntry(OHOS_JPEG_ORIENTATION, &rotationValue, 1);
+        status = captureMetadataSetting_->addEntry(OHOS_JPEG_ORIENTATION, &rotation, 1);
     } else if (ret == CAM_META_SUCCESS) {
-        status = captureMetadataSetting_->updateEntry(OHOS_JPEG_ORIENTATION, &rotationValue, 1);
+        status = captureMetadataSetting_->updateEntry(OHOS_JPEG_ORIENTATION, &rotation, 1);
     }
 
     if (!status) {

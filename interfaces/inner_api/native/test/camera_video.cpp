@@ -231,21 +231,17 @@ int main(int argc, char **argv)
 
     captureSession->BeginConfig();
 
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
-    if (cameraInput == nullptr) {
+    sptr<CaptureInput> captureInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    if (captureInput == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create camera input");
         return 0;
     }
 
+    sptr<CameraInput> cameraInput = (sptr<CameraInput> &)captureInput;
     if (!isResolutionConfigured) {
-        std::vector<camera_format_t> previewFormats = ((sptr<CameraInput> &)cameraInput)->GetSupportedPreviewFormats();
-        if (previewFormats.empty()) {
-            MEDIA_DEBUG_LOG("No preview formats supported");
-        }
+        std::vector<camera_format_t> previewFormats = cameraInput->GetSupportedPreviewFormats();
         MEDIA_DEBUG_LOG("Supported preview formats:");
-        camera_format_t format;
-        for (auto item = previewFormats.begin(); item != previewFormats.end(); ++item) {
-            format = *item;
+        for (auto &format : previewFormats) {
             MEDIA_DEBUG_LOG("format : %{public}d", format);
         }
         if (std::find(previewFormats.begin(), previewFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP)
@@ -256,13 +252,9 @@ int main(int argc, char **argv)
             previewFormat = previewFormats[0];
             MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported preview formats");
         }
-        std::vector<camera_format_t> videoFormats = ((sptr<CameraInput> &)cameraInput)->GetSupportedVideoFormats();
-        if (videoFormats.empty()) {
-            MEDIA_DEBUG_LOG("No video formats supported");
-        }
+        std::vector<camera_format_t> videoFormats = cameraInput->GetSupportedVideoFormats();
         MEDIA_DEBUG_LOG("Supported video formats:");
-        for (auto item = videoFormats.begin(); item != videoFormats.end(); ++item) {
-            format = *item;
+        for (auto &format : videoFormats) {
             MEDIA_DEBUG_LOG("format : %{public}d", format);
         }
         if (std::find(videoFormats.begin(), videoFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP)
@@ -274,24 +266,15 @@ int main(int argc, char **argv)
             MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported video formats");
         }
         std::vector<CameraPicSize> previewSizes
-            = ((sptr<CameraInput> &)cameraInput)->getSupportedSizes(static_cast<camera_format_t>(previewFormat));
-        if (previewSizes.empty()) {
-            MEDIA_DEBUG_LOG("No preview sizes supported");
-        }
+            = cameraInput->getSupportedSizes(static_cast<camera_format_t>(previewFormat));
         MEDIA_DEBUG_LOG("Supported sizes for preview:");
-        CameraPicSize size;
-        for (auto item = previewSizes.begin(); item != previewSizes.end(); ++item) {
-            size = *item;
+        for (auto &size : previewSizes) {
             MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
         }
         std::vector<CameraPicSize> videoSizes
-            = ((sptr<CameraInput> &)cameraInput)->getSupportedSizes(static_cast<camera_format_t>(videoFormat));
-        if (videoSizes.empty()) {
-            MEDIA_DEBUG_LOG("No video sizes supported");
-        }
+            = cameraInput->getSupportedSizes(static_cast<camera_format_t>(videoFormat));
         MEDIA_DEBUG_LOG("Supported sizes for video:");
-        for (auto item = videoSizes.begin(); item != videoSizes.end(); ++item) {
-            size = *item;
+        for (auto &size : videoSizes) {
             MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
         }
         if (!previewSizes.empty()) {
@@ -309,8 +292,8 @@ int main(int argc, char **argv)
     MEDIA_DEBUG_LOG("videoFormat: %{public}d, videoWidth: %{public}d, videoHeight: %{public}d",
                     videoFormat, videoWidth, videoHeight);
 
-    ((sptr<CameraInput> &)cameraInput)->SetErrorCallback(std::make_shared<TestDeviceCallback>(testName));
-    ret = captureSession->AddInput(cameraInput);
+    cameraInput->SetErrorCallback(std::make_shared<TestDeviceCallback>(testName));
+    ret = captureSession->AddInput(captureInput);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Add input to session is failed, ret: %{public}d", ret);
         return 0;
@@ -481,6 +464,7 @@ int main(int argc, char **argv)
 
     // Close video file
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+    cameraInput->Release();
     camManagerObj->SetCallback(nullptr);
 
     MEDIA_DEBUG_LOG("Camera new sample end.");

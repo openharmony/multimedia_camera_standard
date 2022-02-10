@@ -60,8 +60,6 @@ private:
     bool isReleaseCameraDevice_;
     sptr<ICameraDeviceServiceCallback> deviceSvcCallback_;
     sptr<CameraDeviceCallback> deviceHDICallback_;
-    std::shared_ptr<CameraMetadata> cameraAbility_;
-    std::shared_ptr<CameraMetadata> updateSettings_;
     sptr<Camera::IStreamOperator> streamOperator_;
 };
 

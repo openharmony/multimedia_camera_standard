@@ -247,7 +247,10 @@ void CameraCaptureVideo::Release()
         captureSession_->Release();
         captureSession_ = nullptr;
     }
-    cameraInput_ = nullptr;
+    if (cameraInput_ != nullptr) {
+        cameraInput_->Release();
+        cameraInput_ = nullptr;
+    }
     cameraInputCallback_ = nullptr;
     previewSurface_ = nullptr;
     previewSurfaceListener_ = nullptr;
@@ -287,13 +290,8 @@ int32_t CameraCaptureVideo::InitCameraManager()
 int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cameraInput)
 {
     std::vector<camera_format_t> previewFormats = cameraInput->GetSupportedPreviewFormats();
-    if (previewFormats.empty()) {
-        MEDIA_ERR_LOG("No preview formats supported");
-    }
     MEDIA_DEBUG_LOG("Supported preview formats:");
-    camera_format_t format;
-    for (auto item = previewFormats.begin(); item != previewFormats.end(); ++item) {
-        format = *item;
+    for (auto &format : previewFormats) {
         MEDIA_DEBUG_LOG("format : %{public}d", format);
     }
     if (std::find(previewFormats.begin(), previewFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP)
@@ -305,23 +303,16 @@ int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cam
         MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported preview formats");
     }
     std::vector<camera_format_t> photoFormats = cameraInput->GetSupportedPhotoFormats();
-    if (photoFormats.empty()) {
-        MEDIA_ERR_LOG("No photo formats supported");
-    } else {
-        photoFormat_ = photoFormats[0];
-    }
     MEDIA_DEBUG_LOG("Supported photo formats:");
-    for (auto item = photoFormats.begin(); item != photoFormats.end(); ++item) {
-        format = *item;
+    for (auto &format : photoFormats) {
         MEDIA_DEBUG_LOG("format : %{public}d", format);
     }
-    std::vector<camera_format_t> videoFormats = cameraInput->GetSupportedVideoFormats();
-    if (videoFormats.empty()) {
-        MEDIA_ERR_LOG("No video formats supported");
+    if (!photoFormats.empty()) {
+        photoFormat_ = photoFormats[0];
     }
+    std::vector<camera_format_t> videoFormats = cameraInput->GetSupportedVideoFormats();
     MEDIA_DEBUG_LOG("Supported video formats:");
-    for (auto item = videoFormats.begin(); item != videoFormats.end(); ++item) {
-        format = *item;
+    for (auto &format : videoFormats) {
         MEDIA_DEBUG_LOG("format : %{public}d", format);
     }
     if (std::find(videoFormats.begin(), videoFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP) != videoFormats.end()) {
@@ -333,31 +324,18 @@ int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cam
     }
     std::vector<CameraPicSize> previewSizes
         = cameraInput->getSupportedSizes(static_cast<camera_format_t>(previewFormat_));
-    if (previewSizes.empty()) {
-        MEDIA_ERR_LOG("No preview sizes supported");
-    }
     MEDIA_DEBUG_LOG("Supported sizes for preview:");
-    CameraPicSize size;
-    for (auto item = previewSizes.begin(); item != previewSizes.end(); ++item) {
-        size = *item;
+    for (auto &size : previewSizes) {
         MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
     }
     std::vector<CameraPicSize> photoSizes = cameraInput->getSupportedSizes(static_cast<camera_format_t>(photoFormat_));
-    if (photoSizes.empty()) {
-        MEDIA_ERR_LOG("No photo sizes supported");
-    }
     MEDIA_DEBUG_LOG("Supported sizes for photo:");
-    for (auto item = photoSizes.begin(); item != photoSizes.end(); ++item) {
-        size = *item;
+    for (auto &size : photoSizes) {
         MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
     }
     std::vector<CameraPicSize> videoSizes = cameraInput->getSupportedSizes(static_cast<camera_format_t>(videoFormat_));
-    if (videoSizes.empty()) {
-        MEDIA_ERR_LOG("No video sizes supported");
-    }
     MEDIA_DEBUG_LOG("Supported sizes for video:");
-    for (auto item = videoSizes.begin(); item != videoSizes.end(); ++item) {
-        size = *item;
+    for (auto &size : videoSizes) {
         MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
     }
 
@@ -376,9 +354,6 @@ int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cam
     if (previewSizes.size() > 1) {
         previewWidth2_ = previewSizes[1].width;
         previewHeight2_ = previewSizes[1].height;
-    } else {
-        previewWidth2_ = previewWidth_;
-        previewHeight2_ = previewHeight_;
     }
 
     MEDIA_DEBUG_LOG("previewFormat: %{public}d, previewWidth: %{public}d, previewHeight: %{public}d",

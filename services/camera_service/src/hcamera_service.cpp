@@ -116,15 +116,33 @@ int32_t HCameraService::GetCameras(std::vector<std::string> &cameraIds,
 
 int32_t HCameraService::CreateCameraDevice(std::string cameraId, sptr<ICameraDeviceService> &device)
 {
+    int32_t rc;
     sptr<HCameraDevice> cameraDevice;
+    sptr<Camera::IStreamOperator> streamOperator;
 
+    if (streamOperatorCallback_ == nullptr) {
+        streamOperatorCallback_ = new StreamOperatorCallback();
+    }
     if (cameraDeviceCallback_ == nullptr) {
         cameraDeviceCallback_ = new CameraDeviceCallback();
     }
     cameraDevice = new HCameraDevice(cameraHostManager_, cameraDeviceCallback_, cameraId);
     if (cameraDevice == nullptr) {
-        MEDIA_ERR_LOG("HCameraService::CreateCameraDevice-HCameraDevice allocation failed");
+        MEDIA_ERR_LOG("HCameraService::CreateCameraDevice HCameraDevice allocation failed");
         return CAMERA_ALLOC_ERROR;
+    }
+    rc = cameraDevice->Open();
+    if (rc != CAMERA_OK) {
+        MEDIA_ERR_LOG("HCaptureSession::CreateCameraDevice Failed to open camera with return: %{public}d", rc);
+        delete cameraDevice;
+        return rc;
+    }
+    rc = cameraDevice->GetStreamOperator(streamOperatorCallback_, streamOperator);
+    if (rc != CAMERA_OK) {
+        MEDIA_ERR_LOG("HCaptureSession::CreateCameraDevice Failed to get stream operator with return: %{public}d", rc);
+        cameraDevice->Close();
+        delete cameraDevice;
+        return rc;
     }
     device = cameraDevice;
     return CAMERA_OK;
@@ -137,6 +155,7 @@ int32_t HCameraService::CreateCaptureSession(sptr<ICaptureSession> &session)
     if (streamOperatorCallback_ == nullptr) {
         streamOperatorCallback_ = new StreamOperatorCallback();
     }
+
     captureSession = new HCaptureSession(cameraHostManager_, streamOperatorCallback_);
     if (captureSession == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreateCaptureSession HCaptureSession allocation failed");

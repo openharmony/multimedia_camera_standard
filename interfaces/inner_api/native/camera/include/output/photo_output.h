@@ -28,7 +28,7 @@ public:
     PhotoCallback() = default;
     virtual ~PhotoCallback() = default;
     virtual void OnCaptureStarted(const int32_t captureID) const = 0;
-    virtual void OnCaptureEnded(const int32_t captureID) const = 0;
+    virtual void OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const = 0;
     virtual void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const = 0;
     virtual void OnCaptureError(const int32_t captureId, const int32_t errorCode) const = 0;
 };

@@ -40,7 +40,7 @@ int32_t HStreamCaptureCallbackProxy::OnCaptureStarted(int32_t captureId)
     return error;
 }
 
-int32_t HStreamCaptureCallbackProxy::OnCaptureEnded(int32_t captureId)
+int32_t HStreamCaptureCallbackProxy::OnCaptureEnded(int32_t captureId, int32_t frameCount)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -48,6 +48,10 @@ int32_t HStreamCaptureCallbackProxy::OnCaptureEnded(int32_t captureId)
 
     if (!data.WriteInt32(captureId)) {
         MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnCaptureEnded Write captureId failed");
+        return IPC_PROXY_ERR;
+    }
+    if (!data.WriteInt32(frameCount)) {
+        MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnCaptureEnded Write frameCount failed");
         return IPC_PROXY_ERR;
     }
     int error = Remote()->SendRequest(CAMERA_STREAM_CAPTURE_ON_CAPTURE_ENDED, data, reply, option);

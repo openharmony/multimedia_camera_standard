@@ -165,10 +165,10 @@ void TestPhotoOutputCallback::OnCaptureStarted(const int32_t captureID) const
                    testName_, captureID);
 }
 
-void TestPhotoOutputCallback::OnCaptureEnded(const int32_t captureID) const
+void TestPhotoOutputCallback::OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const
 {
-    MEDIA_INFO_LOG("TestPhotoOutputCallback:OnCaptureEnded(), testName_: %{public}s, captureID: %{public}d",
-                   testName_, captureID);
+    MEDIA_INFO_LOG("TestPhotoOutputCallback:OnCaptureEnded(), testName_: %{public}s, captureID: %{public}d,"
+                   " frameCount: %{public}d", testName_, captureID, frameCount);
 }
 
 void TestPhotoOutputCallback::OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const

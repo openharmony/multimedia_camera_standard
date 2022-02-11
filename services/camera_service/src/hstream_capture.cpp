@@ -152,10 +152,10 @@ int32_t HStreamCapture::OnCaptureStarted(int32_t captureId)
     return CAMERA_OK;
 }
 
-int32_t HStreamCapture::OnCaptureEnded(int32_t captureId)
+int32_t HStreamCapture::OnCaptureEnded(int32_t captureId, int32_t frameCount)
 {
     if (streamCaptureCallback_ != nullptr) {
-        streamCaptureCallback_->OnCaptureEnded(captureId);
+        streamCaptureCallback_->OnCaptureEnded(captureId, frameCount);
     }
     return CAMERA_OK;
 }

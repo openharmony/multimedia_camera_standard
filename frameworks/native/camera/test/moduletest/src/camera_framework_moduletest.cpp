@@ -133,9 +133,10 @@ namespace {
             return;
         }
 
-        void OnCaptureEnded(const int32_t captureID) const override
+        void OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const override
         {
-            MEDIA_DEBUG_LOG("AppCallback::OnCaptureEnded captureID: %{public}d", captureID);
+            MEDIA_DEBUG_LOG("AppCallback::OnCaptureEnded captureID: %{public}d, frameCount: %{public}d",
+                            captureID, frameCount);
             g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_END)] = 1;
             return;
         }

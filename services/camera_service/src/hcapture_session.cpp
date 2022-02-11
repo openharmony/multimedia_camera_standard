@@ -687,7 +687,7 @@ void StreamOperatorCallback::OnCaptureStarted(int32_t captureId,
             if (curStreamCapture != nullptr) {
                 curStreamCapture->OnCaptureStarted(captureId);
             } else {
-                MEDIA_ERR_LOG("StreamOperatorCallback::OnCaptureStarted, Stream not found: %{public}d", *item);
+                MEDIA_ERR_LOG("StreamOperatorCallback::OnCaptureStarted StreamId: %{public}d not found", *item);
             }
         }
     }
@@ -704,13 +704,14 @@ void StreamOperatorCallback::OnCaptureEnded(int32_t captureId,
         captureInfo = *item;
         curStreamRepeat = GetStreamRepeatByStreamID(captureInfo->streamId_);
         if (curStreamRepeat != nullptr) {
-            curStreamRepeat->OnFrameEnded(info[0]->frameCount_);
+            curStreamRepeat->OnFrameEnded(captureInfo->frameCount_);
         } else {
             curStreamCapture = GetStreamCaptureByStreamID(captureInfo->streamId_);
             if (curStreamCapture != nullptr) {
-                curStreamCapture->OnCaptureEnded(captureId);
+                curStreamCapture->OnCaptureEnded(captureId, captureInfo->frameCount_);
             } else {
-                MEDIA_ERR_LOG("StreamOperatorCallback::OnCaptureEnded, not found: %{public}d", captureInfo->streamId_);
+                MEDIA_ERR_LOG("StreamOperatorCallback::OnCaptureEnded StreamId: %{public}d not found."
+                              " Framecount: %{public}d", captureInfo->streamId_, captureInfo->frameCount_);
             }
         }
     }
@@ -727,13 +728,14 @@ void StreamOperatorCallback::OnCaptureError(int32_t captureId,
         errInfo = *item;
         curStreamRepeat = GetStreamRepeatByStreamID(errInfo->streamId_);
         if (curStreamRepeat != nullptr) {
-            curStreamRepeat->OnFrameError(info[0]->error_);
+            curStreamRepeat->OnFrameError(errInfo->error_);
         } else {
             curStreamCapture = GetStreamCaptureByStreamID(errInfo->streamId_);
             if (curStreamCapture != nullptr) {
-                curStreamCapture->OnCaptureError(captureId, info[0]->error_);
+                curStreamCapture->OnCaptureError(captureId, errInfo->error_);
             } else {
-                MEDIA_ERR_LOG("StreamOperatorCallback::OnCaptureEnded, not found: %{public}d", errInfo->streamId_);
+                MEDIA_ERR_LOG("StreamOperatorCallback::OnCaptureError StreamId: %{public}d not found."
+                              " Error: %{public}d", errInfo->streamId_, errInfo->error_);
             }
         }
     }
@@ -749,7 +751,7 @@ void StreamOperatorCallback::OnFrameShutter(int32_t captureId,
         if (curStreamCapture != nullptr) {
             curStreamCapture->OnFrameShutter(captureId, timestamp);
         } else {
-            MEDIA_ERR_LOG("StreamOperatorCallback::OnFrameShutter, Stream not found: %{public}d", *item);
+            MEDIA_ERR_LOG("StreamOperatorCallback::OnFrameShutter StreamId: %{public}d not found", *item);
         }
     }
 }

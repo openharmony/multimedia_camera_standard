@@ -187,10 +187,10 @@ public:
         return CAMERA_OK;
     }
 
-    int32_t OnCaptureEnded(const int32_t captureId) override
+    int32_t OnCaptureEnded(const int32_t captureId, const int32_t frameCount) override
     {
         if (photoOutput_ != nullptr && photoOutput_->GetApplicationCallback() != nullptr) {
-            photoOutput_->GetApplicationCallback()->OnCaptureEnded(captureId);
+            photoOutput_->GetApplicationCallback()->OnCaptureEnded(captureId, frameCount);
         } else {
             MEDIA_INFO_LOG("Discarding HStreamCaptureCallbackImpl::OnCaptureEnded callback");
         }

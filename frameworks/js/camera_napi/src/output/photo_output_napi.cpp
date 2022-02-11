@@ -39,11 +39,13 @@ void PhotoOutputCallback::OnCaptureStarted(const int32_t captureID) const
     UpdateJSCallback("OnCaptureStarted", info);
 }
 
-void PhotoOutputCallback::OnCaptureEnded(const int32_t captureID) const
+void PhotoOutputCallback::OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const
 {
-    MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureEnded() is called!, captureID: %{public}d", captureID);
+    MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureEnded() is called!, captureID: %{public}d, frameCount: %{public}d",
+                   captureID, frameCount);
     CallbackInfo info;
     info.captureID = captureID;
+    info.frameCount = frameCount;
     UpdateJSCallback("OnCaptureEnded", info);
 }
 

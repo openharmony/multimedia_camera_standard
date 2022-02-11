@@ -29,7 +29,7 @@ public:
 
     int32_t OnCaptureStarted(int32_t captureId) override;
 
-    int32_t OnCaptureEnded(int32_t captureId) override;
+    int32_t OnCaptureEnded(int32_t captureId, int32_t frameCount) override;
 
     int32_t OnCaptureError(int32_t captureId, int32_t errorType) override;
 

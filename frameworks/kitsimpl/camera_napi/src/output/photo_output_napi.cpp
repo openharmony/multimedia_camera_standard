@@ -297,20 +297,11 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
 int32_t QueryAndGetProperty(napi_env env, napi_value arg, const string &propertyName, napi_value &property)
 {
     bool present = false;
-    int32_t retval = 1;
-    if (napi_has_named_property(env, arg, propertyName.c_str(), &present) == napi_ok) {
-        if (present) {
-            if (napi_get_named_property(env, arg, propertyName.c_str(), &property) != napi_ok) {
-                HiLog::Error(LABEL, "Failed to obtain property: %{public}s", propertyName.c_str());
-                retval = -1;
-            }
-        } else {
-            HiLog::Info(LABEL, "The property (%{public}s) is not provided from application", propertyName.c_str());
-            retval = 0;
-        }
-    } else {
-        HiLog::Error(LABEL, "Failed to check property: %{public}s", propertyName.c_str());
-        retval = -1;
+    int32_t retval = 0;
+    if ((napi_has_named_property(env, arg, propertyName.c_str(), &present) != napi_ok)
+        || (!present) || (napi_get_named_property(env, arg, propertyName.c_str(), &property) != napi_ok)) {
+            HiLog::Error(LABEL, "Failed to obtain property: %{public}s", propertyName.c_str());
+            retval = -1;
     }
 
     return retval;
@@ -319,21 +310,22 @@ int32_t QueryAndGetProperty(napi_env env, napi_value arg, const string &property
 int32_t GetLocationProperties(napi_env env, napi_value locationObj, const PhotoOutputAsyncContext &context)
 {
     PhotoOutputAsyncContext *asyncContext = const_cast<PhotoOutputAsyncContext *>(&context);
-    napi_value property = nullptr;
-    double doubleValue = 0;
+    napi_value property1 = nullptr;
+    napi_value property2 = nullptr;
+    double latitude = -1.0;
+    double longitude = -1.0;
 
-    if (QueryAndGetProperty(env, locationObj, "latitude", property) != 1
-        || napi_get_value_double(env, property, &doubleValue) != napi_ok) {
-        return -1;
+    if ((QueryAndGetProperty(env, locationObj, "latitude", property1) == 0) &&
+        (QueryAndGetProperty(env, locationObj, "longitude", property2) == 0)) {
+        if ((napi_get_value_double(env, property1, &latitude) != napi_ok) ||
+            (napi_get_value_double(env, property2, &longitude) != napi_ok)) {
+            return -1;
+        } else {
+            asyncContext->latitude = latitude;
+            asyncContext->longitude = longitude;
+        }
     } else {
-        asyncContext->latitude = doubleValue;
-    }
-
-    if (QueryAndGetProperty(env, locationObj, "longitude", property) != 1
-        || napi_get_value_double(env, property, &doubleValue) != napi_ok) {
         return -1;
-    } else {
-        asyncContext->longitude = doubleValue;
     }
 
     // Return 0 after location properties are successfully obtained
@@ -350,36 +342,40 @@ static void GetFetchOptionsParam(napi_env env, napi_value arg, const PhotoOutput
     PhotoCaptureSetting::QualityLevel quality;
     PhotoCaptureSetting::RotationConfig rotation;
 
-    if (QueryAndGetProperty(env, arg, "quality", property) == -1
-        || napi_get_value_int32(env, property, &intValue) != napi_ok
-        || CameraNapiUtils::MapQualityLevelFromJs(intValue, quality) == -1) {
-        err = true;
-        return;
-    } else {
-        asyncContext->quality = intValue;
+    if (QueryAndGetProperty(env, arg, "quality", property) == 0) {
+        if (napi_get_value_int32(env, property, &intValue) != napi_ok
+            || CameraNapiUtils::MapQualityLevelFromJs(intValue, quality) == -1) {
+            err = true;
+            return;
+        } else {
+            asyncContext->quality = intValue;
+        }
     }
 
-    if (QueryAndGetProperty(env, arg, "rotation", property) == -1
-        || napi_get_value_int32(env, property, &intValue) != napi_ok
-        || CameraNapiUtils::MapImageRotationFromJs(intValue, rotation) == -1) {
-        err = true;
-        return;
-    } else {
-        asyncContext->rotation = intValue;
+    if (QueryAndGetProperty(env, arg, "rotation", property) == 0) {
+        if (napi_get_value_int32(env, property, &intValue) != napi_ok
+            || CameraNapiUtils::MapImageRotationFromJs(intValue, rotation) == -1) {
+            err = true;
+            return;
+        } else {
+            asyncContext->rotation = intValue;
+        }
     }
 
-    if (QueryAndGetProperty(env, arg, "mirror", property) == -1
-        || napi_get_value_bool(env, property, &boolValue) != napi_ok) {
-        err = true;
-        return;
-    } else {
-        asyncContext->mirror = boolValue ? 1 : 0;
+    if (QueryAndGetProperty(env, arg, "mirror", property) == 0) {
+        if (napi_get_value_bool(env, property, &boolValue) != napi_ok) {
+            err = true;
+            return;
+        } else {
+            asyncContext->mirror = boolValue ? 1 : 0;
+        }
     }
 
-    if (QueryAndGetProperty(env, arg, "location", property) == -1
-        || GetLocationProperties(env, property, context) == -1) {
-        err = true;
-        return;
+    if (QueryAndGetProperty(env, arg, "location", property) == 0) {
+        if (GetLocationProperties(env, property, context) == -1) {
+            err = true;
+            return;
+        }
     }
 }
 
@@ -457,7 +453,7 @@ napi_value PhotoOutputNapi::Capture(napi_env env, napi_callback_info info)
                         capSettings->SetRotation(static_cast<PhotoCaptureSetting::RotationConfig>(context->rotation));
                     }
 
-                    if (context->latitude != -1.0 && context->longitude != 1.0) {
+                    if (context->latitude != -1.0 && context->longitude != -1.0) {
                         capSettings->SetGpsLocation(context->latitude, context->longitude);
                     }
 

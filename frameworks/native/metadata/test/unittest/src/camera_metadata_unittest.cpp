@@ -1070,5 +1070,97 @@ HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_018, TestSize.Level0)
     EXPECT_TRUE(item.count == 1);
     EXPECT_TRUE(item.data.i32[0] == orientation);
 }
+
+/*
+* Feature: Metadata
+* Function: EncodeToString and DecodeFromString
+* SubFunction: NA
+* FunctionPoints: NA
+* EnvConditions: NA
+* CaseDescription: Test EncodeToString and DecodeFromString metadata object without data at the end of metadata items
+*/
+HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_019, TestSize.Level0)
+{
+    std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(1, 0);
+
+    uint8_t cameraPosition = OHOS_CAMERA_POSITION_BACK;
+    bool ret = cameraMetadata->addEntry(OHOS_ABILITY_CAMERA_POSITION, &cameraPosition, 1);
+    EXPECT_TRUE(ret == true);
+
+    common_metadata_header_t *metadata = cameraMetadata->get();
+    ASSERT_NE(metadata, nullptr);
+
+    // Encode camera metadata
+    std::string metadataString = MetadataUtils::EncodeToString(cameraMetadata);
+    EXPECT_TRUE(!metadataString.empty());
+
+    // Decode camera metadata
+    std::shared_ptr<CameraMetadata> decodedMetadata = MetadataUtils::DecodeFromString(metadataString);
+    ASSERT_NE(decodedMetadata, nullptr);
+    ASSERT_NE(decodedMetadata->get(), nullptr);
+
+    // validate metadata
+    EXPECT_TRUE(memcmp(decodedMetadata->get(), metadata, sizeof(common_metadata_header_t)) == 0);
+    camera_metadata_item_entry_t *encodedItem = GetMetadataItems(metadata);
+    camera_metadata_item_entry_t *decodedItem = GetMetadataItems(decodedMetadata->get());
+    int32_t itemLen = sizeof(camera_metadata_item_entry_t);
+    int32_t itemFixedLen = offsetof(camera_metadata_item_entry_t, data);
+    EXPECT_TRUE(metadata->item_count == 1);
+    EXPECT_TRUE(metadata->data_count == 0);
+    EXPECT_TRUE(decodedMetadata->get()->data_count == metadata->data_count);
+    EXPECT_TRUE(memcmp(decodedItem, encodedItem, itemFixedLen) == 0);
+    EXPECT_TRUE(memcmp(&(decodedItem->data), &(encodedItem->data), itemLen - itemFixedLen) == 0);
+}
+
+/*
+* Feature: Metadata
+* Function: EncodeToString and DecodeFromString
+* SubFunction: NA
+* FunctionPoints: NA
+* EnvConditions: NA
+* CaseDescription: Test EncodeToString and DecodeFromString metadata object with data at the end of metadata items
+*/
+HWTEST_F(CameraMetadataUnitTest, camera_metadata_unittest_020, TestSize.Level0)
+{
+    std::shared_ptr<CameraMetadata> cameraMetadata = std::make_shared<CameraMetadata>(3, 24);
+
+    int32_t activeArray[4] = {0, 0, 2000, 1500};
+    bool ret = cameraMetadata->addEntry(OHOS_SENSOR_INFO_ACTIVE_ARRAY_SIZE, activeArray,
+                                        sizeof(activeArray) / sizeof(activeArray[0]));
+    EXPECT_TRUE(ret == true);
+
+    uint8_t connectionType = OHOS_CAMERA_CONNECTION_TYPE_USB_PLUGIN;
+    ret = cameraMetadata->addEntry(OHOS_ABILITY_CAMERA_CONNECTION_TYPE, &connectionType, 1);
+    EXPECT_TRUE(ret == true);
+
+    int32_t zoomCap[] = {100, 600};
+    ret = cameraMetadata->addEntry(OHOS_ABILITY_ZOOM_CAP, zoomCap, sizeof(zoomCap) / sizeof(zoomCap[0]));
+    EXPECT_TRUE(ret == true);
+
+    common_metadata_header_t *metadata = cameraMetadata->get();
+    ASSERT_NE(metadata, nullptr);
+
+    // Encode camera metadata
+    std::string metadataString = MetadataUtils::EncodeToString(cameraMetadata);
+    EXPECT_TRUE(!metadataString.empty());
+
+    // Decode camera metadata
+    std::shared_ptr<CameraMetadata> decodedMetadata = MetadataUtils::DecodeFromString(metadataString);
+    ASSERT_NE(decodedMetadata, nullptr);
+    ASSERT_NE(decodedMetadata->get(), nullptr);
+
+    // validate metadata
+    EXPECT_TRUE(memcmp(decodedMetadata->get(), metadata, sizeof(common_metadata_header_t)) == 0);
+    camera_metadata_item_entry_t *encodedItem = GetMetadataItems(metadata);
+    camera_metadata_item_entry_t *decodedItem = GetMetadataItems(decodedMetadata->get());
+    int32_t itemLen = sizeof(camera_metadata_item_entry_t);
+    int32_t itemFixedLen = offsetof(camera_metadata_item_entry_t, data);
+    for (uint32_t index = 0; index < metadata->item_count; index++, encodedItem++, decodedItem++) {
+        EXPECT_TRUE(memcmp(decodedItem, encodedItem, itemFixedLen) == 0);
+        EXPECT_TRUE(memcmp(&(decodedItem->data), &(encodedItem->data), itemLen - itemFixedLen) == 0);
+    }
+    EXPECT_TRUE(decodedMetadata->get()->data_count == metadata->data_count);
+    EXPECT_TRUE(memcmp(GetMetadataData(decodedMetadata->get()), GetMetadataData(metadata), metadata->data_count) == 0);
+}
 } // CameraStandard
 } // OHOS

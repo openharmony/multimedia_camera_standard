@@ -90,6 +90,8 @@ public:
     sptr<ICameraDeviceService> GetCameraDevice();
     std::shared_ptr<ErrorCallback> GetErrorCallback();
     void ProcessAutoFocusUpdates(const std::shared_ptr<CameraMetadata> &result);
+    std::string GetCameraSettings();
+    int32_t SetCameraSettings(std::string setting);
 
 private:
     std::shared_ptr<CameraMetadata> changedMetadata_;
@@ -105,6 +107,7 @@ private:
     static void getVector(DataPtr data, size_t count, Vec &vect, VecType dataType);
     int32_t SetCropRegion(float zoomRatio);
     int32_t StartFocus(camera_af_mode_t focusMode);
+    int32_t UpdateSetting(std::shared_ptr<CameraMetadata> changedMetadata);
 };
 } // namespace CameraStandard
 } // namespace OHOS

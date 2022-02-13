@@ -21,6 +21,7 @@
 #include "camera_util.h"
 #include "hcamera_device_callback_stub.h"
 #include "media_log.h"
+#include "metadata_utils.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -107,29 +108,24 @@ void CameraInput::LockForControl()
     return;
 }
 
-int32_t CameraInput::UnlockForControl()
+int32_t CameraInput::UpdateSetting(std::shared_ptr<CameraMetadata> changedMetadata)
 {
-    if (changedMetadata_ == nullptr) {
-        MEDIA_ERR_LOG("CameraInput::UnlockForControl Need to call LockForControl() before UnlockForControl()");
-        return CAMERA_INVALID_ARG;
-    }
-
-    if (!GetCameraMetadataItemCount(changedMetadata_->get())) {
-        MEDIA_INFO_LOG("CameraInput::UnlockForControl No configuration to update");
+    if (!GetCameraMetadataItemCount(changedMetadata->get())) {
+        MEDIA_INFO_LOG("CameraInput::UpdateSetting No configuration to update");
         return CAMERA_OK;
     }
 
-    int32_t ret = deviceObj_->UpdateSetting(changedMetadata_);
+    int32_t ret = deviceObj_->UpdateSetting(changedMetadata);
     if (ret != CAMERA_OK) {
-        MEDIA_ERR_LOG("CameraInput::UnlockForControl Failed to update settings");
+        MEDIA_ERR_LOG("CameraInput::UpdateSetting Failed to update settings");
         return ret;
     }
 
-    std::shared_ptr<CameraMetadata> baseMetadata = cameraObj_->GetMetadata();
-    camera_metadata_item_entry_t *itemEntry = GetMetadataItems(changedMetadata_->get());
-    uint8_t *data = GetMetadataData(changedMetadata_->get());
-    int32_t count = changedMetadata_->get()->item_count;
     int32_t length;
+    int32_t count = changedMetadata->get()->item_count;
+    uint8_t *data = GetMetadataData(changedMetadata->get());
+    camera_metadata_item_entry_t *itemEntry = GetMetadataItems(changedMetadata->get());
+    std::shared_ptr<CameraMetadata> baseMetadata = cameraObj_->GetMetadata();
     for (int32_t i = 0; i < count; i++, itemEntry++) {
         bool status = false;
         camera_metadata_item_t item;
@@ -145,10 +141,21 @@ int32_t CameraInput::UnlockForControl()
                                             itemEntry->count);
         }
         if (!status) {
-            MEDIA_ERR_LOG("CameraInput::UnlockForControl Failed to add/update metadata item: %{public}d",
+            MEDIA_ERR_LOG("CameraInput::UpdateSetting Failed to add/update metadata item: %{public}d",
                           itemEntry->item);
         }
     }
+    return CAMERA_OK;
+}
+
+int32_t CameraInput::UnlockForControl()
+{
+    if (changedMetadata_ == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::UnlockForControl Need to call LockForControl() before UnlockForControl()");
+        return CAMERA_INVALID_ARG;
+    }
+
+    UpdateSetting(changedMetadata_);
     changedMetadata_ = nullptr;
     return CAMERA_OK;
 }
@@ -660,6 +667,21 @@ void CameraInput::ProcessAutoFocusUpdates(const std::shared_ptr<CameraMetadata> 
             }
         }
     }
+}
+
+std::string CameraInput::GetCameraSettings()
+{
+    return MetadataUtils::EncodeToString(cameraObj_->GetMetadata());
+}
+
+int32_t CameraInput::SetCameraSettings(std::string setting)
+{
+    std::shared_ptr<CameraMetadata> metadata = MetadataUtils::DecodeFromString(setting);
+    if (metadata == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::SetCameraSettings Failed to decode metadata setting from string");
+        return CAMERA_INVALID_ARG;
+    }
+    return UpdateSetting(metadata);
 }
 } // CameraStandard
 } // OHOS

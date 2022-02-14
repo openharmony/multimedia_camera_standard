@@ -308,43 +308,46 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
     napi_get_undefined(env, &result);
     auto asyncContext = std::make_unique<CameraManagerNapiAsyncContext>();
     status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
-    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
-        result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
-        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
-        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
-        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "CreateCameraInputInstance");
-        status = napi_create_async_work(env, nullptr, resource,
-            [](napi_env env, void* data) {
-                auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
-                context->cameraObjList = CameraManager::GetInstance()->GetCameras();
-                sptr<CameraInfo> camInfo = nullptr;
-                size_t i;
-                for (i = 0; i < context->cameraObjList.size(); i += 1) {
-                    camInfo = context->cameraObjList[i];
-                    if (context->cameraId.empty()) {
-                        if (camInfo->GetPosition() == context->cameraPosition &&
-                            camInfo->GetCameraType() == context->cameraType) {
-                            break;
-                        }
-                    } else if (camInfo->GetID() == context->cameraId) {
+    if (status != napi_ok || asyncContext->objectInfo == nullptr) {
+        MEDIA_ERR_LOG("napi_unwrap( ) failure!");
+        return nullptr;
+    }
+
+    result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
+    CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
+    CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+    CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "CreateCameraInputInstance");
+    status = napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void* data) {
+            auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
+            context->cameraObjList = CameraManager::GetInstance()->GetCameras();
+            sptr<CameraInfo> camInfo = nullptr;
+            size_t i;
+            for (i = 0; i < context->cameraObjList.size(); i += 1) {
+                camInfo = context->cameraObjList[i];
+                if (context->cameraId.empty()) {
+                    if (camInfo->GetPosition() == context->cameraPosition &&
+                        camInfo->GetCameraType() == context->cameraType) {
                         break;
                     }
+                } else if (camInfo->GetID() == context->cameraId) {
+                    break;
                 }
-                if (camInfo != nullptr && i < context->cameraObjList.size()) {
-                    context->cameraInput = context->objectInfo->cameraManager_->CreateCameraInput(camInfo);
-                    context->status = true;
-                } else {
-                    MEDIA_ERR_LOG("Error: unable to get camera Info!");
-                    context->status = false;
-                }
-            },
-            CreateCameraInputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
-        if (status != napi_ok) {
-            napi_get_undefined(env, &result);
-        } else {
-            napi_queue_async_work(env, asyncContext->work);
-            asyncContext.release();
-        }
+            }
+            if (camInfo != nullptr && i < context->cameraObjList.size()) {
+                context->cameraInput = context->objectInfo->cameraManager_->CreateCameraInput(camInfo);
+                context->status = true;
+            } else {
+                MEDIA_ERR_LOG("Error: unable to get camera Info!");
+                context->status = false;
+            }
+        },
+        CreateCameraInputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        napi_get_undefined(env, &result);
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
     }
 
     return result;

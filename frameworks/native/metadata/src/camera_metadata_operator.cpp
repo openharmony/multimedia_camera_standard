@@ -371,17 +371,36 @@ void SetOffset(camera_metadata_item_entry_t *metadataItems, camera_metadata_item
     }
 }
 
+int MetadataExpandItemMem(common_metadata_header_t *dst, camera_metadata_item_entry_t *item,
+    size_t oldItemSize)
+{
+    int32_t ret = CAM_META_SUCCESS;
+    uint8_t *start = GetMetadataData(dst) + item->data.offset;
+    uint8_t *end = start + oldItemSize;
+    size_t length = dst->data_count - item->data.offset - oldItemSize;
+    if (length != 0) {
+        ret = memmove_s(start, length, end, length);
+        if (ret != CAM_META_SUCCESS) {
+            METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex memory move failed");
+            return CAM_META_FAILURE;
+        }
+    }
+    dst->data_count -= oldItemSize;
+
+    camera_metadata_item_entry_t *metadataItems = GetMetadataItems(dst);
+    for (uint32_t i = 0; i < dst->item_count; i++, ++metadataItems) {
+        SetOffset(metadataItems, item, oldItemSize);
+    }
+
+    return CAM_META_SUCCESS;
+}
+
 int UpdateCameraMetadataItemByIndex(common_metadata_header_t *dst, uint32_t index, const void *data, uint32_t dataCount,
                                     camera_metadata_item_t *updatedItem)
 {
     METADATA_DEBUG_LOG("UpdateCameraMetadataItemByIndex start");
-    if (dst == nullptr) {
-        METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex dst is null");
-        return CAM_META_INVALID_PARAM;
-    }
-
-    if (index >= dst->item_count) {
-        METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex index not valid");
+    if ((dst == nullptr) || (index >= dst->item_count)) {
+        METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex dst is null or invalid index");
         return CAM_META_INVALID_PARAM;
     }
 
@@ -398,22 +417,7 @@ int UpdateCameraMetadataItemByIndex(common_metadata_header_t *dst, uint32_t inde
         }
 
         if (oldItemSize != 0) {
-            uint8_t *start = GetMetadataData(dst) + item->data.offset;
-            uint8_t *end = start + oldItemSize;
-            size_t length = dst->data_count - item->data.offset - oldItemSize;
-            if (length != 0) {
-                ret = memmove_s(start, length, end, length);
-                if (ret != CAM_META_SUCCESS) {
-                    METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex memory move failed");
-                    return CAM_META_FAILURE;
-                }
-            }
-            dst->data_count -= oldItemSize;
-
-            camera_metadata_item_entry_t *metadataItems = GetMetadataItems(dst);
-            for (uint32_t i = 0; i < dst->item_count; i++, ++metadataItems) {
-                SetOffset(metadataItems, item, oldItemSize);
-            }
+            MetadataExpandItemMem(dst, item, oldItemSize);
         }
 
         if (dataSize != 0) {

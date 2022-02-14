@@ -19,12 +19,12 @@ ohos_unittest("camera_metadata_unittest") {
   module_out_path = module_output_path
   include_dirs = [
     "./include",
-    "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata/include",
+    "//foundation/multimedia/camera_standard/frameworks/native/metadata/include",
   ]
 
   sources = [ "src/camera_metadata_unittest.cpp" ]
 
-  deps = [ "//foundation/multimedia/camera_standard/frameworks/innerkitsimpl/metadata:metadata" ]
+  deps = [ "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata" ]
 
   external_deps = [ "ipc:ipc_single" ]
 }

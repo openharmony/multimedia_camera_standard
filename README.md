@@ -41,13 +41,13 @@ The structure of the repository directory is as follows:
 ```
 /foundation/multimedia/camera_standard  # Camera code
 ├── frameworks                          # Framework code
-│   ├── innerkitsimpl                   # Internal Native API Implementation
+│   ├── native                          # Internal Native API Implementation
 │   │   ├── camera                      # Camera Framework Implementation
 │   │   └── metadata                    # Metadata Implementation
-│   └── kitsimpl                        # External JS API Implementation
+│   └── js                              # External JS API Implementation
 │       └── camera_napi                 # Camera NAPI Implementation
 ├── interfaces                          # Interfaces
-│   ├── innerkits                       # Internal Native APIs
+│   ├── inner_api                       # Internal Native APIs
 │   └── kits                            # External JS APIs
 ├── LICENSE                             # License file
 ├── ohos.build                          # Build file

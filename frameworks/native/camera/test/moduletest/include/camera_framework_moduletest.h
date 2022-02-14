@@ -55,6 +55,7 @@ public:
     static void TearDownTestCase(void);
 
     /* SetUp:Execute before each test case */
+    void SetUpInit();
     void SetUp();
 
     /* TearDown:Execute after each test case */
@@ -67,6 +68,8 @@ public:
     sptr<CaptureOutput> CreateVideoOutput(int32_t width, int32_t height);
     sptr<CaptureOutput> CreateVideoOutput();
     void SetCameraParameters(sptr<CameraInput> &camInput, bool video);
+    void TestCallbacksSession(sptr<CaptureOutput> photoOutput,
+		    sptr<CaptureOutput> videoOutput);
     void TestCallbacks(sptr<CameraInfo> &cameraInfo, bool video);
     void TestSupportedResolution(int32_t previewWidth, int32_t previewHeight, int32_t photoWidth,
                                  int32_t photoHeight, int32_t videoWidth, int32_t videoHeight);

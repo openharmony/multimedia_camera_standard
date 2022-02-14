@@ -38,13 +38,13 @@
 ```
 /foundation/multimedia/camera_standard   # 相机组件业务代码
 ├── frameworks                           # 框架代码
-│   ├── innerkitsimpl                    # 内部接口实现
+│   ├── native                           # 内部接口实现
 │   │   ├── camera                       # 相机框架实现
 │   │   └── metadata                     # 元数据实现
-│   └── kitsimpl                         # 外部接口实现
-│   └── camera_napi                      # 相机NAPI实现
+│   └── js                               # 外部接口实现
+│       └── camera_napi                  # 相机NAPI实现
 ├── interfaces                           # 接口代码
-│   ├── innerkits                        # 内部接口
+│   ├── inner_api                        # 内部接口
 │   └── kits                             # 外部接口
 ├── LICENSE                              # 许可证文件
 ├── ohos.build                           # 构建文件

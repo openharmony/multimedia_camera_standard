@@ -157,7 +157,7 @@ declare namespace camera {
    * @since 8
    */
   enum ConnectionType {
-    CAMERA_CONNECTION_BUILD_IN = 0,
+    CAMERA_CONNECTION_BUILT_IN = 0,
     CAMERA_CONNECTION_USB_PLUGIN,
     CAMERA_CONNECTION_REMOTE
   }

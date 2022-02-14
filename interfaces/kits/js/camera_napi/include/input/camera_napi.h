@@ -93,7 +93,7 @@ static const std::vector<std::string> vecCameraTypeMode {
 };
 
 static const std::vector<std::string> vecConnectionTypeMode {
-    "CAMERA_CONNECTION_BUILD_IN", "CAMERA_CONNECTION_USB_PLUGIN", "CAMERA_CONNECTION_REMOTE"
+    "CAMERA_CONNECTION_BUILT_IN", "CAMERA_CONNECTION_USB_PLUGIN", "CAMERA_CONNECTION_REMOTE"
 };
 
 static const std::vector<std::string> vecCameraFormat {

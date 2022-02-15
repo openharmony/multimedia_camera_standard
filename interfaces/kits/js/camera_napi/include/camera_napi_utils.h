@@ -143,7 +143,7 @@ enum JSCameraType {
 };
 
 enum JSConnectionType {
-    CAMERA_CONNECTION_BUILD_IN = 0,
+    CAMERA_CONNECTION_BUILT_IN = 0,
     CAMERA_CONNECTION_USB_PLUGIN,
     CAMERA_CONNECTION_REMOTE
 };
@@ -412,7 +412,7 @@ public:
                 break;
             case OHOS_CAMERA_CONNECTION_TYPE_BUILTIN:
             default:
-                jsCameraConnType = CAMERA_CONNECTION_BUILD_IN;
+                jsCameraConnType = CAMERA_CONNECTION_BUILT_IN;
         }
     }
 

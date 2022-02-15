@@ -230,7 +230,7 @@ napi_value CameraInfoNapi::GetConnectionType(napi_env env, napi_callback_info in
     napi_value jsResult = nullptr;
     napi_value undefinedResult = nullptr;
     CameraInfoNapi* obj = nullptr;
-    int32_t jsConnectionType = CAMERA_CONNECTION_BUILD_IN;
+    int32_t jsConnectionType = CAMERA_CONNECTION_BUILT_IN;
     napi_value thisVar = nullptr;
 
     napi_get_undefined(env, &undefinedResult);

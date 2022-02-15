@@ -69,7 +69,7 @@ public:
     std::string& dumpString);
     void CameraDumpSensorInfo(common_metadata_header_t *metadataEntry,
     std::string& dumpString);
-	int32_t Dump(int fd, const std::vector<std::u16string>& args) override;
+    int32_t Dump(int fd, const std::vector<std::u16string>& args) override;
 
 protected:
     HCameraService(sptr<HCameraHostManager> cameraHostManager) : cameraHostManager_(cameraHostManager) {}

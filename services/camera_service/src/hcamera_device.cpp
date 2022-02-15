@@ -60,7 +60,7 @@ std::shared_ptr<CameraMetadata> HCameraDevice::GetSettings()
     if (cameraAbility_ == nullptr) {
         errCode = cameraHostManager_->GetCameraAbility(cameraID_, cameraAbility_);
         if (errCode != CAMERA_OK) {
-            MEDIA_ERR_LOG("Failed to get Camera Ability: %{public}d", errCode);
+            MEDIA_ERR_LOG("HCameraDevice::GetSettings Failed to get Camera Ability: %{public}d", errCode);
             return nullptr;
         }
     }
@@ -113,7 +113,7 @@ int32_t HCameraDevice::GetEnabledResults(std::vector<int32_t> &results)
 
     Camera::CamRetCode rc = hdiCameraDevice_->GetEnabledResults(settings);
     if (rc != Camera::NO_ERROR) {
-        MEDIA_ERR_LOG("HCameraDevice::GetSettings failed with error Code:%{public}d", rc);
+        MEDIA_ERR_LOG("HCameraDevice::GetEnabledResults failed with error Code:%{public}d", rc);
         return HdiToServiceError(rc);
     }
     results = settings;

@@ -58,7 +58,7 @@ public:
     ~PhotoOutputCallback() = default;
 
     void OnCaptureStarted(const int32_t captureID) const override;
-    void OnCaptureEnded(const int32_t captureID) const override;
+    void OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const override;
     void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const override;
     void OnCaptureError(const int32_t captureId, const int32_t errorCode) const override;
     void SetCallbackRef(const std::string &eventType, const napi_ref &callbackRef);

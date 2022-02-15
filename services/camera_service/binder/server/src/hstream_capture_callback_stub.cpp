@@ -56,8 +56,9 @@ int HStreamCaptureCallbackStub::HandleOnCaptureStarted(MessageParcel& data)
 int HStreamCaptureCallbackStub::HandleOnCaptureEnded(MessageParcel& data)
 {
     int32_t captureId = data.ReadInt32();
+    int32_t frameCount = data.ReadInt32();
 
-    return OnCaptureEnded(captureId);
+    return OnCaptureEnded(captureId, frameCount);
 }
 
 int HStreamCaptureCallbackStub::HandleOnCaptureError(MessageParcel& data)

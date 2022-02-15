@@ -40,6 +40,7 @@ public:
     HCameraService(int32_t systemAbilityId, bool runOnCreate = true);
     ~HCameraService();
 
+    void InitMapInfo();
     int32_t GetCameras(std::vector<std::string> &cameraIds,
         std::vector<std::shared_ptr<CameraMetadata>> &cameraAbilityList) override;
     int32_t CreateCameraDevice(std::string cameraId, sptr<ICameraDeviceService> &device) override;
@@ -56,6 +57,19 @@ public:
     void OnDump() override;
     void OnStart() override;
     void OnStop() override;
+    void CameraDumpAbility(common_metadata_header_t *metadataEntry,
+    std::string& dumpString);
+    void CameraDumpStreaminfo(common_metadata_header_t *metadataEntry,
+    std::string& dumpString);
+    void CameraDumpZoom(common_metadata_header_t *metadataEntry,
+    std::string& dumpString);
+    void CameraDumpFlash(common_metadata_header_t *metadataEntry,
+    std::string& dumpString);
+    void CameraDumpAF(common_metadata_header_t *metadataEntry,
+    std::string& dumpString);
+    void CameraDumpSensorInfo(common_metadata_header_t *metadataEntry,
+    std::string& dumpString);
+	int32_t Dump(int fd, const std::vector<std::u16string>& args) override;
 
 protected:
     HCameraService(sptr<HCameraHostManager> cameraHostManager) : cameraHostManager_(cameraHostManager) {}
@@ -65,6 +79,12 @@ private:
     sptr<Camera::ICameraHostCallback> cameraHostCallback_;
     sptr<CameraDeviceCallback> cameraDeviceCallback_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;
+    std::map<int, std::string> cameraPos_;
+    std::map<int, std::string> cameraType_;
+    std::map<int, std::string> cameraConType_;
+    std::map<int, std::string> cameraFormat_;
+    std::map<int, std::string> cameraFocusMode_;
+    std::map<int, std::string> cameraFlashMode_;
 };
 
 class CameraHostCallback : public Camera::CameraHostCallbackStub {

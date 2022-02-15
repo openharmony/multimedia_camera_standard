@@ -450,8 +450,16 @@ void ReturnVoidInCompleteCallback(napi_env env, napi_status status, void* data)
     }
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
-    napi_get_undefined(env, &jsContext->error);
     napi_get_undefined(env, &jsContext->data);
+    napi_get_undefined(env, &jsContext->error);
+
+    if (!context->status) {
+        napi_value napiErrorMsg = nullptr;
+        napi_create_string_utf8(env, "Set function failed", NAPI_AUTO_LENGTH, &napiErrorMsg);
+        napi_create_error(env, nullptr, napiErrorMsg, &jsContext->error);
+        jsContext->status = false;
+    }
+
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
                                              context->work, *jsContext);
@@ -490,6 +498,10 @@ napi_value CameraInputNapi::SetFlashMode(napi_env env, napi_callback_info info)
                     cameraInput->SetFlashMode(static_cast<camera_flash_mode_enum_t>(context->flashMode));
                     cameraInput->SetExposureMode(OHOS_CAMERA_AE_MODE_ON_ALWAYS_FLASH);
                     cameraInput->UnlockForControl();
+                    context->status = true;
+                } else {
+                    MEDIA_ERR_LOG("Flash mode is not supported");
+                    context->status = false;
                 }
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -1101,9 +1113,17 @@ napi_value CameraInputNapi::SetFocusMode(napi_env env, napi_callback_info info)
                     return;
                 }
 
-                cameraInput->LockForControl();
-                context->objectInfo->cameraInput_->SetFocusMode(context->focusMode);
-                cameraInput->UnlockForControl();
+                vector<camera_af_mode_t> vecSupportedFocusModeList;
+                vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
+                if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),
+                    context->focusMode) != vecSupportedFocusModeList.end()) {
+                    cameraInput->LockForControl();
+                    context->objectInfo->cameraInput_->SetFocusMode(context->focusMode);
+                    cameraInput->UnlockForControl();
+                } else {
+                    MEDIA_ERR_LOG("Focus mode is not supported");
+                    context->status = false;
+                }
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -1368,6 +1388,7 @@ napi_value CameraInputNapi::SetZoomRatio(napi_env env, napi_callback_info info)
                 cameraInput->LockForControl();
                 cameraInput->SetZoomRatio(context->zoomRatio);
                 cameraInput->UnlockForControl();
+                context->status = true;
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {

@@ -321,8 +321,7 @@ void HCameraService::CameraDumpAbility(common_metadata_header_t *metadataEntry,
     if (ret == CAM_META_SUCCESS) {
         std::map<int, std::string>::const_iterator iter =
             cameraPos_.find(item.data.u8[0]);
-        if (iter != cameraPos_.end())
-        {
+        if (iter != cameraPos_.end()) {
             dumpString += "        Camera Position:["
                 + iter->second
                 + "]:    ";
@@ -333,8 +332,7 @@ void HCameraService::CameraDumpAbility(common_metadata_header_t *metadataEntry,
     if (ret == CAM_META_SUCCESS) {
         std::map<int, std::string>::const_iterator iter =
             cameraType_.find(item.data.u8[0]);
-        if (iter != cameraType_.end())
-        {
+        if (iter != cameraType_.end()) {
             dumpString += "Camera Type:["
                 + iter->second
                 + "]:    ";
@@ -345,8 +343,7 @@ void HCameraService::CameraDumpAbility(common_metadata_header_t *metadataEntry,
     if (ret == CAM_META_SUCCESS) {
         std::map<int, std::string>::const_iterator iter =
             cameraConType_.find(item.data.u8[0]);
-        if (iter != cameraConType_.end())
-        {
+        if (iter != cameraConType_.end()) {
             dumpString += "Camera Connection Type:["
                 + iter->second
                 + "]:\n";
@@ -359,25 +356,25 @@ void HCameraService::CameraDumpStreaminfo(common_metadata_header_t *metadataEntr
 {
     camera_metadata_item_t item;
     int ret;
+    int32_t unitLen = 3;
+    int32_t widthOffset = 1;
+    int32_t heightOffset = 2;
     dumpString += "        ### Camera Available stream configuration List: \n";
     ret = FindCameraMetadataItem(metadataEntry, OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
     if (ret == CAM_META_SUCCESS) {
-        dumpString += "            Number Stream Info: " + std::to_string(item.count/3) + "\n";
-        for (uint32_t index = 0; index < item.count; index += 3) {
-
+        dumpString += "            Number Stream Info: "
+            + std::to_string(item.count/unitLen) + "\n";
+        for (uint32_t index = 0; index < item.count; index += unitLen) {
             std::map<int, std::string>::const_iterator iter =
             cameraFormat_.find(item.data.i32[index]);
-            if (iter != cameraFormat_.end())
-            {
+            if (iter != cameraFormat_.end()) {
                 dumpString += "            Format:["
                         + iter->second
                         + "]:    ";
-#define CAMERA_WIDTH_OFFSET 1
-#define CAMERA_HEIGHT_OFFSET 2
                 dumpString += "Size:[Width:"
-                        + std::to_string(item.data.i32[index + CAMERA_WIDTH_OFFSET])
+                        + std::to_string(item.data.i32[index + widthOffset])
                         + " Height:"
-                        + std::to_string(item.data.i32[index + CAMERA_HEIGHT_OFFSET])
+                        + std::to_string(item.data.i32[index + heightOffset])
                         + "]:\n";
             }
         }
@@ -434,11 +431,10 @@ void HCameraService::CameraDumpFlash(common_metadata_header_t *metadataEntry,
     dumpString += "        Available Flash Modes:[";
     ret = FindCameraMetadataItem(metadataEntry, OHOS_ABILITY_DEVICE_AVAILABLE_FLASHMODES, &item);
     if (ret == CAM_META_SUCCESS) {
-        for(uint32_t i = 0; i < item.count; i++) {
+        for (uint32_t i = 0; i < item.count; i++) {
             std::map<int, std::string>::const_iterator iter =
                 cameraFlashMode_.find(item.data.u8[i]);
-            if (iter != cameraFlashMode_.end())
-            {
+            if (iter != cameraFlashMode_.end()) {
                 dumpString += " " + iter->second;
             }
         }
@@ -449,12 +445,11 @@ void HCameraService::CameraDumpFlash(common_metadata_header_t *metadataEntry,
     if (ret == CAM_META_SUCCESS) {
         std::map<int, std::string>::const_iterator iter =
             cameraFlashMode_.find(item.data.u8[0]);
-        if (iter != cameraFlashMode_.end())
-        {
+        if (iter != cameraFlashMode_.end()) {
             dumpString += "        Set Flash Mode:["
                 + iter->second
                 + "]:\n";
-         }
+        }
     }
 }
 
@@ -468,11 +463,10 @@ void HCameraService::CameraDumpAF(common_metadata_header_t *metadataEntry,
 
     ret = FindCameraMetadataItem(metadataEntry, OHOS_CONTROL_AF_AVAILABLE_MODES, &item);
     if (ret == CAM_META_SUCCESS) {
-        for(uint32_t i = 0; i < item.count; i++) {
+        for (uint32_t i = 0; i < item.count; i++) {
             std::map<int, std::string>::const_iterator iter =
                 cameraFocusMode_.find(item.data.u8[i]);
-            if (iter != cameraFocusMode_.end())
-            {
+            if (iter != cameraFocusMode_.end()) {
                 dumpString += " " + iter->second;
             }
         }
@@ -483,8 +477,7 @@ void HCameraService::CameraDumpAF(common_metadata_header_t *metadataEntry,
     if (ret == CAM_META_SUCCESS) {
         std::map<int, std::string>::const_iterator iter =
             cameraFocusMode_.find(item.data.u8[0]);
-        if (iter != cameraFocusMode_.end())
-        {
+        if (iter != cameraFocusMode_.end()) {
             dumpString += "        Set Focus Mode:["
                 + iter->second
                 + "]:\n";
@@ -579,6 +572,5 @@ int32_t HCameraService::Dump(int fd, const std::vector<std::u16string>& args)
     write(fd, dumpString.c_str(), dumpString.size());
     return CAMERA_OK;
 }
-
 } // namespace CameraStandard
 } // namespace OHOS

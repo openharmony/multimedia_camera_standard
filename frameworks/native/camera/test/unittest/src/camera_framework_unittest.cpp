@@ -105,7 +105,7 @@ public:
 
 class MockHCameraHostManager : public HCameraHostManager {
 public:
-    MockHCameraHostManager()
+    explicit MockHCameraHostManager(StatusCallback* statusCallback) : HCameraHostManager(statusCallback)
     {
         cameraDevice = new MockCameraDevice();
         ON_CALL(*this, GetCameras).WillByDefault([this](std::vector<std::string> &cameraIds) {
@@ -141,7 +141,7 @@ public:
     MOCK_METHOD1(GetCameras, int32_t(std::vector<std::string> &cameraIds));
     MOCK_METHOD1(SetCallback, int32_t(sptr<Camera::ICameraHostCallback> &callback));
     MOCK_METHOD2(GetCameraAbility, int32_t(std::string &cameraId, std::shared_ptr<CameraMetadata> &ability));
-    MOCK_METHOD2(SetFlashlight, int32_t(std::string cameraId, bool isEnable));
+    MOCK_METHOD2(SetFlashlight, int32_t(const std::string &cameraId, bool isEnable));
     MOCK_METHOD3(OpenCameraDevice, int32_t(std::string &cameraId,
         const sptr<Camera::ICameraDeviceCallback> &callback, sptr<Camera::ICameraDevice> &pDevice));
     sptr<MockCameraDevice> cameraDevice;
@@ -188,7 +188,7 @@ void CameraFrameworkUnitTest::TearDownTestCase(void) {}
 
 void CameraFrameworkUnitTest::SetUp()
 {
-    mockCameraHostManager = new MockHCameraHostManager();
+    mockCameraHostManager = new MockHCameraHostManager(nullptr);
     mockCameraDevice = mockCameraHostManager->cameraDevice;
     mockStreamOperator = mockCameraDevice->streamOperator;
     cameraManager = new FakeCameraManager(new FakeHCameraService(mockCameraHostManager));

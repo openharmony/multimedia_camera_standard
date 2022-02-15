@@ -13,9 +13,6 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <map>
-#include <string>
 #include <unordered_set>
 
 #include "camera_util.h"
@@ -61,21 +58,28 @@ void HCameraService::InitMapInfo()
     cameraFlashMode_.insert(std::make_pair(3, "Always-Open"));
 }
 
-HCameraService::HCameraService(int32_t systemAbilityId, bool runOnCreate) : SystemAbility(systemAbilityId, runOnCreate)
+HCameraService::HCameraService(int32_t systemAbilityId, bool runOnCreate)
+    : SystemAbility(systemAbilityId, runOnCreate),
+      cameraHostManager_(nullptr),
+      cameraDeviceCallback_(nullptr),
+      streamOperatorCallback_(nullptr),
+      cameraServiceCallback_(nullptr)
 {
-    cameraHostManager_ = new HCameraHostManager();
-    if (cameraHostManager_ == nullptr) {
-        MEDIA_ERR_LOG("HCameraService:HCameraHostManager creation is failed");
-        return;
-    }
     InitMapInfo();
 }
 
 HCameraService::~HCameraService()
-{}
+{
+}
 
 void HCameraService::OnStart()
 {
+    if (!cameraHostManager_) {
+        cameraHostManager_ = new HCameraHostManager(this);
+    }
+    if (cameraHostManager_->Init() != CAMERA_OK) {
+        MEDIA_ERR_LOG("HCameraService OnStart failed to init camera host manager.");
+    }
     bool res = Publish(this);
     if (res) {
         MEDIA_INFO_LOG("HCameraService OnStart res=%{public}d", res);
@@ -90,6 +94,12 @@ void HCameraService::OnDump()
 void HCameraService::OnStop()
 {
     MEDIA_INFO_LOG("HCameraService::OnStop called");
+
+    if (cameraHostManager_) {
+        cameraHostManager_->DeInit();
+        delete cameraHostManager_;
+        cameraHostManager_ = nullptr;
+    }
 }
 
 int32_t HCameraService::GetCameras(std::vector<std::string> &cameraIds,
@@ -237,78 +247,19 @@ int32_t HCameraService::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &pro
     return CAMERA_OK;
 }
 
-CameraHostCallback::CameraHostCallback(sptr<ICameraServiceCallback> &callback)
+void HCameraService::OnCameraStatus(const std::string& cameraId, CameraStatus status)
 {
-    cameraServiceCallback = callback;
-}
-
-void CameraHostCallback::OnCameraStatus(const std::string &cameraId, Camera::CameraStatus status)
-{
-    CameraStatus svcStatus = CAMERA_STATUS_UNAVAILABLE;
-
-    if (cameraServiceCallback != nullptr) {
-        switch (status) {
-            case Camera::UN_AVAILABLE:
-                svcStatus = CAMERA_STATUS_UNAVAILABLE;
-                break;
-
-            case Camera::AVAILABLE:
-                svcStatus = CAMERA_STATUS_AVAILABLE;
-                break;
-
-            default:
-                MEDIA_ERR_LOG("Unknown camera status: %{public}d", status);
-                return;
-        }
-        cameraServiceCallback->OnCameraStatusChanged(cameraId, svcStatus);
+    if (cameraServiceCallback_) {
+        cameraServiceCallback_->OnCameraStatusChanged(cameraId, status);
     }
 }
 
-void CameraHostCallback::OnFlashlightStatus(const std::string &cameraId, Camera::FlashlightStatus status)
+void HCameraService::OnFlashlightStatus(const std::string& cameraId, FlashStatus status)
 {
-    FlashStatus flashStaus = FLASH_STATUS_OFF;
-
-    if (cameraServiceCallback != nullptr) {
-        switch (status) {
-            case Camera::FLASHLIGHT_OFF:
-                flashStaus = FLASH_STATUS_OFF;
-                break;
-
-            case Camera::FLASHLIGHT_ON:
-                flashStaus = FLASH_STATUS_ON;
-                break;
-
-            case Camera::FLASHLIGHT_UNAVAILABLE:
-                flashStaus = FLASH_STATUS_UNAVAILABLE;
-                break;
-
-            default:
-                MEDIA_ERR_LOG("Unknown flashlight status: %{public}d", status);
-                return;
-        }
-        cameraServiceCallback->OnFlashlightStatusChanged(cameraId, flashStaus);
+    if (cameraServiceCallback_) {
+        cameraServiceCallback_->OnFlashlightStatusChanged(cameraId, status);
     }
 }
-
-#ifdef BALTIMORE_CAMERA
-void CameraHostCallback::OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event)
-{
-    MEDIA_INFO_LOG("CameraHostCallback::OnCameraEvent called");
-    switch (event) {
-        case Camera::CAMERA_EVENT_DEVICE_ADD:
-            MEDIA_INFO_LOG("CAMERA_EVENT_DEVICE_ADD event with cameraID:%{public}s", cameraId.c_str());
-            break;
-
-        case Camera::CAMERA_EVENT_DEVICE_RMV:
-            MEDIA_INFO_LOG("CAMERA_EVENT_DEVICE_RMV event with cameraID:%{public}s", cameraId.c_str());
-            break;
-
-        default:
-            MEDIA_ERR_LOG("Unknown Camera event: %{public}d", event);
-            return;
-    }
-}
-#endif
 
 int32_t HCameraService::SetCallback(sptr<ICameraServiceCallback> &callback)
 {
@@ -316,16 +267,7 @@ int32_t HCameraService::SetCallback(sptr<ICameraServiceCallback> &callback)
         MEDIA_ERR_LOG("HCameraService::SetCallback callback is null");
         return CAMERA_INVALID_ARG;
     }
-    cameraHostCallback_ = new CameraHostCallback(callback);
-    if (cameraHostCallback_ == nullptr) {
-        MEDIA_ERR_LOG("HCameraService::SetCallback CameraHostCallback allocation failed");
-        return CAMERA_ALLOC_ERROR;
-    }
-    int ret = cameraHostManager_->SetCallback(cameraHostCallback_);
-    if (ret != CAMERA_OK) {
-        MEDIA_ERR_LOG("Setting cameraHostCallback failed");
-        return ret;
-    }
+    cameraServiceCallback_ = callback;
     return CAMERA_OK;
 }
 

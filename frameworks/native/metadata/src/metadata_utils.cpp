@@ -14,6 +14,8 @@
  */
 
 #include "metadata_utils.h"
+#include <securec.h>
+#include "metadata_log.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -126,6 +128,128 @@ bool MetadataUtils::WriteMetadata(const camera_metadata_item_t &item, MessagePar
     }
 
     return bRet;
+}
+
+std::string MetadataUtils::EncodeToString(std::shared_ptr<CameraStandard::CameraMetadata> metadata)
+{
+    int32_t ret, dataLen;
+    const int32_t headerLength = sizeof(common_metadata_header_t);
+    const int32_t itemLen = sizeof(camera_metadata_item_entry_t);
+    const int32_t itemFixedLen = offsetof(camera_metadata_item_entry_t, data);
+
+    if (metadata == nullptr || metadata->get() == nullptr) {
+        METADATA_ERR_LOG("MetadataUtils::EncodeToString Metadata is invalid");
+        return {};
+    }
+
+    common_metadata_header_t *meta = metadata->get();
+    std::string s(headerLength + (itemLen * meta->item_count) + meta->data_count, '\0');
+    char *encodeData = &s[0];
+    ret = memcpy_s(encodeData, headerLength, meta, headerLength);
+    if (ret != CAM_META_SUCCESS) {
+        METADATA_ERR_LOG("MetadataUtils::EncodeToString Failed to copy memory for metadata header");
+        return {};
+    }
+    encodeData += headerLength;
+    camera_metadata_item_entry_t *item = GetMetadataItems(meta);
+    for (uint32_t index = 0; index < meta->item_count; index++, item++) {
+        ret = memcpy_s(encodeData, itemFixedLen, item, itemFixedLen);
+        if (ret != CAM_META_SUCCESS) {
+            METADATA_ERR_LOG("MetadataUtils::EncodeToString Failed to copy memory for item fixed fields");
+            return {};
+        }
+        encodeData += itemFixedLen;
+        dataLen = itemLen - itemFixedLen;
+        ret = memcpy_s(encodeData, dataLen,  &(item->data), dataLen);
+        if (ret != CAM_META_SUCCESS) {
+            METADATA_ERR_LOG("MetadataUtils::EncodeToString Failed to copy memory for item data field");
+            return {};
+        }
+        encodeData += dataLen;
+    }
+
+    if (meta->data_count != 0) {
+        ret = memcpy_s(encodeData, meta->data_count, GetMetadataData(meta), meta->data_count);
+        if (ret != CAM_META_SUCCESS) {
+            METADATA_ERR_LOG("MetadataUtils::EncodeToString Failed to copy memory for data");
+            return {};
+        }
+        encodeData += meta->data_count;
+    }
+    METADATA_DEBUG_LOG("MetadataUtils::EncodeToString Calculated length: %{public}d, encoded length: %{public}d",
+                       s.capacity(), (encodeData - &s[0]));
+
+    return s;
+}
+
+std::shared_ptr<CameraStandard::CameraMetadata> MetadataUtils::DecodeFromString(std::string setting)
+{
+    int32_t ret, dataLen;
+    int32_t totalLen = setting.capacity();
+    const int32_t headerLength = sizeof(common_metadata_header_t);
+    const int32_t itemLen = sizeof(camera_metadata_item_entry_t);
+    const int32_t itemFixedLen = offsetof(camera_metadata_item_entry_t, data);
+
+    if (totalLen < headerLength) {
+        METADATA_ERR_LOG("MetadataUtils::DecodeFromString Length is less than metadata header length");
+        return {};
+    }
+
+    char *decodeData = &setting[0];
+    common_metadata_header_t header;
+    ret = memcpy_s(&header, headerLength, decodeData, headerLength);
+    if (ret != CAM_META_SUCCESS) {
+        METADATA_ERR_LOG("MetadataUtils::DecodeFromString Failed to copy memory for metadata header");
+        return {};
+    }
+    header.item_capacity = header.item_count;
+    header.data_capacity = header.data_count;
+    std::shared_ptr<CameraStandard::CameraMetadata> metadata
+        = std::make_shared<CameraMetadata>(header.item_capacity, header.data_capacity);
+    common_metadata_header_t *meta = metadata->get();
+    ret = memcpy_s(meta, headerLength, &header, headerLength);
+    if (ret != CAM_META_SUCCESS) {
+        METADATA_ERR_LOG("MetadataUtils::DecodeFromString Failed to copy memory for metadata header");
+        return {};
+    }
+    decodeData += headerLength;
+    camera_metadata_item_entry_t *item = GetMetadataItems(meta);
+    for (uint32_t index = 0; index < meta->item_count; index++, item++) {
+        if (totalLen < ((decodeData - &setting[0]) + itemLen)) {
+            METADATA_ERR_LOG("MetadataUtils::DecodeFromString Failed at item index: %{public}d", index);
+            return {};
+        }
+        ret = memcpy_s(item, itemFixedLen, decodeData, itemFixedLen);
+        if (ret != CAM_META_SUCCESS) {
+            METADATA_ERR_LOG("MetadataUtils::DecodeFromString Failed to copy memory for item fixed fields");
+            return {};
+        }
+        decodeData += itemFixedLen;
+        dataLen = itemLen - itemFixedLen;
+        ret = memcpy_s(&(item->data), dataLen,  decodeData, dataLen);
+        if (ret != CAM_META_SUCCESS) {
+            METADATA_ERR_LOG("MetadataUtils::DecodeFromString Failed to copy memory for item data field");
+            return {};
+        }
+        decodeData += dataLen;
+    }
+
+    if (meta->data_count != 0) {
+        if (totalLen < ((decodeData - &setting[0]) + meta->data_count)) {
+            METADATA_ERR_LOG("MetadataUtils::DecodeFromString Failed at data copy");
+            return {};
+        }
+        ret = memcpy_s(GetMetadataData(meta), meta->data_count, decodeData, meta->data_count);
+        if (ret != CAM_META_SUCCESS) {
+            METADATA_ERR_LOG("MetadataUtils::DecodeFromString Failed to copy memory for data");
+            return {};
+        }
+        decodeData += meta->data_count;
+    }
+
+    METADATA_DEBUG_LOG("MetadataUtils::DecodeFromString String length: %{public}d, Decoded length: %{public}d",
+                       setting.capacity(), (decodeData - &setting[0]));
+    return metadata;
 }
 
 bool MetadataUtils::ReadMetadata(camera_metadata_item_t &item, MessageParcel &data)

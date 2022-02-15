@@ -44,6 +44,7 @@ ohos_shared_library("camera_service") {
 
   include_dirs = [
     "//drivers/framework/include/utils/",
+    "//drivers/framework/include/core/",
     "//drivers/adapter/uhdf2/osal/include/",
     "//drivers/adapter/uhdf2/include/hdi/",
     "//foundation/graphic/standard/frameworks/surface/include",
@@ -59,6 +60,7 @@ ohos_shared_library("camera_service") {
   }
 
   deps = [
+    "//drivers/adapter/uhdf2/hdi:libhdi",
     "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
   ]

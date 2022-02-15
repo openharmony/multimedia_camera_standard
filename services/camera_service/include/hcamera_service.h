@@ -16,7 +16,6 @@
 #ifndef OHOS_CAMERA_H_CAMERA_SERVICE_H
 #define OHOS_CAMERA_H_CAMERA_SERVICE_H
 
-#include "camera_host_callback_stub.h"
 #include "hcamera_device.h"
 #include "hcamera_host_manager.h"
 #include "hcamera_service_stub.h"
@@ -30,15 +29,14 @@
 
 namespace OHOS {
 namespace CameraStandard {
-class CameraHostCallback;
-class HCameraService : public SystemAbility, public HCameraServiceStub {
+class HCameraService : public SystemAbility, public HCameraServiceStub, public HCameraHostManager::StatusCallback {
     DECLARE_SYSTEM_ABILITY(HCameraService);
 
 public:
     DISALLOW_COPY_AND_MOVE(HCameraService);
 
-    HCameraService(int32_t systemAbilityId, bool runOnCreate = true);
-    ~HCameraService();
+    explicit HCameraService(int32_t systemAbilityId, bool runOnCreate = true);
+    ~HCameraService() override;
 
     void InitMapInfo();
     int32_t GetCameras(std::vector<std::string> &cameraIds,
@@ -57,6 +55,7 @@ public:
     void OnDump() override;
     void OnStart() override;
     void OnStop() override;
+
     void CameraDumpAbility(common_metadata_header_t *metadataEntry,
     std::string& dumpString);
     void CameraDumpStreaminfo(common_metadata_header_t *metadataEntry,
@@ -71,34 +70,24 @@ public:
     std::string& dumpString);
     int32_t Dump(int fd, const std::vector<std::u16string>& args) override;
 
+    // HCameraHostManager::StatusCallback
+    void OnCameraStatus(const std::string& cameraId, CameraStatus status) override;
+    void OnFlashlightStatus(const std::string& cameraId, FlashStatus status) override;
+
 protected:
     HCameraService(sptr<HCameraHostManager> cameraHostManager) : cameraHostManager_(cameraHostManager) {}
 
 private:
     sptr<HCameraHostManager> cameraHostManager_;
-    sptr<Camera::ICameraHostCallback> cameraHostCallback_;
     sptr<CameraDeviceCallback> cameraDeviceCallback_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;
+    sptr<ICameraServiceCallback> cameraServiceCallback_;
     std::map<int, std::string> cameraPos_;
     std::map<int, std::string> cameraType_;
     std::map<int, std::string> cameraConType_;
     std::map<int, std::string> cameraFormat_;
     std::map<int, std::string> cameraFocusMode_;
     std::map<int, std::string> cameraFlashMode_;
-};
-
-class CameraHostCallback : public Camera::CameraHostCallbackStub {
-public:
-    CameraHostCallback(sptr<ICameraServiceCallback> &callback);
-    virtual ~CameraHostCallback() = default;
-    virtual void OnCameraStatus(const std::string &cameraId, Camera::CameraStatus status) override;
-    virtual void OnFlashlightStatus(const std::string &cameraId, Camera::FlashlightStatus status) override;
-#ifdef BALTIMORE_CAMERA
-    virtual void OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event) override;
-#endif
-
-private:
-    sptr<ICameraServiceCallback> cameraServiceCallback;
 };
 } // namespace CameraStandard
 } // namespace OHOS

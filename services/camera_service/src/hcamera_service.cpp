@@ -47,11 +47,11 @@ void HCameraService::InitMapInfo()
 
     cameraFormat_.insert(std::make_pair(1, "RGBA_8888"));
     cameraFormat_.insert(std::make_pair(2, "YCBCR_420_888"));
-    cameraFormat_.insert(std::make_pair(3, "YCBCB_420_SP"));
+    cameraFormat_.insert(std::make_pair(3, "YCRCB_420_SP"));
     cameraFormat_.insert(std::make_pair(4, "JPEG"));
 
     cameraFocusMode_.insert(std::make_pair(0, "Manual"));
-    cameraFocusMode_.insert(std::make_pair(1, "Contineous-Auto"));
+    cameraFocusMode_.insert(std::make_pair(1, "Continuous-Auto"));
     cameraFocusMode_.insert(std::make_pair(2, "Auto"));
     cameraFocusMode_.insert(std::make_pair(3, "Locked"));
 

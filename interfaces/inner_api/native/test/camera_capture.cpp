@@ -98,21 +98,18 @@ int main(int argc, char **argv)
 
     captureSession->BeginConfig();
 
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
-    if (cameraInput == nullptr) {
+    sptr<CaptureInput> captureInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    if (captureInput == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create camera input");
         return 0;
     }
 
+    sptr<CameraInput> cameraInput = (sptr<CameraInput> &)captureInput;
+
     if (!isResolutionConfigured) {
-        std::vector<camera_format_t> previewFormats = ((sptr<CameraInput> &)cameraInput)->GetSupportedPreviewFormats();
-        if (previewFormats.empty()) {
-            MEDIA_DEBUG_LOG("No preview formats supported");
-        }
+        std::vector<camera_format_t> previewFormats = cameraInput->GetSupportedPreviewFormats();
         MEDIA_DEBUG_LOG("Supported preview formats:");
-        camera_format_t format;
-        for (auto item = previewFormats.begin(); item != previewFormats.end(); ++item) {
-            format = *item;
+        for (auto &format : previewFormats) {
             MEDIA_DEBUG_LOG("format : %{public}d", format);
         }
         if (std::find(previewFormats.begin(), previewFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP)
@@ -123,36 +120,24 @@ int main(int argc, char **argv)
             previewFormat = previewFormats[0];
             MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported preview formats");
         }
-        std::vector<camera_format_t> photoFormats = ((sptr<CameraInput> &)cameraInput)->GetSupportedPhotoFormats();
-        if (photoFormats.empty()) {
-            MEDIA_DEBUG_LOG("No photo formats supported");
-        } else {
-            photoFormat = photoFormats[0];
-        }
+        std::vector<camera_format_t> photoFormats = cameraInput->GetSupportedPhotoFormats();
         MEDIA_DEBUG_LOG("Supported photo formats:");
-        for (auto item = photoFormats.begin(); item != photoFormats.end(); ++item) {
-            format = *item;
+        for (auto &format : photoFormats) {
             MEDIA_DEBUG_LOG("format : %{public}d", format);
         }
-        std::vector<CameraPicSize> previewSizes
-            = ((sptr<CameraInput> &)cameraInput)->getSupportedSizes(static_cast<camera_format_t>(previewFormat));
-        if (previewSizes.empty()) {
-            MEDIA_DEBUG_LOG("No preview sizes supported");
+        if (!photoFormats.empty()) {
+            photoFormat = photoFormats[0];
         }
+        std::vector<CameraPicSize> previewSizes
+            = cameraInput->getSupportedSizes(static_cast<camera_format_t>(previewFormat));
         MEDIA_DEBUG_LOG("Supported sizes for preview:");
-        CameraPicSize size;
-        for (auto item = previewSizes.begin(); item != previewSizes.end(); ++item) {
-            size = *item;
+        for (auto &size : previewSizes) {
             MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
         }
         std::vector<CameraPicSize> photoSizes
-            = ((sptr<CameraInput> &)cameraInput)->getSupportedSizes(static_cast<camera_format_t>(photoFormat));
-        if (photoSizes.empty()) {
-            MEDIA_DEBUG_LOG("No photo sizes supported");
-        }
+            = cameraInput->getSupportedSizes(static_cast<camera_format_t>(photoFormat));
         MEDIA_DEBUG_LOG("Supported sizes for photo:");
-        for (auto item = photoSizes.begin(); item != photoSizes.end(); ++item) {
-            size = *item;
+        for (auto &size : photoSizes) {
             MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
         }
         if (!previewSizes.empty()) {
@@ -171,8 +156,8 @@ int main(int argc, char **argv)
                     photoFormat, photoWidth, photoHeight);
     MEDIA_DEBUG_LOG("photoCaptureCount: %{public}d", photoCaptureCount);
 
-    ((sptr<CameraInput> &)cameraInput)->SetErrorCallback(std::make_shared<TestDeviceCallback>(testName));
-    ret = captureSession->AddInput(cameraInput);
+    cameraInput->SetErrorCallback(std::make_shared<TestDeviceCallback>(testName));
+    ret = captureSession->AddInput(captureInput);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Add input to session is failed, ret: %{public}d", ret);
         return 0;
@@ -244,6 +229,7 @@ int main(int argc, char **argv)
     MEDIA_DEBUG_LOG("Closing the session");
     captureSession->Stop();
     captureSession->Release();
+    cameraInput->Release();
     camManagerObj->SetCallback(nullptr);
 
     MEDIA_DEBUG_LOG("Camera new sample end.");

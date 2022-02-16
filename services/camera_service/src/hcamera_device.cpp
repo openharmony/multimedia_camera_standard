@@ -29,7 +29,6 @@ HCameraDevice::HCameraDevice(sptr<HCameraHostManager> &cameraHostManager,
     cameraHostManager_ = cameraHostManager;
     deviceHDICallback_ = deviceCallback;
     cameraID_ = cameraID;
-    cameraAbility_ = nullptr;
     streamOperator_ = nullptr;
     isReleaseCameraDevice_ = false;
 }
@@ -55,34 +54,25 @@ bool HCameraDevice::IsReleaseCameraDevice()
 
 std::shared_ptr<CameraMetadata> HCameraDevice::GetSettings()
 {
-    int32_t errCode = CAMERA_OK;
-
-    if (cameraAbility_ == nullptr) {
-        errCode = cameraHostManager_->GetCameraAbility(cameraID_, cameraAbility_);
-        if (errCode != CAMERA_OK) {
-            MEDIA_ERR_LOG("HCameraDevice::GetSettings Failed to get Camera Ability: %{public}d", errCode);
-            return nullptr;
-        }
+    int32_t errCode;
+    std::shared_ptr<CameraMetadata> ability = nullptr;
+    errCode = cameraHostManager_->GetCameraAbility(cameraID_, ability);
+    if (errCode != CAMERA_OK) {
+        MEDIA_ERR_LOG("HCameraDevice::GetSettings Failed to get Camera Ability: %{public}d", errCode);
+        return nullptr;
     }
-    return cameraAbility_;
+    return ability;
 }
 
 int32_t HCameraDevice::Open()
 {
-    int32_t errorCode = CAMERA_OK;
-    MEDIA_INFO_LOG("HCameraDevice Opening camera device: %{public}s", cameraID_.c_str());
+    int32_t errorCode;
+    MEDIA_INFO_LOG("HCameraDevice::Open Opening camera device: %{public}s", cameraID_.c_str());
     errorCode = cameraHostManager_->OpenCameraDevice(cameraID_, deviceHDICallback_, hdiCameraDevice_);
     if (errorCode == CAMERA_OK) {
-        if (updateSettings_ != nullptr) {
-            Camera::CamRetCode rc = hdiCameraDevice_->UpdateSettings(updateSettings_);
-            if (rc != Camera::NO_ERROR) {
-                MEDIA_ERR_LOG("HCameraDevice::UpdateSetting failed with error Code: %{public}d", rc);
-                return HdiToServiceError(rc);
-            }
-        }
         errorCode = HdiToServiceError(hdiCameraDevice_->SetResultMode(Camera::ON_CHANGED));
     } else {
-        MEDIA_ERR_LOG("HCameraDevice::Open() Failed to open camera");
+        MEDIA_ERR_LOG("HCameraDevice::Open Failed to open camera");
     }
     return errorCode;
 }
@@ -90,6 +80,7 @@ int32_t HCameraDevice::Open()
 int32_t HCameraDevice::Close()
 {
     if (hdiCameraDevice_ != nullptr) {
+        MEDIA_INFO_LOG("HCameraDevice::Close Closing camera device: %{public}s", cameraID_.c_str());
         hdiCameraDevice_->Close();
     }
     hdiCameraDevice_ = nullptr;
@@ -126,11 +117,12 @@ int32_t HCameraDevice::UpdateSetting(const std::shared_ptr<CameraMetadata> &sett
         MEDIA_ERR_LOG("HCameraDevice::UpdateSetting settings is null");
         return CAMERA_INVALID_ARG;
     }
-    if (GetCameraMetadataItemCount(settings->get()) > 0) {
-        updateSettings_ = settings;
+
+    if (!GetCameraMetadataItemCount(settings->get())) {
+        return CAMERA_OK;
     }
     if (hdiCameraDevice_ != nullptr) {
-        Camera::CamRetCode rc = hdiCameraDevice_->UpdateSettings(updateSettings_);
+        Camera::CamRetCode rc = hdiCameraDevice_->UpdateSettings(settings);
         if (rc != Camera::NO_ERROR) {
             MEDIA_ERR_LOG("HCameraDevice::UpdateSetting failed with error Code: %{public}d", rc);
             return HdiToServiceError(rc);

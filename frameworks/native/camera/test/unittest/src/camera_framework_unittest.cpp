@@ -238,9 +238,15 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_002, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
     ASSERT_TRUE(cameras.size() != 0);
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CameraInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
     ASSERT_NE(input->GetCameraDevice(), nullptr);
+
+    EXPECT_CALL(*mockCameraDevice, Close());
     input->Release();
 }
 
@@ -552,6 +558,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_020, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CameraInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -571,6 +581,7 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_020, TestSize.Level0
     camera_ae_mode_t exposure = OHOS_CAMERA_AE_MODE_ON;
     input->SetExposureMode(exposure);
 
+    EXPECT_CALL(*mockCameraDevice, UpdateSettings(_));
     input->UnlockForControl();
 
     if (!zoomRatioRange.empty()) {
@@ -595,6 +606,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_021, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CameraInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -743,6 +758,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_028, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -755,10 +774,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_028, TestSize.Level0
     ret = session->AddInput(input);
     EXPECT_TRUE(ret == 0);
 
-    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
-    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
-    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     ret = session->CommitConfig();
     EXPECT_TRUE(ret != 0);
 }
@@ -777,6 +792,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_029, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -825,6 +844,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_030, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -843,9 +866,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_030, TestSize.Level0
     ret = session->AddOutput(photo);
     EXPECT_TRUE(ret == 0);
 
-    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
-    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef BALTIMORE_CAMERA
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
@@ -865,7 +885,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_030, TestSize.Level0
     EXPECT_TRUE(ret != 0);
 
     EXPECT_CALL(*mockStreamOperator, ReleaseStreams(_));
-    EXPECT_CALL(*mockCameraDevice, Close());
     session->Release();
 }
 
@@ -883,6 +902,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_031, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -907,9 +930,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_031, TestSize.Level0
     ret = session->AddOutput(photo);
     EXPECT_TRUE(ret == 0);
 
-    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
-    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef BALTIMORE_CAMERA
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
@@ -933,7 +953,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_031, TestSize.Level0
     EXPECT_TRUE(ret == 0);
 
     EXPECT_CALL(*mockStreamOperator, ReleaseStreams(_));
-    EXPECT_CALL(*mockCameraDevice, Close());
     session->Release();
 }
 
@@ -951,6 +970,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_032, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -960,6 +983,7 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_032, TestSize.Level0
     if (!zoomRatioRange.empty()) {
         camInput->LockForControl();
         camInput->SetZoomRatio(zoomRatioRange[0]);
+        EXPECT_CALL(*mockCameraDevice, UpdateSettings(_));
         camInput->UnlockForControl();
     }
 
@@ -984,12 +1008,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_032, TestSize.Level0
     ret = session->AddOutput(photo);
     EXPECT_TRUE(ret == 0);
 
-    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    if (!zoomRatioRange.empty()) {
-        EXPECT_CALL(*mockCameraDevice, UpdateSettings(_));
-    }
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
-    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef BALTIMORE_CAMERA
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
@@ -1001,7 +1019,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_032, TestSize.Level0
     EXPECT_TRUE(ret == 0);
 
     EXPECT_CALL(*mockStreamOperator, ReleaseStreams(_));
-    EXPECT_CALL(*mockCameraDevice, Close());
     session->Release();
 }
 
@@ -1019,6 +1036,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_033, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -1043,9 +1064,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_033, TestSize.Level0
     ret = session->AddOutput(video);
     EXPECT_TRUE(ret == 0);
 
-    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
-    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef BALTIMORE_CAMERA
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
@@ -1073,7 +1091,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_033, TestSize.Level0
     EXPECT_TRUE(ret == 0);
 
     EXPECT_CALL(*mockStreamOperator, ReleaseStreams(_));
-    EXPECT_CALL(*mockCameraDevice, Close());
     session->Release();
 }
 
@@ -1159,6 +1176,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_037, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -1189,6 +1210,10 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_038, TestSize.Level0
     EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
     std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
     ASSERT_NE(input, nullptr);
 
@@ -1207,9 +1232,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_038, TestSize.Level0
     ret = session->AddOutput(photo);
     EXPECT_TRUE(ret == 0);
 
-    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
-    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef BALTIMORE_CAMERA
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
@@ -1232,7 +1254,6 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_038, TestSize.Level0
     EXPECT_TRUE(ret == 0);
 
     EXPECT_CALL(*mockStreamOperator, ReleaseStreams(_));
-    EXPECT_CALL(*mockCameraDevice, Close());
     session->Release();
 }
 } // CameraStandard

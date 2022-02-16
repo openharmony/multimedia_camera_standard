@@ -211,6 +211,7 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
             return result;
         }
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
+        CameraManager::GetInstance()->SetPermissionCheck(true);
         sPreviewOutput_ = CameraManager::GetInstance()->CreatePreviewOutput(surface);
         if (sPreviewOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create previewOutput");

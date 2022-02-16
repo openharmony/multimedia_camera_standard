@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#include "input/camera_manager.h"
+#include <cstring>
 #include "camera_util.h"
 #include "iservice_registry.h"
 #include "media_log.h"
 #include "system_ability_definition.h"
 #include "ipc_skeleton.h"
 #include "accesstoken_kit.h"
-#include <string.h>
+#include "input/camera_manager.h"
 
 using namespace std;
 namespace OHOS {

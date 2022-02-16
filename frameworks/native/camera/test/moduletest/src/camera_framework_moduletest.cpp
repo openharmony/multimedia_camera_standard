@@ -375,8 +375,6 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
 
     EXPECT_TRUE(g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_START)] == 1);
 
-    input_->Release();
-
     if (photoOutput != nullptr) {
         EXPECT_TRUE(g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_START)] == 1);
         EXPECT_TRUE(g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_FRAME_SHUTTER)] == 1);
@@ -389,6 +387,7 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
         TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
         EXPECT_TRUE(g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_START)] == 1);
+        EXPECT_TRUE(g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_END)] == 1);
 
         ((sptr<VideoOutput> &)videoOutput)->Release();
     }
@@ -460,6 +459,7 @@ void CameraFrameworkModuleTest::TestSupportedResolution(int32_t previewWidth, in
 
     session->Stop();
     session->Release();
+    input->Release();
 }
 
 void CameraFrameworkModuleTest::TestUnSupportedResolution(int32_t previewWidth, int32_t previewHeight,
@@ -587,6 +587,7 @@ void CameraFrameworkModuleTest::SetUp()
 void CameraFrameworkModuleTest::TearDown()
 {
     session_->Release();
+    input_->Release();
     MEDIA_DEBUG_LOG("End of camera test case");
 }
 

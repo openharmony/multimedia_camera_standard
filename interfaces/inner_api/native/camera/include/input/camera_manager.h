@@ -75,6 +75,7 @@ public:
     sptr<CameraInfo> GetCameraInfo(std::string cameraId);
 
     static const std::string surfaceFormat;
+    void SetPermissionCheck(bool Enable);
 
 protected:
     CameraManager(sptr<ICameraService> serviceProxy) : serviceProxy_(serviceProxy) {}
@@ -89,6 +90,7 @@ private:
     sptr<ICameraServiceCallback> cameraSvcCallback_;
     std::shared_ptr<CameraManagerCallback> cameraMngrCallback_;
     std::vector<sptr<CameraInfo>> cameraObjList;
+    bool permissionCheckEnabled_ = false;
 };
 } // namespace CameraStandard
 } // namespace OHOS

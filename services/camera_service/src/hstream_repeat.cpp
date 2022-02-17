@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "camera_util.h"
-#include "hstream_repeat.h"
-#include "media_log.h"
-
 #include <iostream>
+
+#include "camera_util.h"
+#include "media_log.h"
+#include "hstream_repeat.h"
 
 namespace OHOS {
 namespace CameraStandard {

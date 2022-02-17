@@ -13,16 +13,16 @@
  * limitations under the License.
  */
 
-#include "camera_util.h"
-#include "hcamera_service.h"
-#include "iservice_registry.h"
-#include "media_log.h"
-#include "system_ability_definition.h"
-
 #include <iostream>
 #include <map>
 #include <string>
 #include <unordered_set>
+
+#include "camera_util.h"
+#include "iservice_registry.h"
+#include "media_log.h"
+#include "system_ability_definition.h"
+#include "hcamera_service.h"
 
 namespace OHOS {
 namespace CameraStandard {

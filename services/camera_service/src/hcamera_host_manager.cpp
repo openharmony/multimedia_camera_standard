@@ -14,10 +14,8 @@
  */
 
 #include "camera_util.h"
-#include "hcamera_host_manager.h"
 #include "media_log.h"
-
-#include <iostream>
+#include "hcamera_host_manager.h"
 
 namespace OHOS {
 namespace CameraStandard {

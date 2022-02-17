@@ -98,22 +98,22 @@ Steps to capture a photo:
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     ```
 
-3. Create the Capture Session
+3. Create the Camera Input using the Camera Object to open the camera.
+
+    ```
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    ```
+
+4. Create the Capture Session
 
     ```
     sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
     ```
 
-4. Begin configuring the Capture Session.
+5. Begin configuring the Capture Session.
 
     ```
     int32_t result = captureSession->BeginConfig();
-    ```
-
-5. Create the Camera Input using the Camera Object.
-
-    ```
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
     ```
 
 6. Add the Camera Input to the Capture Session.
@@ -166,6 +166,12 @@ Steps to capture a photo:
     captureSession->Release();
     ```
 
+13. Release the Camera Input to close the camera.
+
+    ```
+    cameraInput->Release();
+    ```
+
 ### To Start and Stop Preview
 
 Steps to start and stop preview:
@@ -177,22 +183,22 @@ Steps to start and stop preview:
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     ```
 
-2. Create the Capture Session
+2. Create the Camera Input using the Camera Object to open the camera.
+
+    ```
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    ```
+
+3. Create the Capture Session
 
     ```
     sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
     ```
 
-3. Begin configuring the Capture Session.
+4. Begin configuring the Capture Session.
 
     ```
     int32_t result = captureSession->BeginConfig();
-    ```
-
-4. Create the Camera Input using the Camera Object.
-
-    ```
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
     ```
 
 5. Add the Camera Input to the Capture Session.
@@ -201,7 +207,7 @@ Steps to start and stop preview:
     result = captureSession->AddInput(cameraInput);
     ```
 
-6. Create a Preview Output with Surface obtained from Window Manager to render on display. The preview width and Height can be configured as per the supported resolutions which are 640x480 or 832x480. And to save to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo.
+6. Create a Preview Output with Surface obtained from Window Manager to render on display. The preview width and Height can be configured to one of the camera supported resolutions. And to save to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo.
 
     ```
     int32_t previewWidth = 640;
@@ -234,9 +240,16 @@ Steps to start and stop preview:
     result = captureSession->Stop();
     ```
 
+11. Release the Capture Session resources.
 
     ```
     captureSession->Release();
+    ```
+
+12. Release the Camera Input to close the camera.
+
+    ```
+    cameraInput->Release();
     ```
 
 ### To Record Video
@@ -250,22 +263,22 @@ Steps to record Video:
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     ```
 
-2. Create the Capture Session
+2. Create the Camera Input using the Camera Object to open the camera.
+
+    ```
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    ```
+
+3. Create the Capture Session
 
     ```
     sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
     ```
 
-3. Begin configuring the Capture Session.
+4. Begin configuring the Capture Session.
 
     ```
-    int32_t result = captureSession->BeginConfig();
-    ```
-
-4. Create the Camera Input using the Camera Object.
-
-    ```
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+ s   int32_t result = captureSession->BeginConfig();
     ```
 
 5. Add the Camera Input to the Capture Session.
@@ -274,7 +287,7 @@ Steps to record Video:
     result = captureSession->AddInput(cameraInput);
     ```
 
-6. Create a Video Output with Surface obtained from Recoder to MUX with audio and save the file. And to save just Video buffer to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo. The video resolution can be configured from supported resolutions which are 1280x720 or 640x360 while setting the recorder configurations.
+6. Create a Video Output with Surface obtained from Recoder to MUX with audio and save the file. And to save just Video buffer to a file, can follow the step to create Surface and register listerner for buffer updates mentioned in capture photo. The video resolution can be configured to one of the camera and recorder supported resolutions while setting the recorder configurations.
 
     ```
     videoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
@@ -311,6 +324,12 @@ Steps to record Video:
     captureSession->Release();
     ```
 
+12. Release the Camera Input to close the camera.
+
+    ```
+    cameraInput->Release();
+    ```
+
 ### To Switch Between Camera Devices
 
 Below steps demonstrate how to switch between the camera devices. Initially a video output is added to the capture session. If user wish to switch between cameras, existing input and output have to be removed first and then add a new input and output(i.e., photo output in this case).
@@ -322,22 +341,22 @@ Below steps demonstrate how to switch between the camera devices. Initially a vi
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     ```
 
-2. Create the Capture Session
+2. Create the Camera Input using the Camera Object to open the camera.
+
+    ```
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    ```
+
+3. Create the Capture Session
 
     ```
     sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
     ```
 
-3. Begin configuring the Capture Session.
+4. Begin configuring the Capture Session.
 
     ```
     int32_t result = captureSession->BeginConfig();
-    ```
-
-4. Create the Camera Input using the Camera Object.
-
-    ```
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
     ```
 
 5. Add the Camera Input to the Capture Session.
@@ -401,7 +420,7 @@ Below steps demonstrate how to switch between the camera devices. Initially a vi
     result = captureSession->AddInput(cameraInput2);
     ```
 
-15. For PhotoOutput, create the Consumer Surface and register listerner for buffer updates. The surface will be used for creation of photo output. Add the photo output to the capture session once it is successfully created.
+15. Create the photo output and add the photo output to the capture session once it is successfully created. Create the Consumer Surface and register listerner for buffer updates prior to creation of photo output. The surface is used for creation of photo output.
 
     ```
     // Get the surface
@@ -428,17 +447,29 @@ Below steps demonstrate how to switch between the camera devices. Initially a vi
     result = captureSession->CommitConfig();
     ```
 
-17. Capture the Photo.
+17. Release the Camera Input that is removed from session.
+
+    ```
+    cameraInput->Release();
+    ```
+
+18. Capture the Photo.
 
     ```
     result = ((sptr<PhotoOutput> &)photoOutput)->Capture();
     ```
 
 
-18. Release the Capture Session resources.
+19. Release the Capture Session resources.
 
     ```
     captureSession->Release();
+    ```
+
+20. Release the Camera Input to close the camera.
+
+    ```
+    cameraInput2->Release();
     ```
 
 ### To configure flash mode

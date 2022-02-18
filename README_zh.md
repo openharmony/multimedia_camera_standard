@@ -1,13 +1,14 @@
 # Camera组件<a name="ZH-CN_TOPIC_0000001101564782"></a>
 
--   [简介](#section11660541593)
-    -   [基本概念](#sectionbasicconcepts)
--   [目录](#section176641621345)
--   [使用说明](#section45377346241)
-    -   [拍照](#section2071191842718)
-    -   [开始和停止预览](#section2094314213271)
-    -   [视频录像](#section1983913118271)
--   [相关仓](#section16511040154318)
+- [Camera组件<a name="ZH-CN_TOPIC_0000001101564782"></a>](#camera组件)
+  - [简介<a name="section11660541593"></a>](#简介)
+    - [基本概念<a name="sectionbasicconcepts"></a>](#基本概念)
+  - [目录<a name="section176641621345"></a>](#目录)
+  - [使用说明<a name="section45377346241"></a>](#使用说明)
+    - [拍照<a name="section2071191842718"></a>](#拍照)
+    - [开始和停止预览<a name="section2094314213271"></a>](#开始和停止预览)
+    - [视频录像<a name="section1983913118271"></a>](#视频录像)
+  - [相关仓<a name="section16511040154318"></a>](#相关仓)
 
 ## 简介<a name="section11660541593"></a>
 
@@ -66,21 +67,21 @@
     public:
         int32_t mode_;
         sptr<Surface> surface_;
-    
+
         void OnBufferAvailable() override
         {
             int32_t flushFence = 0;
             int64_t timestamp = 0;
             OHOS::Rect damage; // initialize the damage
-    
+
             OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
             surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
             if (buffer != nullptr) {
                 void *addr = buffer->GetVirAddr();
                 int32_t size = buffer->GetSize();
-    
+
                 // Save the buffer(addr) to a file.
-    
+
                 surface_->ReleaseBuffer(buffer, -1);
             }
         }
@@ -94,22 +95,22 @@
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     ```
 
-3.  创建采集会话。
+3.  使用相机对象创建相机输入来打开相机。
+
+    ```
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    ```
+
+4.  创建采集会话。
 
     ```
     sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
     ```
 
-4.  开始配置采集会话。
+5.  开始配置采集会话。
 
     ```
     int32_t result = captureSession->BeginConfig();
-    ```
-
-5.  使用相机对象创建相机输入。
-
-    ```
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
     ```
 
 6.  将相机输入添加到采集会话。
@@ -125,6 +126,7 @@
     int32_t photoWidth = 1280;
     int32_t photoHeight = 960;
     photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
+    photoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_JPEG));
     sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
     capturelistener->mode_ = MODE_PHOTO;
     capturelistener->surface_ = photoSurface;
@@ -161,6 +163,12 @@
     captureSession->Release();
     ```
 
+13. 释放相机输入关闭相机。
+
+    ```
+    cameraInput->Release();
+    ```
+
 ### 开始和停止预览<a name="section2094314213271"></a>
 
 开始和停止预览的步骤:
@@ -168,32 +176,32 @@
 1.  获取相机管理器实例并获取相机对象列表。
 
     ```
-    sptr<CameraManager> camManagerObj = CameraManager::GetInstance(); 
+    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     ```
 
-2.  创建采集会话。
-
-    ```
-    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
-    ```
-
-3.  开始配置采集会话。
-
-    ```
-    int32_t result = captureSession->BeginConfig();
-    ```
-
-4.  使用相机对象创建相机输入。
+2.  使用相机对象创建相机输入来打开相机。
 
     ```
     sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
     ```
 
+3.  创建采集会话。
+
+    ```
+    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
+    ```
+
+4.  开始配置采集会话。
+
+    ```
+    int32_t result = captureSession->BeginConfig();
+    ```
+
 5.  将相机输入添加到采集会话。
 
     ```
-    result = captureSession->AddInput(cameraInput); 
+    result = captureSession->AddInput(cameraInput);
     ```
 
 6.  使用从窗口管理器获得的Surface创建预览输出用以在显示上渲染。预览的宽和高可以配置为所支持的 640x480 或 832x480 分辨率，如果想保存到文件，可以按照拍照流程提到步骤，创建 Surface，注册监听器以监听缓冲区更新。
@@ -201,6 +209,7 @@
     ```
     int32_t previewWidth = 640;
     int32_t previewHeight = 480;
+    previewSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
     sptr<CaptureOutput> previewOutput = camManagerObj->CreateCustomPreviewOutput(previewSurface, previewWidth, previewHeight);
     ```
 
@@ -234,6 +243,12 @@
     captureSession->Release();
     ```
 
+12. 释放相机输入关闭相机。
+
+    ```
+    cameraInput->Release();
+    ```
+
 ### 视频录像<a name="section1983913118271"></a>
 
 视频录像的步骤:
@@ -245,22 +260,22 @@
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     ```
 
-2.  创建采集会话。
+2.  使用相机对象创建相机输入来打开相机。
+
+    ```
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
+    ```
+
+3.  创建采集会话。
 
     ```
     sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
     ```
 
-3.  开始配置采集会话。
+4.  开始配置采集会话。
 
     ```
     int32_t result = captureSession->BeginConfig();
-    ```
-
-4.  使用相机对象创建相机输入。
-
-    ```
-    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
     ```
 
 5.  将相机输入添加到采集会话。
@@ -272,6 +287,7 @@
 6.  通过Surface创建一个视频输出，来与音频合成并保存到文件，Surface通过Recoder获取。如果想仅保存视频缓冲数据到文件里，可以按照拍照流程提到步骤，创建 Surface，注册监听器以监听缓冲区更新。录像的分辨率可以在录制器内配置为所支持的 1280x720 或 640x360 分辨率。
 
     ```
+    videoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
     sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
     ```
 
@@ -303,6 +319,12 @@
 
     ```
     captureSession->Release();
+    ```
+
+12. 释放相机输入关闭相机。
+
+    ```
+    cameraInput->Release();
     ```
 
 ## 相关仓<a name="section16511040154318"></a>

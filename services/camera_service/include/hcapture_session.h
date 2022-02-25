@@ -62,7 +62,7 @@ public:
 private:
     int32_t ValidateSessionInputs();
     int32_t ValidateSessionOutputs();
-    void GetCameraDevice(sptr<HCameraDevice> &device);
+    int32_t GetCameraDevice(sptr<HCameraDevice> &device);
     int32_t HandleCaptureOuputsConfig(sptr<HCameraDevice> &device);
     int32_t CreateAndCommitStreams(sptr<HCameraDevice> &device, std::shared_ptr<CameraMetadata> &deviceSettings,
                                    std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);

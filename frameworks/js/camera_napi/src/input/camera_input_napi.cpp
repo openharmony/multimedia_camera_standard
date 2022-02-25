@@ -1405,44 +1405,9 @@ napi_value CameraInputNapi::SetZoomRatio(napi_env env, napi_callback_info info)
 
 napi_value CameraInputNapi::Release(napi_env env, napi_callback_info info)
 {
-    napi_status status;
-    napi_value result = nullptr;
-    const int32_t refCount = 1;
-    napi_value resource = nullptr;
-    size_t argc = ARGS_ONE;
-    napi_value argv[ARGS_ONE] = {0};
-    napi_value thisVar = nullptr;
-
-    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
-    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
-
-    napi_get_undefined(env, &result);
-    std::unique_ptr<CameraInputAsyncContext> asyncContext = std::make_unique<CameraInputAsyncContext>();
-    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
-    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
-        if (argc == ARGS_ONE) {
-            CAMERA_NAPI_GET_JS_ASYNC_CB_REF(env, argv[PARAM0], refCount, asyncContext->callbackRef);
-        }
-
-        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
-        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "Release");
-
-        status = napi_create_async_work(
-            env, nullptr, resource, [](napi_env env, void* data) {
-                auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->objectInfo->cameraInput_->Release();
-            },
-            ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
-        if (status != napi_ok) {
-            MEDIA_ERR_LOG("Failed to create napi_create_async_work for Release");
-            napi_get_undefined(env, &result);
-        } else {
-            napi_queue_async_work(env, asyncContext->work);
-            asyncContext.release();
-        }
-    }
-
-    return result;
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    return undefinedResult;
 }
 
 void CameraInputNapi::RegisterCallback(napi_env env, const string &eventType, napi_ref callbackRef)

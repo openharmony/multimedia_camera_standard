@@ -28,6 +28,10 @@ int32_t HCameraServiceCallbackProxy::OnCameraStatusChanged(const std::string cam
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceCallbackProxy OnCameraStatusChanged Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteString(cameraId)) {
         MEDIA_ERR_LOG("HCameraServiceCallbackProxy OnCameraStatusChanged Write CameraId failed");
         return IPC_PROXY_ERR;
@@ -50,6 +54,10 @@ int32_t HCameraServiceCallbackProxy::OnFlashlightStatusChanged(const std::string
     MessageOption option;
     int error = ERR_NONE;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceCallbackProxy OnFlashlightStatus Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteString(cameraId)) {
         MEDIA_ERR_LOG("HCameraServiceCallbackProxy OnFlashlightStatus Write CameraId failed");
         return IPC_PROXY_ERR;

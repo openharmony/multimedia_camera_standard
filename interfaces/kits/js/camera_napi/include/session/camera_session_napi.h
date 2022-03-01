@@ -46,6 +46,17 @@ namespace OHOS {
 namespace CameraStandard {
 static const std::string CAMERA_SESSION_NAPI_CLASS_NAME = "CaptureSession";
 
+class SessionCallbackListener : public SessionCallback {
+public:
+    SessionCallbackListener(napi_env env, napi_ref ref) : env_(env), callbackRef_(ref) {}
+    ~SessionCallbackListener() = default;
+    void OnError(int32_t errorCode) override;
+
+private:
+    napi_env env_;
+    napi_ref callbackRef_ = nullptr;
+};
+
 class CameraSessionNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);

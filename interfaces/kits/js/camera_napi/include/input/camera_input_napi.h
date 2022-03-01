@@ -66,6 +66,17 @@ private:
     napi_ref callbackRef_ = nullptr;
 };
 
+class ErrorCallbackListener : public ErrorCallback {
+public:
+    ErrorCallbackListener(napi_env env, napi_ref ref) : env_(env), callbackRef_(ref) {}
+    ~ErrorCallbackListener() = default;
+    void OnError(const int32_t errorType, const int32_t errorMsg) const override;
+
+private:
+    napi_env env_;
+    napi_ref callbackRef_ = nullptr;
+};
+
 class CameraInputNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -107,6 +118,7 @@ private:
     sptr<CameraInput> cameraInput_;
     std::shared_ptr<ExposureCallbackListener> exposureCallback_ = nullptr;
     std::shared_ptr<FocusCallbackListener> focusCallback_ = nullptr;
+    std::shared_ptr<ErrorCallbackListener> errorCallback_ = nullptr;
 
     void RegisterCallback(napi_env env, const std::string &eventType, napi_ref callbackRef);
 

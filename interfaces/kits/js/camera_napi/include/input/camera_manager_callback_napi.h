@@ -37,39 +37,16 @@
 
 namespace OHOS {
 namespace CameraStandard {
-struct AutoRef {
-    AutoRef(napi_env env, napi_ref cb)
-        : env_(env), cb_(cb)
-    {
-    }
-    ~AutoRef()
-    {
-        if (env_ != nullptr && cb_ != nullptr) {
-            (void)napi_delete_reference(env_, cb_);
-        }
-    }
-    napi_env env_;
-    napi_ref cb_;
-};
 class CameraManagerCallbackNapi : public  CameraManagerCallback {
 public:
-    explicit CameraManagerCallbackNapi(napi_env env);
+    explicit CameraManagerCallbackNapi(napi_env env, napi_ref callbackRef_);
     virtual ~CameraManagerCallbackNapi();
-    void SaveCallbackReference(const std::string &callbackName, napi_value callback);
     void OnCameraStatusChanged(const CameraStatusInfo &cameraStatusInfo) const override;
     void OnFlashlightStatusChanged(const std::string &cameraID, const FlashlightStatus flashStatus) const override;
 
 private:
-    struct CameraManagerJsCallback {
-        std::shared_ptr<AutoRef> callback = nullptr;
-        std::string callbackName = "unknown";
-        CameraStatusInfo cameraStatusInfo_;
-    };
-
-    void OnJsCallbackCameraStatusInfo(const std::unique_ptr<CameraManagerJsCallback> &jsCb) const;
-
     napi_env env_ = nullptr;
-    std::shared_ptr<AutoRef> CameraStatusInfoCallback_ = nullptr;
+    napi_ref callbackRef_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

@@ -87,7 +87,8 @@ napi_value CameraManagerNapi::Init(napi_env env, napi_value exports)
     napi_property_descriptor camera_mgr_properties[] = {
         // CameraManager
         DECLARE_NAPI_FUNCTION("getCameras", GetCameras),
-        DECLARE_NAPI_FUNCTION("createCameraInput", CreateCameraInputInstance)
+        DECLARE_NAPI_FUNCTION("createCameraInput", CreateCameraInputInstance),
+        DECLARE_NAPI_FUNCTION("on", On)
     };
 
     status = napi_define_class(env, CAMERA_MANAGER_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
@@ -352,6 +353,55 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
     }
 
     return result;
+}
+
+napi_value CameraManagerNapi::On(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    size_t argCount = ARGS_TWO;
+    napi_value argv[ARGS_TWO] = {nullptr};
+    napi_value thisVar = nullptr;
+    size_t res = 0;
+    char buffer[SIZE];
+    std::string eventType;
+    CameraManagerNapi *obj = nullptr;
+    napi_status status;
+    const int32_t refCount = 1;
+
+    napi_get_undefined(env, &undefinedResult);
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argCount, argv, thisVar);
+    NAPI_ASSERT(env, argCount == ARGS_TWO, "requires 2 parameters");
+
+    if (thisVar == nullptr || argv[PARAM0] == nullptr || argv[PARAM1] == nullptr) {
+        MEDIA_ERR_LOG("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&obj));
+    if (status == napi_ok && obj != nullptr) {
+        napi_valuetype valueType = napi_undefined;
+        if (napi_typeof(env, argv[PARAM0], &valueType) != napi_ok || valueType != napi_string
+            || napi_typeof(env, argv[PARAM1], &valueType) != napi_ok || valueType != napi_function) {
+            return undefinedResult;
+        }
+
+        napi_get_value_string_utf8(env, argv[PARAM0], buffer, SIZE, &res);
+        eventType = std::string(buffer);
+
+        napi_ref callbackRef;
+        napi_create_reference(env, argv[PARAM1], refCount, &callbackRef);
+
+        if (!eventType.empty() && (eventType.compare("cameraStatus")==0)) {
+            shared_ptr<CameraManagerCallbackNapi> callback =
+                make_shared<CameraManagerCallbackNapi>(env, callbackRef);
+            obj->cameraManager_->SetCallback(callback);
+        } else {
+            MEDIA_ERR_LOG("Incorrect callback event type provided for camera manager!");
+        }
+    }
+
+    return undefinedResult;
 }
 } // namespace CameraStandard
 } // namespace OHOS

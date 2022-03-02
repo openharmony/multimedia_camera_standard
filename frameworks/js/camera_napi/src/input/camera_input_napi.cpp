@@ -726,8 +726,8 @@ napi_value CameraInputNapi::IsFocusModeSupported(napi_env env, napi_callback_inf
     napi_status status;
     napi_value result = nullptr;
     napi_value resource = nullptr;
-    size_t argc = ARGS_ONE;
-    napi_value argv[ARGS_ONE] = {0};
+    size_t argc = ARGS_TWO;
+    napi_value argv[ARGS_TWO] = {0};
     napi_value thisVar = nullptr;
 
     CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);

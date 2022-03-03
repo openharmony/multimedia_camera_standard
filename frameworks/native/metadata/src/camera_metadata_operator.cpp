@@ -89,7 +89,7 @@ size_t CalculateCameraMetadataMemoryRequired(uint32_t itemCount, uint32_t dataCo
 common_metadata_header_t *AllocateCameraMetadataBuffer(uint32_t item_capacity, uint32_t data_capacity)
 {
     METADATA_DEBUG_LOG("AllocateCameraMetadataBuffer start");
-    METADATA_DEBUG_LOG("AllocateCameraMetadataBuffer item_capacity: %{public}d, data_capacity: %{public}d",
+    METADATA_INFO_LOG("AllocateCameraMetadataBuffer item_capacity: %{public}d, data_capacity: %{public}d",
         item_capacity, data_capacity);
     size_t memoryRequired = CalculateCameraMetadataMemoryRequired(item_capacity, data_capacity);
     void *buffer = calloc(1, memoryRequired);
@@ -228,9 +228,17 @@ size_t CalculateCameraMetadataItemDataSize(uint32_t type, size_t dataCount)
 int AddCameraMetadataItem(common_metadata_header_t *dst, uint32_t item, const void *data, size_t dataCount)
 {
     METADATA_DEBUG_LOG("AddCameraMetadataItem start");
-    METADATA_DEBUG_LOG("AddCameraMetadataItem item id: %{public}d, dataCount: %{public}zu", item, dataCount);
+    const char *name = GetCameraMetadataItemName(item);
+    METADATA_INFO_LOG("AddCameraMetadataItem Metadata pointer: %{public}p, item id: %{public}d, name: %{public}s, "
+                      "dataCount: %{public}zu", dst, item, name ? name : "<unknown>", dataCount);
     if (dst == nullptr) {
         METADATA_ERR_LOG("AddCameraMetadataItem common_metadata_header_t is null");
+        return CAM_META_INVALID_PARAM;
+    }
+
+    if (!dataCount || data == nullptr) {
+        METADATA_ERR_LOG("AddCameraMetadataItem data is not valid. Metadata pointer: %{public}p, item: %{public}d, "
+                         "dataCount: %{public}zu, data pointer: %{public}p", dst, item, dataCount, data);
         return CAM_META_INVALID_PARAM;
     }
 
@@ -239,12 +247,6 @@ int AddCameraMetadataItem(common_metadata_header_t *dst, uint32_t item, const vo
                          "item_count: %{public}d, item_capacity: %{public}d",
                          dst->item_count, dst->item_capacity);
         return CAM_META_ITEM_CAP_EXCEED;
-    }
-
-    if (dataCount && data == nullptr) {
-        METADATA_ERR_LOG("AddCameraMetadataItem data is not valid. dataCount: %{public}zu, data: %{public}p",
-                         dataCount, data);
-        return CAM_META_INVALID_PARAM;
     }
 
     uint32_t dataType;
@@ -355,6 +357,9 @@ int FindCameraMetadataItemIndex(const common_metadata_header_t *src, uint32_t it
 int FindCameraMetadataItem(const common_metadata_header_t *src, uint32_t item, camera_metadata_item_t *metadataItem)
 {
     uint32_t index = 0;
+    const char *name = GetCameraMetadataItemName(item);
+    METADATA_INFO_LOG("FindCameraMetadataItem Metadata pointer: %{public}p, item id: %{public}d, name: %{public}s",
+                      src, item, name ? name : "<unknown>");
     int ret = FindCameraMetadataItemIndex(src, item, &index);
     if (ret != CAM_META_SUCCESS) {
         return ret;
@@ -381,7 +386,7 @@ int MetadataExpandItemMem(common_metadata_header_t *dst, camera_metadata_item_en
     if (length != 0) {
         ret = memmove_s(start, length, end, length);
         if (ret != CAM_META_SUCCESS) {
-            METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex memory move failed");
+            METADATA_ERR_LOG("MetadataExpandItemMem memory move failed");
             return CAM_META_FAILURE;
         }
     }
@@ -401,6 +406,12 @@ int UpdateCameraMetadataItemByIndex(common_metadata_header_t *dst, uint32_t inde
     METADATA_DEBUG_LOG("UpdateCameraMetadataItemByIndex start");
     if ((dst == nullptr) || (index >= dst->item_count)) {
         METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex dst is null or invalid index");
+        return CAM_META_INVALID_PARAM;
+    }
+
+    if (!dataCount || data == nullptr) {
+        METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex data is not valid. Metadata pointer: %{public}p, "
+                         "dataCount: %{public}u, data pointer: %{public}p", dst, dataCount, data);
         return CAM_META_INVALID_PARAM;
     }
 
@@ -458,6 +469,15 @@ int UpdateCameraMetadataItem(common_metadata_header_t *dst, uint32_t item, const
                              uint32_t dataCount, camera_metadata_item_t *updatedItem)
 {
     METADATA_DEBUG_LOG("UpdateCameraMetadataItem item id: %{public}d, dataCount: %{public}d", item, dataCount);
+    const char *name = GetCameraMetadataItemName(item);
+    METADATA_INFO_LOG("UpdateCameraMetadataItem Metadata pointer: %{public}p, item id: %{public}d, name: %{public}s, "
+                      "dataCount: %{public}u", dst, item, name ? name : "<unknown>", dataCount);
+    if (!dataCount || data == nullptr) {
+        METADATA_ERR_LOG("UpdateCameraMetadataItem data is not valid. Metadata pointer: %{public}p, item: %{public}d, "
+                         "dataCount: %{public}u, data pointer: %{public}p", dst, item, dataCount, data);
+        return CAM_META_INVALID_PARAM;
+    }
+
     uint32_t index = 0;
     uint32_t ret = FindCameraMetadataItemIndex(dst, item, &index);
     if (ret != CAM_META_SUCCESS) {

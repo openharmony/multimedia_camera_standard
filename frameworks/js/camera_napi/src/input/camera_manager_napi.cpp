@@ -326,12 +326,10 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
             size_t i;
             for (i = 0; i < context->cameraObjList.size(); i += 1) {
                 camInfo = context->cameraObjList[i];
-                if (context->cameraId.empty()) {
-                    if (camInof != nullptr){
-                        if (camInfo->GetPosition() == context->cameraPosition &&
-                            camInfo->GetCameraType() == context->cameraType) {
-                            break;
-                        }
+                if (context->cameraId.empty() && camInof != nullptr) {
+                    if (camInfo->GetPosition() == context->cameraPosition &&
+                        camInfo->GetCameraType() == context->cameraType) {
+                        break;
                     }
                 } else if (camInfo->GetID() == context->cameraId) {
                     break;

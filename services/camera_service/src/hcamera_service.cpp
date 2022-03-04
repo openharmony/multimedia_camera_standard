@@ -160,13 +160,11 @@ int32_t HCameraService::CreateCaptureSession(sptr<ICaptureSession> &session)
 int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                           sptr<IStreamCapture> &photoOutput)
 {
-    sptr<HStreamCapture> streamCapture;
-
     if (producer == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreatePhotoOutput producer is null");
         return CAMERA_INVALID_ARG;
     }
-    streamCapture = new HStreamCapture(producer, format);
+    sptr<HStreamCapture> streamCapture = new HStreamCapture(producer, format);
     if (streamCapture == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreatePhotoOutput HStreamCapture allocation failed");
         return CAMERA_ALLOC_ERROR;
@@ -512,7 +510,7 @@ int32_t HCameraService::Dump(int fd, const std::vector<std::u16string>& args)
         return CAMERA_INVALID_STATE;
     }
 
-    write(fd, dumpString.c_str(), dumpString.size());
+    (void)write(fd, dumpString.c_str(), dumpString.size());
     return CAMERA_OK;
 }
 } // namespace CameraStandard

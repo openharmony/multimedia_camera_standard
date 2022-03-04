@@ -12,9 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "camera_metadata_info.h"
 #include "input/camera_info.h"
+#include "camera_metadata_info.h"
 #include "media_log.h"
 
 using namespace std;
@@ -54,7 +53,7 @@ void CameraInfo::init(common_metadata_header_t *metadata)
 
     ret = FindCameraMetadataItem(metadata, OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED, &item);
     if (ret == CAM_META_SUCCESS) {
-        isMirrorSupported_ = (item.data.u8[0] > 0) ? true : false;
+        isMirrorSupported_ = (item.data.u8[0] > 0);
     }
     MEDIA_INFO_LOG("camera position: %{public}d, camera type: %{public}d, camera connection type: %{public}d"
                     "Mirror Supported: %{public}d ",
@@ -102,7 +101,7 @@ std::vector<float> CameraInfo::CalculateZoomRange()
     int32_t minIndex = 0;
     int32_t maxIndex = 1;
     uint32_t zoomRangeCount = 2;
-    float factor = 100.0;
+    constexpr float factor = 100.0;
     float minZoom;
     float maxZoom;
     camera_metadata_item_t item;

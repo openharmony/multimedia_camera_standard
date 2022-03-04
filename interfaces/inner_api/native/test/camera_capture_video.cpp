@@ -374,7 +374,7 @@ int32_t CameraCaptureVideo::InitCameraInput()
     if (cameraInput_ == nullptr) {
         std::vector<sptr<CameraInfo>> cameraObjList = cameraManager_->GetCameras();
         if (cameraObjList.size() <= 0) {
-            MEDIA_ERR_LOG("No cameras are availble!!!");
+            MEDIA_ERR_LOG("No cameras are available!!!");
             return result;
         }
         cameraInput_ = cameraManager_->CreateCameraInput(cameraObjList[0]);

@@ -481,7 +481,7 @@ int32_t CameraInput::SetCropRegion(float zoomRatio)
     camera_metadata_item_t item;
 
     if (zoomRatio == 0) {
-        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invaid zoom ratio");
+        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invalid zoom ratio");
         return CAM_META_FAILURE;
     }
 
@@ -547,7 +547,7 @@ void CameraInput::SetZoomRatio(float zoomRatio)
         return;
     }
     if (zoomRatio < zoomRange[minIndex]) {
-        MEDIA_DEBUG_LOG("CameraInput::SetZoomRatio Zoom ratio: %{public}f is lesser than minumum zoom: %{public}f",
+        MEDIA_DEBUG_LOG("CameraInput::SetZoomRatio Zoom ratio: %{public}f is lesser than minimum zoom: %{public}f",
                         zoomRatio, zoomRange[minIndex]);
         zoomRatio = zoomRange[minIndex];
     } else if (zoomRatio > zoomRange[maxIndex]) {
@@ -557,7 +557,7 @@ void CameraInput::SetZoomRatio(float zoomRatio)
     }
 
     if (zoomRatio == 0) {
-        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Invaid zoom ratio");
+        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Invalid zoom ratio");
         return;
     }
 

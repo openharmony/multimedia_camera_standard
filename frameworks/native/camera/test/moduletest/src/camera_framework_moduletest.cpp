@@ -126,17 +126,17 @@ namespace {
             return;
         }
 
-        void OnCaptureStarted(const int32_t captureID) const override
+        void OnCaptureStarted(const int32_t captureId) const override
         {
-            MEDIA_DEBUG_LOG("AppCallback::OnCaptureStarted captureID: %{public}d", captureID);
+            MEDIA_DEBUG_LOG("AppCallback::OnCaptureStarted captureId: %{public}d", captureId);
             g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_START)] = 1;
             return;
         }
 
-        void OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const override
+        void OnCaptureEnded(const int32_t captureId, const int32_t frameCount) const override
         {
-            MEDIA_DEBUG_LOG("AppCallback::OnCaptureEnded captureID: %{public}d, frameCount: %{public}d",
-                            captureID, frameCount);
+            MEDIA_DEBUG_LOG("AppCallback::OnCaptureEnded captureId: %{public}d, frameCount: %{public}d",
+                            captureId, frameCount);
             g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_END)] = 1;
             return;
         }

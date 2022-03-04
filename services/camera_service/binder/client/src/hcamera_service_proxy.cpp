@@ -18,7 +18,6 @@
 #include "metadata_utils.h"
 #include "remote_request_code.h"
 
-
 namespace OHOS {
 namespace CameraStandard {
 HCameraServiceProxy::HCameraServiceProxy(const sptr<IRemoteObject> &impl)
@@ -237,7 +236,7 @@ int32_t HCameraServiceProxy::CreateCustomPreviewOutput(const sptr<OHOS::IBufferP
     MessageParcel reply;
     MessageOption option;
 
-    if (producer == nullptr || width == 0 || height == 0) {
+    if ((producer == nullptr) || (width == 0) || (height == 0)) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput producer is null or invalid size is set");
         return IPC_PROXY_ERR;
     }

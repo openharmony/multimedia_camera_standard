@@ -212,7 +212,10 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
         }
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
         CameraManager::GetInstance()->SetPermissionCheck(true);
-        sPreviewOutput_ = CameraManager::GetInstance()->CreatePreviewOutput(surface);
+        std::string surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
+        std::string surfaceHegith = surface->GetUserData("SURFACE_HEIGHT");
+        MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s", surfaceWidth.c_str(), surfaceHegith.c_str());
+        sPreviewOutput_ = CameraManager::GetInstance()->CreateCustomPreviewOutput(surface, std::stoi(surfaceWidth), std::stoi(surfaceHegith));
         if (sPreviewOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create previewOutput");
             return result;

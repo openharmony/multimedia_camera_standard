@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,6 +57,7 @@ public:
     int32_t Stop() override;
     int32_t Release(pid_t pid) override;
     static void DestroyStubObjectForPid(pid_t pid);
+    int32_t SetCallback(sptr<ICaptureSessionCallback> &callback) override;
 
     friend class StreamOperatorCallback;
 
@@ -90,6 +91,7 @@ private:
     std::vector<int32_t> deletedStreamIds_;
     sptr<HCameraHostManager> cameraHostManager_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;
+    sptr<ICaptureSessionCallback> sessionCallback_;
     int32_t streamId_ = STREAMID_BEGIN;
 };
 

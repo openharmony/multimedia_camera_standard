@@ -19,6 +19,7 @@ ohos_shared_library("camera_service") {
     "binder/client/src/hcamera_device_callback_proxy.cpp",
     "binder/client/src/hcamera_listener_proxy.cpp",
     "binder/client/src/hcamera_service_callback_proxy.cpp",
+    "binder/client/src/hcapture_session_callback_proxy.cpp",
     "binder/client/src/hstream_capture_callback_proxy.cpp",
     "binder/client/src/hstream_repeat_callback_proxy.cpp",
     "binder/server/src/hcamera_device_callback_stub.cpp",
@@ -26,6 +27,7 @@ ohos_shared_library("camera_service") {
     "binder/server/src/hcamera_listener_stub.cpp",
     "binder/server/src/hcamera_service_callback_stub.cpp",
     "binder/server/src/hcamera_service_stub.cpp",
+    "binder/server/src/hcapture_session_callback_stub.cpp",
     "binder/server/src/hcapture_session_stub.cpp",
     "binder/server/src/hstream_capture_callback_stub.cpp",
     "binder/server/src/hstream_capture_stub.cpp",
@@ -86,7 +88,6 @@ ohos_shared_library("camera_service") {
       "//drivers/peripheral/adapter/camera/interfaces/include/callback/host",
     ]
     deps += [
-      "//drivers/peripheral/adapter/camera/buffer_manager:camera_adapter_buffer_manager",
       "//drivers/peripheral/adapter/camera/hdi_impl:camera_hidl_adapter",
       "//drivers/peripheral/adapter/camera/interfaces/include/client:libcamera_client",
     ]

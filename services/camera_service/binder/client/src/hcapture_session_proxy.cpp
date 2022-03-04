@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -275,6 +275,34 @@ int32_t HCaptureSessionProxy::Release(pid_t pid)
     int error = Remote()->SendRequest(CAMERA_CAPTURE_SESSION_RELEASE, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCaptureSessionProxy Release failed, error: %{public}d", error);
+    }
+
+    return error;
+}
+
+int32_t HCaptureSessionProxy::SetCallback(sptr<ICaptureSessionCallback> &callback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (callback == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy SetCallback callback is null");
+        return IPC_PROXY_ERR;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy SetCallback Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
+    if (!data.WriteRemoteObject(callback->AsObject())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy SetCallback write CaptureSessionCallback obj failed");
+        return IPC_PROXY_ERR;
+    }
+
+    int error = Remote()->SendRequest(CAMERA_CAPTURE_SESSION_SET_CALLBACK, data, reply, option);
+    if (error != ERR_NONE) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy SetCallback failed, error: %{public}d", error);
     }
 
     return error;

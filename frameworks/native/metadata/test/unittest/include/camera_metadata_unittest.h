@@ -16,7 +16,6 @@
 #ifndef CAMERA_METADATA_UNITTEST_H
 #define CAMERA_METADATA_UNITTEST_H
 
-
 #include "gtest/gtest.h"
 
 namespace OHOS {

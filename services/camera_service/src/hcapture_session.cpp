@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,8 @@ namespace CameraStandard {
 static std::map<int32_t, sptr<HCaptureSession>> session_;
 HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     sptr<StreamOperatorCallback> streamOperatorCb)
-    : cameraHostManager_(cameraHostManager), streamOperatorCallback_(streamOperatorCb)
+    : cameraHostManager_(cameraHostManager), streamOperatorCallback_(streamOperatorCb),
+    sessionCallback_(nullptr)
 {
     std::map<int32_t, sptr<HCaptureSession>>::iterator it;
     pid_t pid = IPCSkeleton::GetCallingPid();
@@ -680,6 +681,17 @@ void HCaptureSession::DestroyStubObjectForPid(pid_t pid)
         session->Release(pid);
     }
     MEDIA_DEBUG_LOG("camera stub services(%{public}zu).", session_.size());
+}
+
+int32_t HCaptureSession::SetCallback(sptr<ICaptureSessionCallback> &callback)
+{
+    if (callback == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSession::SetCallback callback is null");
+        return CAMERA_INVALID_ARG;
+    }
+
+    sessionCallback_ = callback;
+    return CAMERA_OK;
 }
 
 StreamOperatorCallback::StreamOperatorCallback(sptr<HCaptureSession> session)

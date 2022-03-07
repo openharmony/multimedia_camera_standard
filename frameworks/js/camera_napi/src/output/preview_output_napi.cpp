@@ -210,12 +210,26 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
             MEDIA_ERR_LOG("failed to get surface from SurfaceUtils");
             return result;
         }
+
+        for (int tryIndx = 0; tryIndx < 20; ++tryIndx){
+            std::string surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
+            std::string surfaceHegith = surface->GetUserData("SURFACE_HEIGHT");
+            MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
+                surfaceWidth.c_str(), surfaceHegith.c_str());
+            if (!surfaceWidth.empty() && !surfaceWidth.empty()){
+                break;
+            }
+            usleep(50000);
+        }
+        if (surfaceWidth.empty() && surfaceWidth.empty()){
+            return result;
+        }
+        // std::string surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
+        // std::string surfaceHegith = surface->GetUserData("SURFACE_HEIGHT");
+        // MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
+        //     surfaceWidth.c_str(), surfaceHegith.c_str());
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
         CameraManager::GetInstance()->SetPermissionCheck(true);
-        std::string surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
-        std::string surfaceHegith = surface->GetUserData("SURFACE_HEIGHT");
-        MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
-            surfaceWidth.c_str(), surfaceHegith.c_str());
         sPreviewOutput_ = CameraManager::GetInstance()->CreateCustomPreviewOutput(surface,
             std::stoi(surfaceWidth), std::stoi(surfaceHegith));
         if (sPreviewOutput_ == nullptr) {

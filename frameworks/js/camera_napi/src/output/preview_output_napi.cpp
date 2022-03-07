@@ -211,23 +211,18 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
             return result;
         }
 
-        for (int tryIndx = 0; tryIndx < 20; ++tryIndx){
+        int retrytimes = 20;
+        int usleeptimes = 50000;
+        for (int tryIndx = 0; tryIndx < retrytimes; ++tryIndx) {
             std::string surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
             std::string surfaceHegith = surface->GetUserData("SURFACE_HEIGHT");
             MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
                 surfaceWidth.c_str(), surfaceHegith.c_str());
-            if (!surfaceWidth.empty() && !surfaceWidth.empty()){
+            if (surfaceWidth.length() > 0 && surfaceWidth.length() > 0) {
                 break;
             }
-            usleep(50000);
+            usleep(usleeptimes);
         }
-        if (surfaceWidth.empty() && surfaceWidth.empty()){
-            return result;
-        }
-        // std::string surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
-        // std::string surfaceHegith = surface->GetUserData("SURFACE_HEIGHT");
-        // MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
-        //     surfaceWidth.c_str(), surfaceHegith.c_str());
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
         CameraManager::GetInstance()->SetPermissionCheck(true);
         sPreviewOutput_ = CameraManager::GetInstance()->CreateCustomPreviewOutput(surface,

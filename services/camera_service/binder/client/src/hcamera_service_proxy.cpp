@@ -319,5 +319,26 @@ int32_t HCameraServiceProxy::CreateVideoOutput(const sptr<OHOS::IBufferProducer>
 
     return error;
 }
+
+int32_t HCameraServiceProxy::SetListenerObject(const sptr<IRemoteObject> &object)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy::SetListenerObject Failed to write descriptor");
+        return IPC_PROXY_ERR;
+    }
+
+    (void)data.WriteRemoteObject(object);
+    int error = Remote()->SendRequest(CAMERA_SERVICE_SET_LISTENER_OBJ, data, reply, option);
+    if (error != ERR_NONE) {
+        MEDIA_ERR_LOG("HCameraServiceProxy::SetListenerObject Set listener obj failed, error: %{public}d", error);
+        return IPC_PROXY_ERR;
+    }
+
+    return reply.ReadInt32();
+}
 } // namespace CameraStandard
 } // namespace OHOS

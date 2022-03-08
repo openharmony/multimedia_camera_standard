@@ -48,6 +48,7 @@ public:
 
     int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                               sptr<IStreamRepeat>& videoOutput) override;
+    int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
 
 private:
     static inline BrokerDelegator<HCameraServiceProxy> delegator_;

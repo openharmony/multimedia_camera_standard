@@ -45,7 +45,7 @@ public:
 
     virtual int32_t Stop() = 0;
 
-    virtual int32_t Release() = 0;
+    virtual int32_t Release(pid_t pid) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"ICaptureSession");
 };

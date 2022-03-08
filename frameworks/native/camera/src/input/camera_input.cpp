@@ -102,6 +102,7 @@ void CameraInput::Release()
 
 void CameraInput::LockForControl()
 {
+    changeMetaMutex_.lock();
     int32_t items = 10;
     int32_t dataLength = 100;
     changedMetadata_ = std::make_shared<CameraMetadata>(items, dataLength);
@@ -157,6 +158,7 @@ int32_t CameraInput::UnlockForControl()
 
     UpdateSetting(changedMetadata_);
     changedMetadata_ = nullptr;
+    changeMetaMutex_.unlock();
     return CAMERA_OK;
 }
 

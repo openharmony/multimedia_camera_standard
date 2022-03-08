@@ -19,6 +19,7 @@
 #include "iservice_registry.h"
 #include "media_log.h"
 #include "system_ability_definition.h"
+#include "ipc_skeleton.h"
 #include "hcamera_service.h"
 
 namespace OHOS {
@@ -143,7 +144,6 @@ int32_t HCameraService::CreateCameraDevice(std::string cameraId, sptr<ICameraDev
 int32_t HCameraService::CreateCaptureSession(sptr<ICaptureSession> &session)
 {
     sptr<HCaptureSession> captureSession;
-
     if (streamOperatorCallback_ == nullptr) {
         streamOperatorCallback_ = new StreamOperatorCallback();
     }

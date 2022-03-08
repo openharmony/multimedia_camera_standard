@@ -27,6 +27,8 @@
 #include "output/photo_output.h"
 #include "output/video_output.h"
 #include "output/preview_output.h"
+#include "hcamera_listener_stub.h"
+#include "input/camera_death_recipient.h"
 #include "hcamera_service_callback_stub.h"
 
 namespace OHOS {
@@ -84,8 +86,13 @@ private:
     CameraManager();
     void Init();
     void SetCameraServiceCallback(sptr<ICameraServiceCallback>& callback);
+    int32_t CreateListenerObject();
+    void CameraServerDied(pid_t pid);
+
     sptr<ICameraDeviceService> CreateCameraDevice(std::string cameraId);
     sptr<ICameraService> serviceProxy_;
+    sptr<CameraListenerStub> listenerStub_ = nullptr;
+    sptr<CameraDeathRecipient> deathRecipient_ = nullptr;
     static sptr<CameraManager> cameraManager_;
     sptr<ICameraServiceCallback> cameraSvcCallback_;
     std::shared_ptr<CameraManagerCallback> cameraMngrCallback_;

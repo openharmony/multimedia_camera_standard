@@ -13,17 +13,30 @@
  * limitations under the License.
  */
 
-#include "hcapture_session.h"
 #include "camera_util.h"
 #include "media_log.h"
 #include "surface.h"
+#include "ipc_skeleton.h"
+#include "hcapture_session.h"
 
 namespace OHOS {
 namespace CameraStandard {
+static std::map<int32_t, sptr<HCaptureSession>> session_;
 HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     sptr<StreamOperatorCallback> streamOperatorCb)
     : cameraHostManager_(cameraHostManager), streamOperatorCallback_(streamOperatorCb)
-{}
+{
+    std::map<int32_t, sptr<HCaptureSession>>::iterator it;
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    MEDIA_DEBUG_LOG("HCaptureSession: camera stub services(%{public}zu) pid(%{public}d).", session_.size(), pid);
+    it = session_.find(pid);
+    if (it != session_.end()) {
+        MEDIA_ERR_LOG("HCaptureSession::HCaptureSession doesn't support multiple sessions per pid");
+    } else {
+        session_[pid] = this;
+    }
+    MEDIA_DEBUG_LOG("HCaptureSession: camera stub services(%{public}zu).", session_.size());
+}
 
 HCaptureSession::~HCaptureSession()
 {}
@@ -606,6 +619,16 @@ int32_t HCaptureSession::Stop()
     return rc;
 }
 
+void HCaptureSession::ClearCaptureSession(pid_t pid)
+{
+    MEDIA_DEBUG_LOG("ClearCaptureSession: camera stub services(%{public}zu) pid(%{public}d).", session_.size(), pid);
+    auto it = session_.find(pid);
+    if (it != session_.end()) {
+        session_.erase(it);
+    }
+    MEDIA_DEBUG_LOG("ClearCaptureSession: camera stub services(%{public}zu).", session_.size());
+}
+
 void HCaptureSession::ReleaseStreams()
 {
     std::vector<int32_t> streamIds;
@@ -631,8 +654,9 @@ void HCaptureSession::ReleaseStreams()
     }
 }
 
-int32_t HCaptureSession::Release()
+int32_t HCaptureSession::Release(pid_t pid)
 {
+    ClearCaptureSession(pid);
     ReleaseStreams();
     if (streamOperatorCallback_ != nullptr) {
         streamOperatorCallback_->SetCaptureSession(nullptr);
@@ -643,6 +667,19 @@ int32_t HCaptureSession::Release()
         cameraDevice_ = nullptr;
     }
     return CAMERA_OK;
+}
+
+void HCaptureSession::DestroyStubObjectForPid(pid_t pid)
+{
+    MEDIA_DEBUG_LOG("camera stub services(%{public}zu) pid(%{public}d).", session_.size(), pid);
+    sptr<HCaptureSession> session;
+
+    auto it = session_.find(pid);
+    if (it != session_.end()) {
+        session = it->second;
+        session->Release(pid);
+    }
+    MEDIA_DEBUG_LOG("camera stub services(%{public}zu).", session_.size());
 }
 
 StreamOperatorCallback::StreamOperatorCallback(sptr<HCaptureSession> session)

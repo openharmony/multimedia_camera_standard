@@ -51,4 +51,22 @@
 #define MEDIA_ERR (-3)
 #define MEDIA_PERMISSION_DENIED (-4)
 
+#define CHECK_AND_RETURN_RET_LOG(cond, ret, fmt, ...)  \
+    do {                                               \
+        if (!(cond)) {                                 \
+            MEDIA_ERR_LOG(fmt, ##__VA_ARGS__);            \
+            return ret;                                \
+        }                                              \
+    } while (0)
+
+#define CHECK_AND_RETURN_LOG(cond, fmt, ...)  \
+    do {                                               \
+        if (!(cond)) {                                 \
+            MEDIA_ERR_LOG(fmt, ##__VA_ARGS__);            \
+            return;                                    \
+        }                                              \
+    } while (0)
+
+#define POINTER_MASK 0x00FFFFFF
+
 #endif // OHOS_CAMERA_LOG_H

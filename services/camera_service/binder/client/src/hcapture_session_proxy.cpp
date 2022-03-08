@@ -262,7 +262,7 @@ int32_t HCaptureSessionProxy::Stop()
     return error;
 }
 
-int32_t HCaptureSessionProxy::Release()
+int32_t HCaptureSessionProxy::Release(pid_t pid)
 {
     MessageParcel data;
     MessageParcel reply;

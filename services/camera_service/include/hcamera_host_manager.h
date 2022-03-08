@@ -16,32 +16,55 @@
 #ifndef OHOS_CAMERA_H_CAMERA_HOST_MANAGER_H
 #define OHOS_CAMERA_H_CAMERA_HOST_MANAGER_H
 
-#include "camera_metadata_info.h"
-#include "icamera_host.h"
-#include "icamera_device.h"
-
 #include <refbase.h>
 #include <iostream>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
+#include "camera_metadata_info.h"
+#include "icamera_device.h"
+#include "icamera_host.h"
+#include "icamera_service_callback.h"
+#include "iservstat_listener_hdi.h"
 
 namespace OHOS {
 namespace CameraStandard {
-class HCameraHostManager : public RefBase {
+class HCameraHostManager : public virtual RefBase, public HDI::ServiceManager::V1_0::ServStatListenerStub {
 public:
-    HCameraHostManager();
-    virtual ~HCameraHostManager();
+    class StatusCallback {
+    public:
+        virtual ~StatusCallback() = default;
+        virtual void OnCameraStatus(const std::string& cameraId, CameraStatus status) = 0;
+        virtual void OnFlashlightStatus(const std::string& cameraId, FlashStatus status) = 0;
+    };
+
+    explicit HCameraHostManager(StatusCallback* statusCallback);
+    ~HCameraHostManager() override;
 
     int32_t Init(void);
+    void DeInit(void);
     virtual int32_t GetCameras(std::vector<std::string> &cameraIds);
     virtual int32_t GetCameraAbility(std::string &cameraId, std::shared_ptr<CameraMetadata> &ability);
     virtual int32_t OpenCameraDevice(std::string &cameraId,
                                      const sptr<Camera::ICameraDeviceCallback> &callback,
                                      sptr<Camera::ICameraDevice> &pDevice);
-    virtual int32_t SetFlashlight(std::string cameraId, bool isEnable);
-    virtual int32_t SetCallback(sptr<Camera::ICameraHostCallback> &callback);
+    virtual int32_t SetFlashlight(const std::string& cameraId, bool isEnable);
+
+    // HDI::ServiceManager::V1_0::IServStatListener
+    void OnReceive(const HDI::ServiceManager::V1_0::ServiceStatus& status) override;
 
 private:
-    sptr<Camera::ICameraHost> GetICameraHost();
-    sptr<Camera::ICameraHost> cameraHostService_;
+    struct CameraDeviceInfo;
+    class CameraHostInfo;
+
+    void AddCameraHost(const std::string& svcName);
+    void RemoveCameraHost(const std::string& svcName);
+    std::shared_ptr<CameraHostInfo> FindCameraHostInfo(const std::string& cameraId);
+
+    std::mutex mutex_;
+    StatusCallback* statusCallback_;
+    std::vector<std::shared_ptr<CameraHostInfo>> cameraHostInfos_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

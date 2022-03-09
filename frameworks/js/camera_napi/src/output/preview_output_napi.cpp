@@ -226,7 +226,11 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
             }
             usleep(usleeptimes);
         }
+#ifdef RK_CAMERA
+        surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_RGBA_8888));
+#else
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
+#endif
         CameraManager::GetInstance()->SetPermissionCheck(true);
         sPreviewOutput_ = CameraManager::GetInstance()->CreateCustomPreviewOutput(surface,
             std::stoi(surfaceWidth), std::stoi(surfaceHegith));

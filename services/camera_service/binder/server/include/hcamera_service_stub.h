@@ -18,11 +18,15 @@
 
 #include "icamera_service.h"
 #include "iremote_stub.h"
+#include "input/camera_death_recipient.h"
+#include "input/i_standard_camera_listener.h"
 
 namespace OHOS {
 namespace CameraStandard {
 class HCameraServiceStub : public IRemoteStub<ICameraService> {
 public:
+    HCameraServiceStub();
+    ~HCameraServiceStub();
     virtual int OnRemoteRequest(uint32_t code, MessageParcel &data,
                                 MessageParcel &reply, MessageOption &option) override;
 
@@ -35,6 +39,13 @@ private:
     int HandleCreatePreviewOutput(MessageParcel &data, MessageParcel &reply);
     int HandleCreatePreviewOutputCustomSize(MessageParcel &data, MessageParcel &reply);
     int HandleCreateVideoOutput(MessageParcel &data, MessageParcel &reply);
+    int DestroyStubForPid(pid_t pid);
+    void ClientDied(pid_t pid);
+    int SetListenerObject(const sptr<IRemoteObject> &object) override;
+    int SetListenerObject(MessageParcel &data, MessageParcel &reply);
+
+    std::map<pid_t, sptr<CameraDeathRecipient>> deathRecipientMap_;
+    std::map<pid_t, sptr<IStandardCameraListener>> cameraListenerMap_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

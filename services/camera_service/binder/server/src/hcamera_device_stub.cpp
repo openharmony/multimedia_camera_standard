@@ -23,8 +23,11 @@ namespace CameraStandard {
 int HCameraDeviceStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    int errCode = ERR_NONE;
+    int errCode = -1;
 
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        return errCode;
+    }
     switch (code) {
         case CAMERA_DEVICE_OPEN: {
             errCode = Open();

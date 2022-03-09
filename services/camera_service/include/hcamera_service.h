@@ -29,7 +29,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-class HCameraService : public SystemAbility, public HCameraServiceStub, public HCameraHostManager::StatusCallback {
+class   HCameraService : public SystemAbility, public HCameraServiceStub, public HCameraHostManager::StatusCallback {
     DECLARE_SYSTEM_ABILITY(HCameraService);
 
 public:
@@ -73,6 +73,7 @@ public:
     // HCameraHostManager::StatusCallback
     void OnCameraStatus(const std::string& cameraId, CameraStatus status) override;
     void OnFlashlightStatus(const std::string& cameraId, FlashStatus status) override;
+    void ClearCaptureSession(int32_t pid);
 
 protected:
     HCameraService(sptr<HCameraHostManager> cameraHostManager) : cameraHostManager_(cameraHostManager) {}

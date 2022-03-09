@@ -47,7 +47,7 @@ public:
 
     int32_t Stop() override;
 
-    int32_t Release() override;
+    int32_t Release(pid_t pid) override;
 
 private:
     static inline BrokerDelegator<HCaptureSessionProxy> delegator_;

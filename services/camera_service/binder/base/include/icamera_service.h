@@ -50,6 +50,8 @@ public:
     virtual int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                       sptr<IStreamRepeat> &videoOutput) = 0;
 
+    virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
+
     DECLARE_INTERFACE_DESCRIPTOR(u"ICameraService");
 };
 } // namespace CameraStandard

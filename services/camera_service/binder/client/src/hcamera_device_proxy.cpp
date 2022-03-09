@@ -30,6 +30,10 @@ int32_t HCameraDeviceProxy::Open()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceProxy Open Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_DEVICE_OPEN, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCameraDeviceProxy Open failed, error: %{public}d", error);
@@ -43,6 +47,10 @@ int32_t HCameraDeviceProxy::Close()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceProxy Close Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_DEVICE_CLOSE, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCameraDeviceProxy Close failed, error: %{public}d", error);
@@ -57,6 +65,10 @@ int32_t HCameraDeviceProxy::Release()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceProxy Release Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_DEVICE_RELEASE, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCameraDeviceProxy Release failed, error: %{public}d", error);
@@ -76,6 +88,10 @@ int32_t HCameraDeviceProxy::SetCallback(sptr<ICameraDeviceServiceCallback>& call
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceProxy SetCallback Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(callback->AsObject())) {
         MEDIA_ERR_LOG("HCameraDeviceProxy SetCallback write CameraDeviceServiceCallback obj failed");
         return IPC_PROXY_ERR;
@@ -95,9 +111,13 @@ int32_t HCameraDeviceProxy::UpdateSetting(const std::shared_ptr<CameraMetadata> 
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceProxy UpdateSetting Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     bool bRet = MetadataUtils::EncodeCameraMetadata(settings, data);
     if (!bRet) {
-        MEDIA_ERR_LOG("HCameraDeviceProxy::UpdateSetting EncodeCameraMetadata failed");
+        MEDIA_ERR_LOG("HCameraDeviceProxy UpdateSetting EncodeCameraMetadata failed");
         return IPC_PROXY_ERR;
     }
 
@@ -115,6 +135,10 @@ int32_t HCameraDeviceProxy::GetEnabledResults(std::vector<int32_t> &results)
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceProxy GetEnabledResults Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_DEVICE_GET_ENABLED_RESULT, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCameraDeviceProxy GetEnabledResults failed, error: %{public}d", error);
@@ -135,6 +159,10 @@ int32_t HCameraDeviceProxy::EnableResult(std::vector<int32_t> &results)
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceProxy EnableResult Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteInt32Vector(results)) {
         MEDIA_ERR_LOG("HCameraDeviceProxy EnableResult write results failed");
         return IPC_PROXY_ERR;
@@ -142,7 +170,7 @@ int32_t HCameraDeviceProxy::EnableResult(std::vector<int32_t> &results)
 
     int error = Remote()->SendRequest(CAMERA_DEVICE_ENABLED_RESULT, data, reply, option);
     if (error != ERR_NONE) {
-        MEDIA_ERR_LOG("HCameraDeviceProxy GetEnabledResults failed, error: %{public}d", error);
+        MEDIA_ERR_LOG("HCameraDeviceProxy EnableResult failed, error: %{public}d", error);
     }
 
     return error;
@@ -154,6 +182,10 @@ int32_t HCameraDeviceProxy::DisableResult(std::vector<int32_t> &results)
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceProxy DisableResult Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteInt32Vector(results)) {
         MEDIA_ERR_LOG("HCameraDeviceProxy DisableResult write results failed");
         return IPC_PROXY_ERR;

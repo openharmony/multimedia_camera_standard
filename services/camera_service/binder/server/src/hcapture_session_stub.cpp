@@ -15,6 +15,7 @@
 
 #include "hcapture_session_stub.h"
 #include "media_log.h"
+#include "ipc_skeleton.h"
 #include "remote_request_code.h"
 
 namespace OHOS {
@@ -22,8 +23,11 @@ namespace CameraStandard {
 int HCaptureSessionStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    int errCode = ERR_NONE;
+    int errCode = -1;
 
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        return errCode;
+    }
     switch (code) {
         case CAMERA_CAPTURE_SESSION_BEGIN_CONFIG:
             errCode = BeginConfig();
@@ -55,8 +59,10 @@ int HCaptureSessionStub::OnRemoteRequest(
         case CAMERA_CAPTURE_SESSION_STOP:
             errCode = Stop();
             break;
-        case CAMERA_CAPTURE_SESSION_RELEASE:
-            errCode = Release();
+        case CAMERA_CAPTURE_SESSION_RELEASE: {
+                pid_t pid = IPCSkeleton::GetCallingPid();
+                errCode = Release(pid);
+            }
             break;
         default:
             MEDIA_ERR_LOG("HCaptureSessionStub request code %{public}d not handled", code);

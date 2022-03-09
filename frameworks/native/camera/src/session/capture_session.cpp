@@ -109,7 +109,7 @@ void CaptureSession::SetCallback(std::shared_ptr<SessionCallback> callback)
 
 void CaptureSession::Release()
 {
-    int32_t errCode = captureSession_->Release();
+    int32_t errCode = captureSession_->Release(0);
     if (errCode != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to Release capture session!, %{public}d", errCode);
     }

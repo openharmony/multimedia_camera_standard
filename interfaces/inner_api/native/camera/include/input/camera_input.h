@@ -94,6 +94,7 @@ public:
     int32_t SetCameraSettings(std::string setting);
 
 private:
+    std::mutex changeMetaMutex_;
     std::shared_ptr<CameraMetadata> changedMetadata_;
     sptr<CameraInfo> cameraObj_;
     sptr<ICameraDeviceService> deviceObj_;

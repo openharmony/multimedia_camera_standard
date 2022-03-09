@@ -31,6 +31,10 @@ int32_t HCameraServiceProxy::GetCameras(std::vector<std::string> &cameraIds,
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy GetCameras Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_SERVICE_GET_CAMERAS, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCameraServiceProxy GetCameras failed, error: %{public}d", error);
@@ -58,6 +62,10 @@ int32_t HCameraServiceProxy::CreateCameraDevice(std::string cameraId, sptr<ICame
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateCameraDevice Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteString(cameraId)) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreateCameraDevice Write CameraId failed");
         return IPC_PROXY_ERR;
@@ -91,6 +99,10 @@ int32_t HCameraServiceProxy::SetCallback(sptr<ICameraServiceCallback>& callback)
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy SetCallback Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(callback->AsObject())) {
         MEDIA_ERR_LOG("HCameraServiceProxy SetCallback write CameraServiceCallback obj failed");
         return IPC_PROXY_ERR;
@@ -110,6 +122,10 @@ int32_t HCameraServiceProxy::CreateCaptureSession(sptr<ICaptureSession>& session
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateCaptureSession Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_SERVICE_CREATE_CAPTURE_SESSION, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreateCaptureSession failed, error: %{public}d", error);
@@ -139,13 +155,17 @@ int32_t HCameraServiceProxy::CreatePhotoOutput(const sptr<OHOS::IBufferProducer>
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreatePhotoOutput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(producer->AsObject())) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreatePhotoOutput write producer obj failed");
         return IPC_PROXY_ERR;
     }
 
     if (!data.WriteInt32(format)) {
-        MEDIA_ERR_LOG("HCameraServiceCallbackProxy CreatePhotoOutput Write format failed");
+        MEDIA_ERR_LOG("HCameraServiceProxy CreatePhotoOutput Write format failed");
         return IPC_PROXY_ERR;
     }
 
@@ -178,13 +198,17 @@ int32_t HCameraServiceProxy::CreatePreviewOutput(const sptr<OHOS::IBufferProduce
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreatePreviewOutput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(producer->AsObject())) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreatePreviewOutput write producer obj failed");
         return IPC_PROXY_ERR;
     }
 
     if (!data.WriteInt32(format)) {
-        MEDIA_ERR_LOG("HCameraServiceCallbackProxy CreatePreviewOutput Write format failed");
+        MEDIA_ERR_LOG("HCameraServiceProxy CreatePreviewOutput Write format failed");
         return IPC_PROXY_ERR;
     }
 
@@ -217,20 +241,25 @@ int32_t HCameraServiceProxy::CreateCustomPreviewOutput(const sptr<OHOS::IBufferP
         MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput producer is null or invalid size is set");
         return IPC_PROXY_ERR;
     }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(producer->AsObject())) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput write producer obj failed");
         return IPC_PROXY_ERR;
     }
     if (!data.WriteInt32(format)) {
-        MEDIA_ERR_LOG("HCameraServiceCallbackProxy CreateCustomPreviewOutput Write format failed");
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput Write format failed");
         return IPC_PROXY_ERR;
     }
     if (!data.WriteInt32(width)) {
-        MEDIA_ERR_LOG("HCameraDeviceCallbackProxy Write width failed");
+        MEDIA_ERR_LOG("HCameraServiceProxy Write width failed");
         return IPC_PROXY_ERR;
     }
     if (!data.WriteInt32(height)) {
-        MEDIA_ERR_LOG("HCameraDeviceCallbackProxy Write height failed");
+        MEDIA_ERR_LOG("HCameraServiceProxy Write height failed");
         return IPC_PROXY_ERR;
     }
     int error = Remote()->SendRequest(CAMERA_SERVICE_CREATE_PREVIEW_OUTPUT_CUSTOM_SIZE, data, reply, option);
@@ -260,13 +289,17 @@ int32_t HCameraServiceProxy::CreateVideoOutput(const sptr<OHOS::IBufferProducer>
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateVideoOutput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(producer->AsObject())) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreateVideoOutput write producer obj failed");
         return IPC_PROXY_ERR;
     }
 
     if (!data.WriteInt32(format)) {
-        MEDIA_ERR_LOG("HCameraServiceCallbackProxy CreateVideoOutput Write format failed");
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateVideoOutput Write format failed");
         return IPC_PROXY_ERR;
     }
 
@@ -285,6 +318,27 @@ int32_t HCameraServiceProxy::CreateVideoOutput(const sptr<OHOS::IBufferProducer>
     }
 
     return error;
+}
+
+int32_t HCameraServiceProxy::SetListenerObject(const sptr<IRemoteObject> &object)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy::SetListenerObject Failed to write descriptor");
+        return IPC_PROXY_ERR;
+    }
+
+    (void)data.WriteRemoteObject(object);
+    int error = Remote()->SendRequest(CAMERA_SERVICE_SET_LISTENER_OBJ, data, reply, option);
+    if (error != ERR_NONE) {
+        MEDIA_ERR_LOG("HCameraServiceProxy::SetListenerObject Set listener obj failed, error: %{public}d", error);
+        return IPC_PROXY_ERR;
+    }
+
+    return reply.ReadInt32();
 }
 } // namespace CameraStandard
 } // namespace OHOS

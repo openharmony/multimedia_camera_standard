@@ -58,6 +58,15 @@ ohos_shared_library("camera_napi") {
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  cflags = [ "-fPIC" ]
+  if (device_name == "baltimore") {
+    cflags += [ "-DBALTIMORE_CAMERA" ]
+  } else {
+    if (device_name == "rk3566" || device_name == "rk3568") {
+      cflags += [ "-DRK_CAMERA" ]
+    }
+  }
+  cflags_cc = cflags
   relative_install_dir = "module/multimedia"
   part_name = "multimedia_camera_standard"
   subsystem_name = "multimedia"

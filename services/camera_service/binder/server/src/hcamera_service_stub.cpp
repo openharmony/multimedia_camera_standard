@@ -12,19 +12,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cinttypes>
 
-#include "hcamera_service_stub.h"
+#include "camera_util.h"
 #include "media_log.h"
 #include "metadata_utils.h"
 #include "remote_request_code.h"
+#include "input/camera_death_recipient.h"
+#include "hcamera_service.h"
+#include "input/i_standard_camera_listener.h"
+#include "ipc_skeleton.h"
+#include "hcamera_service_stub.h"
 
 namespace OHOS {
 namespace CameraStandard {
+HCameraServiceStub::HCameraServiceStub()
+{
+    deathRecipientMap_.clear();
+    cameraListenerMap_.clear();
+    MEDIA_DEBUG_LOG("0x%{public}06" PRIXPTR " Instances create",
+        (POINTER_MASK & reinterpret_cast<uintptr_t>(this)));
+}
+
+HCameraServiceStub::~HCameraServiceStub()
+{
+    MEDIA_DEBUG_LOG("0x%{public}06" PRIXPTR " Instances destroy",
+        (POINTER_MASK & reinterpret_cast<uintptr_t>(this)));
+}
+
 int HCameraServiceStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    int errCode = ERR_NONE;
+    int errCode = -1;
 
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        return errCode;
+    }
     switch (code) {
         case CAMERA_SERVICE_CREATE_DEVICE:
             errCode = HCameraServiceStub::HandleCreateCameraDevice(data, reply);
@@ -49,6 +72,9 @@ int HCameraServiceStub::OnRemoteRequest(
             break;
         case CAMERA_SERVICE_CREATE_VIDEO_OUTPUT:
             errCode = HCameraServiceStub::HandleCreateVideoOutput(data, reply);
+            break;
+        case CAMERA_SERVICE_SET_LISTENER_OBJ:
+            errCode = HCameraServiceStub::SetListenerObject(data, reply);
             break;
         default:
             MEDIA_ERR_LOG("HCameraServiceStub request code %{public}d not handled", code);
@@ -238,6 +264,76 @@ int HCameraServiceStub::HandleCreateVideoOutput(MessageParcel &data, MessageParc
         return IPC_STUB_WRITE_PARCEL_ERR;
     }
 
+    return errCode;
+}
+
+int HCameraServiceStub::DestroyStubForPid(pid_t pid)
+{
+    sptr<CameraDeathRecipient> deathRecipient = nullptr;
+    sptr<IStandardCameraListener> cameraListener = nullptr;
+
+    auto itDeath = deathRecipientMap_.find(pid);
+    if (itDeath != deathRecipientMap_.end()) {
+        deathRecipient = itDeath->second;
+
+        if (deathRecipient != nullptr) {
+            deathRecipient->SetNotifyCb(nullptr);
+        }
+
+        (void)deathRecipientMap_.erase(itDeath);
+    }
+
+    auto itListener = cameraListenerMap_.find(pid);
+    if (itListener != cameraListenerMap_.end()) {
+        cameraListener = itListener->second;
+
+        if (cameraListener != nullptr && cameraListener->AsObject() != nullptr && deathRecipient != nullptr) {
+            (void)cameraListener->AsObject()->RemoveDeathRecipient(deathRecipient);
+        }
+
+        (void)cameraListenerMap_.erase(itListener);
+    }
+
+    HCaptureSession::DestroyStubObjectForPid(pid);
+    return CAMERA_OK;
+}
+
+void HCameraServiceStub::ClientDied(pid_t pid)
+{
+    MEDIA_ERR_LOG("client pid is dead, pid:%{public}d", pid);
+    (void)DestroyStubForPid(pid);
+}
+
+int HCameraServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
+{
+    int errCode = -1;
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, CAMERA_ALLOC_ERROR, "set listener object is nullptr");
+
+    sptr<IStandardCameraListener> cameraListener = iface_cast<IStandardCameraListener>(object);
+    CHECK_AND_RETURN_RET_LOG(cameraListener != nullptr, CAMERA_ALLOC_ERROR,
+        "failed to convert IStandardCameraListener");
+
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    sptr<CameraDeathRecipient> deathRecipient = new(std::nothrow) CameraDeathRecipient(pid);
+    CHECK_AND_RETURN_RET_LOG(deathRecipient != nullptr, CAMERA_ALLOC_ERROR, "failed to new CameraDeathRecipient");
+
+    deathRecipient->SetNotifyCb(std::bind(&HCameraServiceStub::ClientDied, this, std::placeholders::_1));
+
+    if (cameraListener->AsObject() != nullptr) {
+        (void)cameraListener->AsObject()->AddDeathRecipient(deathRecipient);
+    }
+
+    MEDIA_DEBUG_LOG("client pid pid:%{public}d", pid);
+    cameraListenerMap_[pid] = cameraListener;
+    deathRecipientMap_[pid] = deathRecipient;
+    return errCode;
+}
+
+int HCameraServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
+{
+    int errCode = -1;
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    (void)reply.WriteInt32(SetListenerObject(object));
     return errCode;
 }
 } // namespace CameraStandard

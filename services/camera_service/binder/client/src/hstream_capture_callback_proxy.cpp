@@ -28,6 +28,10 @@ int32_t HStreamCaptureCallbackProxy::OnCaptureStarted(int32_t captureId)
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnCaptureStarted Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteInt32(captureId)) {
         MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnCaptureStarted Write captureId failed");
         return IPC_PROXY_ERR;
@@ -46,6 +50,10 @@ int32_t HStreamCaptureCallbackProxy::OnCaptureEnded(int32_t captureId, int32_t f
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnCaptureEnded Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteInt32(captureId)) {
         MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnCaptureEnded Write captureId failed");
         return IPC_PROXY_ERR;
@@ -68,6 +76,10 @@ int32_t HStreamCaptureCallbackProxy::OnCaptureError(int32_t captureId, int32_t e
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnCaptureError Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteInt32(captureId)) {
         MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnCaptureError Write captureId failed");
         return IPC_PROXY_ERR;
@@ -91,6 +103,10 @@ int32_t HStreamCaptureCallbackProxy::OnFrameShutter(int32_t captureId, uint64_t 
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnFrameShutter Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteInt32(captureId)) {
         MEDIA_ERR_LOG("HStreamCaptureCallbackProxy OnFrameShutter Write captureId failed");
         return IPC_PROXY_ERR;

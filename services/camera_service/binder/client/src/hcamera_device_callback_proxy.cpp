@@ -29,6 +29,10 @@ int32_t HCameraDeviceCallbackProxy::OnError(const int32_t errorType, const int32
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnError Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteInt32(errorType)) {
         MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnError Write errorType failed");
         return IPC_PROXY_ERR;
@@ -52,13 +56,17 @@ int32_t HCameraDeviceCallbackProxy::OnResult(const uint64_t timestamp,
     MessageOption option;
     bool bRet = false;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnResult Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteUint64(timestamp)) {
         MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnResult Write timestamp failed");
         return IPC_PROXY_ERR;
     }
     bRet = MetadataUtils::EncodeCameraMetadata(result, data);
     if (!bRet) {
-        MEDIA_ERR_LOG("HCameraDeviceProxy::UpdateSetting EncodeCameraMetadata failed");
+        MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnResult EncodeCameraMetadata failed");
         return IPC_PROXY_ERR;
     }
     int error = Remote()->SendRequest(CAMERA_DEVICE_ON_RESULT, data, reply, option);

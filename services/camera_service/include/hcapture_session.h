@@ -55,7 +55,8 @@ public:
 
     int32_t Start() override;
     int32_t Stop() override;
-    int32_t Release() override;
+    int32_t Release(pid_t pid) override;
+    static void DestroyStubObjectForPid(pid_t pid);
 
     friend class StreamOperatorCallback;
 
@@ -75,6 +76,8 @@ private:
     void DeleteReleasedStream();
     void RestorePreviousState(sptr<HCameraDevice> &device, bool isCreateReleaseStreams);
     void ReleaseStreams();
+    void ClearCaptureSession(pid_t pid);
+
     CaptureSessionState curState_ = CaptureSessionState::SESSION_INIT;
     CaptureSessionState prevState_ = CaptureSessionState::SESSION_INIT;
     sptr<HCameraDevice> cameraDevice_;

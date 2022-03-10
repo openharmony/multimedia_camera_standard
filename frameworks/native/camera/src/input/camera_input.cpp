@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,7 +46,7 @@ public:
         if (camInput_ != nullptr && camInput_->GetErrorCallback() != nullptr) {
             camInput_->GetErrorCallback()->OnError(errorType, errorMsg);
         } else {
-            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, Discarding callback");
+            MEDIA_INFO_LOG("CameraDeviceServiceCallback::ErrorCallback not set!, Discarding callback");
         }
         return CAMERA_OK;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #define OHOS_CAMERA_ICAPTURE_SESSION_H
 
 #include "icamera_device_service.h"
+#include "icapture_session_callback.h"
 #include "iremote_broker.h"
 #include "istream_repeat.h"
 #include "istream_capture.h"
@@ -46,6 +47,8 @@ public:
     virtual int32_t Stop() = 0;
 
     virtual int32_t Release(pid_t pid) = 0;
+
+    virtual int32_t SetCallback(sptr<ICaptureSessionCallback> &callback) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"ICaptureSession");
 };

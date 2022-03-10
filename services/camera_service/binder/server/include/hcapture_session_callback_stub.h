@@ -13,28 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_CAMERA_HCAPTURE_SESSION_STUB_H
-#define OHOS_CAMERA_HCAPTURE_SESSION_STUB_H
+#ifndef OHOS_CAMERA_HCAPTURE_SESSION_CALLBACK_STUB_H
+#define OHOS_CAMERA_HCAPTURE_SESSION_CALLBACK_STUB_H
 
-#include "icapture_session.h"
+#include "icapture_session_callback.h"
 #include "iremote_stub.h"
 
 namespace OHOS {
 namespace CameraStandard {
-class HCaptureSessionStub : public IRemoteStub<ICaptureSession> {
+class HCaptureSessionCallbackStub : public IRemoteStub<ICaptureSessionCallback> {
 public:
     virtual int OnRemoteRequest(uint32_t code, MessageParcel &data,
                                 MessageParcel &reply, MessageOption &option) override;
 
 private:
-    int HandleAddInput(MessageParcel &data);
-    int HandleAddCaptureOutput(MessageParcel &data);
-    int HandleAddRepeatOutput(MessageParcel &data);
-    int HandleRemoveInput(MessageParcel &data);
-    int HandleRemoveCaptureOutput(MessageParcel &data);
-    int HandleRemoveRepeatOutput(MessageParcel &data);
-    int HandleSetCallback(MessageParcel &data);
+    int HandleSessionOnError(MessageParcel& data);
 };
 } // namespace CameraStandard
 } // namespace OHOS
-#endif // OHOS_CAMERA_HCAPTURE_SESSION_STUB_H
+#endif // OHOS_CAMERA_HCAPTURE_SESSION_CALLBACK_STUB_H

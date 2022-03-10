@@ -50,6 +50,7 @@ public:
     bool IsReleaseStream();
     int32_t SetReleaseStream(bool isReleaseStream);
     int32_t GetStreamId();
+    void dumpRepeatStreamInfo(std::string& dumpString);
 
 private:
     static int32_t videoCaptureId_;

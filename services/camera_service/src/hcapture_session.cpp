@@ -364,7 +364,7 @@ int32_t HCaptureSession::CheckAndCommitStreams(sptr<HCameraDevice> &device,
         MEDIA_ERR_LOG("HCaptureSession::CheckAndCommitStreams(), Error from HDI: %{public}d", hdiRc);
         return HdiToServiceError(hdiRc);
     } else if (supportType != Camera::DYNAMIC_SUPPORTED) {
-        MEDIA_ERR_LOG("HCaptureSession::CheckAndCommitStreams(), Config not suported %{public}d", supportType);
+        MEDIA_ERR_LOG("HCaptureSession::CheckAndCommitStreams(), Config not supported %{public}d", supportType);
         return CAMERA_UNSUPPORTED;
     }
 #endif

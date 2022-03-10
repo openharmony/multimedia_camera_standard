@@ -283,7 +283,6 @@ napi_value PhotoOutputNapi::CreatePhotoOutput(napi_env env, std::string surfaceI
 static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
 {
     auto context = static_cast<PhotoOutputAsyncContext*>(data);
-
     if (context == nullptr) {
         MEDIA_ERR_LOG("Async context is null");
         return;

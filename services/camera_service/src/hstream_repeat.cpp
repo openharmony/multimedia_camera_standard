@@ -300,5 +300,31 @@ void HStreamRepeat::ResetCaptureIds()
     videoCaptureId_ = VIDEO_CAPTURE_ID_START;
     previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
 }
+
+void HStreamRepeat::dumpRepeatStreamInfo(std::string& dumpString)
+{
+    std::shared_ptr<Camera::StreamInfo> curStreamInfo;
+    curStreamInfo = std::make_shared<Camera::StreamInfo>();
+    SetStreamInfo(curStreamInfo);
+    dumpString += "repeat stream info: \n";
+    dumpString += "    Buffer Producer Id:[" + std::to_string(curStreamInfo->bufferQueue_->GetUniqueId());
+    dumpString += "]    stream Id:[" + std::to_string(curStreamInfo->streamId_);
+    std::map<int, std::string>::const_iterator iter =
+        g_cameraFormat.find(format_);
+    if (iter != g_cameraFormat.end()) {
+        dumpString += "]    format:[" + iter->second;
+    }
+    dumpString += "]    width:[" + std::to_string(curStreamInfo->width_);
+    dumpString += "]    height:[" + std::to_string(curStreamInfo->height_);
+    dumpString += "]    TunnelMode:[" + std::to_string(curStreamInfo->tunneledMode_);
+    dumpString += "]    dataspace:[" + std::to_string(curStreamInfo->datasapce_);
+    dumpString += "]    Is Video:[" + std::to_string(isVideo_);
+    if (isVideo_) {
+        dumpString += "]    StreamType:[" + std::to_string(curStreamInfo->intent_);
+        dumpString += "]    Encoding Type:[" + std::to_string(curStreamInfo->encodeType_) + "]:\n";
+    } else {
+        dumpString += "]    StreamType:[" + std::to_string(curStreamInfo->intent_) + "]:\n";
+    }
+}
 } // namespace Standard
 } // namespace OHOS

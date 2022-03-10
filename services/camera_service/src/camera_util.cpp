@@ -25,6 +25,48 @@ std::unordered_map<int32_t, int32_t> g_cameraToPixelFormat = {
     {OHOS_CAMERA_FORMAT_JPEG, PIXEL_FMT_YCRCB_420_SP},
 };
 
+std::map<int, std::string> g_cameraPos = {
+    {0, "Front"},
+    {1, "Back"},
+    {2, "Other"},
+};
+
+std::map<int, std::string> g_cameraType = {
+    {0, "Wide-Angle"},
+    {1, "Ultra-Wide"},
+    {2, "TelePhoto"},
+    {3, "TrueDepth"},
+    {4, "Logical"},
+    {5, "Unspecified"},
+};
+
+std::map<int, std::string> g_cameraConType = {
+    {0, "Builtin"},
+    {1, "USB-Plugin"},
+    {2, "Remote"},
+};
+
+std::map<int, std::string> g_cameraFormat = {
+    {1, "RGBA_8888"},
+    {2, "YCBCR_420_888"},
+    {3, "YCRCB_420_SP"},
+    {4, "JPEG"},
+};
+
+std::map<int, std::string> g_cameraFocusMode = {
+    {0, "Manual"},
+    {1, "Continuous-Auto"},
+    {2, "Auto"},
+    {3, "Locked"},
+};
+
+std::map<int, std::string> g_cameraFlashMode = {
+    {0, "Close"},
+    {1, "Open"},
+    {2, "Auto"},
+    {3, "Always-Open"},
+};
+
 int32_t HdiToServiceError(Camera::CamRetCode ret)
 {
     enum CamServiceError err = CAMERA_UNKNOWN_ERROR;

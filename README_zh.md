@@ -8,6 +8,8 @@
     - [拍照<a name="section2071191842718"></a>](#拍照)
     - [开始和停止预览<a name="section2094314213271"></a>](#开始和停止预览)
     - [视频录像<a name="section1983913118271"></a>](#视频录像)
+    - [切换多个照相机设备<a name="sectionswitchcamera"></a>](#切换多个照相机设备)
+    - [设置闪光灯<a name="sectionsetflash"></a>](#设置闪光灯)
   - [相关仓<a name="section16511040154318"></a>](#相关仓)
 
 ## 简介<a name="section11660541593"></a>
@@ -325,6 +327,175 @@
 
     ```
     cameraInput->Release();
+    ```
+
+### 切换多个照相机设备<a name="sectionswitchcamera"></a>
+
+以下演示如何切换多个照相机设备。最初在采集会话中有一个视频输出(vedio output)。如果用户想要切换其他 照相机，现存的相机输入和输出需要县移除并加入新的相机输入和输出(示例中使用的是photo output)。
+
+1.  获取相机管理器实例并获取相机对象列表。
+
+    ```
+    sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
+    std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
+    ```
+
+2.  使用相机对象创建相机输入来打开相机。
+
+    ```
+    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
+    ```
+    
+3.  创建采集会话。
+
+    ```
+    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
+    ```
+
+4.  开始配置采集会话。
+
+    ```
+    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
+    ```
+
+5.  将相机输入添加到采集会话。
+
+    ```
+    result = captureSession->AddInput(cameraInput);
+    ```
+
+6.  通过Surface创建一个视频输出。
+
+    ```
+    sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
+    ```
+
+7.  将视频输出添加到采集会话。
+
+    ```
+    result = captureSession->AddOutput(videoOutput);
+    ```
+
+8.  将配置提交到采集会话。
+
+    ```
+    result = captureSession->CommitConfig();
+    ```
+
+9.  开始录制视频。
+
+    ```
+    result = ((sptr<VideoOutput> &)videoOutput)->Start();
+    ```
+
+10. 需要时停止录制。
+
+    ```
+    result = ((sptr<VideoOutput> &)videoOutput)->Stop();
+    ```
+
+11. 重新配置会话并移除相机输入和输出。
+
+    ```
+    int32_t result = captureSession->BeginConfig();
+    ```
+
+12. 在新的会话配置中移除相机输入。
+
+    ```
+    int32_t result = captureSession->RemoveInput(cameraInput);
+    ```
+
+13. 同样移除相机输出。
+
+    ```
+    int32_t result = captureSession->RemoveOutut(videoOutput);
+    ```
+
+14. 创建新的相机输入，并把它添加到采集会话。
+
+    ```
+    sptr<CaptureInput> cameraInput2 = camManagerObj->CreateCameraInput(cameraObjList[1]);
+    result = captureSession->AddInput(cameraInput2);
+    ```
+
+15. 创建拍照输出，成功创建后将拍照输出添加到采集会话。创建消费者Surface并注册监听器以监听新的拍照输出缓冲区更新。这个Surface用于新创建的拍照输出。
+
+    ```
+    // Get the surface
+    sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
+    int32_t photoWidth = 1280;
+    int32_t photoHeight = 960;
+    photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
+    photoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_JPEG));
+    sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
+    capturelistener->mode_ = MODE_PHOTO;
+    capturelistener->surface_ = photoSurface;
+    photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);
+
+    // Create the Photo Output
+    sptr<CaptureOutput> photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
+
+    // Add the output to the capture session
+    result = captureSession->AddOutput(photoOutput);
+    ```
+
+16. 将配置提交到采集会话。
+
+    ```
+    result = captureSession->CommitConfig();
+    ```
+
+17. 释放被移出会话的相机输入。
+
+    ```
+    cameraInput->Release();
+    ```
+
+18. 拍摄照片。
+
+    ```
+    result = ((sptr<PhotoOutput> &)photoOutput)->Capture();
+    ```
+
+19. 释放采集会话资源。
+
+    ```
+    captureSession->Release();
+    ```
+
+20. 释放相机输入关闭相机。
+
+    ```
+    cameraInput2->Release();
+    ```
+
+### 设置闪光灯<a name="sectionsetflash"></a>
+
+拍照和录像前可以在相机输入里设置闪光灯。
+
+1.  在照相中设置闪光灯。
+
+    ```
+    cameraInput->LockForControl();
+    cameraInput->SetFlashMode(OHOS_CAMERA_FLASH_MODE_OPEN);
+    cameraInput->UnlockForControl();
+    ```
+
+2.  在录像中设置闪光灯。
+
+    ```
+    cameraInput->LockForControl();
+    cameraInput->SetFlashMode(OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN);
+    cameraInput->UnlockForControl();
+    ```
+
+3.  关闭闪光灯。
+
+    ```
+    cameraInput->LockForControl();
+    cameraInput->SetFlashMode(OHOS_CAMERA_FLASH_MODE_CLOSE);
+    cameraInput->UnlockForControl();
     ```
 
 ## 相关仓<a name="section16511040154318"></a>

@@ -46,6 +46,7 @@ public:
     int32_t GetStreamId();
     bool IsReleaseStream();
     int32_t SetReleaseStream(bool isReleaseStream);
+    void dumpCaptureStreamInfo(std::string& dumpString);
 
 private:
     static int32_t photoCaptureId_;

@@ -28,13 +28,18 @@ HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     sessionCallback_(nullptr)
 {
     std::map<int32_t, sptr<HCaptureSession>>::iterator it;
-    pid_t pid = IPCSkeleton::GetCallingPid();
-    MEDIA_DEBUG_LOG("HCaptureSession: camera stub services(%{public}zu) pid(%{public}d).", session_.size(), pid);
-    it = session_.find(pid);
+    pid_ = IPCSkeleton::GetCallingPid();
+    uid_ = IPCSkeleton::GetCallingUid();
+    sessionState_.insert(std::make_pair(CaptureSessionState::SESSION_INIT, "Init"));
+    sessionState_.insert(std::make_pair(CaptureSessionState::SESSION_CONFIG_INPROGRESS, "Config_In-progress"));
+    sessionState_.insert(std::make_pair(CaptureSessionState::SESSION_CONFIG_COMMITTED, "Committed"));
+
+    MEDIA_DEBUG_LOG("HCaptureSession: camera stub services(%{public}zu) pid(%{public}d).", session_.size(), pid_);
+    it = session_.find(pid_);
     if (it != session_.end()) {
         MEDIA_ERR_LOG("HCaptureSession::HCaptureSession doesn't support multiple sessions per pid");
     } else {
-        session_[pid] = this;
+        session_[pid_] = this;
     }
     MEDIA_DEBUG_LOG("HCaptureSession: camera stub services(%{public}zu).", session_.size());
 }
@@ -692,6 +697,62 @@ int32_t HCaptureSession::SetCallback(sptr<ICaptureSessionCallback> &callback)
 
     sessionCallback_ = callback;
     return CAMERA_OK;
+}
+
+std::string HCaptureSession::GetSessionState()
+{
+    std::map<CaptureSessionState, std::string>::const_iterator iter =
+        sessionState_.find(curState_);
+    if (iter != sessionState_.end()) {
+        return iter->second;
+    }
+    return nullptr;
+}
+
+void HCaptureSession::CameraSessionSummary(std::string& dumpString)
+{
+    dumpString += "# Number of Camera clients:[" + std::to_string(session_.size()) + "]:\n";
+}
+
+void HCaptureSession::dumpSessions(std::string& dumpString)
+{
+    for (auto it = session_.begin(); it != session_.end(); it++) {
+        sptr<HCaptureSession> session = it->second;
+        dumpString += "No. of sessions for client:[" + std::to_string(1) + "]:\n";
+        session->dumpSessionInfo(dumpString);
+    }
+}
+
+void HCaptureSession::dumpSessionInfo(std::string& dumpString)
+{
+    sptr<HStreamCapture> streamCaptures;
+
+    dumpString += "Client pid:[" + std::to_string(pid_)
+        + "]    Client uid:[" + std::to_string(uid_) + "]:\n";
+    dumpString += "session state:[" + GetSessionState() + "]:\n";
+    if (cameraDevice_ != nullptr) {
+        dumpString += "session Camera Id:[" + cameraDevice_->GetCameraId() + "]:\n";
+        dumpString += "session Camera release status:["
+        + std::to_string(cameraDevice_->IsReleaseCameraDevice()) + "]:\n";
+    }
+    if (streamCaptures_.size()) {
+        sptr<HStreamCapture> curStreamCapture;
+        for (auto item = streamCaptures_.begin(); item != streamCaptures_.end(); ++item) {
+            curStreamCapture = *item;
+            dumpString += "stream capture:\nrelease status:["
+                + std::to_string(curStreamCapture->IsReleaseStream()) + "]:\n";
+            curStreamCapture->dumpCaptureStreamInfo(dumpString);
+        }
+    }
+    if (streamRepeats_.size()) {
+        sptr<HStreamRepeat> curStreamRepeat = nullptr;
+        for (auto item = streamRepeats_.begin(); item != streamRepeats_.end(); ++item) {
+            curStreamRepeat = *item;
+            dumpString += "stream repeat:\nrelease status:["
+                + std::to_string(curStreamRepeat->IsReleaseStream()) + "]:\n";
+            curStreamRepeat->dumpRepeatStreamInfo(dumpString);
+        }
+    }
 }
 
 StreamOperatorCallback::StreamOperatorCallback(sptr<HCaptureSession> session)

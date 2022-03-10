@@ -38,7 +38,7 @@ int HStreamRepeatCallbackStub::OnRemoteRequest(
             errCode = HStreamRepeatCallbackStub::HandleOnFrameError(data);
             break;
         default:
-            MEDIA_ERR_LOG("HStreamRepeatCallbackStub request code %{public}d not handled", code);
+            MEDIA_ERR_LOG("HStreamRepeatCallbackStub request code %{public}u not handled", code);
             errCode = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;
     }

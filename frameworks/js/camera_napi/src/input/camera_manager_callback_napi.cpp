@@ -33,8 +33,7 @@ CameraManagerCallbackNapi::CameraManagerCallbackNapi(napi_env env): env_(env)
 {}
 
 CameraManagerCallbackNapi::~CameraManagerCallbackNapi()
-{
-}
+{}
 
 void CameraManagerCallbackNapi::SaveCallbackReference(const std::string &callbackName, napi_value args)
 {
@@ -68,6 +67,8 @@ void CameraManagerCallbackNapi::OnCameraStatusChanged(const CameraStatusInfo &ca
 void CameraManagerCallbackNapi::OnFlashlightStatusChanged(const std::string &cameraID,
     const FlashlightStatus flashStatus) const
 {
+    (void)cameraID;
+    (void)flashStatus;
 }
 
 static void SetValueInt32(const napi_env& env, const std::string& fieldStr, const int intValue, const napi_value& result)

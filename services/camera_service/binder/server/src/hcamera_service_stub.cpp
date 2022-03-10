@@ -77,7 +77,7 @@ int HCameraServiceStub::OnRemoteRequest(
             errCode = HCameraServiceStub::SetListenerObject(data, reply);
             break;
         default:
-            MEDIA_ERR_LOG("HCameraServiceStub request code %{public}d not handled", code);
+            MEDIA_ERR_LOG("HCameraServiceStub request code %{public}u not handled", code);
             errCode = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;
     }

@@ -37,7 +37,7 @@ int HCameraServiceCallbackStub::OnRemoteRequest(
             break;
 
         default:
-            MEDIA_ERR_LOG("HCameraServiceCallbackStub request code %{public}d not handled", code);
+            MEDIA_ERR_LOG("HCameraServiceCallbackStub request code %{public}u not handled", code);
             errCode = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;
     }

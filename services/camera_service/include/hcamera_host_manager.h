@@ -60,11 +60,11 @@ private:
 
     void AddCameraHost(const std::string& svcName);
     void RemoveCameraHost(const std::string& svcName);
-    std::shared_ptr<CameraHostInfo> FindCameraHostInfo(const std::string& cameraId);
+    sptr<CameraHostInfo> FindCameraHostInfo(const std::string& cameraId);
 
     std::mutex mutex_;
     StatusCallback* statusCallback_;
-    std::vector<std::shared_ptr<CameraHostInfo>> cameraHostInfos_;
+    std::vector<sptr<CameraHostInfo>> cameraHostInfos_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

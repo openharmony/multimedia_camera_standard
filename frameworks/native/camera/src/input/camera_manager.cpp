@@ -250,7 +250,7 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IB
     sptr<PreviewOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
 
-    if (serviceProxy_ == nullptr || producer == nullptr || width == 0 || height == 0) {
+    if ((serviceProxy_ == nullptr) || (producer == nullptr) || (width == 0) || (height == 0)) {
         MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput serviceProxy_ is null or producer is null or invalid size");
         return nullptr;
     }

@@ -45,7 +45,6 @@ bool CameraMetadata::addEntry(uint32_t item, const void *data, size_t data_count
 
     if (result != CAM_META_ITEM_CAP_EXCEED && result != CAM_META_DATA_CAP_EXCEED) {
         const char *name = GetCameraMetadataItemName(item);
-        (void)name;
 
         if (name) {
             METADATA_ERR_LOG("Failed to add tag. tagname = %{public}s", name);
@@ -150,5 +149,5 @@ bool CameraMetadata::isValid() const
 {
     return metadata_ != nullptr;
 }
-}
-}
+} // CameraStandard
+} // OHOS

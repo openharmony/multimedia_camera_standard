@@ -122,8 +122,8 @@ int32_t CameraInput::UpdateSetting(std::shared_ptr<CameraMetadata> changedMetada
         return ret;
     }
 
-    int32_t length;
-    int32_t count = changedMetadata->get()->item_count;
+    size_t length;
+    uint32_t count = changedMetadata->get()->item_count;
     uint8_t *data = GetMetadataData(changedMetadata->get());
     camera_metadata_item_entry_t *itemEntry = GetMetadataItems(changedMetadata->get());
     std::shared_ptr<CameraMetadata> baseMetadata = cameraObj_->GetMetadata();
@@ -172,7 +172,7 @@ void CameraInput::getVector(DataPtr data, size_t count, Vec &vect, VecType dataT
 
 std::vector<camera_format_t> CameraInput::GetSupportedPhotoFormats()
 {
-    int32_t unitLen = 3;
+    uint32_t unitLen = 3;
     camera_format_t format;
     std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
@@ -197,7 +197,7 @@ std::vector<camera_format_t> CameraInput::GetSupportedPhotoFormats()
 
 std::vector<camera_format_t> CameraInput::GetSupportedVideoFormats()
 {
-    int32_t unitLen = 3;
+    uint32_t unitLen = 3;
     camera_format_t format;
     std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
@@ -222,7 +222,7 @@ std::vector<camera_format_t> CameraInput::GetSupportedVideoFormats()
 
 std::vector<camera_format_t> CameraInput::GetSupportedPreviewFormats()
 {
-    int32_t unitLen = 3;
+    uint32_t unitLen = 3;
     camera_format_t format;
     std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
@@ -247,9 +247,9 @@ std::vector<camera_format_t> CameraInput::GetSupportedPreviewFormats()
 
 std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format)
 {
-    int32_t unitLen = 3;
-    int32_t widthOffset = 1;
-    int32_t heightOffset = 2;
+    uint32_t unitLen = 3;
+    uint32_t widthOffset = 1;
+    uint32_t heightOffset = 2;
     camera_metadata_item_t item;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     int ret = FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
@@ -276,8 +276,8 @@ std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format
     CameraPicSize *size = &sizes[0];
     for (uint32_t index = 0; index < item.count; index += unitLen) {
         if (item.data.i32[index] == format) {
-            size->width = item.data.i32[index + widthOffset];
-            size->height = item.data.i32[index + heightOffset];
+            size->width = static_cast<uint32_t>(item.data.i32[index + widthOffset]);
+            size->height = static_cast<uint32_t>(item.data.i32[index + heightOffset]);
             size++;
         }
     }

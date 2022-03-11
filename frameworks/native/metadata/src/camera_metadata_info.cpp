@@ -86,7 +86,7 @@ bool CameraMetadata::resize_add_metadata(uint32_t item, const void *data, size_t
         return false;
     }
 
-    result = AddCameraMetadataItem(newMetadata, item, data, data_count);
+    result = static_cast<uint32_t>(AddCameraMetadataItem(newMetadata, item, data, data_count));
     if (result != CAM_META_SUCCESS) {
         METADATA_ERR_LOG("Failed to add new entry");
         FreeCameraMetadataBuffer(newMetadata);

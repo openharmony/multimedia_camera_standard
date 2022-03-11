@@ -80,6 +80,7 @@ HCameraHostManager::CameraHostInfo::CameraHostInfo(HCameraHostManager* cameraHos
 
 HCameraHostManager::CameraHostInfo::~CameraHostInfo()
 {
+    MEDIA_INFO_LOG("CameraHostInfo ~CameraHostInfo");
 }
 
 bool HCameraHostManager::CameraHostInfo::Init()
@@ -432,7 +433,7 @@ void HCameraHostManager::AddCameraHost(const std::string& svcName)
         MEDIA_INFO_LOG("HCameraHostManager::AddCameraHost camera host  %{public}s already exists", svcName.c_str());
         return;
     }
-    auto cameraHost = std::make_shared<HCameraHostManager::CameraHostInfo>(this, svcName);
+    sptr<HCameraHostManager::CameraHostInfo> cameraHost = new HCameraHostManager::CameraHostInfo(this, svcName);
     if (!cameraHost->Init()) {
         MEDIA_ERR_LOG("HCameraHostManager::AddCameraHost failed due to init failure");
         return;
@@ -465,7 +466,7 @@ void HCameraHostManager::RemoveCameraHost(const std::string& svcName)
     cameraHostInfos_.erase(it);
 }
 
-std::shared_ptr<HCameraHostManager::CameraHostInfo> HCameraHostManager::FindCameraHostInfo(const std::string& cameraId)
+sptr<HCameraHostManager::CameraHostInfo> HCameraHostManager::FindCameraHostInfo(const std::string& cameraId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     for (const auto& cameraHostInfo : cameraHostInfos_) {

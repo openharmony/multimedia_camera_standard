@@ -14,15 +14,11 @@
  */
 
 #include "hcamera_host_manager.h"
-#include <algorithm>
-#include <memory>
 #include "camera_host_callback_stub.h"
 #include "camera_util.h"
 #include "hdf_io_service_if.h"
 #include "iservmgr_hdi.h"
 #include "media_log.h"
-
-#include <iostream>
 
 namespace OHOS {
 namespace CameraStandard {
@@ -55,9 +51,7 @@ public:
     // CameraHostCallbackStub
     void OnCameraStatus(const std::string& cameraId, Camera::CameraStatus status) override;
     void OnFlashlightStatus(const std::string& cameraId, Camera::FlashlightStatus status) override;
-#ifdef BALTIMORE_CAMERA
     void OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event) override;
-#endif
 
 private:
     std::shared_ptr<CameraDeviceInfo> FindCameraDeviceInfo(const std::string& cameraId);
@@ -246,7 +240,6 @@ void HCameraHostManager::CameraHostInfo::OnFlashlightStatus(const std::string& c
     cameraHostManager_->statusCallback_->OnFlashlightStatus(cameraId, flashStatus);
 }
 
-#ifdef BALTIMORE_CAMERA
 void HCameraHostManager::CameraHostInfo::OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event)
 {
     if (cameraHostManager_->statusCallback_ == nullptr) {
@@ -275,7 +268,6 @@ void HCameraHostManager::CameraHostInfo::OnCameraEvent(const std::string &camera
     }
     cameraHostManager_->statusCallback_->OnCameraStatus(cameraId, svcStatus);
 }
-#endif
 
 std::shared_ptr<HCameraHostManager::CameraDeviceInfo> HCameraHostManager::CameraHostInfo::FindCameraDeviceInfo
    (const std::string& cameraId)

@@ -23,7 +23,7 @@ int main(void)
     uint32_t itemCapacity = 1;
     uint32_t dataCapacity = 1;
     common_metadata_header_t *metadata = AllocateCameraMetadataBuffer(itemCapacity, dataCapacity);
-    METADATA_INFO_LOG("Test Metadata AllocateCameraMetadataBuffer metadata: %p", metadata);
+    METADATA_INFO_LOG("Test Metadata AllocateCameraMetadataBuffer metadata");
 
     uint8_t cameraPositon = OHOS_CAMERA_POSITION_FRONT;
     int result = AddCameraMetadataItem(metadata,

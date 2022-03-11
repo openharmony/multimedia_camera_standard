@@ -96,10 +96,15 @@ bool IsValidSize(std::shared_ptr<CameraMetadata> cameraAbility, int32_t format, 
 #ifndef BALTIMORE_CAMERA
     return true;
 #endif
+    uint32_t unitLen = 3;
     camera_metadata_item_t item;
     int ret = FindCameraMetadataItem(cameraAbility->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("Failed to find stream configuration in camera ability with return code %{public}d", ret);
+        return false;
+    }
+    if (item.count % unitLen != 0) {
+        MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
         return false;
     }
     for (uint32_t index = 0; index < item.count; index += 3) {

@@ -22,10 +22,6 @@ namespace CameraStandard {
 HCameraDevice::HCameraDevice(sptr<HCameraHostManager> &cameraHostManager,
                              sptr<CameraDeviceCallback> deviceCallback, std::string cameraID)
 {
-    if (cameraHostManager == nullptr) {
-        MEDIA_ERR_LOG("HCameraDevice::HCameraDevice cameraHostManager is null");
-        return;
-    }
     cameraHostManager_ = cameraHostManager;
     deviceHDICallback_ = deviceCallback;
     cameraID_ = cameraID;

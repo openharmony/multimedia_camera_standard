@@ -326,6 +326,10 @@ bool MetadataUtils::ReadMetadata(camera_metadata_item_t &item, MessageParcel &da
 
 void MetadataUtils::ItemDataToBuffer(const camera_metadata_item_t &item, void **buffer)
 {
+    if (buffer == nullptr) {
+        METADATA_ERR_LOG("MetadataUtils::ItemDataToBuffer buffer is null");
+        return;
+    }
     if (item.data_type == META_TYPE_BYTE) {
         *buffer = (void*)item.data.u8;
     } else if (item.data_type == META_TYPE_INT32) {

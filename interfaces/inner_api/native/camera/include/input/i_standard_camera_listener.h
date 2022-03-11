@@ -13,16 +13,21 @@
  * limitations under the License.
  */
 
-#include "output/capture_output.h"
+#ifndef I_STANDARD_CAMERA_LISTENER_H
+#define I_STANDARD_CAMERA_LISTENER_H
+
+#include "ipc_types.h"
+#include "iremote_broker.h"
+#include "iremote_proxy.h"
+#include "iremote_stub.h"
 
 namespace OHOS {
 namespace CameraStandard {
-CaptureOutput::CaptureOutput(CAPTURE_OUTPUT_TYPE type) : type_(type) {
-}
-
-CAPTURE_OUTPUT_TYPE CaptureOutput::GetType()
-{
-    return type_;
-}
-} // CameraStandard
-} // OHOS
+class IStandardCameraListener : public IRemoteBroker {
+public:
+    virtual ~IStandardCameraListener() = default;
+    DECLARE_INTERFACE_DESCRIPTOR(u"IStandardCameraListener");
+};
+} // namespace CameraStandard
+} // namespace OHOS
+#endif // I_STANDARD_CAMERA_LISTENER_H

@@ -29,9 +29,13 @@ int32_t HStreamCaptureProxy::Capture(const std::shared_ptr<CameraMetadata> &capt
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamCaptureProxy Capture Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     bool bRet = MetadataUtils::EncodeCameraMetadata(captureSettings, data);
     if (!bRet) {
-        MEDIA_ERR_LOG("HStreamCaptureProxy::Capture EncodeCameraMetadata failed");
+        MEDIA_ERR_LOG("HStreamCaptureProxy Capture EncodeCameraMetadata failed");
         return IPC_PROXY_ERR;
     }
 
@@ -49,6 +53,10 @@ int32_t HStreamCaptureProxy::CancelCapture()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamCaptureProxy CancelCapture Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_STREAM_CAPTURE_CANCEL, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HStreamCaptureProxy CancelCapture failed, error: %{public}d", error);
@@ -63,9 +71,13 @@ int32_t HStreamCaptureProxy::Release()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamCaptureProxy Release Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_STREAM_CAPTURE_RELEASE, data, reply, option);
     if (error != ERR_NONE) {
-        MEDIA_ERR_LOG("HStreamCaptureProxy CancelCapture failed, error: %{public}d", error);
+        MEDIA_ERR_LOG("HStreamCaptureProxy Release failed, error: %{public}d", error);
     }
 
     return error;
@@ -82,6 +94,10 @@ int32_t HStreamCaptureProxy::SetCallback(sptr<IStreamCaptureCallback> &callback)
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamCaptureProxy SetCallback Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(callback->AsObject())) {
         MEDIA_ERR_LOG("HStreamCaptureProxy SetCallback write StreamCaptureCallback obj failed");
         return IPC_PROXY_ERR;

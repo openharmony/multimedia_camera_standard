@@ -13,16 +13,23 @@
  * limitations under the License.
  */
 
-#include "output/capture_output.h"
+#ifndef CAMERA_LISTENER_PROXY_H
+#define CAMERA_LISTENER_PROXY_H
+
+#include "input/i_standard_camera_listener.h"
+#include "input/camera_death_recipient.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace CameraStandard {
-CaptureOutput::CaptureOutput(CAPTURE_OUTPUT_TYPE type) : type_(type) {
-}
+class CameraListenerProxy : public IRemoteProxy<IStandardCameraListener>, public NoCopyable {
+public:
+    explicit CameraListenerProxy(const sptr<IRemoteObject> &impl);
+    virtual ~CameraListenerProxy();
 
-CAPTURE_OUTPUT_TYPE CaptureOutput::GetType()
-{
-    return type_;
-}
-} // CameraStandard
-} // OHOS
+private:
+    static inline BrokerDelegator<CameraListenerProxy> delegator_;
+};
+} // namespace CameraStandard
+} // namespace OHOS
+#endif // CAMERA_LISTENER_PROXY_H

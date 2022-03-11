@@ -342,5 +342,5 @@ void MetadataUtils::ItemDataToBuffer(const camera_metadata_item_t &item, void **
         *buffer = (void*)item.data.r;
     }
 }
-}
-}
+} // CameraStandard
+} // OHOS

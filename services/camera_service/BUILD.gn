@@ -17,13 +17,17 @@ ohos_shared_library("camera_service") {
   install_enable = true
   sources = [
     "binder/client/src/hcamera_device_callback_proxy.cpp",
+    "binder/client/src/hcamera_listener_proxy.cpp",
     "binder/client/src/hcamera_service_callback_proxy.cpp",
+    "binder/client/src/hcapture_session_callback_proxy.cpp",
     "binder/client/src/hstream_capture_callback_proxy.cpp",
     "binder/client/src/hstream_repeat_callback_proxy.cpp",
     "binder/server/src/hcamera_device_callback_stub.cpp",
     "binder/server/src/hcamera_device_stub.cpp",
+    "binder/server/src/hcamera_listener_stub.cpp",
     "binder/server/src/hcamera_service_callback_stub.cpp",
     "binder/server/src/hcamera_service_stub.cpp",
+    "binder/server/src/hcapture_session_callback_stub.cpp",
     "binder/server/src/hcapture_session_stub.cpp",
     "binder/server/src/hstream_capture_callback_stub.cpp",
     "binder/server/src/hstream_capture_stub.cpp",
@@ -44,6 +48,7 @@ ohos_shared_library("camera_service") {
 
   include_dirs = [
     "//drivers/framework/include/utils/",
+    "//drivers/framework/include/core/",
     "//drivers/adapter/uhdf2/osal/include/",
     "//drivers/adapter/uhdf2/include/hdi/",
     "//foundation/graphic/standard/frameworks/surface/include",
@@ -52,6 +57,7 @@ ohos_shared_library("camera_service") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
     "//foundation/multimedia/camera_standard/frameworks/native/metadata/include",
+    "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
   ]
 
   if (target_cpu == "arm") {
@@ -59,6 +65,7 @@ ohos_shared_library("camera_service") {
   }
 
   deps = [
+    "//drivers/adapter/uhdf2/hdi:libhdi",
     "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
   ]
@@ -66,6 +73,7 @@ ohos_shared_library("camera_service") {
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
   ]
@@ -80,7 +88,6 @@ ohos_shared_library("camera_service") {
       "//drivers/peripheral/adapter/camera/interfaces/include/callback/host",
     ]
     deps += [
-      "//drivers/peripheral/adapter/camera/buffer_manager:camera_adapter_buffer_manager",
       "//drivers/peripheral/adapter/camera/hdi_impl:camera_hidl_adapter",
       "//drivers/peripheral/adapter/camera/interfaces/include/client:libcamera_client",
     ]

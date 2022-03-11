@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,10 @@ int32_t HCaptureSessionProxy::BeginConfig()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy BeginConfig Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_CAPTURE_SESSION_BEGIN_CONFIG, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCaptureSessionProxy BeginConfig failed, error: %{public}d", error);
@@ -47,6 +51,10 @@ int32_t HCaptureSessionProxy::AddInput(sptr<ICameraDeviceService> cameraDevice)
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy AddInput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(cameraDevice->AsObject())) {
         MEDIA_ERR_LOG("HCaptureSessionProxy AddInput write cameraDevice obj failed");
         return IPC_PROXY_ERR;
@@ -71,6 +79,10 @@ int32_t HCaptureSessionProxy::AddOutput(sptr<IStreamRepeat> streamRepeat)
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy AddOutput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(streamRepeat->AsObject())) {
         MEDIA_ERR_LOG("HCaptureSessionProxy AddOutput write streamRepeat obj failed");
         return IPC_PROXY_ERR;
@@ -95,6 +107,10 @@ int32_t HCaptureSessionProxy::AddOutput(sptr<IStreamCapture> streamCapture)
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy AddOutput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(streamCapture->AsObject())) {
         MEDIA_ERR_LOG("HCaptureSessionProxy AddOutput write streamCapture obj failed");
         return IPC_PROXY_ERR;
@@ -119,6 +135,10 @@ int32_t HCaptureSessionProxy::RemoveInput(sptr<ICameraDeviceService> cameraDevic
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy RemoveInput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(cameraDevice->AsObject())) {
         MEDIA_ERR_LOG("HCaptureSessionProxy RemoveInput write cameraDevice obj failed");
         return IPC_PROXY_ERR;
@@ -143,6 +163,10 @@ int32_t HCaptureSessionProxy::RemoveOutput(sptr<IStreamCapture> streamCapture)
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy RemoveOutput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(streamCapture->AsObject())) {
         MEDIA_ERR_LOG("HCaptureSessionProxy RemoveOutput write streamCapture obj failed");
         return IPC_PROXY_ERR;
@@ -167,6 +191,10 @@ int32_t HCaptureSessionProxy::RemoveOutput(sptr<IStreamRepeat> streamRepeat)
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy RemoveOutput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(streamRepeat->AsObject())) {
         MEDIA_ERR_LOG("HCaptureSessionProxy RemoveOutput write streamRepeat obj failed");
         return IPC_PROXY_ERR;
@@ -186,6 +214,10 @@ int32_t HCaptureSessionProxy::CommitConfig()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy CommitConfig Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_CAPTURE_SESSION_COMMIT_CONFIG, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCaptureSessionProxy CommitConfig failed, error: %{public}d", error);
@@ -200,6 +232,10 @@ int32_t HCaptureSessionProxy::Start()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy Start Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_CAPTURE_SESSION_START, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCaptureSessionProxy Start failed, error: %{public}d", error);
@@ -214,6 +250,10 @@ int32_t HCaptureSessionProxy::Stop()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy Stop Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_CAPTURE_SESSION_STOP, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCaptureSessionProxy Stop failed, error: %{public}d", error);
@@ -222,15 +262,47 @@ int32_t HCaptureSessionProxy::Stop()
     return error;
 }
 
-int32_t HCaptureSessionProxy::Release()
+int32_t HCaptureSessionProxy::Release(pid_t pid)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy Release Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_CAPTURE_SESSION_RELEASE, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HCaptureSessionProxy Release failed, error: %{public}d", error);
+    }
+
+    return error;
+}
+
+int32_t HCaptureSessionProxy::SetCallback(sptr<ICaptureSessionCallback> &callback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (callback == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy SetCallback callback is null");
+        return IPC_PROXY_ERR;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy SetCallback Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
+    if (!data.WriteRemoteObject(callback->AsObject())) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy SetCallback write CaptureSessionCallback obj failed");
+        return IPC_PROXY_ERR;
+    }
+
+    int error = Remote()->SendRequest(CAMERA_CAPTURE_SESSION_SET_CALLBACK, data, reply, option);
+    if (error != ERR_NONE) {
+        MEDIA_ERR_LOG("HCaptureSessionProxy SetCallback failed, error: %{public}d", error);
     }
 
     return error;

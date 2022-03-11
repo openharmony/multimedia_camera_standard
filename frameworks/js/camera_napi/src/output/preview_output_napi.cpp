@@ -15,6 +15,7 @@
 
 
 #include "output/preview_output_napi.h"
+#include <unistd.h>
 
 namespace OHOS {
 namespace CameraStandard {
@@ -211,9 +212,29 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
             MEDIA_ERR_LOG("failed to get surface from SurfaceUtils");
             return result;
         }
+
+        int retrytimes = 20;
+        int usleeptimes = 50000;
+        std::string surfaceWidth = "";
+        std::string surfaceHegith = "";
+        for (int tryIndx = 0; tryIndx < retrytimes; ++tryIndx) {
+            surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
+            surfaceHegith = surface->GetUserData("SURFACE_HEIGHT");
+            MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
+                surfaceWidth.c_str(), surfaceHegith.c_str());
+            if (surfaceWidth.length() > 0 && surfaceWidth.length() > 0) {
+                break;
+            }
+            usleep(usleeptimes);
+        }
+#ifdef RK_CAMERA
+        surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_RGBA_8888));
+#else
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
+#endif
         CameraManager::GetInstance()->SetPermissionCheck(true);
-        sPreviewOutput_ = CameraManager::GetInstance()->CreatePreviewOutput(surface);
+        sPreviewOutput_ = CameraManager::GetInstance()->CreateCustomPreviewOutput(surface,
+            std::stoi(surfaceWidth), std::stoi(surfaceHegith));
         if (sPreviewOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create previewOutput");
             return result;

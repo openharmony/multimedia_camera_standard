@@ -23,8 +23,11 @@ namespace CameraStandard {
 int HCameraDeviceCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    int errCode = ERR_NONE;
+    int errCode = -1;
 
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        return errCode;
+    }
     switch (code) {
         case CAMERA_DEVICE_ON_ERROR:
             errCode = HCameraDeviceCallbackStub::HandleDeviceOnError(data);
@@ -33,7 +36,7 @@ int HCameraDeviceCallbackStub::OnRemoteRequest(
             errCode = HCameraDeviceCallbackStub::HandleDeviceOnResult(data);
             break;
         default:
-            MEDIA_ERR_LOG("HCameraDeviceCallbackStub request code %{public}d not handled", code);
+            MEDIA_ERR_LOG("HCameraDeviceCallbackStub request code %{public}u not handled", code);
             errCode = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;
     }

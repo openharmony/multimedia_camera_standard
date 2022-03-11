@@ -45,7 +45,6 @@ bool CameraMetadata::addEntry(uint32_t item, const void *data, size_t data_count
 
     if (result != CAM_META_ITEM_CAP_EXCEED && result != CAM_META_DATA_CAP_EXCEED) {
         const char *name = GetCameraMetadataItemName(item);
-        (void)name;
 
         if (name) {
             METADATA_ERR_LOG("Failed to add tag. tagname = %{public}s", name);
@@ -115,15 +114,16 @@ bool CameraMetadata::updateEntry(uint32_t tag, const void *data, size_t dataCoun
         return false;
     }
 
+    const char *name = GetCameraMetadataItemName(tag);
+    (void)name;
     camera_metadata_item_t item;
     int ret = FindCameraMetadataItem(metadata_, tag, &item);
     if (ret) {
-        const char *name = GetCameraMetadataItemName(tag);
-        (void)name;
         METADATA_ERR_LOG("Failed to update tag tagname = %{public}s : not present", (name ? name : "<unknown>"));
         return false;
     }
-
+    METADATA_INFO_LOG("updateEntry Metadata pointer: %{public}p, item id: %{public}d, name: %{public}s, "
+                      "dataCount: %{public}zu", metadata_, tag, name ? name : "<unknown>", dataCount);
     ret = UpdateCameraMetadataItemByIndex(metadata_, item.index, data, dataCount, nullptr);
     if (ret) {
         const char *name = GetCameraMetadataItemName(tag);
@@ -149,5 +149,5 @@ bool CameraMetadata::isValid() const
 {
     return metadata_ != nullptr;
 }
-}
-}
+} // CameraStandard
+} // OHOS

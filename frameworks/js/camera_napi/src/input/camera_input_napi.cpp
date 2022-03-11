@@ -233,6 +233,11 @@ void GetCameraIdAsyncCallbackComplete(napi_env env, napi_status status, void *da
 void FetchOptionsParam(napi_env env, napi_value arg, const CameraInputAsyncContext &context, bool &err)
 {
     CameraInputAsyncContext *asyncContext = const_cast<CameraInputAsyncContext *>(&context);
+    if (asyncContext == nullptr) {
+        MEDIA_INFO_LOG("FetchOptionsParam:asyncContext is null");
+        return;
+    }
+
     if (asyncContext->enumType.compare("ZoomRatio") == 0) {
         double zoom;
         napi_get_value_double(env, arg, &zoom);

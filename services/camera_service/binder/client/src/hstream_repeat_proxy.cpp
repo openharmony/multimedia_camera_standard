@@ -28,6 +28,10 @@ int32_t HStreamRepeatProxy::Start()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamRepeatProxy Start Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_START_VIDEO_RECORDING, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HStreamRepeatProxy Start failed, error: %{public}d", error);
@@ -42,6 +46,10 @@ int32_t HStreamRepeatProxy::Stop()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamRepeatProxy Stop Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_STOP_VIDEO_RECORDING, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HStreamRepeatProxy Stop failed, error: %{public}d", error);
@@ -56,6 +64,10 @@ int32_t HStreamRepeatProxy::Release()
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamRepeatProxy Release Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     int error = Remote()->SendRequest(CAMERA_STREAM_REPEAT_RELEASE, data, reply, option);
     if (error != ERR_NONE) {
         MEDIA_ERR_LOG("HStreamRepeatProxy Stop failed, error: %{public}d", error);
@@ -69,6 +81,10 @@ int32_t HStreamRepeatProxy::SetFps(float fps)
     MessageParcel reply;
     MessageOption option;
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamRepeatProxy SetFps Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteFloat(fps)) {
         MEDIA_ERR_LOG("HStreamRepeatProxy SetFps Write Fps failed");
         return IPC_PROXY_ERR;
@@ -93,6 +109,10 @@ int32_t HStreamRepeatProxy::SetCallback(sptr<IStreamRepeatCallback> &callback)
         return IPC_PROXY_ERR;
     }
 
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HStreamRepeatProxy SetCallback Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
     if (!data.WriteRemoteObject(callback->AsObject())) {
         MEDIA_ERR_LOG("HStreamRepeatProxy SetCallback write StreamRepeatCallback obj failed");
         return IPC_PROXY_ERR;

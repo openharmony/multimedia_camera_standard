@@ -22,8 +22,11 @@ namespace CameraStandard {
 int HStreamCaptureCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    int errCode = ERR_NONE;
+    int errCode = -1;
 
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        return errCode;
+    }
     switch (code) {
         case CAMERA_STREAM_CAPTURE_ON_CAPTURE_STARTED:
             errCode = HandleOnCaptureStarted(data);
@@ -38,7 +41,7 @@ int HStreamCaptureCallbackStub::OnRemoteRequest(
             errCode = HandleOnFrameShutter(data);
             break;
         default:
-            MEDIA_ERR_LOG("HStreamCaptureCallbackStub request code %{public}d not handled", code);
+            MEDIA_ERR_LOG("HStreamCaptureCallbackStub request code %{public}u not handled", code);
             errCode = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;
     }

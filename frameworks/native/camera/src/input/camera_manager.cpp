@@ -15,6 +15,7 @@
 
 #include <cstring>
 #include "camera_util.h"
+#include "media_log.h"
 #include "iservice_registry.h"
 #include "media_log.h"
 #include "system_ability_definition.h"
@@ -33,6 +34,21 @@ CameraManager::CameraManager()
 {
     Init();
     cameraObjList = {};
+}
+
+int32_t CameraManager::CreateListenerObject()
+{
+    listenerStub_ = new(std::nothrow) CameraListenerStub();
+    CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, CAMERA_ALLOC_ERROR,
+        "failed to new CameraListenerStub object");
+    CHECK_AND_RETURN_RET_LOG(serviceProxy_ != nullptr, CAMERA_ALLOC_ERROR,
+        "Camera service does not exist.");
+
+    sptr<IRemoteObject> object = listenerStub_->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, CAMERA_ALLOC_ERROR, "listener object is nullptr..");
+
+    MEDIA_DEBUG_LOG("CreateListenerObject");
+    return serviceProxy_->SetListenerObject(object);
 }
 
 class CameraStatusServiceCallback : public HCameraServiceCallbackStub {
@@ -234,7 +250,7 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IB
     sptr<PreviewOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
 
-    if (serviceProxy_ == nullptr || producer == nullptr || width == 0 || height == 0) {
+    if ((serviceProxy_ == nullptr) || (producer == nullptr) || (width == 0) || (height == 0)) {
         MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput serviceProxy_ is null or producer is null or invalid size");
         return nullptr;
     }
@@ -310,6 +326,30 @@ void CameraManager::Init()
         cameraSvcCallback_ = new CameraStatusServiceCallback(helper);
         SetCameraServiceCallback(cameraSvcCallback_);
     }
+    pid_t pid = 0;
+    deathRecipient_ = new(std::nothrow) CameraDeathRecipient(pid);
+    CHECK_AND_RETURN_LOG(deathRecipient_ != nullptr, "failed to new CameraDeathRecipient.");
+
+    deathRecipient_->SetNotifyCb(std::bind(&CameraManager::CameraServerDied, this, std::placeholders::_1));
+    bool result = object->AddDeathRecipient(deathRecipient_);
+    if (!result) {
+        MEDIA_ERR_LOG("failed to add deathRecipient");
+        return;
+    }
+
+    int32_t ret = CreateListenerObject();
+    CHECK_AND_RETURN_LOG(ret == CAMERA_OK, "failed to new MediaListener.");
+}
+
+void CameraManager::CameraServerDied(pid_t pid)
+{
+    MEDIA_ERR_LOG("camera server has died, pid:%{public}d!", pid);
+    if (serviceProxy_ != nullptr) {
+        (void)serviceProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+        serviceProxy_ = nullptr;
+    }
+    listenerStub_ = nullptr;
+    deathRecipient_ = nullptr;
 }
 
 sptr<ICameraDeviceService> CameraManager::CreateCameraDevice(std::string cameraId)

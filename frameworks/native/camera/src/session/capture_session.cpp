@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "session/capture_session.h"
 #include "camera_util.h"
+#include "hcapture_session_callback_stub.h"
 #include "input/camera_input.h"
 #include "media_log.h"
 #include "output/photo_output.h"
@@ -25,6 +26,33 @@ using namespace std;
 
 namespace OHOS {
 namespace CameraStandard {
+class CaptureSessionCallback : public HCaptureSessionCallbackStub {
+public:
+    sptr<CaptureSession> captureSession_ = nullptr;
+    CaptureSessionCallback() : captureSession_(nullptr) {
+    }
+
+    explicit CaptureSessionCallback(const sptr<CaptureSession> &captureSession) : captureSession_(captureSession) {
+    }
+
+    ~CaptureSessionCallback()
+    {
+        captureSession_ = nullptr;
+    }
+
+    int32_t OnError(int32_t errorCode) override
+    {
+        MEDIA_INFO_LOG("CaptureSessionCallback::OnError() is called!, errorCode: %{public}d",
+                       errorCode);
+        if (captureSession_ != nullptr && captureSession_->GetApplicationCallback() != nullptr) {
+            captureSession_->GetApplicationCallback()->OnError(errorCode);
+        } else {
+            MEDIA_INFO_LOG("CaptureSessionCallback::ApplicationCallback not set!, Discarding callback");
+        }
+        return CAMERA_OK;
+    }
+};
+
 CaptureSession::CaptureSession(sptr<ICaptureSession> &captureSession)
 {
     captureSession_ = captureSession;
@@ -103,13 +131,31 @@ void CaptureSession::SetCallback(std::shared_ptr<SessionCallback> callback)
     if (callback == nullptr) {
         MEDIA_ERR_LOG("CaptureSession::SetCallback: Unregistering application callback!");
     }
+    int32_t errorCode = CAMERA_OK;
+
     appCallback_ = callback;
+    if (appCallback_ != nullptr) {
+        if (captureSessionCallback_ == nullptr) {
+            captureSessionCallback_ = new CaptureSessionCallback(this);
+        }
+        errorCode = captureSession_->SetCallback(captureSessionCallback_);
+        if (errorCode != CAMERA_OK) {
+            MEDIA_ERR_LOG("CaptureSession::SetCallback: Failed to register callback, errorCode: %{public}d", errorCode);
+            captureSessionCallback_ = nullptr;
+            appCallback_ = nullptr;
+        }
+    }
     return;
+}
+
+std::shared_ptr<SessionCallback> CaptureSession::GetApplicationCallback()
+{
+    return appCallback_;
 }
 
 void CaptureSession::Release()
 {
-    int32_t errCode = captureSession_->Release();
+    int32_t errCode = captureSession_->Release(0);
     if (errCode != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to Release capture session!, %{public}d", errCode);
     }

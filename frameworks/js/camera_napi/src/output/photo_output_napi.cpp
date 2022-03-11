@@ -257,7 +257,11 @@ napi_value PhotoOutputNapi::CreatePhotoOutput(napi_env env, std::string surfaceI
         }
         MEDIA_INFO_LOG("surface width: %{public}d, height: %{public}d", surface->GetDefaultWidth(),
                        surface->GetDefaultHeight());
+#ifdef RK_CAMERA
+        surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_RGBA_8888));
+#else
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_JPEG));
+#endif
         CameraManager::GetInstance()->SetPermissionCheck(true);
         sPhotoOutput_ = CameraManager::GetInstance()->CreatePhotoOutput(surface);
         if (sPhotoOutput_ == nullptr) {
@@ -280,7 +284,6 @@ napi_value PhotoOutputNapi::CreatePhotoOutput(napi_env env, std::string surfaceI
 static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
 {
     auto context = static_cast<PhotoOutputAsyncContext*>(data);
-
     if (context == nullptr) {
         MEDIA_ERR_LOG("Async context is null");
         return;

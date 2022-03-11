@@ -73,6 +73,8 @@ void CameraManagerCallbackNapi::OnCameraStatusChanged(const CameraStatusInfo &ca
 void CameraManagerCallbackNapi::OnFlashlightStatusChanged(const std::string &cameraID,
     const FlashlightStatus flashStatus) const
 {
+	(void)cameraID;
+	(void)flashStatus;
 }
 } // namespace CameraStandard
 } // namespace OHOS

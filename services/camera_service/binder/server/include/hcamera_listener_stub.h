@@ -13,16 +13,19 @@
  * limitations under the License.
  */
 
-#include "output/capture_output.h"
+#ifndef CAMERA_LISTENER_STUB_H
+#define CAMERA_LISTENER_STUB_H
+
+#include "input/i_standard_camera_listener.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace CameraStandard {
-CaptureOutput::CaptureOutput(CAPTURE_OUTPUT_TYPE type) : type_(type) {
-}
-
-CAPTURE_OUTPUT_TYPE CaptureOutput::GetType()
-{
-    return type_;
-}
-} // CameraStandard
-} // OHOS
+class CameraListenerStub : public IRemoteStub<IStandardCameraListener>, public NoCopyable {
+public:
+    CameraListenerStub();
+    virtual ~CameraListenerStub();
+};
+} // namespace CameraStandard
+} // namespace OHOS
+#endif // CAMERA_LISTENER_STUB_H

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-#include "hstream_repeat_callback_stub.h"
+#include "hcapture_session_callback_stub.h"
 #include "media_log.h"
+#include "metadata_utils.h"
 #include "remote_request_code.h"
 
 namespace OHOS {
 namespace CameraStandard {
-int HStreamRepeatCallbackStub::OnRemoteRequest(
+int HCaptureSessionCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     int errCode = -1;
@@ -28,36 +29,23 @@ int HStreamRepeatCallbackStub::OnRemoteRequest(
         return errCode;
     }
     switch (code) {
-        case CAMERA_STREAM_REPEAT_ON_FRAME_STARTED:
-            errCode = OnFrameStarted();
-            break;
-        case CAMERA_STREAM_REPEAT_ON_FRAME_ENDED:
-            errCode = HStreamRepeatCallbackStub::HandleOnFrameEnded(data);
-            break;
-        case CAMERA_STREAM_REPEAT_ON_ERROR:
-            errCode = HStreamRepeatCallbackStub::HandleOnFrameError(data);
+        case CAMERA_CAPTURE_SESSION_ON_ERROR:
+            errCode = HCaptureSessionCallbackStub::HandleSessionOnError(data);
             break;
         default:
-            MEDIA_ERR_LOG("HStreamRepeatCallbackStub request code %{public}u not handled", code);
+            MEDIA_ERR_LOG("HCaptureSessionCallbackStub request code %{public}d not handled", code);
             errCode = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;
     }
-
     return errCode;
 }
 
-int HStreamRepeatCallbackStub::HandleOnFrameEnded(MessageParcel& data)
+int HCaptureSessionCallbackStub::HandleSessionOnError(MessageParcel& data)
 {
-    int32_t frameCount = data.ReadInt32();
+    int32_t errorCode = 0;
 
-    return OnFrameEnded(frameCount);
-}
-
-int HStreamRepeatCallbackStub::HandleOnFrameError(MessageParcel& data)
-{
-    int32_t errorType = data.ReadUint64();
-
-    return OnFrameError(errorType);
+    errorCode = data.ReadInt32();
+    return OnError(errorCode);
 }
 } // namespace CameraStandard
 } // namespace OHOS

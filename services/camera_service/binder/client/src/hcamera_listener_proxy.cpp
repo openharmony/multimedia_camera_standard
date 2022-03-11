@@ -12,17 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cinttypes>
 
-#include "output/capture_output.h"
+#include "media_log.h"
+#include "camera_util.h"
+#include "hcamera_listener_proxy.h"
 
 namespace OHOS {
 namespace CameraStandard {
-CaptureOutput::CaptureOutput(CAPTURE_OUTPUT_TYPE type) : type_(type) {
-}
-
-CAPTURE_OUTPUT_TYPE CaptureOutput::GetType()
+CameraListenerProxy::CameraListenerProxy(const sptr<IRemoteObject> &impl)
+    : IRemoteProxy<IStandardCameraListener>(impl)
 {
-    return type_;
+    MEDIA_DEBUG_LOG("0x%{public}06" PRIXPTR " Instances create",
+        (POINTER_MASK & reinterpret_cast<uintptr_t>(this)));
 }
-} // CameraStandard
-} // OHOS
+CameraListenerProxy::~CameraListenerProxy()
+{
+    MEDIA_DEBUG_LOG("0x%{public}06" PRIXPTR " Instances destroy",
+        (POINTER_MASK & reinterpret_cast<uintptr_t>(this)));
+}
+} // namespace CameraStandard
+} // namespace OHOS

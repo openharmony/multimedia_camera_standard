@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,7 +46,7 @@ public:
         if (camInput_ != nullptr && camInput_->GetErrorCallback() != nullptr) {
             camInput_->GetErrorCallback()->OnError(errorType, errorMsg);
         } else {
-            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, Discarding callback");
+            MEDIA_INFO_LOG("CameraDeviceServiceCallback::ErrorCallback not set!, Discarding callback");
         }
         return CAMERA_OK;
     }
@@ -102,6 +102,7 @@ void CameraInput::Release()
 
 void CameraInput::LockForControl()
 {
+    changeMetaMutex_.lock();
     int32_t items = 10;
     int32_t dataLength = 100;
     changedMetadata_ = std::make_shared<CameraMetadata>(items, dataLength);
@@ -157,6 +158,7 @@ int32_t CameraInput::UnlockForControl()
 
     UpdateSetting(changedMetadata_);
     changedMetadata_ = nullptr;
+    changeMetaMutex_.unlock();
     return CAMERA_OK;
 }
 
@@ -479,7 +481,7 @@ int32_t CameraInput::SetCropRegion(float zoomRatio)
     camera_metadata_item_t item;
 
     if (zoomRatio == 0) {
-        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invaid zoom ratio");
+        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invalid zoom ratio");
         return CAM_META_FAILURE;
     }
 
@@ -545,7 +547,7 @@ void CameraInput::SetZoomRatio(float zoomRatio)
         return;
     }
     if (zoomRatio < zoomRange[minIndex]) {
-        MEDIA_DEBUG_LOG("CameraInput::SetZoomRatio Zoom ratio: %{public}f is lesser than minumum zoom: %{public}f",
+        MEDIA_DEBUG_LOG("CameraInput::SetZoomRatio Zoom ratio: %{public}f is lesser than minimum zoom: %{public}f",
                         zoomRatio, zoomRange[minIndex]);
         zoomRatio = zoomRange[minIndex];
     } else if (zoomRatio > zoomRange[maxIndex]) {
@@ -555,7 +557,7 @@ void CameraInput::SetZoomRatio(float zoomRatio)
     }
 
     if (zoomRatio == 0) {
-        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Invaid zoom ratio");
+        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Invalid zoom ratio");
         return;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,7 +60,8 @@ enum CameraServiceRequestCode {
     CAMERA_SERVICE_CREATE_PHOTO_OUTPUT,
     CAMERA_SERVICE_CREATE_PREVIEW_OUTPUT,
     CAMERA_SERVICE_CREATE_PREVIEW_OUTPUT_CUSTOM_SIZE,
-    CAMERA_SERVICE_CREATE_VIDEO_OUTPUT
+    CAMERA_SERVICE_CREATE_VIDEO_OUTPUT,
+    CAMERA_SERVICE_SET_LISTENER_OBJ
 };
 
 /**
@@ -81,6 +82,7 @@ enum CaptureSessionRequestCode {
     CAMERA_CAPTURE_SESSION_START,
     CAMERA_CAPTURE_SESSION_STOP,
     CAMERA_CAPTURE_SESSION_RELEASE,
+    CAMERA_CAPTURE_SESSION_SET_CALLBACK
 };
 
 /**
@@ -144,6 +146,16 @@ enum StreamCaptureCallbackRequestCode {
     CAMERA_STREAM_CAPTURE_ON_CAPTURE_ENDED,
     CAMERA_STREAM_CAPTURE_ON_CAPTURE_ERROR,
     CAMERA_STREAM_CAPTURE_ON_FRAME_SHUTTER
+};
+
+/**
+* @brief Capture session callback remote request code for IPC.
+*
+* @since 1.0
+* @version 1.0
+*/
+enum CaptureSessionCallbackRequestCode {
+    CAMERA_CAPTURE_SESSION_ON_ERROR = 0
 };
 } // namespace CameraStandard
 } // namespace OHOS

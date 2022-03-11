@@ -166,6 +166,10 @@ int32_t GetMetadataSection(uint32_t itemSection, uint32_t *section)
 int32_t GetCameraMetadataItemType(uint32_t item, uint32_t *dataType)
 {
     METADATA_DEBUG_LOG("GetCameraMetadataItemType start");
+    if (dataType == nullptr) {
+        METADATA_ERR_LOG("GetCameraMetadataItemType dataType is null");
+        return CAM_META_INVALID_PARAM;
+    }
     uint32_t section;
     int32_t ret = GetMetadataSection(item >> BITWISE_SHIFT_16, &section);
     if (ret != CAM_META_SUCCESS) {
@@ -380,6 +384,10 @@ void SetOffset(camera_metadata_item_entry_t *metadataItems, camera_metadata_item
 int MetadataExpandItemMem(common_metadata_header_t *dst, camera_metadata_item_entry_t *item,
     size_t oldItemSize)
 {
+    if (item == nullptr || dst == nullptr) {
+        METADATA_ERR_LOG("MetadataExpandItemMem item is null or dst is null");
+        return CAM_META_INVALID_PARAM;
+    }
     int32_t ret = CAM_META_SUCCESS;
     uint8_t *start = GetMetadataData(dst) + item->data.offset;
     uint8_t *end = start + oldItemSize;
@@ -406,7 +414,7 @@ int UpdateCameraMetadataItemByIndex(common_metadata_header_t *dst, uint32_t inde
 {
     METADATA_DEBUG_LOG("UpdateCameraMetadataItemByIndex start");
     if ((dst == nullptr) || (index >= dst->item_count)) {
-        METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex dst is null or invalid index or data is null");
+        METADATA_ERR_LOG("UpdateCameraMetadataItemByIndex dst is null or invalid index");
         return CAM_META_INVALID_PARAM;
     }
 

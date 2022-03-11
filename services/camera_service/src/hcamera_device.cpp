@@ -27,10 +27,6 @@ HCameraDevice::HCameraDevice(sptr<HCameraHostManager> &cameraHostManager,
     cameraID_ = cameraID;
     streamOperator_ = nullptr;
     isReleaseCameraDevice_ = false;
-    if (cameraHostManager == nullptr) {
-        MEDIA_ERR_LOG("HCameraDevice::HCameraDevice cameraHostManager is null");
-        return;
-    }
 }
 
 HCameraDevice::~HCameraDevice()

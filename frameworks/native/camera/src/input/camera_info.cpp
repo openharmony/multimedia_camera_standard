@@ -104,6 +104,7 @@ std::vector<float> CameraInfo::CalculateZoomRange()
     constexpr float factor = 100.0;
     float minZoom;
     float maxZoom;
+    float tempZoom;
     camera_metadata_item_t item;
 
     ret = FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_ZOOM_CAP, &item);
@@ -131,11 +132,13 @@ std::vector<float> CameraInfo::CalculateZoomRange()
     }
     MEDIA_DEBUG_LOG("Scene zoom cap min: %{public}d, max: %{public}d",
                     item.data.i32[minIndex], item.data.i32[maxIndex]);
-    if (minZoom < item.data.i32[minIndex] / factor) {
-        minZoom = item.data.i32[minIndex] / factor;
+    tempZoom = item.data.i32[minIndex] / factor;
+    if (minZoom < tempZoom) {
+        minZoom = tempZoom;
     }
-    if (maxZoom > item.data.i32[maxIndex] / factor) {
-        maxZoom = item.data.i32[maxIndex] / factor;
+    tempZoom = item.data.i32[maxIndex] / factor;
+    if (maxZoom > tempZoom) {
+        maxZoom = tempZoom;
     }
     return {minZoom, maxZoom};
 }

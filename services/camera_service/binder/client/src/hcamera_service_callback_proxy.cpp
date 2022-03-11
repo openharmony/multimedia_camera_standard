@@ -22,7 +22,7 @@ namespace CameraStandard {
 HCameraServiceCallbackProxy::HCameraServiceCallbackProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<ICameraServiceCallback>(impl) { }
 
-int32_t HCameraServiceCallbackProxy::OnCameraStatusChanged(const std::string cameraId, const CameraStatus status)
+int32_t HCameraServiceCallbackProxy::OnCameraStatusChanged(const std::string& cameraId, const CameraStatus status)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -47,7 +47,7 @@ int32_t HCameraServiceCallbackProxy::OnCameraStatusChanged(const std::string cam
     return error;
 }
 
-int32_t HCameraServiceCallbackProxy::OnFlashlightStatusChanged(const std::string cameraId, const FlashStatus status)
+int32_t HCameraServiceCallbackProxy::OnFlashlightStatusChanged(const std::string& cameraId, const FlashStatus status)
 {
     MessageParcel data;
     MessageParcel reply;

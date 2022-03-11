@@ -26,8 +26,8 @@ public:
     explicit HCameraServiceCallbackProxy(const sptr<IRemoteObject> &impl);
     virtual ~HCameraServiceCallbackProxy() = default;
 
-    int32_t OnCameraStatusChanged(const std::string cameraId, const CameraStatus status) override;
-    int32_t OnFlashlightStatusChanged(const std::string cameraId, const FlashStatus status) override;
+    int32_t OnCameraStatusChanged(const std::string& cameraId, const CameraStatus status) override;
+    int32_t OnFlashlightStatusChanged(const std::string& cameraId, const FlashStatus status) override;
 
 private:
     static inline BrokerDelegator<HCameraServiceCallbackProxy> delegator_;

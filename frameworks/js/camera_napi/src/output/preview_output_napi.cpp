@@ -215,13 +215,13 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
         int retrytimes = 20;
         int usleeptimes = 50000;
         std::string surfaceWidth = "";
-        std::string surfaceHegith = "";
+        std::string surfaceHeight = "";
         for (int tryIndx = 0; tryIndx < retrytimes; ++tryIndx) {
             surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
-            surfaceHegith = surface->GetUserData("SURFACE_HEIGHT");
+            surfaceHeight = surface->GetUserData("SURFACE_HEIGHT");
             MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
-                surfaceWidth.c_str(), surfaceHegith.c_str());
-            if (surfaceWidth.length() > 0 && surfaceHegith.length() > 0) {
+                surfaceWidth.c_str(), surfaceHeight.c_str());
+            if (surfaceWidth.length() > 0 && surfaceHeight.length() > 0) {
                 break;
             }
             usleep(usleeptimes);
@@ -233,7 +233,7 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
 #endif
         CameraManager::GetInstance()->SetPermissionCheck(true);
         sPreviewOutput_ = CameraManager::GetInstance()->CreateCustomPreviewOutput(surface,
-            std::stoi(surfaceWidth), std::stoi(surfaceHegith));
+            std::stoi(surfaceWidth), std::stoi(surfaceHeight));
         if (sPreviewOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create previewOutput");
             return result;

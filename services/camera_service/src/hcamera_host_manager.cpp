@@ -27,8 +27,8 @@ struct HCameraHostManager::CameraDeviceInfo {
     std::shared_ptr<CameraMetadata> ability;
     std::mutex mutex;
 
-    explicit CameraDeviceInfo(std::string cameraId, sptr<Camera::ICameraDevice> device = nullptr)
-        : cameraId(std::move(cameraId)), ability(nullptr)
+    explicit CameraDeviceInfo(const std::string& cameraId, sptr<Camera::ICameraDevice> device = nullptr)
+        : cameraId(cameraId), ability(nullptr)
     {
     }
 

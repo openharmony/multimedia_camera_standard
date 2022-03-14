@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,15 +14,11 @@
  */
 
 #include "hcamera_host_manager.h"
-#include <algorithm>
-#include <memory>
 #include "camera_host_callback_stub.h"
 #include "camera_util.h"
 #include "hdf_io_service_if.h"
 #include "iservmgr_hdi.h"
 #include "media_log.h"
-
-#include <iostream>
 
 namespace OHOS {
 namespace CameraStandard {
@@ -55,9 +51,7 @@ public:
     // CameraHostCallbackStub
     void OnCameraStatus(const std::string& cameraId, Camera::CameraStatus status) override;
     void OnFlashlightStatus(const std::string& cameraId, Camera::FlashlightStatus status) override;
-#ifdef BALTIMORE_CAMERA
     void OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event) override;
-#endif
 
 private:
     std::shared_ptr<CameraDeviceInfo> FindCameraDeviceInfo(const std::string& cameraId);
@@ -80,6 +74,7 @@ HCameraHostManager::CameraHostInfo::CameraHostInfo(HCameraHostManager* cameraHos
 
 HCameraHostManager::CameraHostInfo::~CameraHostInfo()
 {
+    MEDIA_INFO_LOG("CameraHostInfo ~CameraHostInfo");
 }
 
 bool HCameraHostManager::CameraHostInfo::Init()
@@ -246,7 +241,6 @@ void HCameraHostManager::CameraHostInfo::OnFlashlightStatus(const std::string& c
     cameraHostManager_->statusCallback_->OnFlashlightStatus(cameraId, flashStatus);
 }
 
-#ifdef BALTIMORE_CAMERA
 void HCameraHostManager::CameraHostInfo::OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event)
 {
     if (cameraHostManager_->statusCallback_ == nullptr) {
@@ -275,7 +269,6 @@ void HCameraHostManager::CameraHostInfo::OnCameraEvent(const std::string &camera
     }
     cameraHostManager_->statusCallback_->OnCameraStatus(cameraId, svcStatus);
 }
-#endif
 
 std::shared_ptr<HCameraHostManager::CameraDeviceInfo> HCameraHostManager::CameraHostInfo::FindCameraDeviceInfo
    (const std::string& cameraId)
@@ -432,7 +425,7 @@ void HCameraHostManager::AddCameraHost(const std::string& svcName)
         MEDIA_INFO_LOG("HCameraHostManager::AddCameraHost camera host  %{public}s already exists", svcName.c_str());
         return;
     }
-    auto cameraHost = std::make_shared<HCameraHostManager::CameraHostInfo>(this, svcName);
+    sptr<HCameraHostManager::CameraHostInfo> cameraHost = new HCameraHostManager::CameraHostInfo(this, svcName);
     if (!cameraHost->Init()) {
         MEDIA_ERR_LOG("HCameraHostManager::AddCameraHost failed due to init failure");
         return;
@@ -465,7 +458,7 @@ void HCameraHostManager::RemoveCameraHost(const std::string& svcName)
     cameraHostInfos_.erase(it);
 }
 
-std::shared_ptr<HCameraHostManager::CameraHostInfo> HCameraHostManager::FindCameraHostInfo(const std::string& cameraId)
+sptr<HCameraHostManager::CameraHostInfo> HCameraHostManager::FindCameraHostInfo(const std::string& cameraId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     for (const auto& cameraHostInfo : cameraHostInfos_) {

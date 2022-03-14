@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,8 +37,6 @@ public:
 
     explicit HCameraService(int32_t systemAbilityId, bool runOnCreate = true);
     ~HCameraService() override;
-
-    void InitMapInfo();
     int32_t GetCameras(std::vector<std::string> &cameraIds,
         std::vector<std::shared_ptr<CameraMetadata>> &cameraAbilityList) override;
     int32_t CreateCameraDevice(std::string cameraId, sptr<ICameraDeviceService> &device) override;
@@ -55,7 +53,18 @@ public:
     void OnDump() override;
     void OnStart() override;
     void OnStop() override;
+    int32_t Dump(int fd, const std::vector<std::u16string>& args) override;
 
+    // HCameraHostManager::StatusCallback
+    void OnCameraStatus(const std::string& cameraId, CameraStatus status) override;
+    void OnFlashlightStatus(const std::string& cameraId, FlashStatus status) override;
+
+protected:
+    HCameraService(sptr<HCameraHostManager> cameraHostManager) : cameraHostManager_(cameraHostManager) {}
+
+private:
+    void CameraSummary(std::vector<std::string> cameraIds,
+        std::string& dumpString);
     void CameraDumpAbility(common_metadata_header_t *metadataEntry,
     std::string& dumpString);
     void CameraDumpStreaminfo(common_metadata_header_t *metadataEntry,
@@ -68,27 +77,12 @@ public:
     std::string& dumpString);
     void CameraDumpSensorInfo(common_metadata_header_t *metadataEntry,
     std::string& dumpString);
-    int32_t Dump(int fd, const std::vector<std::u16string>& args) override;
 
-    // HCameraHostManager::StatusCallback
-    void OnCameraStatus(const std::string& cameraId, CameraStatus status) override;
-    void OnFlashlightStatus(const std::string& cameraId, FlashStatus status) override;
-    void ClearCaptureSession(int32_t pid);
-
-protected:
-    HCameraService(sptr<HCameraHostManager> cameraHostManager) : cameraHostManager_(cameraHostManager) {}
-
-private:
     sptr<HCameraHostManager> cameraHostManager_;
     sptr<CameraDeviceCallback> cameraDeviceCallback_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;
     sptr<ICameraServiceCallback> cameraServiceCallback_;
-    std::map<int, std::string> cameraPos_;
-    std::map<int, std::string> cameraType_;
-    std::map<int, std::string> cameraConType_;
-    std::map<int, std::string> cameraFormat_;
-    std::map<int, std::string> cameraFocusMode_;
-    std::map<int, std::string> cameraFlashMode_;
+    std::map<std::string, sptr<HCameraDevice>> devices_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,6 +58,12 @@ enum CamServiceError {
 };
 
 extern std::unordered_map<int32_t, int32_t> g_cameraToPixelFormat;
+extern std::map<int, std::string> g_cameraPos;
+extern std::map<int, std::string> g_cameraType;
+extern std::map<int, std::string> g_cameraConType;
+extern std::map<int, std::string> g_cameraFormat;
+extern std::map<int, std::string> g_cameraFocusMode;
+extern std::map<int, std::string> g_cameraFlashMode;
 
 int32_t HdiToServiceError(Camera::CamRetCode ret);
 

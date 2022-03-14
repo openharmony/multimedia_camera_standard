@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,11 +60,11 @@ private:
 
     void AddCameraHost(const std::string& svcName);
     void RemoveCameraHost(const std::string& svcName);
-    std::shared_ptr<CameraHostInfo> FindCameraHostInfo(const std::string& cameraId);
+    sptr<CameraHostInfo> FindCameraHostInfo(const std::string& cameraId);
 
     std::mutex mutex_;
     StatusCallback* statusCallback_;
-    std::vector<std::shared_ptr<CameraHostInfo>> cameraHostInfos_;
+    std::vector<sptr<CameraHostInfo>> cameraHostInfos_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

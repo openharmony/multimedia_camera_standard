@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -192,6 +192,27 @@ int32_t HStreamCapture::GetStreamId()
 void HStreamCapture::ResetCaptureId()
 {
     photoCaptureId_ = PHOTO_CAPTURE_ID_START;
+}
+
+void HStreamCapture::dumpCaptureStreamInfo(std::string& dumpString)
+{
+    std::shared_ptr<Camera::StreamInfo> curStreamInfo;
+    curStreamInfo = std::make_shared<Camera::StreamInfo>();
+    SetStreamInfo(curStreamInfo);
+    dumpString += "photo stream info: \n";
+    dumpString += "    Buffer producer Id:[" + std::to_string(curStreamInfo->bufferQueue_->GetUniqueId());
+    dumpString += "]    stream Id:[" + std::to_string(curStreamInfo->streamId_);
+    std::map<int, std::string>::const_iterator iter =
+        g_cameraFormat.find(format_);
+    if (iter != g_cameraFormat.end()) {
+        dumpString += "]    format:[" + iter->second;
+    }
+    dumpString += "]    width:[" + std::to_string(curStreamInfo->width_);
+    dumpString += "]    height:[" + std::to_string(curStreamInfo->height_);
+    dumpString += "]    dataspace:[" + std::to_string(curStreamInfo->datasapce_);
+    dumpString += "]    StreamType:[" + std::to_string(curStreamInfo->intent_);
+    dumpString += "]    TunnelMode:[" + std::to_string(curStreamInfo->tunneledMode_);
+    dumpString += "]    Encoding Type:[" + std::to_string(curStreamInfo->encodeType_) + "]:\n";
 }
 } // namespace CameraStandard
 } // namespace OHOS

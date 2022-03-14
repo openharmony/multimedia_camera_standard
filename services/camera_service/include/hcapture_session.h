@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,6 +60,9 @@ public:
     int32_t SetCallback(sptr<ICaptureSessionCallback> &callback) override;
 
     friend class StreamOperatorCallback;
+    static void dumpSessions(std::string& dumpString);
+    void dumpSessionInfo(std::string& dumpString);
+    static void CameraSessionSummary(std::string& dumpString);
 
 private:
     int32_t ValidateSessionInputs();
@@ -78,6 +81,7 @@ private:
     void RestorePreviousState(sptr<HCameraDevice> &device, bool isCreateReleaseStreams);
     void ReleaseStreams();
     void ClearCaptureSession(pid_t pid);
+    std::string GetSessionState();
 
     CaptureSessionState curState_ = CaptureSessionState::SESSION_INIT;
     CaptureSessionState prevState_ = CaptureSessionState::SESSION_INIT;
@@ -93,6 +97,9 @@ private:
     sptr<StreamOperatorCallback> streamOperatorCallback_;
     sptr<ICaptureSessionCallback> sessionCallback_;
     int32_t streamId_ = STREAMID_BEGIN;
+    std::map<CaptureSessionState, std::string> sessionState_;
+    pid_t pid_;
+    int32_t uid_;
 };
 
 class StreamOperatorCallback : public Camera::StreamOperatorCallbackStub {

@@ -55,7 +55,7 @@ int HStreamRepeatCallbackStub::HandleOnFrameEnded(MessageParcel& data)
 
 int HStreamRepeatCallbackStub::HandleOnFrameError(MessageParcel& data)
 {
-    int32_t errorType = data.ReadUint64();
+    int32_t errorType = static_cast<int32_t>(data.ReadUint64());
 
     return OnFrameError(errorType);
 }

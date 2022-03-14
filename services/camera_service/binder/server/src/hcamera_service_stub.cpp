@@ -96,7 +96,7 @@ int HCameraServiceStub::HandleGetCameras(MessageParcel& reply)
         return IPC_STUB_WRITE_PARCEL_ERR;
     }
 
-    int count = cameraAbilityList.size();
+    int count = static_cast<int>(cameraAbilityList.size());
     if (!reply.WriteInt32(count)) {
         MEDIA_ERR_LOG("HCameraServiceStub HandleGetCameras Write vector size failed");
         return IPC_STUB_WRITE_PARCEL_ERR;

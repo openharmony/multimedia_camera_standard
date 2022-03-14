@@ -228,8 +228,8 @@ int32_t HCaptureSession::ValidateSessionInputs()
 
 int32_t HCaptureSession::ValidateSessionOutputs()
 {
-    int32_t currentOutputCnt = streamCaptures_.size() + streamRepeats_.size();
-    int32_t newOutputCnt = tempStreamCaptures_.size() + tempStreamRepeats_.size();
+    uint32_t currentOutputCnt = streamCaptures_.size() + streamRepeats_.size();
+    uint32_t newOutputCnt = tempStreamCaptures_.size() + tempStreamRepeats_.size();
     if (newOutputCnt + currentOutputCnt - deletedStreamIds_.size() == 0) {
         MEDIA_ERR_LOG("HCaptureSession::ValidateSessionOutputs No outputs present");
         return CAMERA_INVALID_SESSION_CFG;

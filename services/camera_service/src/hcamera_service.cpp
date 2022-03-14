@@ -274,9 +274,9 @@ void HCameraService::CameraDumpStreaminfo(common_metadata_header_t *metadataEntr
 {
     camera_metadata_item_t item;
     int ret;
-    int32_t unitLen = 3;
-    int32_t widthOffset = 1;
-    int32_t heightOffset = 2;
+    uint32_t unitLen = 3;
+    uint32_t widthOffset = 1;
+    uint32_t heightOffset = 2;
     dumpString += "        ### Camera Available stream configuration List: \n";
     ret = FindCameraMetadataItem(metadataEntry, OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
     if (ret == CAM_META_SUCCESS) {

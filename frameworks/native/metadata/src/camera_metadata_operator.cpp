@@ -574,7 +574,7 @@ uint32_t GetCameraMetadataDataSize(const common_metadata_header_t *metadataHeade
     return metadataHeader->data_capacity;
 }
 
-uint32_t CopyCameraMetadataItems(common_metadata_header_t *newMetadata, const common_metadata_header_t *oldMetadata)
+int32_t CopyCameraMetadataItems(common_metadata_header_t *newMetadata, const common_metadata_header_t *oldMetadata)
 {
     if (newMetadata == nullptr || oldMetadata == nullptr) {
         return CAM_META_INVALID_PARAM;

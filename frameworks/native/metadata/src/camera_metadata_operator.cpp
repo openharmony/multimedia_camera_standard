@@ -480,7 +480,7 @@ int UpdateCameraMetadataItem(common_metadata_header_t *dst, uint32_t item, const
     }
 
     uint32_t index = 0;
-    uint32_t ret = FindCameraMetadataItemIndex(dst, item, &index);
+    int32_t ret = FindCameraMetadataItemIndex(dst, item, &index);
     if (ret != CAM_META_SUCCESS) {
         return ret;
     }
@@ -527,7 +527,7 @@ int DeleteCameraMetadataItemByIndex(common_metadata_header_t *dst, uint32_t inde
         }
     }
 
-    int32_t length = sizeof(camera_metadata_item_entry_t) * (dst->item_count - index - 1);
+    uint64_t length = sizeof(camera_metadata_item_entry_t) * (dst->item_count - index - 1);
     if (length != 0) {
         ret = memmove_s(itemToDelete, length, itemToDelete + 1, length);
         if (ret != CAM_META_SUCCESS) {
@@ -544,7 +544,7 @@ int DeleteCameraMetadataItem(common_metadata_header_t *dst, uint32_t item)
 {
     METADATA_DEBUG_LOG("DeleteCameraMetadataItem item: %{public}u", item);
     uint32_t index = 0;
-    uint32_t ret = FindCameraMetadataItemIndex(dst, item, &index);
+    int32_t ret = FindCameraMetadataItemIndex(dst, item, &index);
     if (ret != CAM_META_SUCCESS) {
         return ret;
     }
@@ -574,7 +574,7 @@ uint32_t GetCameraMetadataDataSize(const common_metadata_header_t *metadataHeade
     return metadataHeader->data_capacity;
 }
 
-uint32_t CopyCameraMetadataItems(common_metadata_header_t *newMetadata, const common_metadata_header_t *oldMetadata)
+int32_t CopyCameraMetadataItems(common_metadata_header_t *newMetadata, const common_metadata_header_t *oldMetadata)
 {
     if (newMetadata == nullptr || oldMetadata == nullptr) {
         return CAM_META_INVALID_PARAM;

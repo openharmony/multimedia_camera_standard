@@ -27,6 +27,7 @@ CameraPicSize *CameraSizeNapi::sCameraPicSize_ = nullptr;
 
 CameraSizeNapi::CameraSizeNapi() : env_(nullptr), wrapper_(nullptr)
 {
+    cameraPicSize_ = nullptr;
 }
 
 CameraSizeNapi::~CameraSizeNapi()

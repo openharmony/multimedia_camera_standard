@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
-#include <cstring>
+#include "input/camera_manager.h"
+
+#include "accesstoken_kit.h"
 #include "camera_util.h"
-#include "media_log.h"
+#include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "media_log.h"
 #include "system_ability_definition.h"
-#include "ipc_skeleton.h"
-#include "accesstoken_kit.h"
-#include "input/camera_manager.h"
+
+#include <cstring>
 
 using namespace std;
 namespace OHOS {
@@ -65,7 +66,7 @@ public:
         camMngr_ = nullptr;
     }
 
-    int32_t OnCameraStatusChanged(const std::string cameraId, const CameraStatus status) override
+    int32_t OnCameraStatusChanged(const std::string& cameraId, const CameraStatus status) override
     {
         CameraDeviceStatus deviceStatus;
         CameraStatusInfo cameraStatusInfo;
@@ -87,14 +88,16 @@ public:
             }
             cameraStatusInfo.cameraInfo = camMngr_->GetCameraInfo(cameraId);
             cameraStatusInfo.cameraStatus = deviceStatus;
-            camMngr_->GetApplicationCallback()->OnCameraStatusChanged(cameraStatusInfo);
+            if (cameraStatusInfo.cameraInfo) {
+                camMngr_->GetApplicationCallback()->OnCameraStatusChanged(cameraStatusInfo);
+            }
         } else {
             MEDIA_INFO_LOG("CameraManager::Callback not registered!, Ignore the callback");
         }
         return CAMERA_OK;
     }
 
-    int32_t OnFlashlightStatusChanged(const std::string cameraId, const FlashStatus status) override
+    int32_t OnFlashlightStatusChanged(const std::string& cameraId, const FlashStatus status) override
     {
         FlashlightStatus flashlightStatus;
 

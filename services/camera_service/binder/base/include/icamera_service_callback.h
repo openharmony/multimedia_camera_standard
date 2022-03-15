@@ -33,8 +33,8 @@ enum FlashStatus {
 
 class ICameraServiceCallback : public IRemoteBroker {
 public:
-    virtual int32_t OnCameraStatusChanged(const std::string cameraId, const CameraStatus status) = 0;
-    virtual int32_t OnFlashlightStatusChanged(const std::string cameraId, const FlashStatus status) = 0;
+    virtual int32_t OnCameraStatusChanged(const std::string& cameraId, const CameraStatus status) = 0;
+    virtual int32_t OnFlashlightStatusChanged(const std::string& cameraId, const FlashStatus status) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"ICameraServiceCallback");
 };

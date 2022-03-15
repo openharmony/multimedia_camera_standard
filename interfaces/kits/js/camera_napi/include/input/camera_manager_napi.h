@@ -35,6 +35,7 @@
 #include "output/video_output_napi.h"
 #include "session/camera_session_napi.h"
 #include "camera_napi_utils.h"
+#include "camera_manager_callback_napi.h"
 
 #include <fstream>
 #include <iostream>
@@ -63,6 +64,7 @@ private:
 
     static napi_value GetCameras(napi_env env, napi_callback_info info);
     static napi_value CreateCameraInputInstance(napi_env env, napi_callback_info info);
+    static napi_value On(napi_env env, napi_callback_info info);
     static napi_ref sConstructor_;
 
     napi_env env_;

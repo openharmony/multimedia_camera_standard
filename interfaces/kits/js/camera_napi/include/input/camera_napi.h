@@ -89,7 +89,7 @@ static const std::vector<std::string> vecCameraPositionMode {
 
 static const std::vector<std::string> vecCameraTypeMode {
     "CAMERA_TYPE_UNSPECIFIED", "CAMERA_TYPE_WIDE_ANGLE", "CAMERA_TYPE_ULTRA_WIDE",
-    "CAMERA_TYPE_TELEPHOTO", "CAMERA_TYPE_TRUE_DEAPTH"
+    "CAMERA_TYPE_TELEPHOTO", "CAMERA_TYPE_TRUE_DEPTH"
 };
 
 static const std::vector<std::string> vecConnectionTypeMode {

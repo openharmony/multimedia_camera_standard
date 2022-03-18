@@ -58,6 +58,25 @@ void MetadataUtils::DecodeCameraMetadata(MessageParcel &data, std::shared_ptr<Ca
     uint32_t tagCount = data.ReadUint32();
     uint32_t itemCapacity = data.ReadUint32();
     uint32_t dataCapacity = data.ReadUint32();
+    constexpr uint32_t MAX_SUPPORTED_TAGS = 1000;
+    constexpr uint32_t MAX_SUPPORTED_ITEMS = 1000;
+    constexpr uint32_t MAX_ITEM_CAPACITY = (1000 * 10);
+    constexpr uint32_t MAX_DATA_CAPACITY = (1000 * 10 * 10);
+
+    if (tagCount > MAX_SUPPORTED_TAGS) {
+        tagCount = MAX_SUPPORTED_TAGS;
+        METADATA_ERR_LOG("MetadataUtils::DecodeCameraMetadata tagCount is more than supported value");
+    }
+
+    if (itemCapacity > MAX_ITEM_CAPACITY) {
+        itemCapacity = MAX_ITEM_CAPACITY;
+        METADATA_ERR_LOG("MetadataUtils::DecodeCameraMetadata itemCapacity is more than supported value");
+    }
+
+    if (dataCapacity > MAX_DATA_CAPACITY) {
+        dataCapacity = MAX_DATA_CAPACITY;
+        METADATA_ERR_LOG("MetadataUtils::DecodeCameraMetadata dataCapacity is more than supported value");
+    }
 
     std::vector<camera_metadata_item_t> items;
     for (uint32_t i = 0; i < tagCount; i++) {
@@ -66,6 +85,10 @@ void MetadataUtils::DecodeCameraMetadata(MessageParcel &data, std::shared_ptr<Ca
         item.item = data.ReadUint32();
         item.data_type = data.ReadUint32();
         item.count = data.ReadUint32();
+        if (item.count > MAX_SUPPORTED_ITEMS) {
+            item.count = MAX_SUPPORTED_ITEMS;
+            METADATA_ERR_LOG("MetadataUtils::DecodeCameraMetadata item.count is more than supported value");
+        }
         MetadataUtils::ReadMetadata(item, data);
         items.push_back(item);
     }

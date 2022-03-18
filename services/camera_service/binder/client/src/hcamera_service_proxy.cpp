@@ -30,6 +30,7 @@ int32_t HCameraServiceProxy::GetCameras(std::vector<std::string> &cameraIds,
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+    constexpr int32_t MAX_SUPPORTED_CAMERAS = 100;
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         MEDIA_ERR_LOG("HCameraServiceProxy GetCameras Write interface token failed");
@@ -47,6 +48,11 @@ int32_t HCameraServiceProxy::GetCameras(std::vector<std::string> &cameraIds,
     }
 
     int32_t count = reply.ReadInt32();
+    if ((cameraIds.size() != count) || (count > MAX_SUPPORTED_CAMERAS)) {
+        MEDIA_ERR_LOG("HCameraServiceProxy GetCameras Malformed camera count value");
+        return IPC_PROXY_ERR;
+    }
+
     std::shared_ptr<CameraMetadata> cameraAbility;
     for (int i = 0; i < count; i++) {
         MetadataUtils::DecodeCameraMetadata(reply, cameraAbility);

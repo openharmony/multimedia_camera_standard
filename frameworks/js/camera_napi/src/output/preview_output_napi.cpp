@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -70,6 +70,7 @@ void PreviewOutputCallback::UpdateJSCallback(std::string propName, const int32_t
     napi_value callback = nullptr;
     napi_value retVal;
     napi_value propValue;
+    int32_t jsErrorCodeUnknown = -1;
 
     napi_get_undefined(env_, &result[PARAM0]);
 
@@ -87,7 +88,7 @@ void PreviewOutputCallback::UpdateJSCallback(std::string propName, const int32_t
         CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(errorCallbackRef_,
             "OnError callback is not registered by JS");
         napi_create_object(env_, &result[PARAM1]);
-        napi_create_int32(env_, value, &propValue);
+        napi_create_int32(env_, jsErrorCodeUnknown, &propValue);
         napi_set_named_property(env_, result[PARAM1], "code", propValue);
         napi_get_reference_value(env_, errorCallbackRef_, &callback); // should errorcode be valued as -1
     }
@@ -215,13 +216,13 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
         int retrytimes = 20;
         int usleeptimes = 50000;
         std::string surfaceWidth = "";
-        std::string surfaceHegith = "";
+        std::string surfaceHeight = "";
         for (int tryIndx = 0; tryIndx < retrytimes; ++tryIndx) {
             surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
-            surfaceHegith = surface->GetUserData("SURFACE_HEIGHT");
+            surfaceHeight = surface->GetUserData("SURFACE_HEIGHT");
             MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
-                surfaceWidth.c_str(), surfaceHegith.c_str());
-            if (surfaceWidth.length() > 0 && surfaceHegith.length() > 0) {
+                surfaceWidth.c_str(), surfaceHeight.c_str());
+            if (surfaceWidth.length() > 0 && surfaceHeight.length() > 0) {
                 break;
             }
             usleep(usleeptimes);
@@ -233,7 +234,7 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
 #endif
         CameraManager::GetInstance()->SetPermissionCheck(true);
         sPreviewOutput_ = CameraManager::GetInstance()->CreateCustomPreviewOutput(surface,
-            std::stoi(surfaceWidth), std::stoi(surfaceHegith));
+            std::stoi(surfaceWidth), std::stoi(surfaceHeight));
         if (sPreviewOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create previewOutput");
             return result;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -89,7 +89,7 @@ static const std::vector<std::string> vecCameraPositionMode {
 
 static const std::vector<std::string> vecCameraTypeMode {
     "CAMERA_TYPE_UNSPECIFIED", "CAMERA_TYPE_WIDE_ANGLE", "CAMERA_TYPE_ULTRA_WIDE",
-    "CAMERA_TYPE_TELEPHOTO", "CAMERA_TYPE_TRUE_DEAPTH"
+    "CAMERA_TYPE_TELEPHOTO", "CAMERA_TYPE_TRUE_DEPTH"
 };
 
 static const std::vector<std::string> vecConnectionTypeMode {

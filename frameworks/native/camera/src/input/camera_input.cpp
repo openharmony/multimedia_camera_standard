@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,7 +46,7 @@ public:
         if (camInput_ != nullptr && camInput_->GetErrorCallback() != nullptr) {
             camInput_->GetErrorCallback()->OnError(errorType, errorMsg);
         } else {
-            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, Discarding callback");
+            MEDIA_INFO_LOG("CameraDeviceServiceCallback::ErrorCallback not set!, Discarding callback");
         }
         return CAMERA_OK;
     }
@@ -122,8 +122,8 @@ int32_t CameraInput::UpdateSetting(std::shared_ptr<CameraMetadata> changedMetada
         return ret;
     }
 
-    int32_t length;
-    int32_t count = changedMetadata->get()->item_count;
+    size_t length;
+    uint32_t count = changedMetadata->get()->item_count;
     uint8_t *data = GetMetadataData(changedMetadata->get());
     camera_metadata_item_entry_t *itemEntry = GetMetadataItems(changedMetadata->get());
     std::shared_ptr<CameraMetadata> baseMetadata = cameraObj_->GetMetadata();
@@ -172,7 +172,7 @@ void CameraInput::getVector(DataPtr data, size_t count, Vec &vect, VecType dataT
 
 std::vector<camera_format_t> CameraInput::GetSupportedPhotoFormats()
 {
-    int32_t unitLen = 3;
+    uint32_t unitLen = 3;
     camera_format_t format;
     std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
@@ -197,7 +197,7 @@ std::vector<camera_format_t> CameraInput::GetSupportedPhotoFormats()
 
 std::vector<camera_format_t> CameraInput::GetSupportedVideoFormats()
 {
-    int32_t unitLen = 3;
+    uint32_t unitLen = 3;
     camera_format_t format;
     std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
@@ -222,7 +222,7 @@ std::vector<camera_format_t> CameraInput::GetSupportedVideoFormats()
 
 std::vector<camera_format_t> CameraInput::GetSupportedPreviewFormats()
 {
-    int32_t unitLen = 3;
+    uint32_t unitLen = 3;
     camera_format_t format;
     std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
@@ -247,9 +247,9 @@ std::vector<camera_format_t> CameraInput::GetSupportedPreviewFormats()
 
 std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format)
 {
-    int32_t unitLen = 3;
-    int32_t widthOffset = 1;
-    int32_t heightOffset = 2;
+    uint32_t unitLen = 3;
+    uint32_t widthOffset = 1;
+    uint32_t heightOffset = 2;
     camera_metadata_item_t item;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
     int ret = FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
@@ -276,8 +276,8 @@ std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format
     CameraPicSize *size = &sizes[0];
     for (uint32_t index = 0; index < item.count; index += unitLen) {
         if (item.data.i32[index] == format) {
-            size->width = item.data.i32[index + widthOffset];
-            size->height = item.data.i32[index + heightOffset];
+            size->width = static_cast<uint32_t>(item.data.i32[index + widthOffset]);
+            size->height = static_cast<uint32_t>(item.data.i32[index + heightOffset]);
             size++;
         }
     }
@@ -481,7 +481,7 @@ int32_t CameraInput::SetCropRegion(float zoomRatio)
     camera_metadata_item_t item;
 
     if (zoomRatio == 0) {
-        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invaid zoom ratio");
+        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invalid zoom ratio");
         return CAM_META_FAILURE;
     }
 
@@ -547,7 +547,7 @@ void CameraInput::SetZoomRatio(float zoomRatio)
         return;
     }
     if (zoomRatio < zoomRange[minIndex]) {
-        MEDIA_DEBUG_LOG("CameraInput::SetZoomRatio Zoom ratio: %{public}f is lesser than minumum zoom: %{public}f",
+        MEDIA_DEBUG_LOG("CameraInput::SetZoomRatio Zoom ratio: %{public}f is lesser than minimum zoom: %{public}f",
                         zoomRatio, zoomRange[minIndex]);
         zoomRatio = zoomRange[minIndex];
     } else if (zoomRatio > zoomRange[maxIndex]) {
@@ -557,7 +557,7 @@ void CameraInput::SetZoomRatio(float zoomRatio)
     }
 
     if (zoomRatio == 0) {
-        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Invaid zoom ratio");
+        MEDIA_ERR_LOG("CameraInput::SetZoomRatio Invalid zoom ratio");
         return;
     }
 

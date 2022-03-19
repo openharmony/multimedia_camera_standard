@@ -13,21 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef I_STANDARD_CAMERA_LISTENER_H
-#define I_STANDARD_CAMERA_LISTENER_H
+#ifndef OHOS_CAMERA_HCAPTURE_SESSION_CALLBACK_STUB_H
+#define OHOS_CAMERA_HCAPTURE_SESSION_CALLBACK_STUB_H
 
-#include "ipc_types.h"
-#include "iremote_broker.h"
-#include "iremote_proxy.h"
+#include "icapture_session_callback.h"
 #include "iremote_stub.h"
 
 namespace OHOS {
 namespace CameraStandard {
-class IStandardCameraListener : public IRemoteBroker {
+class HCaptureSessionCallbackStub : public IRemoteStub<ICaptureSessionCallback> {
 public:
-    virtual ~IStandardCameraListener() = default;
-    DECLARE_INTERFACE_DESCRIPTOR(u"IStandardCameraListener");
+    virtual int OnRemoteRequest(uint32_t code, MessageParcel &data,
+                                MessageParcel &reply, MessageOption &option) override;
+
+private:
+    int HandleSessionOnError(MessageParcel& data);
 };
 } // namespace CameraStandard
 } // namespace OHOS
-#endif // I_STANDARD_CAMERA_LISTENER_H
+#endif // OHOS_CAMERA_HCAPTURE_SESSION_CALLBACK_STUB_H

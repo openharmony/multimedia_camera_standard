@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,7 @@ int HStreamCaptureStub::OnRemoteRequest(
             errCode = Release();
             break;
         default:
-            MEDIA_ERR_LOG("HStreamCaptureStub request code %{public}d not handled", code);
+            MEDIA_ERR_LOG("HStreamCaptureStub request code %{public}u not handled", code);
             errCode = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,6 @@
 #include "media_log.h"
 #include "metadata_utils.h"
 #include "remote_request_code.h"
-
 
 namespace OHOS {
 namespace CameraStandard {
@@ -237,7 +236,7 @@ int32_t HCameraServiceProxy::CreateCustomPreviewOutput(const sptr<OHOS::IBufferP
     MessageParcel reply;
     MessageOption option;
 
-    if (producer == nullptr || width == 0 || height == 0) {
+    if ((producer == nullptr) || (width == 0) || (height == 0)) {
         MEDIA_ERR_LOG("HCameraServiceProxy CreateCustomPreviewOutput producer is null or invalid size is set");
         return IPC_PROXY_ERR;
     }

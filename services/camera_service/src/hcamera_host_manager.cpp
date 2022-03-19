@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,8 +27,8 @@ struct HCameraHostManager::CameraDeviceInfo {
     std::shared_ptr<CameraMetadata> ability;
     std::mutex mutex;
 
-    explicit CameraDeviceInfo(std::string cameraId, sptr<Camera::ICameraDevice> device = nullptr)
-        : cameraId(std::move(cameraId)), ability(nullptr)
+    explicit CameraDeviceInfo(const std::string& cameraId, sptr<Camera::ICameraDevice> device = nullptr)
+        : cameraId(cameraId), ability(nullptr)
     {
     }
 
@@ -124,6 +124,11 @@ int32_t HCameraHostManager::CameraHostInfo::GetCameraAbility(std::string& camera
     std::shared_ptr<CameraMetadata>& ability)
 {
     auto deviceInfo = FindCameraDeviceInfo(cameraId);
+    if (deviceInfo == nullptr) {
+        MEDIA_ERR_LOG("CameraHostInfo::GetCameraAbility deviceInfo is null");
+        return CAMERA_UNKNOWN_ERROR;
+    }
+
     if (deviceInfo->ability) {
         ability = deviceInfo->ability;
     } else {
@@ -146,6 +151,11 @@ int32_t HCameraHostManager::CameraHostInfo::OpenCamera(std::string& cameraId,
 {
     MEDIA_INFO_LOG("CameraHostInfo::OpenCamera %{public}s", cameraId.c_str());
     auto deviceInfo = FindCameraDeviceInfo(cameraId);
+    if (deviceInfo == nullptr) {
+        MEDIA_ERR_LOG("CameraHostInfo::GetCameraAbility deviceInfo is null");
+        return CAMERA_UNKNOWN_ERROR;
+    }
+
     std::lock_guard<std::mutex> lock(deviceInfo->mutex);
     Camera::CamRetCode rc = cameraHostProxy_->OpenCamera(cameraId, callback, pDevice);
     if (rc != Camera::NO_ERROR) {

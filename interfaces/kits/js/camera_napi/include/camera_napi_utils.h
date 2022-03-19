@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "output/photo_output.h"
+#include "input/camera_manager.h"
 
 #define CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar)                 \
     do {                                                                        \
@@ -194,6 +195,13 @@ enum JSImageRotation {
     ROTATION_90 = 90,
     ROTATION_180 = 180,
     ROTATION_270 = 270
+};
+
+enum JSCameraStatus {
+    JS_CAMERA_STATUS_APPEAR = 0,
+    JS_CAMERA_STATUS_DISAPPEAR = 1,
+    JS_CAMERA_STATUS_AVAILABLE = 2,
+    JS_CAMERA_STATUS_UNAVAILABLE = 3
 };
 
 /* Util class used by napi asynchronous methods for making call to js callback function */
@@ -459,6 +467,22 @@ public:
         }
 
         return 0;
+    }
+
+    static void MapCameraStatusEnum(CameraDeviceStatus deviceStatus, int32_t &jsCameraStatus)
+    {
+        MEDIA_INFO_LOG("native camera status = %{public}d", static_cast<int32_t>(deviceStatus));
+        switch (deviceStatus) {
+            case CAMERA_DEVICE_STATUS_UNAVAILABLE:
+                jsCameraStatus = JS_CAMERA_STATUS_UNAVAILABLE;
+                break;
+            case CAMERA_DEVICE_STATUS_AVAILABLE:
+                jsCameraStatus = JS_CAMERA_STATUS_AVAILABLE;
+                break;
+            default:
+                MEDIA_ERR_LOG("Received native camera status is not supported with JS");
+                jsCameraStatus = -1;
+        }
     }
 
     static void CreateNapiErrorObject(napi_env env, napi_value &errorObj,

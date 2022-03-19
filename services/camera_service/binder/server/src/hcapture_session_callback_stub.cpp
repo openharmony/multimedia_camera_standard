@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#include "hcamera_device_callback_stub.h"
+#include "hcapture_session_callback_stub.h"
 #include "media_log.h"
 #include "metadata_utils.h"
 #include "remote_request_code.h"
 
 namespace OHOS {
 namespace CameraStandard {
-int HCameraDeviceCallbackStub::OnRemoteRequest(
+int HCaptureSessionCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     int errCode = -1;
@@ -29,38 +29,23 @@ int HCameraDeviceCallbackStub::OnRemoteRequest(
         return errCode;
     }
     switch (code) {
-        case CAMERA_DEVICE_ON_ERROR:
-            errCode = HCameraDeviceCallbackStub::HandleDeviceOnError(data);
-            break;
-        case CAMERA_DEVICE_ON_RESULT:
-            errCode = HCameraDeviceCallbackStub::HandleDeviceOnResult(data);
+        case CAMERA_CAPTURE_SESSION_ON_ERROR:
+            errCode = HCaptureSessionCallbackStub::HandleSessionOnError(data);
             break;
         default:
-            MEDIA_ERR_LOG("HCameraDeviceCallbackStub request code %{public}u not handled", code);
+            MEDIA_ERR_LOG("HCaptureSessionCallbackStub request code %{public}d not handled", code);
             errCode = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;
     }
     return errCode;
 }
 
-int HCameraDeviceCallbackStub::HandleDeviceOnError(MessageParcel& data)
+int HCaptureSessionCallbackStub::HandleSessionOnError(MessageParcel& data)
 {
-    int32_t errorType = 0;
-    int32_t errorMsg = 0;
+    int32_t errorCode = 0;
 
-    errorType = data.ReadInt32();
-    errorMsg = data.ReadInt32();
-    return OnError(errorType, errorMsg);
-}
-
-int HCameraDeviceCallbackStub::HandleDeviceOnResult(MessageParcel& data)
-{
-    std::shared_ptr<CameraStandard::CameraMetadata> metadata = nullptr;
-    uint64_t timestamp = 0;
-
-    timestamp = data.ReadUint64();
-    MetadataUtils::DecodeCameraMetadata(data, metadata);
-    return OnResult(timestamp, metadata);
+    errorCode = data.ReadInt32();
+    return OnError(errorCode);
 }
 } // namespace CameraStandard
 } // namespace OHOS

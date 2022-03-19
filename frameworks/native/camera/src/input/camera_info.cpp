@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,9 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "camera_metadata_info.h"
 #include "input/camera_info.h"
+#include "camera_metadata_info.h"
 #include "media_log.h"
 
 using namespace std;
@@ -54,7 +53,7 @@ void CameraInfo::init(common_metadata_header_t *metadata)
 
     ret = FindCameraMetadataItem(metadata, OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED, &item);
     if (ret == CAM_META_SUCCESS) {
-        isMirrorSupported_ = (item.data.u8[0] > 0) ? true : false;
+        isMirrorSupported_ = (item.data.u8[0] > 0);
     }
     MEDIA_INFO_LOG("camera position: %{public}d, camera type: %{public}d, camera connection type: %{public}d"
                     "Mirror Supported: %{public}d ",
@@ -102,9 +101,10 @@ std::vector<float> CameraInfo::CalculateZoomRange()
     int32_t minIndex = 0;
     int32_t maxIndex = 1;
     uint32_t zoomRangeCount = 2;
-    float factor = 100.0;
+    constexpr float factor = 100.0;
     float minZoom;
     float maxZoom;
+    float tempZoom;
     camera_metadata_item_t item;
 
     ret = FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_ZOOM_CAP, &item);
@@ -132,11 +132,13 @@ std::vector<float> CameraInfo::CalculateZoomRange()
     }
     MEDIA_DEBUG_LOG("Scene zoom cap min: %{public}d, max: %{public}d",
                     item.data.i32[minIndex], item.data.i32[maxIndex]);
-    if (minZoom < item.data.i32[minIndex] / factor) {
-        minZoom = item.data.i32[minIndex] / factor;
+    tempZoom = item.data.i32[minIndex] / factor;
+    if (minZoom < tempZoom) {
+        minZoom = tempZoom;
     }
-    if (maxZoom > item.data.i32[maxIndex] / factor) {
-        maxZoom = item.data.i32[maxIndex] / factor;
+    tempZoom = item.data.i32[maxIndex] / factor;
+    if (maxZoom > tempZoom) {
+        maxZoom = tempZoom;
     }
     return {minZoom, maxZoom};
 }

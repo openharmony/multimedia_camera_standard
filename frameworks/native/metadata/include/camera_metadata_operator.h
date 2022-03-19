@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -173,7 +173,7 @@ int GetCameraMetadataItem(const common_metadata_header_t *src, uint32_t index, c
 uint32_t GetCameraMetadataItemCount(const common_metadata_header_t *metadata_header);
 uint32_t GetCameraMetadataItemCapacity(const common_metadata_header_t *metadata_header);
 uint32_t GetCameraMetadataDataSize(const common_metadata_header_t *metadata_header);
-uint32_t CopyCameraMetadataItems(common_metadata_header_t *newMetadata, const common_metadata_header_t *oldMetadata);
+int32_t CopyCameraMetadataItems(common_metadata_header_t *newMetadata, const common_metadata_header_t *oldMetadata);
 size_t CalculateCameraMetadataItemDataSize(uint32_t type, size_t data_count);
 int32_t GetCameraMetadataItemType(uint32_t item, uint32_t *data_type);
 } // CameraStandard

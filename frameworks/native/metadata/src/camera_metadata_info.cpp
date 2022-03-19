@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,7 +45,6 @@ bool CameraMetadata::addEntry(uint32_t item, const void *data, size_t data_count
 
     if (result != CAM_META_ITEM_CAP_EXCEED && result != CAM_META_DATA_CAP_EXCEED) {
         const char *name = GetCameraMetadataItemName(item);
-        (void)name;
 
         if (name) {
             METADATA_ERR_LOG("Failed to add tag. tagname = %{public}s", name);
@@ -150,5 +149,5 @@ bool CameraMetadata::isValid() const
 {
     return metadata_ != nullptr;
 }
-}
-}
+} // CameraStandard
+} // OHOS

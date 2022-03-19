@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,8 +26,8 @@ public:
     explicit HCameraServiceCallbackProxy(const sptr<IRemoteObject> &impl);
     virtual ~HCameraServiceCallbackProxy() = default;
 
-    int32_t OnCameraStatusChanged(const std::string cameraId, const CameraStatus status) override;
-    int32_t OnFlashlightStatusChanged(const std::string cameraId, const FlashStatus status) override;
+    int32_t OnCameraStatusChanged(const std::string& cameraId, const CameraStatus status) override;
+    int32_t OnFlashlightStatusChanged(const std::string& cameraId, const FlashStatus status) override;
 
 private:
     static inline BrokerDelegator<HCameraServiceCallbackProxy> delegator_;

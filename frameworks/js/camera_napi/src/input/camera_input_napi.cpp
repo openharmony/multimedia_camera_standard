@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,6 +59,24 @@ void FocusCallbackListener::OnFocusState(FocusState state)
     napi_get_undefined(env_, &result[PARAM0]);
     napi_create_int32(env_, jsFocusState, &result[PARAM1]);
 
+    napi_get_reference_value(env_, callbackRef_, &callback);
+    napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+}
+
+void ErrorCallbackListener::OnError(const int32_t errorType, const int32_t errorMsg) const
+{
+    MEDIA_INFO_LOG("ErrorCallbackListener:OnError() is called!, errorType: %{public}d", errorType);
+    int32_t jsErrorCodeUnknown = -1;
+    napi_value result[ARGS_TWO];
+    napi_value callback = nullptr;
+    napi_value retVal;
+    napi_value propValue;
+    napi_create_object(env_, &result[PARAM1]);
+
+    napi_get_undefined(env_, &result[PARAM0]);
+    napi_create_int32(env_, jsErrorCodeUnknown, &propValue);
+
+    napi_set_named_property(env_, result[PARAM1], "code", propValue);
     napi_get_reference_value(env_, callbackRef_, &callback);
     napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
 }
@@ -215,6 +233,11 @@ void GetCameraIdAsyncCallbackComplete(napi_env env, napi_status status, void *da
 void FetchOptionsParam(napi_env env, napi_value arg, const CameraInputAsyncContext &context, bool &err)
 {
     CameraInputAsyncContext *asyncContext = const_cast<CameraInputAsyncContext *>(&context);
+    if (asyncContext == nullptr) {
+        MEDIA_INFO_LOG("FetchOptionsParam:asyncContext is null");
+        return;
+    }
+
     if (asyncContext->enumType.compare("ZoomRatio") == 0) {
         double zoom;
         napi_get_value_double(env, arg, &zoom);
@@ -1405,9 +1428,45 @@ napi_value CameraInputNapi::SetZoomRatio(napi_env env, napi_callback_info info)
 
 napi_value CameraInputNapi::Release(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-    return undefinedResult;
+    napi_status status;
+    napi_value result = nullptr;
+    const int32_t refCount = 1;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+
+    napi_get_undefined(env, &result);
+    std::unique_ptr<CameraInputAsyncContext> asyncContext = std::make_unique<CameraInputAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        if (argc == ARGS_ONE) {
+            CAMERA_NAPI_GET_JS_ASYNC_CB_REF(env, argv[PARAM0], refCount, asyncContext->callbackRef);
+        }
+
+        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "Release");
+
+        status = napi_create_async_work(
+            env, nullptr, resource, [](napi_env env, void* data) {
+                auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->objectInfo->cameraInput_->Release();
+                context->status = true;
+            },
+            ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for Release");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
 }
 
 void CameraInputNapi::RegisterCallback(napi_env env, const string &eventType, napi_ref callbackRef)
@@ -1429,6 +1488,9 @@ void CameraInputNapi::RegisterCallback(napi_env env, const string &eventType, na
         focusCallback_ = callback;
     } else if (eventType.compare("error") == 0) {
         // Set callback for error
+        shared_ptr<ErrorCallbackListener> callback = make_shared<ErrorCallbackListener>(env, callbackRef);
+        cameraInput_->SetErrorCallback(callback);
+        errorCallback_ = callback;
     } else {
         MEDIA_ERR_LOG("Incorrect callback event type provided for camera input!");
     }

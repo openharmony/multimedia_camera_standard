@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -73,6 +73,7 @@ void VideoCallbackListener::UpdateJSCallback(std::string propName, const int32_t
     napi_value callback = nullptr;
     napi_value retVal;
     napi_value propValue;
+    int32_t jsErrorCodeUnknown = -1;
 
     napi_get_undefined(env_, &result[PARAM0]);
 
@@ -90,7 +91,7 @@ void VideoCallbackListener::UpdateJSCallback(std::string propName, const int32_t
         CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(errorCallbackRef_,
             "OnError callback is not registered by JS");
         napi_create_object(env_, &result[PARAM1]);
-        napi_create_int32(env_, value, &propValue);
+        napi_create_int32(env_, jsErrorCodeUnknown, &propValue);
         napi_set_named_property(env_, result[PARAM1], "code", propValue);
         napi_get_reference_value(env_, errorCallbackRef_, &callback); // should errorcode be valued as -1
     }

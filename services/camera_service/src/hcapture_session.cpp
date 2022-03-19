@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,16 +24,22 @@ namespace CameraStandard {
 static std::map<int32_t, sptr<HCaptureSession>> session_;
 HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     sptr<StreamOperatorCallback> streamOperatorCb)
-    : cameraHostManager_(cameraHostManager), streamOperatorCallback_(streamOperatorCb)
+    : cameraHostManager_(cameraHostManager), streamOperatorCallback_(streamOperatorCb),
+    sessionCallback_(nullptr)
 {
     std::map<int32_t, sptr<HCaptureSession>>::iterator it;
-    pid_t pid = IPCSkeleton::GetCallingPid();
-    MEDIA_DEBUG_LOG("HCaptureSession: camera stub services(%{public}zu) pid(%{public}d).", session_.size(), pid);
-    it = session_.find(pid);
+    pid_ = IPCSkeleton::GetCallingPid();
+    uid_ = IPCSkeleton::GetCallingUid();
+    sessionState_.insert(std::make_pair(CaptureSessionState::SESSION_INIT, "Init"));
+    sessionState_.insert(std::make_pair(CaptureSessionState::SESSION_CONFIG_INPROGRESS, "Config_In-progress"));
+    sessionState_.insert(std::make_pair(CaptureSessionState::SESSION_CONFIG_COMMITTED, "Committed"));
+
+    MEDIA_DEBUG_LOG("HCaptureSession: camera stub services(%{public}zu) pid(%{public}d).", session_.size(), pid_);
+    it = session_.find(pid_);
     if (it != session_.end()) {
         MEDIA_ERR_LOG("HCaptureSession::HCaptureSession doesn't support multiple sessions per pid");
     } else {
-        session_[pid] = this;
+        session_[pid_] = this;
     }
     MEDIA_DEBUG_LOG("HCaptureSession: camera stub services(%{public}zu).", session_.size());
 }
@@ -227,8 +233,8 @@ int32_t HCaptureSession::ValidateSessionInputs()
 
 int32_t HCaptureSession::ValidateSessionOutputs()
 {
-    int32_t currentOutputCnt = streamCaptures_.size() + streamRepeats_.size();
-    int32_t newOutputCnt = tempStreamCaptures_.size() + tempStreamRepeats_.size();
+    uint32_t currentOutputCnt = streamCaptures_.size() + streamRepeats_.size();
+    uint32_t newOutputCnt = tempStreamCaptures_.size() + tempStreamRepeats_.size();
     if (newOutputCnt + currentOutputCnt - deletedStreamIds_.size() == 0) {
         MEDIA_ERR_LOG("HCaptureSession::ValidateSessionOutputs No outputs present");
         return CAMERA_INVALID_SESSION_CFG;
@@ -364,7 +370,7 @@ int32_t HCaptureSession::CheckAndCommitStreams(sptr<HCameraDevice> &device,
         MEDIA_ERR_LOG("HCaptureSession::CheckAndCommitStreams(), Error from HDI: %{public}d", hdiRc);
         return HdiToServiceError(hdiRc);
     } else if (supportType != Camera::DYNAMIC_SUPPORTED) {
-        MEDIA_ERR_LOG("HCaptureSession::CheckAndCommitStreams(), Config not suported %{public}d", supportType);
+        MEDIA_ERR_LOG("HCaptureSession::CheckAndCommitStreams(), Config not supported %{public}d", supportType);
         return CAMERA_UNSUPPORTED;
     }
 #endif
@@ -680,6 +686,73 @@ void HCaptureSession::DestroyStubObjectForPid(pid_t pid)
         session->Release(pid);
     }
     MEDIA_DEBUG_LOG("camera stub services(%{public}zu).", session_.size());
+}
+
+int32_t HCaptureSession::SetCallback(sptr<ICaptureSessionCallback> &callback)
+{
+    if (callback == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSession::SetCallback callback is null");
+        return CAMERA_INVALID_ARG;
+    }
+
+    sessionCallback_ = callback;
+    return CAMERA_OK;
+}
+
+std::string HCaptureSession::GetSessionState()
+{
+    std::map<CaptureSessionState, std::string>::const_iterator iter =
+        sessionState_.find(curState_);
+    if (iter != sessionState_.end()) {
+        return iter->second;
+    }
+    return nullptr;
+}
+
+void HCaptureSession::CameraSessionSummary(std::string& dumpString)
+{
+    dumpString += "# Number of Camera clients:[" + std::to_string(session_.size()) + "]:\n";
+}
+
+void HCaptureSession::dumpSessions(std::string& dumpString)
+{
+    for (auto it = session_.begin(); it != session_.end(); it++) {
+        sptr<HCaptureSession> session = it->second;
+        dumpString += "No. of sessions for client:[" + std::to_string(1) + "]:\n";
+        session->dumpSessionInfo(dumpString);
+    }
+}
+
+void HCaptureSession::dumpSessionInfo(std::string& dumpString)
+{
+    sptr<HStreamCapture> streamCaptures;
+
+    dumpString += "Client pid:[" + std::to_string(pid_)
+        + "]    Client uid:[" + std::to_string(uid_) + "]:\n";
+    dumpString += "session state:[" + GetSessionState() + "]:\n";
+    if (cameraDevice_ != nullptr) {
+        dumpString += "session Camera Id:[" + cameraDevice_->GetCameraId() + "]:\n";
+        dumpString += "session Camera release status:["
+        + std::to_string(cameraDevice_->IsReleaseCameraDevice()) + "]:\n";
+    }
+    if (streamCaptures_.size()) {
+        sptr<HStreamCapture> curStreamCapture;
+        for (auto item = streamCaptures_.begin(); item != streamCaptures_.end(); ++item) {
+            curStreamCapture = *item;
+            dumpString += "stream capture:\nrelease status:["
+                + std::to_string(curStreamCapture->IsReleaseStream()) + "]:\n";
+            curStreamCapture->dumpCaptureStreamInfo(dumpString);
+        }
+    }
+    if (streamRepeats_.size()) {
+        sptr<HStreamRepeat> curStreamRepeat = nullptr;
+        for (auto item = streamRepeats_.begin(); item != streamRepeats_.end(); ++item) {
+            curStreamRepeat = *item;
+            dumpString += "stream repeat:\nrelease status:["
+                + std::to_string(curStreamRepeat->IsReleaseStream()) + "]:\n";
+            curStreamRepeat->dumpRepeatStreamInfo(dumpString);
+        }
+    }
 }
 
 StreamOperatorCallback::StreamOperatorCallback(sptr<HCaptureSession> session)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
-#include <cstring>
+#include "input/camera_manager.h"
+
+#include "accesstoken_kit.h"
 #include "camera_util.h"
-#include "media_log.h"
+#include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "media_log.h"
 #include "system_ability_definition.h"
-#include "ipc_skeleton.h"
-#include "accesstoken_kit.h"
-#include "input/camera_manager.h"
+
+#include <cstring>
 
 using namespace std;
 namespace OHOS {
@@ -65,7 +66,7 @@ public:
         camMngr_ = nullptr;
     }
 
-    int32_t OnCameraStatusChanged(const std::string cameraId, const CameraStatus status) override
+    int32_t OnCameraStatusChanged(const std::string& cameraId, const CameraStatus status) override
     {
         CameraDeviceStatus deviceStatus;
         CameraStatusInfo cameraStatusInfo;
@@ -87,14 +88,16 @@ public:
             }
             cameraStatusInfo.cameraInfo = camMngr_->GetCameraInfo(cameraId);
             cameraStatusInfo.cameraStatus = deviceStatus;
-            camMngr_->GetApplicationCallback()->OnCameraStatusChanged(cameraStatusInfo);
+            if (cameraStatusInfo.cameraInfo) {
+                camMngr_->GetApplicationCallback()->OnCameraStatusChanged(cameraStatusInfo);
+            }
         } else {
             MEDIA_INFO_LOG("CameraManager::Callback not registered!, Ignore the callback");
         }
         return CAMERA_OK;
     }
 
-    int32_t OnFlashlightStatusChanged(const std::string cameraId, const FlashStatus status) override
+    int32_t OnFlashlightStatusChanged(const std::string& cameraId, const FlashStatus status) override
     {
         FlashlightStatus flashlightStatus;
 
@@ -250,7 +253,7 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IB
     sptr<PreviewOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
 
-    if (serviceProxy_ == nullptr || producer == nullptr || width == 0 || height == 0) {
+    if ((serviceProxy_ == nullptr) || (producer == nullptr) || (width == 0) || (height == 0)) {
         MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput serviceProxy_ is null or producer is null or invalid size");
         return nullptr;
     }

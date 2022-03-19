@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,24 @@ namespace {
 
 napi_ref CameraSessionNapi::sConstructor_ = nullptr;
 sptr<CaptureSession> CameraSessionNapi::sCameraSession_ = nullptr;
+
+void SessionCallbackListener::OnError(int32_t errorCode)
+{
+    MEDIA_INFO_LOG("SessionCallbackListener:OnError() is called!, errorCode: %{public}d", errorCode);
+    int32_t jsErrorCodeUnknown = -1;
+    napi_value result[ARGS_TWO];
+    napi_value callback = nullptr;
+    napi_value retVal;
+    napi_value propValue;
+    napi_create_object(env_, &result[PARAM1]);
+
+    napi_get_undefined(env_, &result[PARAM0]);
+    napi_create_int32(env_, jsErrorCodeUnknown, &propValue);
+
+    napi_set_named_property(env_, result[PARAM1], "code", propValue);
+    napi_get_reference_value(env_, callbackRef_, &callback);
+    napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+}
 
 CameraSessionNapi::CameraSessionNapi() : env_(nullptr), wrapper_(nullptr)
 {
@@ -631,7 +649,49 @@ napi_value CameraSessionNapi::Release(napi_env env, napi_callback_info info)
 napi_value CameraSessionNapi::On(napi_env env, napi_callback_info info)
 {
     napi_value undefinedResult = nullptr;
+    size_t argCount = ARGS_TWO;
+    napi_value argv[ARGS_TWO] = {nullptr};
+    napi_value thisVar = nullptr;
+    size_t res = 0;
+    char buffer[SIZE];
+    std::string eventType;
+    const int32_t refCount = 1;
+    CameraSessionNapi *obj = nullptr;
+    napi_status status;
+
     napi_get_undefined(env, &undefinedResult);
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argCount, argv, thisVar);
+    NAPI_ASSERT(env, argCount == ARGS_TWO, "requires 2 parameters");
+
+    if (thisVar == nullptr || argv[PARAM0] == nullptr || argv[PARAM1] == nullptr) {
+        MEDIA_ERR_LOG("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&obj));
+    if (status == napi_ok && obj != nullptr) {
+        napi_valuetype valueType = napi_undefined;
+        if (napi_typeof(env, argv[PARAM0], &valueType) != napi_ok || valueType != napi_string
+            || napi_typeof(env, argv[PARAM1], &valueType) != napi_ok || valueType != napi_function) {
+            return undefinedResult;
+        }
+
+        napi_get_value_string_utf8(env, argv[PARAM0], buffer, SIZE, &res);
+        eventType = std::string(buffer);
+
+        napi_ref callbackRef;
+        napi_create_reference(env, argv[PARAM1], refCount, &callbackRef);
+
+        if (!eventType.empty() && eventType.compare("error") == 0) {
+            std::shared_ptr<SessionCallbackListener> callback =
+                std::make_shared<SessionCallbackListener>(SessionCallbackListener(env, callbackRef));
+            obj->cameraSession_->SetCallback(callback);
+        } else {
+            MEDIA_ERR_LOG("Failed to Register Callback: event type is empty!");
+        }
+    }
+
     return undefinedResult;
 }
 } // namespace CameraStandard

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -135,7 +135,7 @@ std::string MetadataUtils::EncodeToString(std::shared_ptr<CameraStandard::Camera
     int32_t ret, dataLen;
     const int32_t headerLength = sizeof(common_metadata_header_t);
     const int32_t itemLen = sizeof(camera_metadata_item_entry_t);
-    const int32_t itemFixedLen = offsetof(camera_metadata_item_entry_t, data);
+    const int32_t itemFixedLen = static_cast<int32_t>(offsetof(camera_metadata_item_entry_t, data));
 
     if (metadata == nullptr || metadata->get() == nullptr) {
         METADATA_ERR_LOG("MetadataUtils::EncodeToString Metadata is invalid");
@@ -184,11 +184,11 @@ std::string MetadataUtils::EncodeToString(std::shared_ptr<CameraStandard::Camera
 
 std::shared_ptr<CameraStandard::CameraMetadata> MetadataUtils::DecodeFromString(std::string setting)
 {
-    int32_t ret, dataLen;
-    int32_t totalLen = setting.capacity();
-    const int32_t headerLength = sizeof(common_metadata_header_t);
-    const int32_t itemLen = sizeof(camera_metadata_item_entry_t);
-    const int32_t itemFixedLen = offsetof(camera_metadata_item_entry_t, data);
+    uint32_t ret, dataLen;
+    uint32_t totalLen = setting.capacity();
+    const uint32_t headerLength = sizeof(common_metadata_header_t);
+    const uint32_t itemLen = sizeof(camera_metadata_item_entry_t);
+    const uint32_t itemFixedLen = offsetof(camera_metadata_item_entry_t, data);
 
     if (totalLen < headerLength) {
         METADATA_ERR_LOG("MetadataUtils::DecodeFromString Length is less than metadata header length");
@@ -235,7 +235,7 @@ std::shared_ptr<CameraStandard::CameraMetadata> MetadataUtils::DecodeFromString(
     }
 
     if (meta->data_count != 0) {
-        if (totalLen < ((decodeData - &setting[0]) + meta->data_count)) {
+        if (totalLen < static_cast<uint32_t>(((decodeData - &setting[0]) + meta->data_count))) {
             METADATA_ERR_LOG("MetadataUtils::DecodeFromString Failed at data copy");
             return {};
         }
@@ -326,6 +326,10 @@ bool MetadataUtils::ReadMetadata(camera_metadata_item_t &item, MessageParcel &da
 
 void MetadataUtils::ItemDataToBuffer(const camera_metadata_item_t &item, void **buffer)
 {
+    if (buffer == nullptr) {
+        METADATA_ERR_LOG("MetadataUtils::ItemDataToBuffer buffer is null");
+        return;
+    }
     if (item.data_type == META_TYPE_BYTE) {
         *buffer = (void*)item.data.u8;
     } else if (item.data_type == META_TYPE_INT32) {
@@ -342,5 +346,5 @@ void MetadataUtils::ItemDataToBuffer(const camera_metadata_item_t &item, void **
         *buffer = (void*)item.data.r;
     }
 }
-}
-}
+} // CameraStandard
+} // OHOS

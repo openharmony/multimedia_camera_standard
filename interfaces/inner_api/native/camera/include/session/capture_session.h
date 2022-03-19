@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include "input/capture_input.h"
 #include "output/capture_output.h"
 #include "icapture_session.h"
+#include "icapture_session_callback.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -44,11 +45,13 @@ public:
     int32_t Start();
     int32_t Stop();
     void SetCallback(std::shared_ptr<SessionCallback> callback);
+    std::shared_ptr<SessionCallback> GetApplicationCallback();
     void Release();
 
 private:
     sptr<ICaptureSession> captureSession_;
     std::shared_ptr<SessionCallback> appCallback_;
+    sptr<ICaptureSessionCallback> captureSessionCallback_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

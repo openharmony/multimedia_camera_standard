@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,6 +45,17 @@
 namespace OHOS {
 namespace CameraStandard {
 static const std::string CAMERA_SESSION_NAPI_CLASS_NAME = "CaptureSession";
+
+class SessionCallbackListener : public SessionCallback {
+public:
+    SessionCallbackListener(napi_env env, napi_ref ref) : env_(env), callbackRef_(ref) {}
+    ~SessionCallbackListener() = default;
+    void OnError(int32_t errorCode) override;
+
+private:
+    napi_env env_;
+    napi_ref callbackRef_ = nullptr;
+};
 
 class CameraSessionNapi {
 public:

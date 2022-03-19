@@ -13,21 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef I_STANDARD_CAMERA_LISTENER_H
-#define I_STANDARD_CAMERA_LISTENER_H
+#ifndef OHOS_CAMERA_HCAPTURE_SESSION_CALLBACK_PROXY_H
+#define OHOS_CAMERA_HCAPTURE_SESSION_CALLBACK_PROXY_H
 
-#include "ipc_types.h"
-#include "iremote_broker.h"
 #include "iremote_proxy.h"
-#include "iremote_stub.h"
+#include "icapture_session_callback.h"
 
 namespace OHOS {
 namespace CameraStandard {
-class IStandardCameraListener : public IRemoteBroker {
+class HCaptureSessionCallbackProxy : public IRemoteProxy<ICaptureSessionCallback> {
 public:
-    virtual ~IStandardCameraListener() = default;
-    DECLARE_INTERFACE_DESCRIPTOR(u"IStandardCameraListener");
+    explicit HCaptureSessionCallbackProxy(const sptr<IRemoteObject> &impl);
+    virtual ~HCaptureSessionCallbackProxy() = default;
+
+    int32_t OnError(int32_t errorCode) override;
+
+private:
+    static inline BrokerDelegator<HCaptureSessionCallbackProxy> delegator_;
 };
 } // namespace CameraStandard
 } // namespace OHOS
-#endif // I_STANDARD_CAMERA_LISTENER_H
+#endif // OHOS_CAMERA_HCAPTURE_SESSION_CALLBACK_PROXY_H

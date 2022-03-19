@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,6 +36,11 @@ int32_t TestUtils::SaveYUV(const char *buffer, int32_t size, SurfaceType type)
 {
     char path[PATH_MAX] = {0};
     int32_t retVal;
+
+    if ((buffer == nullptr) || (size == 0)) {
+        MEDIA_ERR_LOG("buffer is null or size is 0");
+        return -1;
+    }
 
     MEDIA_DEBUG_LOG("TestUtils::SaveYUV(), type: %{public}d", type);
     if (type == SurfaceType::PREVIEW) {
@@ -207,11 +212,13 @@ void TestVideoOutputCallback::OnFrameStarted() const
 {
     MEDIA_INFO_LOG("TestVideoOutputCallback:OnFrameStarted(), testName_: %{public}s", testName_);
 }
+
 void TestVideoOutputCallback::OnFrameEnded(const int32_t frameCount) const
 {
     MEDIA_INFO_LOG("TestVideoOutputCallback:OnFrameEnded(), testName_: %{public}s, frameCount: %{public}d",
                    testName_, frameCount);
 }
+
 void TestVideoOutputCallback::OnError(const int32_t errorCode) const
 {
     MEDIA_INFO_LOG("TestVideoOutputCallback:OnError(), testName_: %{public}s, errorCode: %{public}d",

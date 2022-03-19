@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -374,7 +374,7 @@ int32_t CameraCaptureVideo::InitCameraInput()
     if (cameraInput_ == nullptr) {
         std::vector<sptr<CameraInfo>> cameraObjList = cameraManager_->GetCameras();
         if (cameraObjList.size() <= 0) {
-            MEDIA_ERR_LOG("No cameras are availble!!!");
+            MEDIA_ERR_LOG("No cameras are available!!!");
             return result;
         }
         cameraInput_ = cameraManager_->CreateCameraInput(cameraObjList[0]);

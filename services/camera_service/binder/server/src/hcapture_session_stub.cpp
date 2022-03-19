@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -64,8 +64,11 @@ int HCaptureSessionStub::OnRemoteRequest(
                 errCode = Release(pid);
             }
             break;
+        case CAMERA_CAPTURE_SESSION_SET_CALLBACK:
+            errCode = HandleSetCallback(data);
+            break;
         default:
-            MEDIA_ERR_LOG("HCaptureSessionStub request code %{public}d not handled", code);
+            MEDIA_ERR_LOG("HCaptureSessionStub request code %{public}u not handled", code);
             errCode = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;
     }
@@ -149,6 +152,19 @@ int HCaptureSessionStub::HandleRemoveRepeatOutput(MessageParcel &data)
     sptr<IStreamRepeat> streamRepeat = iface_cast<IStreamRepeat>(remoteObj);
 
     return RemoveOutput(streamRepeat);
+}
+
+int HCaptureSessionStub::HandleSetCallback(MessageParcel &data)
+{
+    auto remoteObject = data.ReadRemoteObject();
+    if (remoteObject == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSessionStub HandleSetCallback CaptureSessionCallback is null");
+        return IPC_STUB_INVALID_DATA_ERR;
+    }
+
+    auto callback = iface_cast<ICaptureSessionCallback>(remoteObject);
+
+    return SetCallback(callback);
 }
 } // namespace CameraStandard
 } // namespace OHOS

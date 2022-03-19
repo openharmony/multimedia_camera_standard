@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,10 +22,6 @@ namespace CameraStandard {
 HCameraDevice::HCameraDevice(sptr<HCameraHostManager> &cameraHostManager,
                              sptr<CameraDeviceCallback> deviceCallback, std::string cameraID)
 {
-    if (cameraHostManager == nullptr) {
-        MEDIA_ERR_LOG("HCameraDevice::HCameraDevice cameraHostManager is null");
-        return;
-    }
     cameraHostManager_ = cameraHostManager;
     deviceHDICallback_ = deviceCallback;
     cameraID_ = cameraID;
@@ -147,6 +143,12 @@ int32_t HCameraDevice::EnableResult(std::vector<int32_t> &results)
         MEDIA_ERR_LOG("HCameraDevice::EnableResult results vector empty");
         return CAMERA_INVALID_ARG;
     }
+
+    if (hdiCameraDevice_ == nullptr) {
+        MEDIA_ERR_LOG("HCameraDevice::hdiCameraDevice_ is null");
+        return CAMERA_UNKNOWN_ERROR;
+    }
+
     Camera::CamRetCode rc = hdiCameraDevice_->EnableResult(results);
     if (rc != Camera::NO_ERROR) {
         MEDIA_ERR_LOG("HCameraDevice::EnableResult failed with error Code:%{public}d", rc);
@@ -162,6 +164,12 @@ int32_t HCameraDevice::DisableResult(std::vector<int32_t> &results)
         MEDIA_ERR_LOG("HCameraDevice::DisableResult results vector empty");
         return CAMERA_INVALID_ARG;
     }
+    
+    if (hdiCameraDevice_ == nullptr) {
+        MEDIA_ERR_LOG("HCameraDevice::hdiCameraDevice_ is null");
+        return CAMERA_UNKNOWN_ERROR;
+    }
+
     Camera::CamRetCode rc = hdiCameraDevice_->DisableResult(results);
     if (rc != Camera::NO_ERROR) {
         MEDIA_ERR_LOG("HCameraDevice::DisableResult failed with error Code:%{public}d", rc);
@@ -188,6 +196,12 @@ int32_t HCameraDevice::GetStreamOperator(sptr<Camera::IStreamOperatorCallback> c
         MEDIA_ERR_LOG("HCameraDevice::GetStreamOperator callback is null");
         return CAMERA_INVALID_ARG;
     }
+
+    if (hdiCameraDevice_ == nullptr) {
+        MEDIA_ERR_LOG("HCameraDevice::hdiCameraDevice_ is null");
+        return CAMERA_UNKNOWN_ERROR;
+    }
+
     Camera::CamRetCode rc = hdiCameraDevice_->GetStreamOperator(callback, streamOperator);
     if (rc != Camera::NO_ERROR) {
         MEDIA_ERR_LOG("HCameraDevice::GetStreamOperator failed with error Code:%{public}d", rc);

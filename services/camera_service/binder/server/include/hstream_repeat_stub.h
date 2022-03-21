@@ -23,8 +23,8 @@ namespace OHOS {
 namespace CameraStandard {
 class HStreamRepeatStub : public IRemoteStub<IStreamRepeat> {
 public:
-    virtual int OnRemoteRequest(uint32_t code, MessageParcel &data,
-                                MessageParcel &reply, MessageOption &option) override;
+    int OnRemoteRequest(uint32_t code, MessageParcel &data,
+                        MessageParcel &reply, MessageOption &option) override;
 
 private:
     int HandleSetCallback(MessageParcel &data);

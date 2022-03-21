@@ -54,7 +54,6 @@ int32_t HCameraDeviceCallbackProxy::OnResult(const uint64_t timestamp,
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    bool bRet = false;
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnResult Write interface token failed");
@@ -64,8 +63,7 @@ int32_t HCameraDeviceCallbackProxy::OnResult(const uint64_t timestamp,
         MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnResult Write timestamp failed");
         return IPC_PROXY_ERR;
     }
-    bRet = MetadataUtils::EncodeCameraMetadata(result, data);
-    if (!bRet) {
+    if (!(MetadataUtils::EncodeCameraMetadata(result, data))) {
         MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnResult EncodeCameraMetadata failed");
         return IPC_PROXY_ERR;
     }

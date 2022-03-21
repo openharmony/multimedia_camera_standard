@@ -72,7 +72,7 @@ int32_t TestUtils::SaveYUV(const char *buffer, int32_t size, SurfaceType type)
         return -1;
     }
 
-    MEDIA_DEBUG_LOG("%s, saving file to %{public}s", __FUNCTION__, path);
+    MEDIA_DEBUG_LOG("%s, saving file to %{private}s", __FUNCTION__, path);
     int imgFd = open(path, O_RDWR | O_CREAT, FILE_PERMISSIONS_FLAG);
     if (imgFd == -1) {
         MEDIA_ERR_LOG("%s, open file failed, errno = %{public}s.", __FUNCTION__, strerror(errno));
@@ -112,7 +112,7 @@ int32_t TestUtils::SaveVideoFile(const char *buffer, int32_t size, VideoSaveMode
             MEDIA_ERR_LOG("Failed to create video file name");
             return -1;
         }
-        MEDIA_DEBUG_LOG("%{public}s, save video to file %{public}s", __FUNCTION__, path);
+        MEDIA_DEBUG_LOG("%{public}s, save video to file %{private}s", __FUNCTION__, path);
         fd = open(path, O_RDWR | O_CREAT, FILE_PERMISSIONS_FLAG);
         if (fd == -1) {
             std::cout << "open file failed, errno = " << strerror(errno) << std::endl;
@@ -123,7 +123,8 @@ int32_t TestUtils::SaveVideoFile(const char *buffer, int32_t size, VideoSaveMode
         if (ret == -1) {
             std::cout << "write file failed, error = " << strerror(errno) << std::endl;
             close(fd);
-            return -1;
+            fd = -1;
+            return fd;
         }
     } else { // VideoSaveMode::CLOSE
         if (fd != -1) {
@@ -237,6 +238,10 @@ void SurfaceListener::OnBufferAvailable()
     MEDIA_DEBUG_LOG("SurfaceListener::OnBufferAvailable(), testName_: %{public}s, surfaceType_: %{public}d",
                     testName_, surfaceType_);
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
+    if (!surface_) {
+        MEDIA_ERR_LOG("OnBufferAvailable:surface_ is null");
+        return;
+    }
     surface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
     if (buffer != nullptr) {
         char *addr = static_cast<char *>(buffer->GetVirAddr());
@@ -287,3 +292,4 @@ void SurfaceListener::OnBufferAvailable()
 }
 } // namespace CameraStandard
 } // namespace OHOS
+

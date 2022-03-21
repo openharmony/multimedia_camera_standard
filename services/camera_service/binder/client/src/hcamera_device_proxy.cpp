@@ -115,8 +115,7 @@ int32_t HCameraDeviceProxy::UpdateSetting(const std::shared_ptr<CameraMetadata> 
         MEDIA_ERR_LOG("HCameraDeviceProxy UpdateSetting Write interface token failed");
         return IPC_PROXY_ERR;
     }
-    bool bRet = MetadataUtils::EncodeCameraMetadata(settings, data);
-    if (!bRet) {
+    if (!(MetadataUtils::EncodeCameraMetadata(settings, data))) {
         MEDIA_ERR_LOG("HCameraDeviceProxy UpdateSetting EncodeCameraMetadata failed");
         return IPC_PROXY_ERR;
     }

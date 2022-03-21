@@ -81,3 +81,4 @@ int HStreamCaptureCallbackStub::HandleOnFrameShutter(MessageParcel& data)
 }
 } // namespace CameraStandard
 } // namespace OHOS
+

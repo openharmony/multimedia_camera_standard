@@ -23,7 +23,7 @@ namespace OHOS {
 namespace CameraStandard {
 class HStreamCaptureStub : public IRemoteStub<IStreamCapture> {
 public:
-    virtual int OnRemoteRequest(uint32_t code, MessageParcel &data,
+    int OnRemoteRequest(uint32_t code, MessageParcel &data,
                                 MessageParcel &reply, MessageOption &option) override;
 
 public:

@@ -35,7 +35,7 @@ public:
 
 class VideoOutput : public CaptureOutput {
 public:
-    VideoOutput(sptr<IStreamRepeat> &streamRepeat);
+    explicit VideoOutput(sptr<IStreamRepeat> &streamRepeat);
     void Release() override;
     sptr<IStreamRepeat> GetStreamRepeat();
     void SetCallback(std::shared_ptr<VideoCallback> callback);

@@ -36,7 +36,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-static const std::string CAMERA_SIZE_NAPI_CLASS_NAME = "Size";
+static const char CAMERA_SIZE_NAPI_CLASS_NAME[] = "Size";
 
 class CameraSizeNapi {
 public:

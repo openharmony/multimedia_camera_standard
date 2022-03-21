@@ -49,9 +49,9 @@ class TestCameraMngerCallback : public CameraManagerCallback {
 public:
     explicit TestCameraMngerCallback(const char *testName);
     virtual ~TestCameraMngerCallback() = default;
-    virtual void OnCameraStatusChanged(const CameraStatusInfo &cameraStatusInfo) const override;
-    virtual void OnFlashlightStatusChanged(const std::string &cameraID,
-                                           const FlashlightStatus flashStatus) const override;
+    void OnCameraStatusChanged(const CameraStatusInfo &cameraStatusInfo) const override;
+    void OnFlashlightStatusChanged(const std::string &cameraID,
+                                   const FlashlightStatus flashStatus) const override;
 
 private:
     const char *testName_;
@@ -61,7 +61,7 @@ class TestDeviceCallback : public ErrorCallback {
 public:
     explicit TestDeviceCallback(const char *testName);
     virtual ~TestDeviceCallback() = default;
-    virtual void OnError(const int32_t errorType, const int32_t errorMsg) const override;
+    void OnError(const int32_t errorType, const int32_t errorMsg) const override;
 
 private:
     const char *testName_;
@@ -71,10 +71,10 @@ class TestPhotoOutputCallback : public PhotoCallback {
 public:
     explicit TestPhotoOutputCallback(const char *testName);
     virtual ~TestPhotoOutputCallback() = default;
-    virtual void OnCaptureStarted(const int32_t captureID) const override;
-    virtual void OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const override;
-    virtual void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const override;
-    virtual void OnCaptureError(const int32_t captureId, const int32_t errorCode) const override;
+    void OnCaptureStarted(const int32_t captureID) const override;
+    void OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const override;
+    void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const override;
+    void OnCaptureError(const int32_t captureId, const int32_t errorCode) const override;
 
 private:
     const char *testName_;
@@ -84,9 +84,9 @@ class TestPreviewOutputCallback : public PreviewCallback {
 public:
     explicit TestPreviewOutputCallback(const char *testName);
     virtual ~TestPreviewOutputCallback() = default;
-    virtual void OnFrameStarted() const override;
-    virtual void OnFrameEnded(const int32_t frameCount) const override;
-    virtual void OnError(const int32_t errorCode) const override;
+    void OnFrameStarted() const override;
+    void OnFrameEnded(const int32_t frameCount) const override;
+    void OnError(const int32_t errorCode) const override;
 
 private:
     const char *testName_;
@@ -96,9 +96,9 @@ class TestVideoOutputCallback : public VideoCallback {
 public:
     explicit TestVideoOutputCallback(const char *testName);
     virtual ~TestVideoOutputCallback() = default;
-    virtual void OnFrameStarted() const override;
-    virtual void OnFrameEnded(const int32_t frameCount) const override;
-    virtual void OnError(const int32_t errorCode) const override;
+    void OnFrameStarted() const override;
+    void OnFrameEnded(const int32_t frameCount) const override;
+    void OnError(const int32_t errorCode) const override;
 
 private:
     const char *testName_;
@@ -108,7 +108,7 @@ class SurfaceListener : public IBufferConsumerListener {
 public:
     SurfaceListener(const char *testName, SurfaceType surfaceType, int32_t &fd, sptr<Surface> surface);
     virtual ~SurfaceListener() = default;
-    virtual void OnBufferAvailable() override;
+    void OnBufferAvailable() override;
 
 private:
     const char *testName_;
@@ -121,3 +121,4 @@ private:
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // CAMERA_TEST_COMMON_H
+

@@ -74,3 +74,4 @@ int32_t HCameraServiceCallbackProxy::OnFlashlightStatusChanged(const std::string
 }
 } // namespace CameraStandard
 } // namespace OHOS
+

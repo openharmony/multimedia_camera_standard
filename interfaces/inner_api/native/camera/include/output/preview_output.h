@@ -33,7 +33,7 @@ public:
 
 class PreviewOutput : public CaptureOutput {
 public:
-    PreviewOutput(sptr<IStreamRepeat> &streamRepeat);
+    explicit PreviewOutput(sptr<IStreamRepeat> &streamRepeat);
     void SetCallback(std::shared_ptr<PreviewCallback> callback);
     void Release() override;
     sptr<IStreamRepeat> GetStreamRepeat();
@@ -47,3 +47,4 @@ private:
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_PREVIEW_OUTPUT_H
+

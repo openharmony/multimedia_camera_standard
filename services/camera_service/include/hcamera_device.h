@@ -67,11 +67,11 @@ private:
 class CameraDeviceCallback : public Camera::CameraDeviceCallbackStub {
 public:
     CameraDeviceCallback() = default;
-    CameraDeviceCallback(sptr<HCameraDevice> hCameraDevice);
+    explicit CameraDeviceCallback(sptr<HCameraDevice> hCameraDevice);
     virtual ~CameraDeviceCallback() = default;
-    virtual void OnError(Camera::ErrorType type, int32_t errorMsg) override;
-    virtual void OnResult(const uint64_t timestamp,
-                          const std::shared_ptr<CameraStandard::CameraMetadata> &result) override;
+    void OnError(Camera::ErrorType type, int32_t errorMsg) override;
+    void OnResult(const uint64_t timestamp,
+                  const std::shared_ptr<CameraStandard::CameraMetadata> &result) override;
     void SetHCameraDevice(sptr<HCameraDevice> hcameraDevice);
 
 private:

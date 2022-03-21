@@ -13,19 +13,18 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <map>
-#include <string>
+#include "hcamera_service.h"
+
+#include <securec.h>
 #include <unordered_set>
 
+#include "access_token.h"
+#include "accesstoken_kit.h"
 #include "camera_util.h"
 #include "iservice_registry.h"
 #include "media_log.h"
 #include "system_ability_definition.h"
 #include "ipc_skeleton.h"
-#include "access_token.h"
-#include "accesstoken_kit.h"
-#include "hcamera_service.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -47,6 +46,10 @@ void HCameraService::OnStart()
 {
     if (!cameraHostManager_) {
         cameraHostManager_ = new HCameraHostManager(this);
+        if (!cameraHostManager_) {
+            MEDIA_ERR_LOG("HCameraService OnStart failed to create HCameraHostManager obj");
+            return;
+        }
     }
     if (cameraHostManager_->Init() != CAMERA_OK) {
         MEDIA_ERR_LOG("HCameraService OnStart failed to init camera host manager.");
@@ -113,6 +116,10 @@ int32_t HCameraService::CreateCameraDevice(std::string cameraId, sptr<ICameraDev
 
     if (cameraDeviceCallback_ == nullptr) {
         cameraDeviceCallback_ = new CameraDeviceCallback();
+        if (!cameraDeviceCallback_) {
+            MEDIA_ERR_LOG("HCameraService::CreateCameraDevice CameraDeviceCallback allocation failed");
+            return CAMERA_ALLOC_ERROR;
+        }
     }
     cameraDevice = new HCameraDevice(cameraHostManager_, cameraDeviceCallback_, cameraId);
     if (cameraDevice == nullptr) {
@@ -129,6 +136,10 @@ int32_t HCameraService::CreateCaptureSession(sptr<ICaptureSession> &session)
     sptr<HCaptureSession> captureSession;
     if (streamOperatorCallback_ == nullptr) {
         streamOperatorCallback_ = new StreamOperatorCallback();
+        if (streamOperatorCallback_ == nullptr) {
+            MEDIA_ERR_LOG("HCameraService::CreateCaptureSession streamOperatorCallback_ allocation failed");
+            return CAMERA_ALLOC_ERROR;
+        }
     }
 
     captureSession = new HCaptureSession(cameraHostManager_, streamOperatorCallback_);
@@ -179,7 +190,7 @@ int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProduc
 {
     sptr<HStreamRepeat> streamRepeatPreview;
 
-    if (producer == nullptr || width == 0 || height == 0) {
+    if ((producer == nullptr) || (width == 0) || (height == 0)) {
         MEDIA_ERR_LOG("HCameraService::CreateCustomPreviewOutput producer is null or invalid custom size is set");
         return CAMERA_INVALID_ARG;
     }

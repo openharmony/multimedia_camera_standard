@@ -27,7 +27,7 @@ enum CAPTURE_OUTPUT_TYPE {
 };
 class CaptureOutput : public RefBase {
 public:
-    CaptureOutput(CAPTURE_OUTPUT_TYPE type);
+    explicit CaptureOutput(CAPTURE_OUTPUT_TYPE type);
     virtual ~CaptureOutput() {}
     virtual void Release() = 0;
     CAPTURE_OUTPUT_TYPE GetType();

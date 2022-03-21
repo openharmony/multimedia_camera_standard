@@ -14,6 +14,7 @@
  */
 
 #include "output/photo_output.h"
+#include <securec.h>
 #include "camera_util.h"
 #include "hstream_capture_callback_stub.h"
 #include "media_log.h"
@@ -70,7 +71,6 @@ void PhotoCaptureSetting::SetQuality(PhotoCaptureSetting::QualityLevel qualityLe
     if (!status) {
         MEDIA_ERR_LOG("PhotoCaptureSetting::SetQuality Failed to set Quality");
     }
-    return;
 }
 
 PhotoCaptureSetting::RotationConfig PhotoCaptureSetting::GetRotation()
@@ -230,6 +230,11 @@ void PhotoOutput::SetCallback(std::shared_ptr<PhotoCallback> callback)
     if (appCallback_ != nullptr) {
         if (cameraSvcCallback_ == nullptr) {
             cameraSvcCallback_ = new HStreamCaptureCallbackImpl(this);
+            if (!cameraSvcCallback_) {
+                MEDIA_ERR_LOG("PhotoOutput::SetCallback new HStreamCaptureCallbackImpl Failed to register callback");
+                appCallback_ = nullptr;
+                return;
+            }
         }
         errorCode = streamCapture_->SetCallback(cameraSvcCallback_);
         if (errorCode != CAMERA_OK) {
@@ -238,7 +243,6 @@ void PhotoOutput::SetCallback(std::shared_ptr<PhotoCallback> callback)
             appCallback_ = nullptr;
         }
     }
-    return;
 }
 
 std::shared_ptr<PhotoCallback> PhotoOutput::GetApplicationCallback()

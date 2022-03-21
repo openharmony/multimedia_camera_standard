@@ -27,8 +27,8 @@ class HCameraServiceStub : public IRemoteStub<ICameraService> {
 public:
     HCameraServiceStub();
     ~HCameraServiceStub();
-    virtual int OnRemoteRequest(uint32_t code, MessageParcel &data,
-                                MessageParcel &reply, MessageOption &option) override;
+    int OnRemoteRequest(uint32_t code, MessageParcel &data,
+                        MessageParcel &reply, MessageOption &option) override;
 
 private:
     int HandleGetCameras(MessageParcel& reply);
@@ -50,3 +50,4 @@ private:
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_HCAMERA_SERVICE_STUB_H
+

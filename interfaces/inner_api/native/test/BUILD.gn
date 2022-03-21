@@ -32,7 +32,7 @@ config("camera_config") {
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",
   ]
 
-  if (device_name == "baltimore") {
+  if ("${product_name}" == "m40") {
     include_dirs += [
       "//drivers/peripheral/adapter/camera/interfaces/include",
       "//drivers/peripheral/adapter/camera/interfaces/include/server",

@@ -105,6 +105,9 @@ void SurfaceListener::OnBufferAvailable()
     int64_t timestamp = 0;
     OHOS::Rect damage;
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
+    if (captureSurface_ == nullptr) {
+        return;
+    }
     captureSurface_->AcquireBuffer(buffer, flushFence, timestamp, damage);
     if (buffer != nullptr) {
         const char *addr = static_cast<char *>(buffer->GetVirAddr());
@@ -182,14 +185,14 @@ napi_value VideoOutputNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", On)
     };
 
-    status = napi_define_class(env, CAMERA_VIDEO_OUTPUT_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
+    status = napi_define_class(env, CAMERA_VIDEO_OUTPUT_NAPI_CLASS_NAME, NAPI_AUTO_LENGTH,
                                VideoOutputNapiConstructor, nullptr,
                                sizeof(video_output_props) / sizeof(video_output_props[PARAM0]),
                                video_output_props, &ctorObj);
     if (status == napi_ok) {
         status = napi_create_reference(env, ctorObj, refCount, &sConstructor_);
         if (status == napi_ok) {
-            status = napi_set_named_property(env, exports, CAMERA_VIDEO_OUTPUT_NAPI_CLASS_NAME.c_str(), ctorObj);
+            status = napi_set_named_property(env, exports, CAMERA_VIDEO_OUTPUT_NAPI_CLASS_NAME, ctorObj);
             if (status == napi_ok) {
                 return exports;
             }

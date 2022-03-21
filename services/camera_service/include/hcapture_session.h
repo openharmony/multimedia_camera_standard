@@ -105,16 +105,16 @@ private:
 class StreamOperatorCallback : public Camera::StreamOperatorCallbackStub {
 public:
     StreamOperatorCallback() = default;
-    StreamOperatorCallback(sptr<HCaptureSession> session);
+    explicit StreamOperatorCallback(sptr<HCaptureSession> session);
     virtual ~StreamOperatorCallback() = default;
 
-    virtual void OnCaptureStarted(int32_t captureId, const std::vector<int32_t> &streamId) override;
-    virtual void OnCaptureEnded(int32_t captureId,
-                                const std::vector<std::shared_ptr<Camera::CaptureEndedInfo>> &info) override;
-    virtual void OnCaptureError(int32_t captureId,
-                                const std::vector<std::shared_ptr<Camera::CaptureErrorInfo>> &info) override;
-    virtual void OnFrameShutter(int32_t captureId,
-                                const std::vector<int32_t> &streamId, uint64_t timestamp) override;
+    void OnCaptureStarted(int32_t captureId, const std::vector<int32_t> &streamId) override;
+    void OnCaptureEnded(int32_t captureId,
+                        const std::vector<std::shared_ptr<Camera::CaptureEndedInfo>> &info) override;
+    void OnCaptureError(int32_t captureId,
+                        const std::vector<std::shared_ptr<Camera::CaptureErrorInfo>> &info) override;
+    void OnFrameShutter(int32_t captureId,
+                        const std::vector<int32_t> &streamId, uint64_t timestamp) override;
     void SetCaptureSession(sptr<HCaptureSession> captureSession);
 
 private:

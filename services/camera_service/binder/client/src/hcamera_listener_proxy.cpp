@@ -12,11 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "hcamera_listener_proxy.h"
+
 #include <cinttypes>
 
 #include "media_log.h"
 #include "camera_util.h"
-#include "hcamera_listener_proxy.h"
 
 namespace OHOS {
 namespace CameraStandard {

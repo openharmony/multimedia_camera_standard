@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
+#include "hstream_repeat.h"
+
 #include <iostream>
 
 #include "camera_util.h"
 #include "media_log.h"
-#include "hstream_repeat.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -93,6 +94,11 @@ void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
 #endif
     }
     MEDIA_INFO_LOG("HStreamRepeat::SetStreamInfo pixelFormat is %{public}d", pixelFormat);
+    if (!streamInfo) {
+        MEDIA_ERR_LOG("HStreamRepeat::SetStreamInfo null");
+        return;
+    }
+
     streamInfo->format_ = pixelFormat;
     streamInfo->tunneledMode_ = true;
     streamInfo->datasapce_ = CAMERA_PREVIEW_COLOR_SPACE;
@@ -153,7 +159,7 @@ bool HStreamRepeat::IsvalidCaptureID()
         startValue = PREVIEW_CAPTURE_ID_START;
         endValue = PREVIEW_CAPTURE_ID_END;
     }
-    return (captureID >= startValue && captureID <= endValue);
+    return ((captureID >= startValue) && (captureID <= endValue));
 }
 
 int32_t HStreamRepeat::StartVideo()

@@ -135,14 +135,14 @@ napi_value CameraInputNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", On)
     };
 
-    status = napi_define_class(env, CAMERA_INPUT_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
+    status = napi_define_class(env, CAMERA_INPUT_NAPI_CLASS_NAME, NAPI_AUTO_LENGTH,
                                CameraInputNapiConstructor, nullptr,
                                sizeof(camera_input_props) / sizeof(camera_input_props[PARAM0]),
                                camera_input_props, &ctorObj);
     if (status == napi_ok) {
         status = napi_create_reference(env, ctorObj, refCount, &sConstructor_);
         if (status == napi_ok) {
-            status = napi_set_named_property(env, exports, CAMERA_INPUT_NAPI_CLASS_NAME.c_str(), ctorObj);
+            status = napi_set_named_property(env, exports, CAMERA_INPUT_NAPI_CLASS_NAME, ctorObj);
             if (status == napi_ok) {
                 return exports;
             }
@@ -355,8 +355,10 @@ napi_value CameraInputNapi::GetCameraId(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->cameraId = context->objectInfo->cameraId_;
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->cameraId = context->objectInfo->cameraId_;
+                    context->status = true;
+                }
             },
             GetCameraIdAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -409,9 +411,11 @@ napi_value CameraInputNapi::HasFlash(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                std::vector<camera_flash_mode_enum_t> list;
-                list = context->objectInfo->cameraInput_->GetSupportedFlashModes();
-                context->status = !(list.empty());
+                if (context->objectInfo != nullptr) {
+                    std::vector<camera_flash_mode_enum_t> list;
+                    list = context->objectInfo->cameraInput_->GetSupportedFlashModes();
+                    context->status = !(list.empty());
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -450,7 +454,9 @@ napi_value CameraInputNapi::IsFlashModeSupported(napi_env env, napi_callback_inf
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->status = IsFlashSupported(context->objectInfo->cameraInput_, context->flashMode);
+                if (context->objectInfo != nullptr) {
+                    context->status = IsFlashSupported(context->objectInfo->cameraInput_, context->flashMode);
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -515,16 +521,18 @@ napi_value CameraInputNapi::SetFlashMode(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
-                if (IsFlashSupported(cameraInput, context->flashMode)) {
-                    cameraInput->LockForControl();
-                    cameraInput->SetFlashMode(static_cast<camera_flash_mode_enum_t>(context->flashMode));
-                    cameraInput->SetExposureMode(OHOS_CAMERA_AE_MODE_ON_ALWAYS_FLASH);
-                    cameraInput->UnlockForControl();
-                    context->status = true;
-                } else {
-                    MEDIA_ERR_LOG("Flash mode is not supported");
-                    context->status = false;
+                if (context->objectInfo != nullptr) {
+                    sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
+                    if (IsFlashSupported(cameraInput, context->flashMode)) {
+                        cameraInput->LockForControl();
+                        cameraInput->SetFlashMode(static_cast<camera_flash_mode_enum_t>(context->flashMode));
+                        cameraInput->SetExposureMode(OHOS_CAMERA_AE_MODE_ON_ALWAYS_FLASH);
+                        cameraInput->UnlockForControl();
+                        context->status = true;
+                    } else {
+                        MEDIA_ERR_LOG("Flash mode is not supported");
+                        context->status = false;
+                    }
                 }
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -584,8 +592,10 @@ napi_value CameraInputNapi::GetFlashMode(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->flashMode = context->objectInfo->cameraInput_->GetFlashMode();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->flashMode = context->objectInfo->cameraInput_->GetFlashMode();
+                    context->status = true;
+                }
             },
             GetFlashModeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -688,8 +698,10 @@ napi_value CameraInputNapi::GetExposureMode(napi_env env, napi_callback_info inf
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->exposureMode = context->objectInfo->cameraInput_->GetExposureMode();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->exposureMode = context->objectInfo->cameraInput_->GetExposureMode();
+                    context->status = true;
+                }
             },
             GetExposureModeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -728,9 +740,11 @@ napi_value CameraInputNapi::SetExposureMode(napi_env env, napi_callback_info inf
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->objectInfo->cameraInput_->
-                                SetExposureMode(static_cast<camera_ae_mode_t>(context->exposureMode));
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->objectInfo->cameraInput_->
+                                    SetExposureMode(static_cast<camera_ae_mode_t>(context->exposureMode));
+                    context->status = true;
+                }
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -769,19 +783,21 @@ napi_value CameraInputNapi::IsFocusModeSupported(napi_env env, napi_callback_inf
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                if (context->focusModeLocked) {
-                    MEDIA_INFO_LOG("FOCUS_MODE_LOCKED is supported");
-                    context->status = true;
-                    return;
-                }
+                if (context->objectInfo != nullptr) {
+                    if (context->focusModeLocked) {
+                        MEDIA_INFO_LOG("FOCUS_MODE_LOCKED is supported");
+                        context->status = true;
+                        return;
+                    }
 
-                vector<camera_af_mode_t> vecSupportedFocusModeList;
-                vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
-                if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),
-                    context->focusMode) != vecSupportedFocusModeList.end()) {
-                    context->status = true;
-                } else {
-                    context->status = false;
+                    vector<camera_af_mode_t> vecSupportedFocusModeList;
+                    vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
+                    if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),
+                        context->focusMode) != vecSupportedFocusModeList.end()) {
+                        context->status = true;
+                    } else {
+                        context->status = false;
+                    }
                 }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -861,8 +877,11 @@ napi_value CameraInputNapi::GetSupportedPhotoFormats(napi_env env, napi_callback
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->vecSupportedPhotoFormatList = context->objectInfo->cameraInput_->GetSupportedPhotoFormats();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->vecSupportedPhotoFormatList =
+                        context->objectInfo->cameraInput_->GetSupportedPhotoFormats();
+                    context->status = true;
+                }
             },
             GetSupportedPhotoFormatsAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -940,8 +959,11 @@ napi_value CameraInputNapi::GetSupportedVideoFormats(napi_env env, napi_callback
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->vecSupportedVideoFormatList = context->objectInfo->cameraInput_->GetSupportedVideoFormats();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->vecSupportedVideoFormatList =
+                        context->objectInfo->cameraInput_->GetSupportedVideoFormats();
+                    context->status = true;
+                }
             },
             GetSupportedVideoFormatsAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -1019,9 +1041,11 @@ napi_value CameraInputNapi::GetSupportedPreviewFormats(napi_env env, napi_callba
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->vecSupportedPreviewFormatList =
-                    context->objectInfo->cameraInput_->GetSupportedPreviewFormats();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->vecSupportedPreviewFormatList =
+                        context->objectInfo->cameraInput_->GetSupportedPreviewFormats();
+                    context->status = true;
+                }
             },
             GetSupportedPreviewFormatsAsyncCallbackComplete,
             static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -1088,8 +1112,10 @@ napi_value CameraInputNapi::GetFocusMode(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->focusMode = context->objectInfo->cameraInput_->GetFocusMode();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->focusMode = context->objectInfo->cameraInput_->GetFocusMode();
+                    context->status = true;
+                }
             },
             GetFocusModeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -1129,23 +1155,25 @@ napi_value CameraInputNapi::SetFocusMode(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
-                context->status = true;
-                if (context->focusModeLocked) {
-                    MEDIA_INFO_LOG("Focus mode set is FOCUS_MODE_LOCKED");
-                    return;
-                }
+                if (context->objectInfo != nullptr) {
+                    sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
+                    context->status = true;
+                    if (context->focusModeLocked) {
+                        MEDIA_INFO_LOG("Focus mode set is FOCUS_MODE_LOCKED");
+                        return;
+                    }
 
-                vector<camera_af_mode_t> vecSupportedFocusModeList;
-                vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
-                if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),
-                    context->focusMode) != vecSupportedFocusModeList.end()) {
-                    cameraInput->LockForControl();
-                    context->objectInfo->cameraInput_->SetFocusMode(context->focusMode);
-                    cameraInput->UnlockForControl();
-                } else {
-                    MEDIA_ERR_LOG("Focus mode is not supported");
-                    context->status = false;
+                    vector<camera_af_mode_t> vecSupportedFocusModeList;
+                    vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
+                    if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),
+                        context->focusMode) != vecSupportedFocusModeList.end()) {
+                        cameraInput->LockForControl();
+                        context->objectInfo->cameraInput_->SetFocusMode(context->focusMode);
+                        cameraInput->UnlockForControl();
+                    } else {
+                        MEDIA_ERR_LOG("Focus mode is not supported");
+                        context->status = false;
+                    }
                 }
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
@@ -1225,9 +1253,11 @@ napi_value CameraInputNapi::GetSupportedSizes(napi_env env, napi_callback_info i
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->vecSupportedSizeList =
-                    context->objectInfo->cameraInput_->getSupportedSizes(context->cameraFormat);
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->vecSupportedSizeList =
+                        context->objectInfo->cameraInput_->getSupportedSizes(context->cameraFormat);
+                    context->status = true;
+                }
             },
             GetSupportedSizesAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -1301,8 +1331,10 @@ napi_value CameraInputNapi::GetZoomRatioRange(napi_env env, napi_callback_info i
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->vecZoomRatioList = context->objectInfo->cameraInput_->GetSupportedZoomRatioRange();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->vecZoomRatioList = context->objectInfo->cameraInput_->GetSupportedZoomRatioRange();
+                    context->status = true;
+                }
             },
             GetZoomRatioRangeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -1366,8 +1398,10 @@ napi_value CameraInputNapi::GetZoomRatio(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->zoomRatio = context->objectInfo->cameraInput_->GetZoomRatio();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->zoomRatio = context->objectInfo->cameraInput_->GetZoomRatio();
+                    context->status = true;
+                }
             },
             GetZoomRatioAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -1407,11 +1441,13 @@ napi_value CameraInputNapi::SetZoomRatio(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
-                cameraInput->LockForControl();
-                cameraInput->SetZoomRatio(context->zoomRatio);
-                cameraInput->UnlockForControl();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
+                    cameraInput->LockForControl();
+                    cameraInput->SetZoomRatio(context->zoomRatio);
+                    cameraInput->UnlockForControl();
+                    context->status = true;
+                }
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -1453,8 +1489,10 @@ napi_value CameraInputNapi::Release(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
-                context->objectInfo->cameraInput_->Release();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    context->objectInfo->cameraInput_->Release();
+                    context->status = true;
+                }
             },
             ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
@@ -1478,19 +1516,19 @@ void CameraInputNapi::RegisterCallback(napi_env env, const string &eventType, na
 
     if (eventType.compare("exposureStateChange") == 0) {
         // Set callback for exposureStateChange
-        shared_ptr<ExposureCallbackListener> callback = make_shared<ExposureCallbackListener>(env, callbackRef);
-        cameraInput_->SetExposureCallback(callback);
-        exposureCallback_ = callback;
+        shared_ptr<ExposureCallbackListener> exposureCallback = make_shared<ExposureCallbackListener>(env, callbackRef);
+        cameraInput_->SetExposureCallback(exposureCallback);
+        exposureCallback_ = exposureCallback;
     } else if (eventType.compare("focusStateChange") == 0) {
         // Set callback for focusStateChange
-        shared_ptr<FocusCallbackListener> callback = make_shared<FocusCallbackListener>(env, callbackRef);
-        cameraInput_->SetFocusCallback(callback);
-        focusCallback_ = callback;
+        shared_ptr<FocusCallbackListener> focusCallback = make_shared<FocusCallbackListener>(env, callbackRef);
+        cameraInput_->SetFocusCallback(focusCallback);
+        focusCallback_ = focusCallback;
     } else if (eventType.compare("error") == 0) {
         // Set callback for error
-        shared_ptr<ErrorCallbackListener> callback = make_shared<ErrorCallbackListener>(env, callbackRef);
-        cameraInput_->SetErrorCallback(callback);
-        errorCallback_ = callback;
+        shared_ptr<ErrorCallbackListener> errorCallback = make_shared<ErrorCallbackListener>(env, callbackRef);
+        cameraInput_->SetErrorCallback(errorCallback);
+        errorCallback_ = errorCallback;
     } else {
         MEDIA_ERR_LOG("Incorrect callback event type provided for camera input!");
     }

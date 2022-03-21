@@ -26,3 +26,4 @@ CAPTURE_OUTPUT_TYPE CaptureOutput::GetType()
 }
 } // CameraStandard
 } // OHOS
+

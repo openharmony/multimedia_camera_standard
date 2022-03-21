@@ -16,6 +16,7 @@
 #include "input/camera_input.h"
 
 #include <cinttypes>
+#include <securec.h>
 #include <set>
 #include "camera_device_ability_items.h"
 #include "camera_util.h"
@@ -88,6 +89,10 @@ CameraInput::CameraInput(sptr<ICameraDeviceService> &deviceObj,
                          sptr<CameraInfo> &cameraObj) : cameraObj_(cameraObj), deviceObj_(deviceObj)
 {
     CameraDeviceSvcCallback_ = new CameraDeviceServiceCallback(this);
+    if (!CameraDeviceSvcCallback_) {
+        MEDIA_ERR_LOG("CameraInput::CameraInput CameraDeviceServiceCallback alloc failed");
+        return;
+    }
     deviceObj_->SetCallback(CameraDeviceSvcCallback_);
 }
 
@@ -97,7 +102,6 @@ void CameraInput::Release()
     if (retCode != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to release Camera Input, retCode: %{public}d", retCode);
     }
-    return;
 }
 
 void CameraInput::LockForControl()
@@ -106,7 +110,6 @@ void CameraInput::LockForControl()
     int32_t items = 10;
     int32_t dataLength = 100;
     changedMetadata_ = std::make_shared<CameraMetadata>(items, dataLength);
-    return;
 }
 
 int32_t CameraInput::UpdateSetting(std::shared_ptr<CameraMetadata> changedMetadata)
@@ -262,8 +265,8 @@ std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format
         return {};
     }
     int32_t count = 0;
-    for (uint32_t index = 0; index < item.count; index += unitLen) {
-        if (item.data.i32[index] == format) {
+    for (uint32_t index_ = 0; index_ < item.count; index_ += unitLen) {
+        if (item.data.i32[index_] == format) {
             count++;
         }
     }
@@ -337,7 +340,6 @@ camera_ae_mode_t CameraInput::GetExposureMode()
 void CameraInput::SetExposureCallback(std::shared_ptr<ExposureCallback> exposureCallback)
 {
     exposurecallback_ = exposureCallback;
-    return;
 }
 
 std::vector<camera_af_mode_t> CameraInput::GetSupportedFocusModes()
@@ -416,7 +418,7 @@ void CameraInput::SetFocusMode(camera_af_mode_t focusMode)
 
     MEDIA_DEBUG_LOG("CameraInput::SetFocusMode Focus mode: %{public}d", focusMode);
 
-#ifdef BALTIMORE_CAMERA
+#ifdef PRODUCT_M40
     ret = StartFocus(focusMode);
     if (ret != CAM_META_SUCCESS) {
         return;
@@ -561,7 +563,7 @@ void CameraInput::SetZoomRatio(float zoomRatio)
         return;
     }
 
-#ifdef BALTIMORE_CAMERA
+#ifdef PRODUCT_M40
     ret = SetCropRegion(zoomRatio);
     if (ret != CAM_META_SUCCESS) {
         return;

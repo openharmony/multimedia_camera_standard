@@ -40,7 +40,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-static const std::string CAMERA_VIDEO_OUTPUT_NAPI_CLASS_NAME = "VideoOutput";
+static const char CAMERA_VIDEO_OUTPUT_NAPI_CLASS_NAME[] = "VideoOutput";
 
 class SurfaceListener : public IBufferConsumerListener {
 public:

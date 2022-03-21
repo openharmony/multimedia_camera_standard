@@ -147,12 +147,12 @@ napi_value CameraNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("VideoOutputErrorCode", CreateErrorUnknownEnum(env))
     };
 
-    status = napi_define_class(env, CAMERA_LIB_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, CameraNapiConstructor,
+    status = napi_define_class(env, CAMERA_LIB_NAPI_CLASS_NAME, NAPI_AUTO_LENGTH, CameraNapiConstructor,
                                nullptr, sizeof(camera_properties) / sizeof(camera_properties[PARAM0]),
                                camera_properties, &ctorObj);
     if (status == napi_ok) {
         if (napi_create_reference(env, ctorObj, refCount, &sConstructor_) == napi_ok) {
-            status = napi_set_named_property(env, exports, CAMERA_LIB_NAPI_CLASS_NAME.c_str(), ctorObj);
+            status = napi_set_named_property(env, exports, CAMERA_LIB_NAPI_CLASS_NAME, ctorObj);
             if (status == napi_ok && napi_define_properties(env, exports,
                 sizeof(camera_static_prop) / sizeof(camera_static_prop[PARAM0]), camera_static_prop) == napi_ok) {
                 return exports;

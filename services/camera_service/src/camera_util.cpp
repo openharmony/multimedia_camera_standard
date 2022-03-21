@@ -14,6 +14,7 @@
  */
 
 #include "camera_util.h"
+#include <securec.h>
 #include "media_log.h"
 
 namespace OHOS {
@@ -93,7 +94,7 @@ int32_t HdiToServiceError(Camera::CamRetCode ret)
 
 bool IsValidSize(std::shared_ptr<CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height)
 {
-#ifndef BALTIMORE_CAMERA
+#ifndef PRODUCT_M40
     return true;
 #endif
     uint32_t unitLen = 3;

@@ -335,8 +335,8 @@ int main(int argc, char **argv)
         std::vector<CameraPicSize> videoSizes
             = cameraInput->getSupportedSizes(static_cast<camera_format_t>(videoFormat));
         MEDIA_DEBUG_LOG("Supported sizes for video:");
-        for (auto &size : videoSizes) {
-            MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
+        for (auto &sizeVideo : videoSizes) {
+            MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", sizeVideo.width, sizeVideo.height);
         }
         if (!previewSizes.empty()) {
             previewWidth = previewSizes[0].width;

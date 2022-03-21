@@ -52,6 +52,7 @@ public:
     int32_t TakePhoto();
     int32_t RecordVideo();
     void Release();
+
 private:
     int32_t AddOutputbyState();
     int32_t InitCameraFormatAndResolution(sptr<CameraInput> &cameraInput);

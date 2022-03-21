@@ -59,8 +59,8 @@ ohos_shared_library("camera_napi") {
   ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   cflags = [ "-fPIC" ]
-  if (device_name == "baltimore") {
-    cflags += [ "-DBALTIMORE_CAMERA" ]
+  if ("${product_name}" == "m40") {
+    cflags += [ "-DPRODUCT_M40" ]
   } else {
     if (device_name == "rk3566" || device_name == "rk3568") {
       cflags += [ "-DRK_CAMERA" ]

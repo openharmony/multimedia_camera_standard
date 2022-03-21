@@ -86,6 +86,11 @@ void PreviewOutput::SetCallback(std::shared_ptr<PreviewCallback> callback)
     if (appCallback_ != nullptr) {
         if (svcCallback_ == nullptr) {
             svcCallback_ = new HStreamRepeatCallbackImpl(this);
+            if (!svcCallback_) {
+                MEDIA_ERR_LOG("PreviewOutput::SetCallback: new HStreamRepeatCallbackImpl Failed to register callback");
+                appCallback_ = nullptr;
+                return;
+            }
         }
         errorCode = streamRepeat_->SetCallback(svcCallback_);
         if (errorCode != CAMERA_OK) {
@@ -108,3 +113,4 @@ std::shared_ptr<PreviewCallback> PreviewOutput::GetApplicationCallback()
 }
 } // CameraStandard
 } // OHOS
+

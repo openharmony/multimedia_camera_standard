@@ -13,13 +13,15 @@
  * limitations under the License.
  */
 
+#include "input/camera_manager.h"
+
 #include <cstring>
+
 #include "camera_util.h"
+#include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "media_log.h"
 #include "system_ability_definition.h"
-#include "ipc_skeleton.h"
-#include "input/camera_manager.h"
 
 using namespace std;
 namespace OHOS {
@@ -138,6 +140,9 @@ sptr<CaptureSession> CameraManager::CreateCaptureSession()
     retCode = serviceProxy_->CreateCaptureSession(captureSession);
     if (retCode == CAMERA_OK && captureSession != nullptr) {
         result = new CaptureSession(captureSession);
+        if (!result) {
+            MEDIA_ERR_LOG("Failed to new CaptureSession");
+        }
     } else {
         MEDIA_ERR_LOG("Failed to get capture session object from hcamera service!, %{public}d", retCode);
     }
@@ -158,6 +163,9 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(sptr<Surface> &surface)
     retCode = serviceProxy_->CreatePhotoOutput(surface->GetProducer(), std::stoi(format), streamCapture);
     if (retCode == CAMERA_OK) {
         result = new PhotoOutput(streamCapture);
+        if (!result) {
+            MEDIA_ERR_LOG("Failed to new PhotoOutput ");
+        }
     } else {
         MEDIA_ERR_LOG("Failed to get stream capture object from hcamera service!, %{public}d", retCode);
     }
@@ -177,6 +185,9 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(const sptr<OHOS::IBufferProdu
     retCode = serviceProxy_->CreatePhotoOutput(producer, format, streamCapture);
     if (retCode == CAMERA_OK) {
         result = new PhotoOutput(streamCapture);
+        if (!result) {
+            MEDIA_ERR_LOG("Failed to new PhotoOutput");
+        }
     } else {
         MEDIA_ERR_LOG("Failed to get stream capture object from hcamera service!, %{public}d", retCode);
     }
@@ -197,6 +208,9 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
     retCode = serviceProxy_->CreatePreviewOutput(surface->GetProducer(), std::stoi(format), streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new PreviewOutput(streamRepeat);
+        if (!result) {
+            MEDIA_ERR_LOG("Failed to new PreviewOutput");
+        }
     } else {
         MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
     }
@@ -216,6 +230,9 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(const sptr<OHOS::IBufferP
     retCode = serviceProxy_->CreatePreviewOutput(producer, format, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new PreviewOutput(streamRepeat);
+        if (!result) {
+            MEDIA_ERR_LOG("Failed to new PreviewOutput");
+        }
     } else {
         MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
     }
@@ -237,6 +254,9 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(sptr<Surface> surfa
                                                        streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new PreviewOutput(streamRepeat);
+        if (!result) {
+            MEDIA_ERR_LOG("Failed to new PreviewOutput");
+        }
     } else {
         MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
     }
@@ -257,6 +277,9 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IB
     retCode = serviceProxy_->CreateCustomPreviewOutput(producer, format, width, height, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new PreviewOutput(streamRepeat);
+        if (!result) {
+            MEDIA_ERR_LOG("Failed to new PreviewOutput");
+        }
     } else {
         MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
     }
@@ -277,6 +300,9 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
     retCode = serviceProxy_->CreateVideoOutput(surface->GetProducer(), std::stoi(format), streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new VideoOutput(streamRepeat);
+        if (!result) {
+            MEDIA_ERR_LOG("Failed to new VideoOutput");
+        }
     } else {
         MEDIA_ERR_LOG("VideoOutpout: Failed to get stream repeat object from hcamera service! %{public}d", retCode);
     }
@@ -296,6 +322,9 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(const sptr<OHOS::IBufferProdu
     retCode = serviceProxy_->CreateVideoOutput(producer, format, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new VideoOutput(streamRepeat);
+        if (!result) {
+            MEDIA_ERR_LOG("Failed to new VideoOutput");
+        }
     } else {
         MEDIA_ERR_LOG("VideoOutpout: Failed to get stream repeat object from hcamera service! %{public}d", retCode);
     }
@@ -322,9 +351,12 @@ void CameraManager::Init()
         MEDIA_ERR_LOG("CameraManager::init serviceProxy_ is null.");
         return;
     } else {
-        sptr<CameraManager> helper = this;
-        cameraSvcCallback_ = new CameraStatusServiceCallback(helper);
-        SetCameraServiceCallback(cameraSvcCallback_);
+        cameraSvcCallback_ = new CameraStatusServiceCallback(this);
+        if (cameraSvcCallback_) {
+            SetCameraServiceCallback(cameraSvcCallback_);
+        } else {
+            MEDIA_ERR_LOG("CameraManager::init Failed to new CameraStatusServiceCallback.");
+        }
     }
     pid_t pid = 0;
     deathRecipient_ = new(std::nothrow) CameraDeathRecipient(pid);
@@ -400,6 +432,9 @@ sptr<CameraManager> &CameraManager::GetInstance()
     if (CameraManager::cameraManager_ == nullptr) {
         MEDIA_INFO_LOG("Initializing camera manager for first time!");
         CameraManager::cameraManager_ = new CameraManager();
+        if (CameraManager::cameraManager_ == nullptr) {
+            MEDIA_ERR_LOG("CameraManager::GetInstance failed to new CameraManager");
+        }
     }
     return CameraManager::cameraManager_;
 }
@@ -416,13 +451,17 @@ std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
         cameraObjList.clear();
     }
     if (serviceProxy_ == nullptr) {
-        MEDIA_ERR_LOG("CameraManager::SetCallback serviceProxy_ is null, returning empty list!");
+        MEDIA_ERR_LOG("CameraManager::GetCameras serviceProxy_ is null, returning empty list!");
         return cameraObjList;
     }
     retCode = serviceProxy_->GetCameras(cameraIds, cameraAbilityList);
     if (retCode == CAMERA_OK) {
         for (auto& it : cameraIds) {
             cameraObj = new CameraInfo(it, cameraAbilityList[index++]);
+            if (cameraObj == nullptr) {
+                MEDIA_ERR_LOG("CameraManager::GetCameras new CameraInfo failed for id={public}%s", it.c_str());
+                continue;
+            }
             cameraObjList.emplace_back(cameraObj);
         }
     } else {
@@ -440,6 +479,10 @@ sptr<CameraInput> CameraManager::CreateCameraInput(sptr<CameraInfo> &camera)
         deviceObj = CreateCameraDevice(camera->GetID());
         if (deviceObj != nullptr) {
             cameraInput = new CameraInput(deviceObj, camera);
+            if (cameraInput == nullptr) {
+                MEDIA_ERR_LOG("failed to new CameraInput Returning null in CreateCameraInput");
+                return cameraInput;
+            }
         } else {
             MEDIA_ERR_LOG("Returning null in CreateCameraInput");
         }

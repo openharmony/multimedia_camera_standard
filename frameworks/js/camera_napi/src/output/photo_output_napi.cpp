@@ -155,6 +155,9 @@ void PhotoOutputCallback::UpdateJSCallback(std::string propName, const CallbackI
         napi_create_int32(env_, jsErrorCodeUnknown, &propValue);
         napi_set_named_property(env_, result[PARAM1], "code", propValue);
         napi_get_reference_value(env_, errorCallbackRef_, &callback);
+        if (errorCallbackRef_ != nullptr) {
+            napi_delete_reference(env_, errorCallbackRef_);
+        }
     }
 
     napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);

@@ -139,8 +139,8 @@ sptr<CaptureSession> CameraManager::CreateCaptureSession()
     }
     retCode = serviceProxy_->CreateCaptureSession(captureSession);
     if (retCode == CAMERA_OK && captureSession != nullptr) {
-        result = new CaptureSession(captureSession);
-        if (!result) {
+        result = new(std::nothrow) CaptureSession(captureSession);
+        if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new CaptureSession");
         }
     } else {
@@ -162,8 +162,8 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(sptr<Surface> &surface)
     std::string format = surface->GetUserData(surfaceFormat);
     retCode = serviceProxy_->CreatePhotoOutput(surface->GetProducer(), std::stoi(format), streamCapture);
     if (retCode == CAMERA_OK) {
-        result = new PhotoOutput(streamCapture);
-        if (!result) {
+        result = new(std::nothrow) PhotoOutput(streamCapture);
+        if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PhotoOutput ");
         }
     } else {
@@ -184,8 +184,8 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(const sptr<OHOS::IBufferProdu
     }
     retCode = serviceProxy_->CreatePhotoOutput(producer, format, streamCapture);
     if (retCode == CAMERA_OK) {
-        result = new PhotoOutput(streamCapture);
-        if (!result) {
+        result = new(std::nothrow) PhotoOutput(streamCapture);
+        if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PhotoOutput");
         }
     } else {
@@ -207,8 +207,8 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
     std::string format = surface->GetUserData(surfaceFormat);
     retCode = serviceProxy_->CreatePreviewOutput(surface->GetProducer(), std::stoi(format), streamRepeat);
     if (retCode == CAMERA_OK) {
-        result = new PreviewOutput(streamRepeat);
-        if (!result) {
+        result = new(std::nothrow) PreviewOutput(streamRepeat);
+        if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PreviewOutput");
         }
     } else {
@@ -229,8 +229,8 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(const sptr<OHOS::IBufferP
     }
     retCode = serviceProxy_->CreatePreviewOutput(producer, format, streamRepeat);
     if (retCode == CAMERA_OK) {
-        result = new PreviewOutput(streamRepeat);
-        if (!result) {
+        result = new(std::nothrow) PreviewOutput(streamRepeat);
+        if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PreviewOutput");
         }
     } else {
@@ -253,8 +253,8 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(sptr<Surface> surfa
     retCode = serviceProxy_->CreateCustomPreviewOutput(surface->GetProducer(), std::stoi(format), width, height,
                                                        streamRepeat);
     if (retCode == CAMERA_OK) {
-        result = new PreviewOutput(streamRepeat);
-        if (!result) {
+        result = new(std::nothrow) PreviewOutput(streamRepeat);
+        if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PreviewOutput");
         }
     } else {
@@ -276,8 +276,8 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IB
     }
     retCode = serviceProxy_->CreateCustomPreviewOutput(producer, format, width, height, streamRepeat);
     if (retCode == CAMERA_OK) {
-        result = new PreviewOutput(streamRepeat);
-        if (!result) {
+        result = new(std::nothrow) PreviewOutput(streamRepeat);
+        if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PreviewOutput");
         }
     } else {
@@ -299,8 +299,8 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
     std::string format = surface->GetUserData(surfaceFormat);
     retCode = serviceProxy_->CreateVideoOutput(surface->GetProducer(), std::stoi(format), streamRepeat);
     if (retCode == CAMERA_OK) {
-        result = new VideoOutput(streamRepeat);
-        if (!result) {
+        result = new(std::nothrow) VideoOutput(streamRepeat);
+        if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new VideoOutput");
         }
     } else {
@@ -321,8 +321,8 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(const sptr<OHOS::IBufferProdu
     }
     retCode = serviceProxy_->CreateVideoOutput(producer, format, streamRepeat);
     if (retCode == CAMERA_OK) {
-        result = new VideoOutput(streamRepeat);
-        if (!result) {
+        result = new(std::nothrow) VideoOutput(streamRepeat);
+        if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new VideoOutput");
         }
     } else {
@@ -351,7 +351,7 @@ void CameraManager::Init()
         MEDIA_ERR_LOG("CameraManager::init serviceProxy_ is null.");
         return;
     } else {
-        cameraSvcCallback_ = new CameraStatusServiceCallback(this);
+        cameraSvcCallback_ = new(std::nothrow) CameraStatusServiceCallback(this);
         if (cameraSvcCallback_) {
             SetCameraServiceCallback(cameraSvcCallback_);
         } else {
@@ -431,7 +431,7 @@ sptr<CameraManager> &CameraManager::GetInstance()
 {
     if (CameraManager::cameraManager_ == nullptr) {
         MEDIA_INFO_LOG("Initializing camera manager for first time!");
-        CameraManager::cameraManager_ = new CameraManager();
+        CameraManager::cameraManager_ = new(std::nothrow) CameraManager();
         if (CameraManager::cameraManager_ == nullptr) {
             MEDIA_ERR_LOG("CameraManager::GetInstance failed to new CameraManager");
         }
@@ -457,7 +457,7 @@ std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
     retCode = serviceProxy_->GetCameras(cameraIds, cameraAbilityList);
     if (retCode == CAMERA_OK) {
         for (auto& it : cameraIds) {
-            cameraObj = new CameraInfo(it, cameraAbilityList[index++]);
+            cameraObj = new(std::nothrow) CameraInfo(it, cameraAbilityList[index++]);
             if (cameraObj == nullptr) {
                 MEDIA_ERR_LOG("CameraManager::GetCameras new CameraInfo failed for id={public}%s", it.c_str());
                 continue;
@@ -478,7 +478,7 @@ sptr<CameraInput> CameraManager::CreateCameraInput(sptr<CameraInfo> &camera)
     if (camera != nullptr) {
         deviceObj = CreateCameraDevice(camera->GetID());
         if (deviceObj != nullptr) {
-            cameraInput = new CameraInput(deviceObj, camera);
+            cameraInput = new(std::nothrow) CameraInput(deviceObj, camera);
             if (cameraInput == nullptr) {
                 MEDIA_ERR_LOG("failed to new CameraInput Returning null in CreateCameraInput");
                 return cameraInput;

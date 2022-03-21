@@ -97,7 +97,7 @@ bool IsValidSize(std::shared_ptr<CameraMetadata> cameraAbility, int32_t format, 
 #ifndef PRODUCT_M40
     return true;
 #endif
-    uint32_t unitLen = 3;
+    constexpr uint32_t unitLen = 3;
     camera_metadata_item_t item;
     int ret = FindCameraMetadataItem(cameraAbility->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
     if (ret != CAM_META_SUCCESS) {
@@ -105,7 +105,7 @@ bool IsValidSize(std::shared_ptr<CameraMetadata> cameraAbility, int32_t format, 
         return false;
     }
     if (item.count % unitLen != 0) {
-        MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
+        MEDIA_ERR_LOG("Invalid stream configuration count: %{public}u", item.count);
         return false;
     }
     for (uint32_t index = 0; index < item.count; index += 3) {

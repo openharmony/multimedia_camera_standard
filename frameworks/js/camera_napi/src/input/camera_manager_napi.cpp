@@ -420,6 +420,9 @@ napi_value CameraManagerNapi::On(napi_env env, napi_callback_info info)
             obj->cameraManager_->SetCallback(callback);
         } else {
             MEDIA_ERR_LOG("Incorrect callback event type provided for camera manager!");
+            if (callbackRef != nullptr) {
+                napi_delete_reference(env, callbackRef);
+            }
         }
     }
 

@@ -13,14 +13,13 @@
  * limitations under the License.
  */
 
+#include "camera_framework_moduletest.h"
 #include <cinttypes>
-
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
 #include "media_log.h"
 #include "surface.h"
 #include "test_common.h"
-#include "camera_framework_moduletest.h"
 
 #include "ipc_skeleton.h"
 #include "access_token.h"
@@ -245,7 +244,7 @@ sptr<CaptureOutput> CameraFrameworkModuleTest::CreatePhotoOutput(int32_t width, 
     sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
     surface->SetDefaultWidthAndHeight(width, height);
     surface->SetUserData(CameraManager::surfaceFormat, std::to_string(photoFormat_));
-    sptr<SurfaceListener> listener = new SurfaceListener("Test_Capture", SurfaceType::PHOTO, fd, surface);
+    sptr<SurfaceListener> listener = new(std::nothrow) SurfaceListener("Test_Capture", SurfaceType::PHOTO, fd, surface);
     surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
     sptr<CaptureOutput> photoOutput = manager_->CreatePhotoOutput(surface);
     return photoOutput;
@@ -264,7 +263,8 @@ sptr<CaptureOutput> CameraFrameworkModuleTest::CreatePreviewOutput(bool customPr
     sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
     surface->SetDefaultWidthAndHeight(width, height);
     surface->SetUserData(CameraManager::surfaceFormat, std::to_string(previewFormat_));
-    sptr<SurfaceListener> listener = new SurfaceListener("Test_Preview", SurfaceType::PREVIEW, fd, surface);
+    sptr<SurfaceListener> listener = new(std::nothrow) SurfaceListener("Test_Preview", SurfaceType::PREVIEW,
+                                                                       fd, surface);
     surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
     sptr<CaptureOutput> previewOutput = nullptr;
     if (customPreview) {
@@ -286,7 +286,8 @@ sptr<CaptureOutput> CameraFrameworkModuleTest::CreateVideoOutput(int32_t width, 
     sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
     surface->SetDefaultWidthAndHeight(width, height);
     surface->SetUserData(CameraManager::surfaceFormat, std::to_string(videoFormat_));
-    sptr<SurfaceListener> listener = new SurfaceListener("Test_Video", SurfaceType::VIDEO, g_videoFd, surface);
+    sptr<SurfaceListener> listener = new(std::nothrow) SurfaceListener("Test_Video", SurfaceType::VIDEO,
+                                                                       g_videoFd, surface);
     surface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
     sptr<CaptureOutput> videoOutput = manager_->CreateVideoOutput(surface);
     return videoOutput;
@@ -777,6 +778,8 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_003, TestSize.Le
     intResult = session_->Start();
     EXPECT_EQ(intResult, 0);
 
+    sleep(WAIT_TIME_AFTER_START);
+
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
     EXPECT_EQ(intResult, 0);
 
@@ -786,6 +789,8 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_003, TestSize.Le
     EXPECT_EQ(intResult, 0);
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+
+    sleep(WAIT_TIME_BEFORE_STOP);
     session_->Stop();
 }
 
@@ -1077,7 +1082,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_018, TestSize.Le
 
     sptr<CaptureInput> input1 = nullptr;
     intResult = session_->AddInput(input1);
-    EXPECT_EQ(intResult, 0);
+    EXPECT_NE(intResult, 0);
 
     session_->Stop();
 }
@@ -1097,7 +1102,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_019, TestSize.Le
 
     sptr<CaptureOutput> previewOutput = nullptr;
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_EQ(intResult, 0);
+    EXPECT_NE(intResult, 0);
 
     session_->Stop();
 }
@@ -1265,7 +1270,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_024, TestSize.Le
 #ifdef PRODUCT_M40
     EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_EQ(intResult, 0);
+    EXPECT_NE(intResult, 0);
 #endif
 
     sleep(WAIT_TIME_AFTER_START);
@@ -1452,6 +1457,8 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_027, TestSize.Le
     intResult = session_->Stop();
     EXPECT_EQ(intResult, 0);
 
+    sleep(WAIT_TIME_AFTER_START);
+
     intResult = session_->Start();
     EXPECT_EQ(intResult, 0);
 
@@ -1494,6 +1501,8 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_028, TestSize.Le
     intResult = session_->Start();
     EXPECT_EQ(intResult, 0);
 
+    sleep(WAIT_TIME_AFTER_START);
+
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
     EXPECT_EQ(intResult, 0);
 
@@ -1501,6 +1510,8 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_028, TestSize.Le
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
     EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
     EXPECT_EQ(intResult, 0);
@@ -1512,6 +1523,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_028, TestSize.Le
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
+    sleep(WAIT_TIME_BEFORE_STOP);
     session_->Stop();
 }
 
@@ -1721,6 +1733,8 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_032, TestSize.Le
     intResult = session_->Start();
     EXPECT_EQ(intResult, 0);
 
+    sleep(WAIT_TIME_AFTER_START);
+
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
     EXPECT_EQ(intResult, 0);
 
@@ -1731,6 +1745,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_032, TestSize.Le
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
+    sleep(WAIT_TIME_BEFORE_STOP);
     session_->Stop();
 }
 

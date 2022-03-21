@@ -605,6 +605,10 @@ uint32_t GetCameraMetadataItemCapacity(const common_metadata_header_t *metadataH
 
 uint32_t GetCameraMetadataDataSize(const common_metadata_header_t *metadataHeader)
 {
+    if (metadataHeader == nullptr) {
+        METADATA_ERR_LOG("GetCameraMetadataDataSize::metadataHeader is null");
+        return 0;
+    }
     return metadataHeader->data_capacity;
 }
 

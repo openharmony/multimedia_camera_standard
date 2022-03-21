@@ -55,7 +55,7 @@ private:
 
 class VideoCallbackListener : public VideoCallback {
 public:
-    VideoCallbackListener(napi_env env);
+    explicit VideoCallbackListener(napi_env env);
     ~VideoCallbackListener() = default;
 
     void OnFrameStarted() const override;

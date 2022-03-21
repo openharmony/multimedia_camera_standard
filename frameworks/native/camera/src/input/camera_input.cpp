@@ -26,6 +26,12 @@
 
 namespace OHOS {
 namespace CameraStandard {
+namespace {
+    constexpr int32_t DEFAULT_ITEMS = 10;
+    constexpr int32_t DEFAULT_DATA_LENGTH = 100;
+    constexpr uint32_t UNIT_LENGTH = 3;
+}
+
 class CameraDeviceServiceCallback : public HCameraDeviceCallbackStub {
 public:
     sptr<CameraInput> camInput_ = nullptr;
@@ -88,8 +94,8 @@ const std::unordered_map<camera_af_state_t, FocusCallback::FocusState> CameraInp
 CameraInput::CameraInput(sptr<ICameraDeviceService> &deviceObj,
                          sptr<CameraInfo> &cameraObj) : cameraObj_(cameraObj), deviceObj_(deviceObj)
 {
-    CameraDeviceSvcCallback_ = new CameraDeviceServiceCallback(this);
-    if (!CameraDeviceSvcCallback_) {
+    CameraDeviceSvcCallback_ = new(std::nothrow) CameraDeviceServiceCallback(this);
+    if (CameraDeviceSvcCallback_ == nullptr) {
         MEDIA_ERR_LOG("CameraInput::CameraInput CameraDeviceServiceCallback alloc failed");
         return;
     }
@@ -107,9 +113,7 @@ void CameraInput::Release()
 void CameraInput::LockForControl()
 {
     changeMetaMutex_.lock();
-    int32_t items = 10;
-    int32_t dataLength = 100;
-    changedMetadata_ = std::make_shared<CameraMetadata>(items, dataLength);
+    changedMetadata_ = std::make_shared<CameraMetadata>(DEFAULT_ITEMS, DEFAULT_DATA_LENGTH);
 }
 
 int32_t CameraInput::UpdateSetting(std::shared_ptr<CameraMetadata> changedMetadata)
@@ -175,7 +179,6 @@ void CameraInput::getVector(DataPtr data, size_t count, Vec &vect, VecType dataT
 
 std::vector<camera_format_t> CameraInput::GetSupportedPhotoFormats()
 {
-    uint32_t unitLen = 3;
     camera_format_t format;
     std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
@@ -185,11 +188,11 @@ std::vector<camera_format_t> CameraInput::GetSupportedPhotoFormats()
         MEDIA_ERR_LOG("Failed to get stream configuration with return code %{public}d", ret);
         return {};
     }
-    if (item.count % unitLen != 0) {
+    if (item.count % UNIT_LENGTH != 0) {
         MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
         return {};
     }
-    for (uint32_t index = 0; index < item.count; index += unitLen) {
+    for (uint32_t index = 0; index < item.count; index += UNIT_LENGTH) {
         format = static_cast<camera_format_t>(item.data.i32[index]);
         if (format == OHOS_CAMERA_FORMAT_JPEG) {
             formats.insert(format);
@@ -200,7 +203,6 @@ std::vector<camera_format_t> CameraInput::GetSupportedPhotoFormats()
 
 std::vector<camera_format_t> CameraInput::GetSupportedVideoFormats()
 {
-    uint32_t unitLen = 3;
     camera_format_t format;
     std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
@@ -210,11 +212,11 @@ std::vector<camera_format_t> CameraInput::GetSupportedVideoFormats()
         MEDIA_ERR_LOG("Failed to get stream configuration with return code %{public}d", ret);
         return {};
     }
-    if (item.count % unitLen != 0) {
+    if (item.count % UNIT_LENGTH != 0) {
         MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
         return {};
     }
-    for (uint32_t index = 0; index < item.count; index += unitLen) {
+    for (uint32_t index = 0; index < item.count; index += UNIT_LENGTH) {
         format = static_cast<camera_format_t>(item.data.i32[index]);
         if (format != OHOS_CAMERA_FORMAT_JPEG) {
             formats.insert(format);
@@ -225,7 +227,6 @@ std::vector<camera_format_t> CameraInput::GetSupportedVideoFormats()
 
 std::vector<camera_format_t> CameraInput::GetSupportedPreviewFormats()
 {
-    uint32_t unitLen = 3;
     camera_format_t format;
     std::set<camera_format_t> formats;
     std::shared_ptr<CameraMetadata> metadata = cameraObj_->GetMetadata();
@@ -235,11 +236,11 @@ std::vector<camera_format_t> CameraInput::GetSupportedPreviewFormats()
         MEDIA_ERR_LOG("Failed to get stream configuration with return code %{public}d", ret);
         return {};
     }
-    if (item.count % unitLen != 0) {
+    if (item.count % UNIT_LENGTH != 0) {
         MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
         return {};
     }
-    for (uint32_t index = 0; index < item.count; index += unitLen) {
+    for (uint32_t index = 0; index < item.count; index += UNIT_LENGTH) {
         format = static_cast<camera_format_t>(item.data.i32[index]);
         if (format != OHOS_CAMERA_FORMAT_JPEG) {
             formats.insert(format);
@@ -250,7 +251,6 @@ std::vector<camera_format_t> CameraInput::GetSupportedPreviewFormats()
 
 std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format)
 {
-    uint32_t unitLen = 3;
     uint32_t widthOffset = 1;
     uint32_t heightOffset = 2;
     camera_metadata_item_t item;
@@ -260,12 +260,12 @@ std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format
         MEDIA_ERR_LOG("Failed to get stream configuration with return code %{public}d", ret);
         return {};
     }
-    if (item.count % unitLen != 0) {
-        MEDIA_ERR_LOG("Invalid stream configuration count: %{public}d", item.count);
+    if (item.count % UNIT_LENGTH != 0) {
+        MEDIA_ERR_LOG("Invalid stream configuration count: %{public}u", item.count);
         return {};
     }
     int32_t count = 0;
-    for (uint32_t index_ = 0; index_ < item.count; index_ += unitLen) {
+    for (uint32_t index_ = 0; index_ < item.count; index_ += UNIT_LENGTH) {
         if (item.data.i32[index_] == format) {
             count++;
         }
@@ -277,7 +277,7 @@ std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format
 
     std::vector<CameraPicSize> sizes(count);
     CameraPicSize *size = &sizes[0];
-    for (uint32_t index = 0; index < item.count; index += unitLen) {
+    for (uint32_t index = 0; index < item.count; index += UNIT_LENGTH) {
         if (item.data.i32[index] == format) {
             size->width = static_cast<uint32_t>(item.data.i32[index + widthOffset]);
             size->height = static_cast<uint32_t>(item.data.i32[index + heightOffset]);
@@ -494,7 +494,7 @@ int32_t CameraInput::SetCropRegion(float zoomRatio)
         return ret;
     }
     if (item.count != arrayCount) {
-        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invalid sensor active array size count: %{public}d", item.count);
+        MEDIA_ERR_LOG("CameraInput::SetCropRegion Invalid sensor active array size count: %{public}u", item.count);
         return CAM_META_FAILURE;
     }
 

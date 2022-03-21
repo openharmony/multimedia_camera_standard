@@ -23,6 +23,10 @@ namespace CameraStandard {
 class CaptureInput : public RefBase {
 public:
     virtual ~CaptureInput() {}
+
+    /**
+    * @brief Release camera input.
+    */
     virtual void Release() = 0;
 };
 } // namespace CameraStandard

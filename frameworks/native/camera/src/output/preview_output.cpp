@@ -85,8 +85,8 @@ void PreviewOutput::SetCallback(std::shared_ptr<PreviewCallback> callback)
     appCallback_ = callback;
     if (appCallback_ != nullptr) {
         if (svcCallback_ == nullptr) {
-            svcCallback_ = new HStreamRepeatCallbackImpl(this);
-            if (!svcCallback_) {
+            svcCallback_ = new(std::nothrow) HStreamRepeatCallbackImpl(this);
+            if (svcCallback_ == nullptr) {
                 MEDIA_ERR_LOG("PreviewOutput::SetCallback: new HStreamRepeatCallbackImpl Failed to register callback");
                 appCallback_ = nullptr;
                 return;

@@ -59,21 +59,130 @@ public:
 
 class CameraManager : public RefBase {
 public:
+    /**
+    * @brief Get camera manager instance.
+    *
+    * @return Returns pointer to camera manager instance.
+    */
     static sptr<CameraManager> &GetInstance();
+
+    /**
+    * @brief Get all available cameras.
+    *
+    * @return Returns vector of cameraInfo of available camera.
+    */
     std::vector<sptr<CameraInfo>> GetCameras();
+
+    /**
+    * @brief Create camera input instance.
+    *
+    * @param The cameraInfo for which input has to be created.
+    * @return Returns pointer to camera input instance.
+    */
     sptr<CameraInput> CreateCameraInput(sptr<CameraInfo> &camera);
+
+    /**
+    * @brief Create capture session.
+    *
+    * @return Returns pointer to capture session.
+    */
     sptr<CaptureSession> CreateCaptureSession();
+
+    /**
+    * @brief Create photo output instance using surface.
+    *
+    * @param The surface to be used for photo output.
+    * @return Returns pointer to photo output instance.
+    */
     sptr<PhotoOutput> CreatePhotoOutput(sptr<Surface> &surface);
+
+    /**
+    * @brief Create photo output instance using IBufferProducer.
+    *
+    * @param The IBufferProducer to be used for photo output.
+    * @param The format to be used for photo capture.
+    * @return Returns pointer to photo output instance.
+    */
     sptr<PhotoOutput> CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format);
+
+    /**
+    * @brief Create video output instance using surface.
+    *
+    * @param The surface to be used for video output.
+    * @return Returns pointer to video output instance.
+    */
     sptr<VideoOutput> CreateVideoOutput(sptr<Surface> &surface);
+
+    /**
+    * @brief Create video output instance using IBufferProducer.
+    *
+    * @param The IBufferProducer to be used for video output.
+    * @param The format to be used for video capture.
+    * @return Returns pointer to video output instance.
+    */
     sptr<VideoOutput> CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format);
+
+    /**
+    * @brief Create preview output instance using surface.
+    *
+    * @param The surface to be used for preview.
+    * @return Returns pointer to preview output instance.
+    */
     sptr<PreviewOutput> CreatePreviewOutput(sptr<Surface> surface);
+
+    /**
+    * @brief Create preview output instance using IBufferProducer.
+    *
+    * @param The IBufferProducer to be used for preview output.
+    * @param The format to be used for preview.
+    * @return Returns pointer to video preview instance.
+    */
     sptr<PreviewOutput> CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format);
+
+    /**
+    * @brief Create preview output instance using surface
+    * with custom width and height.
+    *
+    * @param The surface to be used for preview.
+    * @param preview width.
+    * @param preview height.
+    * @return Returns pointer to preview output instance.
+    */
     sptr<PreviewOutput> CreateCustomPreviewOutput(sptr<Surface> surface, int32_t width, int32_t height);
+
+    /**
+    * @brief Create preview output instance using IBufferProducer
+    * with custom width and height.
+    *
+    * @param The IBufferProducer to be used for preview output.
+    * @param The format to be used for preview.
+    * @param preview width.
+    * @param preview height.
+    * @return Returns pointer to preview output instance.
+    */
     sptr<PreviewOutput> CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                                   int32_t width, int32_t height);
+
+    /**
+    * @brief Set camera manager callback.
+    *
+    * @param CameraManagerCallback pointer.
+    */
     void SetCallback(std::shared_ptr<CameraManagerCallback> callback);
+
+    /**
+    * @brief Get the application callback.
+    *
+    * @return CameraManagerCallback pointer is set by application.
+    */
     std::shared_ptr<CameraManagerCallback> GetApplicationCallback();
+
+    /**
+    * @brief Get cameraInfo of specific camera id.
+    *
+    * @param std::string camera id.
+    * @return Returns pointer to cameraInfo of given Id if found else return nullptr.
+    */
     sptr<CameraInfo> GetCameraInfo(std::string cameraId);
 
     static const std::string surfaceFormat;

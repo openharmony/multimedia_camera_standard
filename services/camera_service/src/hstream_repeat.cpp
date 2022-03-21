@@ -94,7 +94,7 @@ void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
 #endif
     }
     MEDIA_INFO_LOG("HStreamRepeat::SetStreamInfo pixelFormat is %{public}d", pixelFormat);
-    if (!streamInfo) {
+    if (streamInfo == nullptr) {
         MEDIA_ERR_LOG("HStreamRepeat::SetStreamInfo null");
         return;
     }

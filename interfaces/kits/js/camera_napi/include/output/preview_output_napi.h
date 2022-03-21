@@ -46,7 +46,7 @@ static const char CAMERA_PREVIEW_OUTPUT_NAPI_CLASS_NAME[] = "PreviewOutput";
 
 class PreviewOutputCallback : public PreviewCallback {
 public:
-    PreviewOutputCallback(napi_env env);
+    explicit PreviewOutputCallback(napi_env env);
     ~PreviewOutputCallback() = default;
 
     void OnFrameStarted() const override;

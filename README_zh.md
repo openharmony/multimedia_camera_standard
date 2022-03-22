@@ -500,5 +500,5 @@
 
 ## 相关仓<a name="section16511040154318"></a>
 
-[multimedia\_camera\_standard](https://gitee.com/openharmony/multimedia_camera_standard)
+[multimedia\_camera\_standard](https://gitee.com/openharmony/multimedia_camera_standard/README_zh.md)
 

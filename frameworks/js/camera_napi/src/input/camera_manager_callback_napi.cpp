@@ -34,11 +34,37 @@ CameraManagerCallbackNapi::~CameraManagerCallbackNapi()
 {
 }
 
-void CameraManagerCallbackNapi::OnCameraStatusChanged(const CameraStatusInfo &cameraStatusInfo) const
+void CameraManagerCallbackNapi::OnCameraStatusCallbackAsync(const CameraStatusInfo &cameraStatusInfo) const
 {
-    MEDIA_DEBUG_LOG("CameraManagerCallbackNapi:OnCameraStatusChanged is called");
-    MEDIA_DEBUG_LOG("CameraManagerCallbackNapi: CameraDeviceStatus: %{public}d", cameraStatusInfo.cameraStatus);
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (!loop) {
+        MEDIA_ERR_LOG("CameraManagerCallbackNapi:OnCameraStatusCallbackAsync() failed to get event loop");
+        return;
+    }
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    if (!work) {
+        MEDIA_ERR_LOG("CameraManagerCallbackNapi:OnCameraStatusCallbackAsync() failed to allocate work");
+        return;
+    }
+    std::unique_ptr<CameraStatusCallbackInfo> callbackInfo =
+        std::make_unique<CameraStatusCallbackInfo>(cameraStatusInfo, this);
+    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        CameraStatusCallbackInfo *callbackInfo = reinterpret_cast<CameraStatusCallbackInfo *>(work->data);
+        if (callbackInfo) {
+            callbackInfo->listener_->OnCameraStatusCallback(callbackInfo->info_);
+        }
+        delete work;
+    });
+    if (ret) {
+        MEDIA_ERR_LOG("CameraManagerCallbackNapi:OnCameraStatusCallbackAsync() failed to execute work");
+        delete work;
+    }
+}
 
+void CameraManagerCallbackNapi::OnCameraStatusCallback(const CameraStatusInfo &cameraStatusInfo) const
+{
     napi_value result[ARGS_TWO];
     napi_value callback = nullptr;
     napi_value retVal;
@@ -67,9 +93,15 @@ void CameraManagerCallbackNapi::OnCameraStatusChanged(const CameraStatusInfo &ca
 
     napi_get_reference_value(env_, callbackRef_, &callback);
     napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
-
-    return;
 }
+
+void CameraManagerCallbackNapi::OnCameraStatusChanged(const CameraStatusInfo &cameraStatusInfo) const
+{
+    MEDIA_DEBUG_LOG("CameraManagerCallbackNapi:OnCameraStatusChanged CameraDeviceStatus: %{public}d",
+                    cameraStatusInfo.cameraStatus);
+    OnCameraStatusCallbackAsync(cameraStatusInfo);
+}
+
 void CameraManagerCallbackNapi::OnFlashlightStatusChanged(const std::string &cameraID,
     const FlashlightStatus flashStatus) const
 {

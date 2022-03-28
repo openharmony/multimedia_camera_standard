@@ -15,6 +15,7 @@
 
 
 #include "output/video_output_napi.h"
+#include <uv.h>
 #include "hilog/log.h"
 
 namespace OHOS {
@@ -33,25 +34,51 @@ sptr<SurfaceListener> VideoOutputNapi::listener = nullptr;
 
 VideoCallbackListener::VideoCallbackListener(napi_env env) : env_(env) {}
 
+void VideoCallbackListener::UpdateJSCallbackAsync(std::string propName, const int32_t value) const
+{
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (!loop) {
+        MEDIA_ERR_LOG("VideoCallbackListener:UpdateJSCallbackAsync() failed to get event loop");
+        return;
+    }
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    if (!work) {
+        MEDIA_ERR_LOG("VideoCallbackListener:UpdateJSCallbackAsync() failed to allocate work");
+        return;
+    }
+    std::unique_ptr<VideoOutputCallbackInfo> callbackInfo =
+        std::make_unique<VideoOutputCallbackInfo>(propName, value, this);
+    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        VideoOutputCallbackInfo *callbackInfo = reinterpret_cast<VideoOutputCallbackInfo *>(work->data);
+        if (callbackInfo) {
+            callbackInfo->listener_->UpdateJSCallback(callbackInfo->eventName_, callbackInfo->value_);
+        }
+        delete work;
+    });
+    if (ret) {
+        MEDIA_ERR_LOG("VideoCallbackListener:UpdateJSCallbackAsync() failed to execute work");
+        delete work;
+    }
+}
+
 void VideoCallbackListener::OnFrameStarted() const
 {
     MEDIA_INFO_LOG("VideoCallbackListener::OnFrameStarted");
-    UpdateJSCallback("OnFrameStarted", -1);
-    return;
+    UpdateJSCallbackAsync("OnFrameStarted", -1);
 }
 
 void VideoCallbackListener::OnFrameEnded(const int32_t frameCount) const
 {
     MEDIA_INFO_LOG("VideoCallbackListener::OnFrameEnded frameCount: %{public}d", frameCount);
-    UpdateJSCallback("OnFrameEnded", frameCount);
-    return;
+    UpdateJSCallbackAsync("OnFrameEnded", frameCount);
 }
 
 void VideoCallbackListener::OnError(const int32_t errorCode) const
 {
     MEDIA_INFO_LOG("VideoCallbackListener::OnError errorCode: %{public}d", errorCode);
-    UpdateJSCallback("OnError", errorCode);
-    return;
+    UpdateJSCallbackAsync("OnError", errorCode);
 }
 
 void VideoCallbackListener::SetCallbackRef(const std::string &eventType, const napi_ref &callbackRef)

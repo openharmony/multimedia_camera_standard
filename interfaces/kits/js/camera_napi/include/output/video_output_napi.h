@@ -65,11 +65,20 @@ public:
 
 private:
     void UpdateJSCallback(std::string propName, const int32_t value) const;
+    void UpdateJSCallbackAsync(std::string propName, const int32_t value) const;
 
     napi_env env_;
     napi_ref frameStartCallbackRef_ = nullptr;
     napi_ref frameEndCallbackRef_ = nullptr;
     napi_ref errorCallbackRef_ = nullptr;
+};
+
+struct VideoOutputCallbackInfo {
+    std::string eventName_;
+    int32_t value_;
+    const VideoCallbackListener *listener_;
+    VideoOutputCallbackInfo(std::string eventName, int32_t value, const VideoCallbackListener *listener)
+        : eventName_(eventName), value_(value), listener_(listener) {}
 };
 
 class VideoOutputNapi {

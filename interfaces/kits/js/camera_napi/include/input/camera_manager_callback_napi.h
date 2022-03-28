@@ -45,8 +45,18 @@ public:
     void OnFlashlightStatusChanged(const std::string &cameraID, const FlashlightStatus flashStatus) const override;
 
 private:
+    void OnCameraStatusCallback(const CameraStatusInfo &cameraStatusInfo) const;
+    void OnCameraStatusCallbackAsync(const CameraStatusInfo &cameraStatusInfo) const;
+
     napi_env env_ = nullptr;
     napi_ref callbackRef_;
+};
+
+struct CameraStatusCallbackInfo {
+    CameraStatusInfo info_;
+    const CameraManagerCallbackNapi *listener_;
+    CameraStatusCallbackInfo(CameraStatusInfo info, const CameraManagerCallbackNapi *listener)
+        : info_(info), listener_(listener) {}
 };
 } // namespace CameraStandard
 } // namespace OHOS

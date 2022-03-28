@@ -14,6 +14,7 @@
  */
 
 #include "output/photo_output_napi.h"
+#include <uv.h>
 
 namespace OHOS {
 namespace CameraStandard {
@@ -31,12 +32,41 @@ std::string PhotoOutputNapi::sSurfaceId_ = "invalid";
 
 PhotoOutputCallback::PhotoOutputCallback(napi_env env) : env_(env) {}
 
+void PhotoOutputCallback::UpdateJSCallbackAsync(std::string propName, const CallbackInfo &info) const
+{
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (!loop) {
+        MEDIA_ERR_LOG("PhotoOutputCallback:UpdateJSCallbackAsync() failed to get event loop");
+        return;
+    }
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    if (!work) {
+        MEDIA_ERR_LOG("PhotoOutputCallback:UpdateJSCallbackAsync() failed to allocate work");
+        return;
+    }
+    std::unique_ptr<PhotoOutputCallbackInfo> callbackInfo =
+        std::make_unique<PhotoOutputCallbackInfo>(propName, info, this);
+    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        PhotoOutputCallbackInfo *callbackInfo = reinterpret_cast<PhotoOutputCallbackInfo *>(work->data);
+        if (callbackInfo) {
+            callbackInfo->listener_->UpdateJSCallback(callbackInfo->eventName_, callbackInfo->info_);
+        }
+        delete work;
+    });
+    if (ret) {
+        MEDIA_ERR_LOG("PhotoOutputCallback:UpdateJSCallbackAsync() failed to execute work");
+        delete work;
+    }
+}
+
 void PhotoOutputCallback::OnCaptureStarted(const int32_t captureID) const
 {
     MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureStarted() is called!, captureID: %{public}d", captureID);
     CallbackInfo info;
     info.captureID = captureID;
-    UpdateJSCallback("OnCaptureStarted", info);
+    UpdateJSCallbackAsync("OnCaptureStarted", info);
 }
 
 void PhotoOutputCallback::OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const
@@ -46,7 +76,7 @@ void PhotoOutputCallback::OnCaptureEnded(const int32_t captureID, const int32_t 
     CallbackInfo info;
     info.captureID = captureID;
     info.frameCount = frameCount;
-    UpdateJSCallback("OnCaptureEnded", info);
+    UpdateJSCallbackAsync("OnCaptureEnded", info);
 }
 
 void PhotoOutputCallback::OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const
@@ -56,7 +86,7 @@ void PhotoOutputCallback::OnFrameShutter(const int32_t captureId, const uint64_t
     CallbackInfo info;
     info.captureID = captureId;
     info.timestamp = timestamp;
-    UpdateJSCallback("OnFrameShutter", info);
+    UpdateJSCallbackAsync("OnFrameShutter", info);
 }
 
 void PhotoOutputCallback::OnCaptureError(const int32_t captureId, const int32_t errorCode) const
@@ -66,7 +96,7 @@ void PhotoOutputCallback::OnCaptureError(const int32_t captureId, const int32_t 
     CallbackInfo info;
     info.captureID = captureId;
     info.errorCode = errorCode;
-    UpdateJSCallback("OnCaptureError", info);
+    UpdateJSCallbackAsync("OnCaptureError", info);
 }
 
 void PhotoOutputCallback::SetCallbackRef(const std::string &eventType, const napi_ref &callbackRef)

@@ -20,6 +20,12 @@
 #include "surface.h"
 #include "test_common.h"
 
+#include "ipc_skeleton.h"
+#include "access_token.h"
+#include "hap_token_info.h"
+#include "accesstoken_kit.h"
+#include "token_setproc.h"
+
 using namespace testing::ext;
 using ::testing::A;
 using ::testing::InSequence;
@@ -183,8 +189,69 @@ sptr<CaptureOutput> CameraFrameworkUnitTest::CreateVideoOutput(int32_t width, in
     return cameraManager->CreateVideoOutput(surface);
 }
 
-void CameraFrameworkUnitTest::SetUpTestCase(void) {}
-void CameraFrameworkUnitTest::TearDownTestCase(void) {}
+static std::string permissionName = "ohos.permission.CAMERA";
+static OHOS::Security::AccessToken::HapInfoParams g_infoManagerTestInfoParms = {
+    .userID = 1,
+    .bundleName = permissionName,
+    .instIndex = 0,
+    .appIDDesc = "testtesttesttest"
+};
+
+static OHOS::Security::AccessToken::PermissionDef g_infoManagerTestPermDef1 = {
+    .permissionName = "ohos.permission.CAMERA",
+    .bundleName = "ohos.permission.CAMERA",
+    .grantMode = 1,
+    .availableLevel = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
+    .label = "label",
+    .labelId = 1,
+    .description = "camera test",
+    .descriptionId = 1
+};
+
+static OHOS::Security::AccessToken::PermissionStateFull g_infoManagerTestState1 = {
+    .permissionName = "ohos.permission.CAMERA",
+    .isGeneral = true,
+    .resDeviceID = {"local"},
+    .grantStatus = {OHOS::Security::AccessToken::PermissionState::PERMISSION_GRANTED},
+    .grantFlags = {1}
+};
+
+static OHOS::Security::AccessToken::HapPolicyParams g_infoManagerTestPolicyPrams = {
+    .apl = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
+    .domain = "test.domain",
+    .permList = {g_infoManagerTestPermDef1},
+    .permStateList = {g_infoManagerTestState1}
+};
+
+OHOS::Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+
+void CameraFrameworkUnitTest::SetUpTestCase(void)
+{
+    int32_t ret = -1;
+
+    /* Grant the permission so that create camera test can be success */
+    tokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::AllocHapToken(
+        g_infoManagerTestInfoParms,
+        g_infoManagerTestPolicyPrams);
+    if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
+        return;
+    }
+
+    (void)SetSelfTokenID(tokenIdEx.tokenIdExStruct.tokenID);
+
+    ret = Security::AccessToken::AccessTokenKit::GrantPermission(
+        tokenIdEx.tokenIdExStruct.tokenID,
+        permissionName, OHOS::Security::AccessToken::PERMISSION_USER_FIXED);
+    if (ret != 0) {
+        return;
+    }
+}
+
+void CameraFrameworkUnitTest::TearDownTestCase(void)
+{
+    (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+        tokenIdEx.tokenIdExStruct.tokenID);
+}
 
 void CameraFrameworkUnitTest::SetUp()
 {

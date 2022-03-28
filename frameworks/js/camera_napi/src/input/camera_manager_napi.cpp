@@ -54,7 +54,6 @@ napi_value CameraManagerNapi::CameraManagerNapiConstructor(napi_env env, napi_ca
         if (obj != nullptr) {
             obj->env_ = env;
             obj->cameraManager_ = CameraManager::GetInstance();
-            obj->cameraManager_->SetPermissionCheck(true);
             status = napi_wrap(env, thisVar, reinterpret_cast<void*>(obj.get()),
                                CameraManagerNapi::CameraManagerNapiDestructor, nullptr, &(obj->wrapper_));
             if (status == napi_ok) {
@@ -73,7 +72,6 @@ void CameraManagerNapi::CameraManagerNapiDestructor(napi_env env, void *nativeOb
 {
     CameraManagerNapi *camera = reinterpret_cast<CameraManagerNapi*>(nativeObject);
     if (camera != nullptr) {
-        camera->cameraManager_->SetPermissionCheck(false);
         camera->~CameraManagerNapi();
     }
 }

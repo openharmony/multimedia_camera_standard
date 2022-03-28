@@ -58,6 +58,7 @@ ohos_shared_library("camera_service") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
     "//foundation/multimedia/camera_standard/frameworks/native/metadata/include",
     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
+    "//base/security/access_token/interfaces/innerkits/accesstoken/include",
   ]
 
   if (target_cpu == "arm") {
@@ -71,6 +72,7 @@ ohos_shared_library("camera_service") {
   ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "ipc:ipc_single",

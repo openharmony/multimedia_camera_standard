@@ -13,14 +13,20 @@
  * limitations under the License.
  */
 
-#include "camera_framework_moduletest.h"
+#include <cinttypes>
+
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
 #include "media_log.h"
 #include "surface.h"
 #include "test_common.h"
+#include "camera_framework_moduletest.h"
 
-#include <cinttypes>
+#include "ipc_skeleton.h"
+#include "access_token.h"
+#include "hap_token_info.h"
+#include "accesstoken_kit.h"
+#include "token_setproc.h"
 
 using namespace testing::ext;
 
@@ -199,6 +205,40 @@ namespace {
     };
 } // namespace
 
+static std::string permissionName = "ohos.permission.CAMERA";
+static OHOS::Security::AccessToken::HapInfoParams g_infoManagerTestInfoParms = {
+    .userID = 1,
+    .bundleName = permissionName,
+    .instIndex = 0,
+    .appIDDesc = "testtesttesttest"
+};
+
+static OHOS::Security::AccessToken::PermissionDef g_infoManagerTestPermDef1 = {
+    .permissionName = "ohos.permission.CAMERA",
+    .bundleName = "ohos.permission.CAMERA",
+    .grantMode = 1,
+    .availableLevel = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
+    .label = "label",
+    .labelId = 1,
+    .description = "camera test",
+    .descriptionId = 1
+};
+
+static OHOS::Security::AccessToken::PermissionStateFull g_infoManagerTestState1 = {
+    .permissionName = "ohos.permission.CAMERA",
+    .isGeneral = true,
+    .resDeviceID = {"local"},
+    .grantStatus = {OHOS::Security::AccessToken::PermissionState::PERMISSION_GRANTED},
+    .grantFlags = {1}
+};
+
+static OHOS::Security::AccessToken::HapPolicyParams g_infoManagerTestPolicyPrams = {
+    .apl = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
+    .domain = "test.domain",
+    .permList = {g_infoManagerTestPermDef1},
+    .permStateList = {g_infoManagerTestState1}
+};
+
 sptr<CaptureOutput> CameraFrameworkModuleTest::CreatePhotoOutput(int32_t width, int32_t height)
 {
     int32_t fd = -1;
@@ -365,8 +405,11 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
     intResult = session_->CommitConfig();
     EXPECT_TRUE(intResult == 0);
 
+    /* In case of wagner device, once commit config is done with flash on
+    it is not giving the flash status callback, removing it */
+#ifndef BALTIMORE_CAMERA
     EXPECT_TRUE(g_camFlashMap.count(cameraInfo->GetID()) != 0);
-
+#endif
     EXPECT_TRUE(g_photoEvents.none());
     EXPECT_TRUE(g_previewEvents.none());
     EXPECT_TRUE(g_videoEvents.none());
@@ -377,7 +420,12 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
 
     if (photoOutput != nullptr) {
         EXPECT_TRUE(g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_START)] == 1);
+        /* In case of wagner device, frame shutter callback not working,
+        hence removed. Once supported by hdi, the same needs to be
+        enabled */
+#ifndef BALTIMORE_CAMERA
         EXPECT_TRUE(g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_FRAME_SHUTTER)] == 1);
+#endif
         EXPECT_TRUE(g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_END)] == 1);
 
         ((sptr<PhotoOutput> &)photoOutput)->Release();
@@ -530,9 +578,34 @@ void CameraFrameworkModuleTest::SetUpInit()
 #endif
 }
 
+OHOS::Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+
 void CameraFrameworkModuleTest::SetUp()
 {
+    int32_t ret = -1;
+    
     SetUpInit();
+
+    /* Grant the permission so that create camera test can be success */
+    tokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::AllocHapToken(
+        g_infoManagerTestInfoParms,
+        g_infoManagerTestPolicyPrams);
+    if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
+        MEDIA_DEBUG_LOG("Alloc TokenID failure \n");
+        return;
+    }
+
+    (void)SetSelfTokenID(tokenIdEx.tokenIdExStruct.tokenID);
+
+    ret = Security::AccessToken::AccessTokenKit::GrantPermission(
+        tokenIdEx.tokenIdExStruct.tokenID,
+        permissionName, OHOS::Security::AccessToken::PERMISSION_USER_FIXED);
+    if (ret != 0) {
+        MEDIA_ERR_LOG("GrantPermission( ) failed");
+        return;
+    } else {
+        MEDIA_DEBUG_LOG("GrantPermission( ) success");
+    }
 
     manager_ = CameraManager::GetInstance();
     manager_->SetCallback(std::make_shared<AppCallback>());
@@ -588,9 +661,13 @@ void CameraFrameworkModuleTest::TearDown()
 {
     session_->Release();
     input_->Release();
+    (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+        tokenIdEx.tokenIdExStruct.tokenID);
+    MEDIA_DEBUG_LOG("Deleted the allocated Token");
     MEDIA_DEBUG_LOG("End of camera test case");
 }
 
+#ifndef BALTIMORE_CAMERA
 /*
  * Feature: Framework
  * Function: Test Capture
@@ -620,7 +697,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_001, TestSize.Le
     EXPECT_TRUE(intResult == 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 }
-
+#endif
 /*
  * Feature: Framework
  * Function: Test Capture + Preview

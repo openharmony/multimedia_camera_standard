@@ -173,14 +173,14 @@ typedef enum camera_device_metadata_tag {
     OHOS_STREAM_JPEG_END,
 } camera_device_metadata_tag_t;
 
-// OHOS_CAMERA_POSITION
+// OHOS_ABILITY_CAMERA_POSITION
 typedef enum camera_position_enum {
     OHOS_CAMERA_POSITION_FRONT = 0,
     OHOS_CAMERA_POSITION_BACK,
     OHOS_CAMERA_POSITION_OTHER
 } camera_position_enum_t;
 
-// OHOS_CAMERA_TYPE
+// OHOS_ABILITY_CAMERA_TYPE
 typedef enum camera_type_enum {
     OHOS_CAMERA_TYPE_WIDE_ANGLE = 0,
     OHOS_CAMERA_TYPE_ULTRA_WIDE,
@@ -190,20 +190,20 @@ typedef enum camera_type_enum {
     OHOS_CAMERA_TYPE_UNSPECIFIED,
 } camera_type_enum_t;
 
-// OHOS_CAMERA_CONNECTION_TYPE
+// OHOS_ABILITY_CAMERA_CONNECTION_TYPE
 typedef enum camera_connection_type {
     OHOS_CAMERA_CONNECTION_TYPE_BUILTIN = 0,
     OHOS_CAMERA_CONNECTION_TYPE_USB_PLUGIN,
     OHOS_CAMERA_CONNECTION_TYPE_REMOTE,
 } camera_connection_type_t;
 
-// OHOS_EXPOSURE_MODE
+// OHOS_CONTROL_EXPOSUREMODE
 typedef enum camera_exposure_mode_enum {
     OHOS_CAMERA_EXPOSURE_MODE_MANUAL = 0,
     OHOS_CAMERA_EXPOSURE_MODE_CONTINUOUS_AUTO
 } camera_exposure_mode_enum_t;
 
-// OHOS_FOCUS_MODE
+// OHOS_CONTROL_FOCUSMODE
 typedef enum camera_focus_mode_enum {
     OHOS_CAMERA_FOCUS_MODE_MANUAL = 0,
     OHOS_CAMERA_FOCUS_MODE_CONTINUOUS_AUTO,
@@ -211,7 +211,7 @@ typedef enum camera_focus_mode_enum {
     OHOS_CAMERA_FOCUS_MODE_LOCKED
 } camera_focus_mode_enum_t;
 
-// OHOS_FLASH_MODE
+// OHOS_CONTROL_FLASHMODE
 typedef enum camera_flash_mode_enum {
     OHOS_CAMERA_FLASH_MODE_CLOSE = 0,
     OHOS_CAMERA_FLASH_MODE_OPEN,

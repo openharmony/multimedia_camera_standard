@@ -20,8 +20,50 @@
 #include "media_log.h"
 #include "test_common.h"
 
+#include "ipc_skeleton.h"
+#include "access_token.h"
+#include "hap_token_info.h"
+#include "accesstoken_kit.h"
+#include "token_setproc.h"
+
 using namespace OHOS;
 using namespace OHOS::CameraStandard;
+
+static std::string permissionName = "ohos.permission.CAMERA";
+static OHOS::Security::AccessToken::HapInfoParams g_infoManagerTestInfoParms = {
+    .userID = 1,
+    .bundleName = permissionName,
+    .instIndex = 0,
+    .appIDDesc = "testtesttesttest"
+};
+
+static OHOS::Security::AccessToken::PermissionDef g_infoManagerTestPermDef1 = {
+    .permissionName = "ohos.permission.CAMERA",
+    .bundleName = "ohos.permission.CAMERA",
+    .grantMode = 1,
+    .availableLevel = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
+    .label = "label",
+    .labelId = 1,
+    .description = "camera test",
+    .descriptionId = 1
+};
+
+static OHOS::Security::AccessToken::PermissionStateFull g_infoManagerTestState1 = {
+    .permissionName = "ohos.permission.CAMERA",
+    .isGeneral = true,
+    .resDeviceID = {"local"},
+    .grantStatus = {OHOS::Security::AccessToken::PermissionState::PERMISSION_GRANTED},
+    .grantFlags = {1}
+};
+
+static OHOS::Security::AccessToken::HapPolicyParams g_infoManagerTestPolicyPrams = {
+    .apl = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
+    .domain = "test.domain",
+    .permList = {g_infoManagerTestPermDef1},
+    .permStateList = {g_infoManagerTestState1}
+};
+
+static OHOS::Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
 
 static void PhotoModeUsage(FILE *fp)
 {
@@ -174,6 +216,9 @@ static void DisplayMenu(std::shared_ptr<CameraCaptureVideo> testObj)
 
             case 'q':
                 testObj->Release();
+                (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+                    tokenIdEx.tokenIdExStruct.tokenID);
+                MEDIA_DEBUG_LOG("Deleted the allocated Token");
                 exit(EXIT_SUCCESS);
 
             default:
@@ -275,6 +320,27 @@ int32_t CameraCaptureVideo::InitCameraManager()
     int32_t result = -1;
 
     if (cameraManager_ == nullptr) {
+        /* Grant the permission so that create camera test can be success */
+        tokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::AllocHapToken(
+            g_infoManagerTestInfoParms,
+            g_infoManagerTestPolicyPrams);
+        if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
+            MEDIA_DEBUG_LOG("Alloc TokenID failure \n");
+            return 0;
+        }
+
+        (void)SetSelfTokenID(tokenIdEx.tokenIdExStruct.tokenID);
+
+        result = Security::AccessToken::AccessTokenKit::GrantPermission(
+            tokenIdEx.tokenIdExStruct.tokenID,
+            permissionName, OHOS::Security::AccessToken::PERMISSION_USER_FIXED);
+        if (result != 0) {
+            MEDIA_ERR_LOG("GrantPermission( ) failed");
+            return 0;
+        } else {
+            MEDIA_DEBUG_LOG("GrantPermission( ) success");
+        }
+
         cameraManager_ = CameraManager::GetInstance();
         if (cameraManager_ == nullptr) {
             MEDIA_ERR_LOG("Failed to get camera manager!");

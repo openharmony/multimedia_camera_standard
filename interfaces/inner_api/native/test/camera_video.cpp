@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <unistd.h>
 
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
@@ -21,7 +22,11 @@
 #include "surface.h"
 #include "test_common.h"
 
-#include <unistd.h>
+#include "ipc_skeleton.h"
+#include "access_token.h"
+#include "hap_token_info.h"
+#include "accesstoken_kit.h"
+#include "token_setproc.h"
 
 using namespace std;
 using namespace OHOS;
@@ -161,6 +166,40 @@ namespace {
     }
 }
 
+static std::string permissionName = "ohos.permission.CAMERA";
+static OHOS::Security::AccessToken::HapInfoParams g_infoManagerTestInfoParms = {
+    .userID = 1,
+    .bundleName = permissionName,
+    .instIndex = 0,
+    .appIDDesc = "testtesttesttest"
+};
+
+static OHOS::Security::AccessToken::PermissionDef g_infoManagerTestPermDef1 = {
+    .permissionName = "ohos.permission.CAMERA",
+    .bundleName = "ohos.permission.CAMERA",
+    .grantMode = 1,
+    .availableLevel = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
+    .label = "label",
+    .labelId = 1,
+    .description = "camera test",
+    .descriptionId = 1
+};
+
+static OHOS::Security::AccessToken::PermissionStateFull g_infoManagerTestState1 = {
+    .permissionName = "ohos.permission.CAMERA",
+    .isGeneral = true,
+    .resDeviceID = {"local"},
+    .grantStatus = {OHOS::Security::AccessToken::PermissionState::PERMISSION_GRANTED},
+    .grantFlags = {1}
+};
+
+static OHOS::Security::AccessToken::HapPolicyParams g_infoManagerTestPolicyPrams = {
+    .apl = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
+    .domain = "test.domain",
+    .permList = {g_infoManagerTestPermDef1},
+    .permStateList = {g_infoManagerTestState1}
+};
+
 int main(int argc, char **argv)
 {
     const int32_t previewFormatIndex = 1;
@@ -207,6 +246,28 @@ int main(int argc, char **argv)
         cout << "Pass " << (validArgCount - 1) << "arguments" << endl;
         cout << "PreviewFormat, PreviewWidth, PreviewHeight, VideoFormat, VideoWidth, VideoHeight" << endl;
         return 0;
+    }
+
+    /* Grant the permission so that create camera test can be success */
+    OHOS::Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
+    tokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::AllocHapToken(
+        g_infoManagerTestInfoParms,
+        g_infoManagerTestPolicyPrams);
+    if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
+        MEDIA_DEBUG_LOG("Alloc TokenID failure \n");
+        return 0;
+    }
+
+    (void)SetSelfTokenID(tokenIdEx.tokenIdExStruct.tokenID);
+
+    ret = Security::AccessToken::AccessTokenKit::GrantPermission(
+        tokenIdEx.tokenIdExStruct.tokenID,
+        permissionName, OHOS::Security::AccessToken::PERMISSION_USER_FIXED);
+    if (ret != 0) {
+        MEDIA_ERR_LOG("GrantPermission( ) failed");
+        return 0;
+    } else {
+        MEDIA_DEBUG_LOG("GrantPermission( ) success");
     }
 
     sptr<CameraManager> camManagerObj = CameraManager::GetInstance();
@@ -466,6 +527,9 @@ int main(int argc, char **argv)
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
     cameraInput->Release();
     camManagerObj->SetCallback(nullptr);
+    (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+        tokenIdEx.tokenIdExStruct.tokenID);
+    MEDIA_DEBUG_LOG("Deleted the allocated Token");
 
     MEDIA_DEBUG_LOG("Camera new sample end.");
     return 0;

@@ -23,6 +23,8 @@
 #include "media_log.h"
 #include "system_ability_definition.h"
 #include "ipc_skeleton.h"
+#include "access_token.h"
+#include "accesstoken_kit.h"
 #include "hcamera_service.h"
 
 namespace OHOS {
@@ -96,6 +98,18 @@ int32_t HCameraService::GetCameras(std::vector<std::string> &cameraIds,
 int32_t HCameraService::CreateCameraDevice(std::string cameraId, sptr<ICameraDeviceService> &device)
 {
     sptr<HCameraDevice> cameraDevice;
+
+    OHOS::Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    std::string permissionName = "ohos.permission.CAMERA";
+
+    int permission_result = OHOS::Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken,
+        permissionName);
+    if (permission_result != OHOS::Security::AccessToken::TypePermissionState::PERMISSION_GRANTED) {
+        MEDIA_ERR_LOG("HCameraService::CreateCameraDevice: Permission to Access Camera Denied!!!!");
+        return CAMERA_ALLOC_ERROR;
+    } else {
+        MEDIA_DEBUG_LOG("HCameraService::CreateCameraDevice: Permission to Access Camera Granted!!!!");
+    }
 
     if (cameraDeviceCallback_ == nullptr) {
         cameraDeviceCallback_ = new CameraDeviceCallback();

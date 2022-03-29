@@ -588,6 +588,7 @@ int32_t HCaptureSession::Start()
     sptr<HStreamRepeat> curStreamRepeat;
 
     if (curState_ != CaptureSessionState::SESSION_CONFIG_COMMITTED) {
+        MEDIA_ERR_LOG("HCaptureSession::Start(), Invalid session state: %{public}d", rc);
         return rc;
     }
     for (auto item = streamRepeats_.begin(); item != streamRepeats_.end(); ++item) {

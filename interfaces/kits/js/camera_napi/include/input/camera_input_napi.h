@@ -51,8 +51,18 @@ public:
     void OnExposureState(const ExposureState state) override;
 
 private:
+    void OnExposureStateCallback(ExposureState state) const;
+    void OnExposureStateCallbackAsync(ExposureState state) const;
+
     napi_env env_;
     napi_ref callbackRef_ = nullptr;
+};
+
+struct ExposureCallbackInfo {
+    ExposureCallback::ExposureState state_;
+    const ExposureCallbackListener *listener_;
+    ExposureCallbackInfo(ExposureCallback::ExposureState state, const ExposureCallbackListener *listener)
+        : state_(state), listener_(listener) {}
 };
 
 class FocusCallbackListener : public FocusCallback {
@@ -62,8 +72,18 @@ public:
     void OnFocusState(FocusState state) override;
 
 private:
+    void OnFocusStateCallback(FocusState state) const;
+    void OnFocusStateCallbackAsync(FocusState state) const;
+
     napi_env env_;
     napi_ref callbackRef_ = nullptr;
+};
+
+struct FocusCallbackInfo {
+    FocusCallback::FocusState state_;
+    const FocusCallbackListener *listener_;
+    FocusCallbackInfo(FocusCallback::FocusState state, const FocusCallbackListener *listener)
+        : state_(state), listener_(listener) {}
 };
 
 class ErrorCallbackListener : public ErrorCallback {
@@ -73,8 +93,19 @@ public:
     void OnError(const int32_t errorType, const int32_t errorMsg) const override;
 
 private:
+    void OnErrorCallback(const int32_t errorType, const int32_t errorMsg) const;
+    void OnErrorCallbackAsync(const int32_t errorType, const int32_t errorMsg) const;
+
     napi_env env_;
     napi_ref callbackRef_ = nullptr;
+};
+
+struct ErrorCallbackInfo {
+    int32_t errorType_;;
+    int32_t errorMsg_;
+    const ErrorCallbackListener *listener_;
+    ErrorCallbackInfo(int32_t errorType, int32_t errorMsg, const ErrorCallbackListener *listener)
+        : errorType_(errorType), errorMsg_(errorMsg), listener_(listener) {}
 };
 
 class CameraInputNapi {

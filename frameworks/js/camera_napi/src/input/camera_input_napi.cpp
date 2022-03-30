@@ -14,6 +14,7 @@
  */
 
 #include "input/camera_input_napi.h"
+#include <uv.h>
 
 namespace OHOS {
 namespace CameraStandard {
@@ -29,9 +30,36 @@ napi_ref CameraInputNapi::sConstructor_ = nullptr;
 std::string CameraInputNapi::sCameraId_ = "invalid";
 sptr<CameraInput> CameraInputNapi::sCameraInput_ = nullptr;
 
-void ExposureCallbackListener::OnExposureState(const ExposureState state)
+void ExposureCallbackListener::OnExposureStateCallbackAsync(ExposureState state) const
 {
-    MEDIA_INFO_LOG("ExposureCallbackListener:OnExposureState() is called!, captureID: %{public}d", state);
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (!loop) {
+        MEDIA_ERR_LOG("ExposureCallbackListener:OnExposureStateCallbackAsync() failed to get event loop");
+        return;
+    }
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    if (!work) {
+        MEDIA_ERR_LOG("ExposureCallbackListener:OnExposureStateCallbackAsync() failed to allocate work");
+        return;
+    }
+    std::unique_ptr<ExposureCallbackInfo> callbackInfo = std::make_unique<ExposureCallbackInfo>(state, this);
+    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        ExposureCallbackInfo *callbackInfo = reinterpret_cast<ExposureCallbackInfo *>(work->data);
+        if (callbackInfo) {
+            callbackInfo->listener_->OnExposureStateCallback(callbackInfo->state_);
+        }
+        delete work;
+    });
+    if (ret) {
+        MEDIA_ERR_LOG("ExposureCallbackListener:OnExposureStateCallbackAsync() failed to execute work");
+        delete work;
+    }
+}
+
+void ExposureCallbackListener::OnExposureStateCallback(ExposureState state) const
+{
     int32_t jsExposureState;
     napi_value result[ARGS_TWO];
     napi_value callback = nullptr;
@@ -46,9 +74,42 @@ void ExposureCallbackListener::OnExposureState(const ExposureState state)
     napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
 }
 
-void FocusCallbackListener::OnFocusState(FocusState state)
+void ExposureCallbackListener::OnExposureState(const ExposureState state)
 {
-    MEDIA_INFO_LOG("FocusCallbackListener:OnFocusState() is called!, state: %{public}d", state);
+    MEDIA_INFO_LOG("ExposureCallbackListener:OnExposureState() is called!, state: %{public}d", state);
+    OnExposureStateCallbackAsync(state);
+}
+
+void FocusCallbackListener::OnFocusStateCallbackAsync(FocusState state) const
+{
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (!loop) {
+        MEDIA_ERR_LOG("FocusCallbackListener:OnFocusStateCallbackAsync() failed to get event loop");
+        return;
+    }
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    if (!work) {
+        MEDIA_ERR_LOG("FocusCallbackListener:OnFocusStateCallbackAsync() failed to allocate work");
+        return;
+    }
+    std::unique_ptr<FocusCallbackInfo> callbackInfo = std::make_unique<FocusCallbackInfo>(state, this);
+    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        FocusCallbackInfo *callbackInfo = reinterpret_cast<FocusCallbackInfo *>(work->data);
+        if (callbackInfo) {
+            callbackInfo->listener_->OnFocusStateCallback(callbackInfo->state_);
+        }
+        delete work;
+    });
+    if (ret) {
+        MEDIA_ERR_LOG("FocusCallbackListener:OnFocusStateCallbackAsync() failed to execute work");
+        delete work;
+    }
+}
+
+void FocusCallbackListener::OnFocusStateCallback(FocusState state) const
+{
     int32_t jsFocusState;
     napi_value result[ARGS_TWO];
     napi_value callback = nullptr;
@@ -63,9 +124,42 @@ void FocusCallbackListener::OnFocusState(FocusState state)
     napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
 }
 
-void ErrorCallbackListener::OnError(const int32_t errorType, const int32_t errorMsg) const
+void FocusCallbackListener::OnFocusState(FocusState state)
 {
-    MEDIA_INFO_LOG("ErrorCallbackListener:OnError() is called!, errorType: %{public}d", errorType);
+    MEDIA_INFO_LOG("FocusCallbackListener:OnFocusState() is called!, state: %{public}d", state);
+    OnFocusStateCallbackAsync(state);
+}
+
+void ErrorCallbackListener::OnErrorCallbackAsync(const int32_t errorType, const int32_t errorMsg) const
+{
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (!loop) {
+        MEDIA_ERR_LOG("ErrorCallbackListener:OnErrorCallbackAsync() failed to get event loop");
+        return;
+    }
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    if (!work) {
+        MEDIA_ERR_LOG("ErrorCallbackListener:OnErrorCallbackAsync() failed to allocate work");
+        return;
+    }
+    std::unique_ptr<ErrorCallbackInfo> callbackInfo = std::make_unique<ErrorCallbackInfo>(errorType, errorMsg, this);
+    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        ErrorCallbackInfo *callbackInfo = reinterpret_cast<ErrorCallbackInfo *>(work->data);
+        if (callbackInfo) {
+            callbackInfo->listener_->OnErrorCallback(callbackInfo->errorType_, callbackInfo->errorMsg_);
+        }
+        delete work;
+    });
+    if (ret) {
+        MEDIA_ERR_LOG("ErrorCallbackListener:OnErrorCallbackAsync() failed to execute work");
+        delete work;
+    }
+}
+
+void ErrorCallbackListener::OnErrorCallback(const int32_t errorType, const int32_t errorMsg) const
+{
     int32_t jsErrorCodeUnknown = -1;
     napi_value result[ARGS_TWO];
     napi_value callback = nullptr;
@@ -79,6 +173,12 @@ void ErrorCallbackListener::OnError(const int32_t errorType, const int32_t error
     napi_set_named_property(env_, result[PARAM1], "code", propValue);
     napi_get_reference_value(env_, callbackRef_, &callback);
     napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+}
+
+void ErrorCallbackListener::OnError(const int32_t errorType, const int32_t errorMsg) const
+{
+    MEDIA_INFO_LOG("ErrorCallbackListener:OnError() is called!, errorType: %{public}d", errorType);
+    OnErrorCallbackAsync(errorType, errorMsg);
 }
 
 CameraInputNapi::CameraInputNapi() : env_(nullptr), wrapper_(nullptr)

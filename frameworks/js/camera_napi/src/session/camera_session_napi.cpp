@@ -14,6 +14,7 @@
  */
 
 #include "session/camera_session_napi.h"
+#include <uv.h>
 
 namespace OHOS {
 namespace CameraStandard {
@@ -28,9 +29,36 @@ namespace {
 napi_ref CameraSessionNapi::sConstructor_ = nullptr;
 sptr<CaptureSession> CameraSessionNapi::sCameraSession_ = nullptr;
 
-void SessionCallbackListener::OnError(int32_t errorCode)
+void SessionCallbackListener::OnErrorCallbackAsync(int32_t errorCode) const
 {
-    MEDIA_INFO_LOG("SessionCallbackListener:OnError() is called!, errorCode: %{public}d", errorCode);
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (!loop) {
+        MEDIA_ERR_LOG("SessionCallbackListener:OnErrorCallbackAsync() failed to get event loop");
+        return;
+    }
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    if (!work) {
+        MEDIA_ERR_LOG("SessionCallbackListener:OnErrorCallbackAsync() failed to allocate work");
+        return;
+    }
+    std::unique_ptr<SessionCallbackInfo> callbackInfo = std::make_unique<SessionCallbackInfo>(errorCode, this);
+    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        SessionCallbackInfo *callbackInfo = reinterpret_cast<SessionCallbackInfo *>(work->data);
+        if (callbackInfo) {
+            callbackInfo->listener_->OnErrorCallback(callbackInfo->errorCode_);
+        }
+        delete work;
+    });
+    if (ret) {
+        MEDIA_ERR_LOG("SessionCallbackListener:OnErrorCallbackAsync() failed to execute work");
+        delete work;
+    }
+}
+
+void SessionCallbackListener::OnErrorCallback(int32_t errorCode) const
+{
     int32_t jsErrorCodeUnknown = -1;
     napi_value result[ARGS_TWO];
     napi_value callback = nullptr;
@@ -44,6 +72,12 @@ void SessionCallbackListener::OnError(int32_t errorCode)
     napi_set_named_property(env_, result[PARAM1], "code", propValue);
     napi_get_reference_value(env_, callbackRef_, &callback);
     napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);
+}
+
+void SessionCallbackListener::OnError(int32_t errorCode)
+{
+    MEDIA_INFO_LOG("SessionCallbackListener:OnError() is called!, errorCode: %{public}d", errorCode);
+    OnErrorCallbackAsync(errorCode);
 }
 
 CameraSessionNapi::CameraSessionNapi() : env_(nullptr), wrapper_(nullptr)

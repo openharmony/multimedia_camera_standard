@@ -16,6 +16,7 @@
 
 #include "output/preview_output_napi.h"
 #include <unistd.h>
+#include <uv.h>
 
 namespace OHOS {
 namespace CameraStandard {
@@ -33,22 +34,51 @@ uint64_t PreviewOutputNapi::sSurfaceId_ = 0;
 
 PreviewOutputCallback::PreviewOutputCallback(napi_env env) : env_(env) {}
 
+void PreviewOutputCallback::UpdateJSCallbackAsync(std::string propName, const int32_t value) const
+{
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (!loop) {
+        MEDIA_ERR_LOG("PreviewOutputCallback:UpdateJSCallbackAsync() failed to get event loop");
+        return;
+    }
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    if (!work) {
+        MEDIA_ERR_LOG("PreviewOutputCallback:UpdateJSCallbackAsync() failed to allocate work");
+        return;
+    }
+    std::unique_ptr<PreviewOutputCallbackInfo> callbackInfo =
+        std::make_unique<PreviewOutputCallbackInfo>(propName, value, this);
+    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        PreviewOutputCallbackInfo *callbackInfo = reinterpret_cast<PreviewOutputCallbackInfo *>(work->data);
+        if (callbackInfo) {
+            callbackInfo->listener_->UpdateJSCallback(callbackInfo->eventName_, callbackInfo->value_);
+        }
+        delete work;
+    });
+    if (ret) {
+        MEDIA_ERR_LOG("PreviewOutputCallback:UpdateJSCallbackAsync() failed to execute work");
+        delete work;
+    }
+}
+
 void PreviewOutputCallback::OnFrameStarted() const
 {
     MEDIA_INFO_LOG("PreviewOutputCallback:OnFrameStarted() is called!");
-    UpdateJSCallback("OnFrameStarted", -1);
+    UpdateJSCallbackAsync("OnFrameStarted", -1);
 }
 
 void PreviewOutputCallback::OnFrameEnded(const int32_t frameCount) const
 {
     MEDIA_INFO_LOG("PreviewOutputCallback:OnFrameEnded() is called!, frameCount: %{public}d", frameCount);
-    UpdateJSCallback("OnFrameEnded", -1);
+    UpdateJSCallbackAsync("OnFrameEnded", frameCount);
 }
 
 void PreviewOutputCallback::OnError(const int32_t errorCode) const
 {
     MEDIA_INFO_LOG("PreviewOutputCallback:OnError() is called!, errorCode: %{public}d", errorCode);
-    UpdateJSCallback("OnError", errorCode);
+    UpdateJSCallbackAsync("OnError", errorCode);
 }
 
 void PreviewOutputCallback::SetCallbackRef(const std::string &eventType, const napi_ref &callbackRef)

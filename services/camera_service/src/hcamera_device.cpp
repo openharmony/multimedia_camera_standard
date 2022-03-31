@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+#include "hcamera_device.h"
+
 #include "camera_util.h"
 #include "media_log.h"
-#include "hcamera_device.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -109,14 +110,11 @@ int32_t HCameraDevice::Release()
 
 int32_t HCameraDevice::GetEnabledResults(std::vector<int32_t> &results)
 {
-    std::vector<int32_t> settings;
-
-    Camera::CamRetCode rc = hdiCameraDevice_->GetEnabledResults(settings);
+    Camera::CamRetCode rc = hdiCameraDevice_->GetEnabledResults(results);
     if (rc != Camera::NO_ERROR) {
         MEDIA_ERR_LOG("HCameraDevice::GetEnabledResults failed with error Code:%{public}d", rc);
         return HdiToServiceError(rc);
     }
-    results = settings;
     return CAMERA_OK;
 }
 

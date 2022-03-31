@@ -171,8 +171,8 @@ int main(int argc, char **argv)
     if (!isResolutionConfigured) {
         std::vector<camera_format_t> previewFormats = cameraInput->GetSupportedPreviewFormats();
         MEDIA_DEBUG_LOG("Supported preview formats:");
-        for (auto &format : previewFormats) {
-            MEDIA_DEBUG_LOG("format : %{public}d", format);
+        for (auto &formatPreview : previewFormats) {
+            MEDIA_DEBUG_LOG("format : %{public}d", formatPreview);
         }
         if (std::find(previewFormats.begin(), previewFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP)
             != previewFormats.end()) {
@@ -184,8 +184,8 @@ int main(int argc, char **argv)
         }
         std::vector<camera_format_t> photoFormats = cameraInput->GetSupportedPhotoFormats();
         MEDIA_DEBUG_LOG("Supported photo formats:");
-        for (auto &format : photoFormats) {
-            MEDIA_DEBUG_LOG("format : %{public}d", format);
+        for (auto &formatPhoto : photoFormats) {
+            MEDIA_DEBUG_LOG("format : %{public}d", formatPhoto);
         }
         if (!photoFormats.empty()) {
             photoFormat = photoFormats[0];
@@ -226,6 +226,10 @@ int main(int argc, char **argv)
     }
 
     sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
+    if (photoSurface == nullptr) {
+        MEDIA_DEBUG_LOG("Failed to create photoSurface");
+        return 0;
+    }
     photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
     photoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(photoFormat));
     sptr<SurfaceListener> captureListener = new SurfaceListener("Photo", SurfaceType::PHOTO, photoFd, photoSurface);
@@ -245,12 +249,16 @@ int main(int argc, char **argv)
     }
 
     sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
+    if (previewSurface == nullptr) {
+        MEDIA_DEBUG_LOG("Failed to create previewSurface");
+        return 0;
+    }
     previewSurface->SetDefaultWidthAndHeight(previewWidth, previewHeight);
     previewSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(previewFormat));
     sptr<SurfaceListener> listener = new SurfaceListener("Preview", SurfaceType::PREVIEW, previewFd, previewSurface);
     previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
-    sptr<CaptureOutput> previewOutput = camManagerObj->CreateCustomPreviewOutput(previewSurface, previewWidth,
-                                                                                 previewHeight);
+    sptr<CaptureOutput> previewOutput = camManagerObj->CreateCustomPreviewOutput(previewSurface,
+        previewWidth, previewHeight);
     if (previewOutput == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create previewOutput");
         return 0;

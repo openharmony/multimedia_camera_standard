@@ -62,7 +62,7 @@ private:
 
 class PhotoOutput : public CaptureOutput {
 public:
-    PhotoOutput(sptr<IStreamCapture> &streamCapture);
+    explicit PhotoOutput(sptr<IStreamCapture> &streamCapture);
     sptr<IStreamCapture> GetStreamCapture();
     void SetCallback(std::shared_ptr<PhotoCallback> callback);
     int32_t Capture(std::shared_ptr<PhotoCaptureSetting> photoCaptureSettings);

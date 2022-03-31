@@ -322,11 +322,11 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput,
     camInput->UnlockForControl();
 
     if (!zoomRatioRange.empty()) {
-        EXPECT_TRUE(camInput->GetZoomRatio() == zoomRatioRange[0]);
+        EXPECT_EQ(camInput->GetZoomRatio(), zoomRatioRange[0]);
     }
-    EXPECT_TRUE(camInput->GetFlashMode() == flash);
-    EXPECT_TRUE(camInput->GetFocusMode() == focus);
-    EXPECT_TRUE(camInput->GetExposureMode() == exposure);
+    EXPECT_EQ(camInput->GetFlashMode(), flash);
+    EXPECT_EQ(camInput->GetFocusMode(), focus);
+    EXPECT_EQ(camInput->GetExposureMode(), exposure);
 }
 
 void CameraFrameworkModuleTest::TestCallbacksSession(sptr<CaptureOutput> photoOutput,
@@ -335,22 +335,22 @@ void CameraFrameworkModuleTest::TestCallbacksSession(sptr<CaptureOutput> photoOu
     int32_t intResult;
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     if (videoOutput != nullptr) {
         intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
-        EXPECT_TRUE(intResult == 0);
+        EXPECT_EQ(intResult, 0);
         sleep(WAIT_TIME_AFTER_START);
     }
 
     if (photoOutput != nullptr) {
         intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
-        EXPECT_TRUE(intResult == 0);
+        EXPECT_EQ(intResult, 0);
     }
 
     if (videoOutput != nullptr) {
         intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
-        EXPECT_TRUE(intResult == 0);
+        EXPECT_EQ(intResult, 0);
     }
 
     sleep(WAIT_TIME_BEFORE_STOP);
@@ -360,7 +360,7 @@ void CameraFrameworkModuleTest::TestCallbacksSession(sptr<CaptureOutput> photoOu
 void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool video)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     // Register error callback
     std::shared_ptr<AppCallback> callback = std::make_shared<AppCallback>();
@@ -369,10 +369,10 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
 
     SetCameraParameters(camInput, video);
 
-    EXPECT_TRUE(g_camInputOnError == false);
+    EXPECT_EQ(g_camInputOnError, false);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> photoOutput = nullptr;
     sptr<CaptureOutput> videoOutput = nullptr;
@@ -392,7 +392,7 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
         intResult = session_->AddOutput(videoOutput);
     }
 
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
@@ -400,14 +400,14 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
     // Register preview callback
     ((sptr<PreviewOutput> &)previewOutput)->SetCallback(callback);
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     /* In case of wagner device, once commit config is done with flash on
     it is not giving the flash status callback, removing it */
-#ifndef BALTIMORE_CAMERA
+#ifndef PRODUCT_M40
     EXPECT_TRUE(g_camFlashMap.count(cameraInfo->GetID()) != 0);
 #endif
     EXPECT_TRUE(g_photoEvents.none());
@@ -416,33 +416,32 @@ void CameraFrameworkModuleTest::TestCallbacks(sptr<CameraInfo> &cameraInfo, bool
 
     TestCallbacksSession(photoOutput, videoOutput);
 
-    EXPECT_TRUE(g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_START)] == 1);
+    EXPECT_EQ(g_previewEvents[static_cast<int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_FRAME_START)], 1);
 
     if (photoOutput != nullptr) {
         EXPECT_TRUE(g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_START)] == 1);
         /* In case of wagner device, frame shutter callback not working,
         hence removed. Once supported by hdi, the same needs to be
         enabled */
-#ifndef BALTIMORE_CAMERA
+#ifndef PRODUCT_M40
         EXPECT_TRUE(g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_FRAME_SHUTTER)] == 1);
 #endif
         EXPECT_TRUE(g_photoEvents[static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_CAPTURE_END)] == 1);
-
         ((sptr<PhotoOutput> &)photoOutput)->Release();
     }
 
     if (videoOutput != nullptr) {
         TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
-        EXPECT_TRUE(g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_START)] == 1);
-        EXPECT_TRUE(g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_END)] == 1);
+        EXPECT_EQ(g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_START)], 1);
+        EXPECT_EQ(g_videoEvents[static_cast<int>(CAM_VIDEO_EVENTS::CAM_VIDEO_FRAME_END)], 1);
 
         ((sptr<VideoOutput> &)videoOutput)->Release();
     }
 
     ((sptr<PreviewOutput> &)previewOutput)->Release();
 
-    EXPECT_TRUE(g_camStatusMap.count(cameraInfo->GetID()) == 0);
+    EXPECT_EQ(g_camStatusMap.count(cameraInfo->GetID()), 0);
 }
 
 void CameraFrameworkModuleTest::TestSupportedResolution(int32_t previewWidth, int32_t previewHeight,
@@ -456,16 +455,16 @@ void CameraFrameworkModuleTest::TestSupportedResolution(int32_t previewWidth, in
     ASSERT_NE(session, nullptr);
 
     int32_t intResult = session->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session->AddInput(input);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput(true, previewWidth, previewHeight);
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> videoOutput = nullptr;
     sptr<CaptureOutput> photoOutput = nullptr;
@@ -473,35 +472,35 @@ void CameraFrameworkModuleTest::TestSupportedResolution(int32_t previewWidth, in
         videoOutput = CreateVideoOutput(videoWidth, videoHeight);
         ASSERT_NE(videoOutput, nullptr);
         intResult = session->AddOutput(videoOutput);
-        EXPECT_TRUE(intResult == 0);
+        EXPECT_EQ(intResult, 0);
     } else if ((photoWidth != photoWidth_) || (photoHeight != photoHeight_)) {
         photoOutput = CreatePhotoOutput(photoWidth, photoHeight);
         ASSERT_NE(photoOutput, nullptr);
         intResult = session->AddOutput(photoOutput);
-        EXPECT_TRUE(intResult == 0);
+        EXPECT_EQ(intResult, 0);
     }
 
     intResult = session->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     if (photoOutput != nullptr) {
         intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
-        EXPECT_TRUE(intResult == 0);
+        EXPECT_EQ(intResult, 0);
         sleep(WAIT_TIME_AFTER_CAPTURE);
     }
 
     if (videoOutput != nullptr) {
         intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
-        EXPECT_TRUE(intResult == 0);
+        EXPECT_EQ(intResult, 0);
         sleep(WAIT_TIME_BEFORE_STOP);
     }
 
     if (videoOutput != nullptr) {
         intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
-        EXPECT_TRUE(intResult == 0);
+        EXPECT_EQ(intResult, 0);
         TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
     }
 
@@ -515,10 +514,10 @@ void CameraFrameworkModuleTest::TestUnSupportedResolution(int32_t previewWidth, 
                                                           int32_t videoWidth, int32_t videoHeight)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = nullptr;
     if ((previewWidth != previewWidth_) || (previewHeight != previewHeight_)) {
@@ -529,7 +528,7 @@ void CameraFrameworkModuleTest::TestUnSupportedResolution(int32_t previewWidth, 
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> output = nullptr;
     if ((videoWidth != videoWidth_) || (videoHeight != videoHeight_)) {
@@ -542,11 +541,11 @@ void CameraFrameworkModuleTest::TestUnSupportedResolution(int32_t previewWidth, 
 
     if (output != nullptr) {
         intResult = session_->AddOutput(output);
-        EXPECT_TRUE(intResult == 0);
+        EXPECT_EQ(intResult, 0);
     }
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 
     session_->Stop();
 }
@@ -565,7 +564,7 @@ void CameraFrameworkModuleTest::SetUpInit()
     g_camInputOnError = false;
     g_videoFd = -1;
 
-#ifndef BALTIMORE_CAMERA
+#ifndef PRODUCT_M40
     previewFormat_ = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
     videoFormat_ = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
     photoFormat_ = OHOS_CAMERA_FORMAT_JPEG;
@@ -608,6 +607,7 @@ void CameraFrameworkModuleTest::SetUp()
     }
 
     manager_ = CameraManager::GetInstance();
+    ASSERT_NE(manager_, nullptr);
     manager_->SetCallback(std::make_shared<AppCallback>());
 
     cameras_ = manager_->GetCameras();
@@ -617,7 +617,7 @@ void CameraFrameworkModuleTest::SetUp()
     ASSERT_NE(input_, nullptr);
 
     sptr<CameraInput> camInput = (sptr<CameraInput> &)input_;
-#ifdef BALTIMORE_CAMERA
+#ifdef PRODUCT_M40
     previewFormats_ = camInput->GetSupportedPreviewFormats();
     ASSERT_TRUE(previewFormats_.size() != 0);
     if (std::find(previewFormats_.begin(), previewFormats_.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP)
@@ -659,15 +659,18 @@ void CameraFrameworkModuleTest::SetUp()
 
 void CameraFrameworkModuleTest::TearDown()
 {
-    session_->Release();
-    input_->Release();
+    if (session_) {
+        session_->Release();
+    }
+    if (input_) {
+        input_->Release();
+    }
     (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
         tokenIdEx.tokenIdExStruct.tokenID);
-    MEDIA_DEBUG_LOG("Deleted the allocated Token");
     MEDIA_DEBUG_LOG("End of camera test case");
 }
 
-#ifndef BALTIMORE_CAMERA
+#ifndef PRODUCT_M40
 /*
  * Feature: Framework
  * Function: Test Capture
@@ -679,22 +682,22 @@ void CameraFrameworkModuleTest::TearDown()
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_001, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
     ASSERT_NE(photoOutput, nullptr);
 
     intResult = session_->AddOutput(photoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 }
 #endif
@@ -709,32 +712,32 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_001, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_002, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
     ASSERT_NE(photoOutput, nullptr);
 
     intResult = session_->AddOutput(photoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
     intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
     session_->Stop();
@@ -751,36 +754,36 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_002, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_003, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> videoOutput = CreateVideoOutput();
     ASSERT_NE(videoOutput, nullptr);
 
     intResult = session_->AddOutput(videoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
     session_->Stop();
@@ -823,22 +826,22 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_005, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_006, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
@@ -856,27 +859,27 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_006, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_007, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> videoOutput = CreateVideoOutput();
     ASSERT_NE(videoOutput, nullptr);
 
     intResult = session_->AddOutput(videoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
     // Video mode without preview is not supported
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
 }
 
-#ifdef BALTIMORE_CAMERA
+#ifdef PRODUCT_M40
 /*
  * Feature: Framework
  * Function: Test Custom Preview with valid resolutions
@@ -952,10 +955,10 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_010, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_011, TestSize.Level0)
 {
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput(true, 0, 0);
-    EXPECT_TRUE(previewOutput == nullptr);
+    EXPECT_EQ(previewOutput, nullptr);
 }
 
-#ifdef BALTIMORE_CAMERA
+#ifdef PRODUCT_M40
 /*
  * Feature: Framework
  * Function: Test Video with invalid resolutions
@@ -1039,24 +1042,24 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_016, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_017, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 }
 
 /*
@@ -1070,11 +1073,11 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_017, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_018, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureInput> input1 = nullptr;
     intResult = session_->AddInput(input1);
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_EQ(intResult, 0);
 
     session_->Stop();
 }
@@ -1090,11 +1093,11 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_018, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_019, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = nullptr;
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_EQ(intResult, 0);
 
     session_->Stop();
 }
@@ -1110,16 +1113,16 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_019, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_020, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 
     session_->Stop();
 }
@@ -1135,13 +1138,13 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_020, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_021, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 
     session_->Stop();
 }
@@ -1157,25 +1160,25 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_021, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_022, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
     ASSERT_NE(photoOutput, nullptr);
 
     intResult = session_->AddOutput(photoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 
     intResult = session_->Stop();
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 }
 
 /*
@@ -1195,23 +1198,23 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_023, TestSize.Le
     ASSERT_NE(previewOutput, nullptr);
 
     int32_t intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 
     intResult = session_->AddOutput(photoOutput);
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
     intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
     session_->Stop();
@@ -1228,57 +1231,57 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_023, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_024, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> photoOutput1 = CreatePhotoOutput();
     ASSERT_NE(photoOutput1, nullptr);
 
     intResult = session_->AddOutput(photoOutput1);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> photoOutput2 = CreatePhotoOutput();
     ASSERT_NE(photoOutput2, nullptr);
 
     intResult = session_->AddOutput(photoOutput2);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
 
     intResult = session_->Start();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_EQ(intResult, 0);
 #endif
 
     sleep(WAIT_TIME_AFTER_START);
     intResult = ((sptr<PhotoOutput> &)photoOutput1)->Capture();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
     intResult = ((sptr<PhotoOutput> &)photoOutput2)->Capture();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
@@ -1299,28 +1302,28 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_024, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_025, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput1 = CreatePreviewOutput();
     ASSERT_NE(previewOutput1, nullptr);
 
     intResult = session_->AddOutput(previewOutput1);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput2 = CreatePreviewOutput();
     ASSERT_NE(previewOutput2, nullptr);
 
     intResult = session_->AddOutput(previewOutput2);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
@@ -1341,71 +1344,71 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_025, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_026, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> videoOutput1 = CreateVideoOutput();
     ASSERT_NE(videoOutput1, nullptr);
 
     intResult = session_->AddOutput(videoOutput1);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> videoOutput2 = CreateVideoOutput();
     ASSERT_NE(videoOutput2, nullptr);
 
     intResult = session_->AddOutput(videoOutput2);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
 
     intResult = session_->Start();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
 
     intResult = ((sptr<VideoOutput> &)videoOutput1)->Start();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
 
     intResult = ((sptr<VideoOutput> &)videoOutput2)->Start();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
 
     sleep(WAIT_TIME_AFTER_START);
 
     intResult = ((sptr<VideoOutput> &)videoOutput1)->Stop();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
 
     intResult = ((sptr<VideoOutput> &)videoOutput2)->Stop();
-#ifdef BALTIMORE_CAMERA
-    EXPECT_TRUE(intResult == 0);
+#ifdef PRODUCT_M40
+    EXPECT_EQ(intResult, 0);
 #else
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 #endif
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
@@ -1427,30 +1430,30 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_026, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_027, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
     intResult = session_->Stop();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
@@ -1468,51 +1471,51 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_027, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_028, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> videoOutput = CreateVideoOutput();
     ASSERT_NE(videoOutput, nullptr);
 
     intResult = session_->AddOutput(videoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
     session_->Stop();
 }
 
-#ifdef BALTIMORE_CAMERA
+#ifdef PRODUCT_M40
 /*
  * Feature: Framework
  * Function: Test remove video output and commit when preview + video outputs were committed
@@ -1524,37 +1527,37 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_028, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_029, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> videoOutput = CreateVideoOutput();
     ASSERT_NE(videoOutput, nullptr);
 
     intResult = session_->AddOutput(videoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->RemoveOutput(videoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
@@ -1573,53 +1576,53 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_029, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_030, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> videoOutput = CreateVideoOutput();
     ASSERT_NE(videoOutput, nullptr);
 
     intResult = session_->AddOutput(videoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
     ASSERT_NE(photoOutput, nullptr);
 
     intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->RemoveOutput(videoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddOutput(photoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
     intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
     sleep(WAIT_TIME_AFTER_CAPTURE);
 
     session_->Stop();
 }
 
-#ifdef BALTIMORE_CAMERA
+#ifdef PRODUCT_M40
 /*
  * Feature: Framework
  * Function: Test remove photo output and commit when preview + photo outputs were committed
@@ -1631,37 +1634,37 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_030, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_031, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
     ASSERT_NE(photoOutput, nullptr);
 
     intResult = session_->AddOutput(photoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->RemoveOutput(photoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
@@ -1680,51 +1683,51 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_031, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_032, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddInput(input_);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
     ASSERT_NE(previewOutput, nullptr);
 
     intResult = session_->AddOutput(previewOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
     ASSERT_NE(photoOutput, nullptr);
 
     intResult = session_->AddOutput(photoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> videoOutput = CreateVideoOutput();
     ASSERT_NE(videoOutput, nullptr);
 
     intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->RemoveOutput(photoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->AddOutput(videoOutput);
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->CommitConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sleep(WAIT_TIME_AFTER_START);
 
     intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
 
@@ -1742,11 +1745,11 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_032, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_033, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> output = nullptr;
     intResult = session_->RemoveOutput(output);
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 }
 
 /*
@@ -1760,11 +1763,11 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_033, TestSize.Le
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_034, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
-    EXPECT_TRUE(intResult == 0);
+    EXPECT_EQ(intResult, 0);
 
     sptr<CaptureInput> input = nullptr;
     intResult = session_->RemoveInput(input);
-    EXPECT_TRUE(intResult != 0);
+    EXPECT_NE(intResult, 0);
 }
 } // CameraStandard
 } // OHOS

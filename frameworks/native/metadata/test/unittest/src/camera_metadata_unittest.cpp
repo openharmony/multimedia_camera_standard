@@ -14,6 +14,7 @@
  */
 
 #include "camera_metadata_unittest.h"
+#include <securec.h>
 #include "metadata_utils.h"
 
 using namespace testing::ext;

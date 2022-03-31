@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include "hcamera_service_stub.h"
+
 #include <cinttypes>
 
 #include "camera_util.h"
@@ -22,7 +25,6 @@
 #include "hcamera_service.h"
 #include "input/i_standard_camera_listener.h"
 #include "ipc_skeleton.h"
-#include "hcamera_service_stub.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -103,8 +105,7 @@ int HCameraServiceStub::HandleGetCameras(MessageParcel& reply)
     }
 
     for (auto cameraAbility : cameraAbilityList) {
-        bool bRet = MetadataUtils::EncodeCameraMetadata(cameraAbility, reply);
-        if (!bRet) {
+        if (!(MetadataUtils::EncodeCameraMetadata(cameraAbility, reply))) {
             MEDIA_ERR_LOG("HCameraServiceStub HandleGetCameras write ability failed");
             return IPC_STUB_WRITE_PARCEL_ERR;
         }

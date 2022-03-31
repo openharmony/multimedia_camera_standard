@@ -80,8 +80,8 @@ ohos_shared_library("camera_service") {
     "samgr_standard:samgr_proxy",
   ]
 
-  if (device_name == "baltimore") {
-    cflags += [ "-DBALTIMORE_CAMERA" ]
+  if ("${product_name}" == "m40") {
+    cflags += [ "-DPRODUCT_M40" ]
     include_dirs += [
       "//drivers/peripheral/adapter/camera/interfaces/include",
       "//drivers/peripheral/adapter/camera/interfaces/include/server",

@@ -41,3 +41,4 @@ public:
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_ICAMERA_SERVICE_CALLBACK_H
+

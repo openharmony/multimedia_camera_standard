@@ -178,4 +178,4 @@ size_t CalculateCameraMetadataItemDataSize(uint32_t type, size_t data_count);
 int32_t GetCameraMetadataItemType(uint32_t item, uint32_t *data_type);
 } // CameraStandard
 } // OHOS
-#endif
+#endif // CAMERA_METADATA_OPERATOR_H

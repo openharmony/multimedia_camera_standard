@@ -49,7 +49,7 @@ namespace OHOS {
 namespace CameraStandard {
 struct CamRecorderCallback;
 
-static const std::string CAMERA_LIB_NAPI_CLASS_NAME = "camera";
+static const char CAMERA_LIB_NAPI_CLASS_NAME[] = "camera";
 // Photo default size
 static const std::int32_t PHOTO_DEFAULT_WIDTH = 1280;
 static const std::int32_t PHOTO_DEFAULT_HEIGHT = 960;

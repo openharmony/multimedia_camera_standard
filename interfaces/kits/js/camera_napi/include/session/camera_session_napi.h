@@ -44,7 +44,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-static const std::string CAMERA_SESSION_NAPI_CLASS_NAME = "CaptureSession";
+static const char CAMERA_SESSION_NAPI_CLASS_NAME[] = "CaptureSession";
 
 class SessionCallbackListener : public SessionCallback {
 public:

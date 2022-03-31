@@ -42,7 +42,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-static const std::string CAMERA_PREVIEW_OUTPUT_NAPI_CLASS_NAME = "PreviewOutput";
+static const char CAMERA_PREVIEW_OUTPUT_NAPI_CLASS_NAME[] = "PreviewOutput";
 
 class PreviewOutputCallback : public PreviewCallback {
 public:

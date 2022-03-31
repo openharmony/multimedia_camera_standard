@@ -14,6 +14,7 @@
  */
 
 #include "camera_metadata_info.h"
+#include <securec.h>
 #include "metadata_log.h"
 
 namespace OHOS {
@@ -126,9 +127,9 @@ bool CameraMetadata::updateEntry(uint32_t tag, const void *data, size_t dataCoun
                       "dataCount: %{public}zu", metadata_, tag, name ? name : "<unknown>", dataCount);
     ret = UpdateCameraMetadataItemByIndex(metadata_, item.index, data, dataCount, nullptr);
     if (ret) {
-        const char *name = GetCameraMetadataItemName(tag);
-        (void)name;
-        METADATA_ERR_LOG("Failed to update tag tagname = %{public}s", (name ? name : "<unknown>"));
+        const char *name_ = GetCameraMetadataItemName(tag);
+        (void)name_;
+        METADATA_ERR_LOG("Failed to update tag tagname = %{public}s", (name_ ? name_ : "<unknown>"));
         return false;
     }
 

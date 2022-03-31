@@ -42,7 +42,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-static const std::string CAMERA_INPUT_NAPI_CLASS_NAME = "CameraInput";
+static const char CAMERA_INPUT_NAPI_CLASS_NAME[] = "CameraInput";
 
 class ExposureCallbackListener : public ExposureCallback {
 public:

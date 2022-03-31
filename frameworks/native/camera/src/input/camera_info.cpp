@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "input/camera_info.h"
+#include <securec.h>
 #include "camera_metadata_info.h"
 #include "media_log.h"
 
@@ -153,7 +154,7 @@ std::vector<float> CameraInfo::GetZoomRatioRange()
         return zoomRatioRange_;
     }
 
-#ifndef BALTIMORE_CAMERA
+#ifndef PRODUCT_M40
     int ret;
     uint32_t zoomRangeCount = 2;
     camera_metadata_item_t item;

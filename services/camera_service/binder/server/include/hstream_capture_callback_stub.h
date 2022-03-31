@@ -35,3 +35,4 @@ private:
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_HSTREAM_CAPTURE_CALLBACK_STUB_H
+

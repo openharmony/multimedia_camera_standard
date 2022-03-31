@@ -43,7 +43,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-static const std::string CAMERA_PHOTO_OUTPUT_NAPI_CLASS_NAME = "PhotoOutput";
+static const char CAMERA_PHOTO_OUTPUT_NAPI_CLASS_NAME[] = "PhotoOutput";
 
 struct CallbackInfo {
     int32_t captureID;

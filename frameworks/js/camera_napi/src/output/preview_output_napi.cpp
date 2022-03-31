@@ -156,14 +156,14 @@ napi_value PreviewOutputNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", JSonFunc)
     };
 
-    status = napi_define_class(env, CAMERA_PREVIEW_OUTPUT_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
+    status = napi_define_class(env, CAMERA_PREVIEW_OUTPUT_NAPI_CLASS_NAME, NAPI_AUTO_LENGTH,
                                PreviewOutputNapiConstructor, nullptr,
                                sizeof(preview_output_props) / sizeof(preview_output_props[PARAM0]),
                                preview_output_props, &ctorObj);
     if (status == napi_ok) {
         status = napi_create_reference(env, ctorObj, refCount, &sConstructor_);
         if (status == napi_ok) {
-            status = napi_set_named_property(env, exports, CAMERA_PREVIEW_OUTPUT_NAPI_CLASS_NAME.c_str(), ctorObj);
+            status = napi_set_named_property(env, exports, CAMERA_PREVIEW_OUTPUT_NAPI_CLASS_NAME, ctorObj);
             if (status == napi_ok) {
                 return exports;
             }
@@ -332,8 +332,10 @@ napi_value PreviewOutputNapi::Release(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<PreviewOutputAsyncContext*>(data);
-                ((sptr<PreviewOutput> &)(context->objectInfo->previewOutput_))->Release();
-                context->status = true;
+                if (context->objectInfo != nullptr) {
+                    ((sptr<PreviewOutput> &)(context->objectInfo->previewOutput_))->Release();
+                    context->status = true;
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {

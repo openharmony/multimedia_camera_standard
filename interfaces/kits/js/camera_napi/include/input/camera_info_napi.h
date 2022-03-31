@@ -36,7 +36,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-static const std::string CAMERA_OBJECT_NAPI_CLASS_NAME = "Camera";
+static const char CAMERA_OBJECT_NAPI_CLASS_NAME[] = "Camera";
 
 class CameraInfoNapi {
 public:

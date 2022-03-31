@@ -54,6 +54,10 @@ napi_value CameraManagerNapi::CameraManagerNapiConstructor(napi_env env, napi_ca
         if (obj != nullptr) {
             obj->env_ = env;
             obj->cameraManager_ = CameraManager::GetInstance();
+            if (obj->cameraManager_ == nullptr) {
+                MEDIA_ERR_LOG("Failure wrapping js to native napi, obj->cameraManager_ null");
+                return result;
+            }
             status = napi_wrap(env, thisVar, reinterpret_cast<void*>(obj.get()),
                                CameraManagerNapi::CameraManagerNapiDestructor, nullptr, &(obj->wrapper_));
             if (status == napi_ok) {
@@ -89,13 +93,13 @@ napi_value CameraManagerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", On)
     };
 
-    status = napi_define_class(env, CAMERA_MANAGER_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
+    status = napi_define_class(env, CAMERA_MANAGER_NAPI_CLASS_NAME, NAPI_AUTO_LENGTH,
                                CameraManagerNapiConstructor, nullptr,
                                sizeof(camera_mgr_properties) / sizeof(camera_mgr_properties[PARAM0]),
                                camera_mgr_properties, &ctorObj);
     if (status == napi_ok) {
         if (napi_create_reference(env, ctorObj, refCount, &sConstructor_) == napi_ok) {
-            status = napi_set_named_property(env, exports, CAMERA_MANAGER_NAPI_CLASS_NAME.c_str(), ctorObj);
+            status = napi_set_named_property(env, exports, CAMERA_MANAGER_NAPI_CLASS_NAME, ctorObj);
             if (status == napi_ok) {
                 return exports;
             }

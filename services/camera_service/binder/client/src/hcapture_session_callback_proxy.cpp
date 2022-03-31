@@ -45,3 +45,4 @@ int32_t HCaptureSessionCallbackProxy::OnError(int32_t errorCode)
 }
 } // namespace CameraStandard
 } // namespace OHOS
+

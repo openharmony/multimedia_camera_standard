@@ -14,6 +14,7 @@
  */
 
 #include "hcamera_host_manager.h"
+
 #include "camera_host_callback_stub.h"
 #include "camera_util.h"
 #include "hdf_io_service_if.h"
@@ -133,6 +134,10 @@ int32_t HCameraHostManager::CameraHostInfo::GetCameraAbility(std::string& camera
         ability = deviceInfo->ability;
     } else {
         std::lock_guard<std::mutex> lock(deviceInfo->mutex);
+        if (!cameraHostProxy_) {
+            MEDIA_ERR_LOG("CameraHostInfo::GetCameraAbility cameraHostProxy_ is null");
+            return CAMERA_UNKNOWN_ERROR;
+        }
         if (!deviceInfo->ability) {
             Camera::CamRetCode rc = cameraHostProxy_->GetCameraAbility(cameraId, ability);
             if (rc != Camera::NO_ERROR) {
@@ -157,6 +162,10 @@ int32_t HCameraHostManager::CameraHostInfo::OpenCamera(std::string& cameraId,
     }
 
     std::lock_guard<std::mutex> lock(deviceInfo->mutex);
+    if (!cameraHostProxy_) {
+        MEDIA_ERR_LOG("CameraHostInfo::OpenCamera cameraHostProxy_ is null");
+        return CAMERA_UNKNOWN_ERROR;
+    }
     Camera::CamRetCode rc = cameraHostProxy_->OpenCamera(cameraId, callback, pDevice);
     if (rc != Camera::NO_ERROR) {
         MEDIA_ERR_LOG("CameraHostInfo::OpenCamera failed with error Code:%{public}d", rc);
@@ -168,6 +177,10 @@ int32_t HCameraHostManager::CameraHostInfo::OpenCamera(std::string& cameraId,
 int32_t HCameraHostManager::CameraHostInfo::SetFlashlight(const std::string& cameraId, bool isEnable)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (!cameraHostProxy_) {
+        MEDIA_ERR_LOG("CameraHostInfo::SetFlashlight cameraHostProxy_ is null");
+        return CAMERA_UNKNOWN_ERROR;
+    }
     Camera::CamRetCode rc = cameraHostProxy_->SetFlashlight(cameraId, isEnable);
     if (rc != Camera::NO_ERROR) {
         MEDIA_ERR_LOG("CameraHostInfo::SetFlashlight failed with error Code:%{public}d", rc);
@@ -178,7 +191,7 @@ int32_t HCameraHostManager::CameraHostInfo::SetFlashlight(const std::string& cam
 
 void HCameraHostManager::CameraHostInfo::OnCameraStatus(const std::string& cameraId, Camera::CameraStatus status)
 {
-    if (cameraHostManager_->statusCallback_ == nullptr) {
+    if ((cameraHostManager_ == nullptr) || (cameraHostManager_->statusCallback_ == nullptr)) {
         MEDIA_WARNING_LOG("CameraHostInfo::OnCameraStatus for %{public}s with status %{public}d "
                           "failed due to no callback",
                           cameraId.c_str(), status);
@@ -208,9 +221,9 @@ void HCameraHostManager::CameraHostInfo::OnCameraStatus(const std::string& camer
 void HCameraHostManager::CameraHostInfo::OnFlashlightStatus(const std::string& cameraId,
     Camera::FlashlightStatus status)
 {
-    if (cameraHostManager_->statusCallback_ == nullptr) {
+    if ((cameraHostManager_ == nullptr) || (cameraHostManager_->statusCallback_ == nullptr)) {
         MEDIA_WARNING_LOG("CameraHostInfo::OnFlashlightStatus for %{public}s with status %{public}d "
-                          "failed due to no callback",
+                          "failed due to no callback or cameraHostManager_ is null",
                           cameraId.c_str(), status);
         return;
     }
@@ -243,9 +256,9 @@ void HCameraHostManager::CameraHostInfo::OnFlashlightStatus(const std::string& c
 
 void HCameraHostManager::CameraHostInfo::OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event)
 {
-    if (cameraHostManager_->statusCallback_ == nullptr) {
+    if ((cameraHostManager_ == nullptr) || (cameraHostManager_->statusCallback_ == nullptr)) {
         MEDIA_WARNING_LOG("CameraHostInfo::OnCameraEvent for %{public}s with status %{public}d "
-                          "failed due to no callback",
+                          "failed due to no callback or cameraHostManager_ is null",
                           cameraId.c_str(), event);
         return;
     }

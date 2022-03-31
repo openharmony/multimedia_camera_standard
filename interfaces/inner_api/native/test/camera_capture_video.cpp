@@ -254,6 +254,11 @@ int32_t CameraCaptureVideo::TakePhoto()
 {
     int32_t result = -1;
 
+    if (!photoOutput_) {
+        MEDIA_ERR_LOG("photoOutput_ is null");
+        return result;
+    }
+
     result = ((sptr<PhotoOutput> &)photoOutput_)->Capture();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to capture, result: %{public}d", result);
@@ -266,6 +271,11 @@ int32_t CameraCaptureVideo::TakePhoto()
 int32_t CameraCaptureVideo::RecordVideo()
 {
     int32_t result = -1;
+
+    if (!videoOutput_) {
+        MEDIA_ERR_LOG("videoOutput_ is null");
+        return result;
+    }
 
     result = ((sptr<VideoOutput> &)videoOutput_)->Start();
     if (result != CAMERA_OK) {
@@ -357,8 +367,8 @@ int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cam
 {
     std::vector<camera_format_t> previewFormats = cameraInput->GetSupportedPreviewFormats();
     MEDIA_DEBUG_LOG("Supported preview formats:");
-    for (auto &format : previewFormats) {
-        MEDIA_DEBUG_LOG("format : %{public}d", format);
+    for (auto &formatPreview : previewFormats) {
+        MEDIA_DEBUG_LOG("format : %{public}d", formatPreview);
     }
     if (std::find(previewFormats.begin(), previewFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP)
         != previewFormats.end()) {
@@ -370,16 +380,16 @@ int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cam
     }
     std::vector<camera_format_t> photoFormats = cameraInput->GetSupportedPhotoFormats();
     MEDIA_DEBUG_LOG("Supported photo formats:");
-    for (auto &format : photoFormats) {
-        MEDIA_DEBUG_LOG("format : %{public}d", format);
+    for (auto &formatPhoto : photoFormats) {
+        MEDIA_DEBUG_LOG("format : %{public}d", formatPhoto);
     }
     if (!photoFormats.empty()) {
         photoFormat_ = photoFormats[0];
     }
     std::vector<camera_format_t> videoFormats = cameraInput->GetSupportedVideoFormats();
     MEDIA_DEBUG_LOG("Supported video formats:");
-    for (auto &format : videoFormats) {
-        MEDIA_DEBUG_LOG("format : %{public}d", format);
+    for (auto &formatVideo : videoFormats) {
+        MEDIA_DEBUG_LOG("format : %{public}d", formatVideo);
     }
     if (std::find(videoFormats.begin(), videoFormats.end(), OHOS_CAMERA_FORMAT_YCRCB_420_SP) != videoFormats.end()) {
         videoFormat_ = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
@@ -391,18 +401,18 @@ int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cam
     std::vector<CameraPicSize> previewSizes
         = cameraInput->getSupportedSizes(static_cast<camera_format_t>(previewFormat_));
     MEDIA_DEBUG_LOG("Supported sizes for preview:");
-    for (auto &size : previewSizes) {
-        MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
+    for (auto &sizePreview : previewSizes) {
+        MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", sizePreview.width, sizePreview.height);
     }
     std::vector<CameraPicSize> photoSizes = cameraInput->getSupportedSizes(static_cast<camera_format_t>(photoFormat_));
     MEDIA_DEBUG_LOG("Supported sizes for photo:");
-    for (auto &size : photoSizes) {
-        MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
+    for (auto &sizePhoto : photoSizes) {
+        MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", sizePhoto.width, sizePhoto.height);
     }
     std::vector<CameraPicSize> videoSizes = cameraInput->getSupportedSizes(static_cast<camera_format_t>(videoFormat_));
     MEDIA_DEBUG_LOG("Supported sizes for video:");
-    for (auto &size : videoSizes) {
-        MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
+    for (auto &sizeVideo : videoSizes) {
+        MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", sizeVideo.width, sizeVideo.height);
     }
 
     if (!photoSizes.empty()) {
@@ -437,6 +447,11 @@ int32_t CameraCaptureVideo::InitCameraInput()
 {
     int32_t result = -1;
 
+    if (!cameraManager_) {
+        MEDIA_ERR_LOG("cameraManager_ is null");
+        return result;
+    }
+
     if (cameraInput_ == nullptr) {
         std::vector<sptr<CameraInfo>> cameraObjList = cameraManager_->GetCameras();
         if (cameraObjList.size() <= 0) {
@@ -464,8 +479,17 @@ int32_t CameraCaptureVideo::InitPreviewOutput()
 {
     int32_t result = -1;
 
+    if (!cameraManager_) {
+        MEDIA_ERR_LOG("cameraManager_ is null");
+        return result;
+    }
+
     if (previewOutput_ == nullptr) {
         previewSurface_ = Surface::CreateSurfaceAsConsumer();
+        if (!previewSurface_) {
+            MEDIA_ERR_LOG("previewSurface_ is null");
+            return result;
+        }
         previewSurface_->SetDefaultWidthAndHeight(previewWidth_, previewHeight_);
         previewSurface_->SetUserData(CameraManager::surfaceFormat, std::to_string(previewFormat_));
         previewSurfaceListener_ = new SurfaceListener(testName_, SurfaceType::PREVIEW, fd_, previewSurface_);
@@ -486,12 +510,25 @@ int32_t CameraCaptureVideo::InitSecondPreviewOutput()
 {
     int32_t result = -1;
 
+    if (!cameraManager_) {
+        MEDIA_ERR_LOG("cameraManager_ is null");
+        return result;
+    }
+
     if (secondPreviewOutput_ == nullptr) {
         secondPreviewSurface_ = Surface::CreateSurfaceAsConsumer();
+        if (!secondPreviewSurface_) {
+            MEDIA_ERR_LOG("secondPreviewSurface_ is null");
+            return result;
+        }
         secondPreviewSurface_->SetDefaultWidthAndHeight(previewWidth_, previewHeight_);
         secondPreviewSurface_->SetUserData(CameraManager::surfaceFormat, std::to_string(previewFormat_));
         secondPreviewSurfaceListener_ = new SurfaceListener(testName_,
             SurfaceType::SECOND_PREVIEW, fd_, secondPreviewSurface_);
+        if (!secondPreviewSurfaceListener_) {
+            MEDIA_ERR_LOG("Failed to create new SurfaceListener");
+            return result;
+        }
         secondPreviewSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)secondPreviewSurfaceListener_);
         secondPreviewOutput_ = cameraManager_->CreateCustomPreviewOutput(secondPreviewSurface_->GetProducer(),
                                                                          previewFormat_, previewWidth2_,
@@ -511,11 +548,24 @@ int32_t CameraCaptureVideo::InitPhotoOutput()
 {
     int32_t result = -1;
 
+    if (!cameraManager_) {
+        MEDIA_ERR_LOG("cameraManager_ is null");
+        return result;
+    }
+
     if (photoOutput_ == nullptr) {
         photoSurface_ = Surface::CreateSurfaceAsConsumer();
+        if (!photoSurface_) {
+            MEDIA_ERR_LOG("photoSurface_ is null");
+            return result;
+        }
         photoSurface_->SetDefaultWidthAndHeight(photoWidth_, photoHeight_);
         photoSurface_->SetUserData(CameraManager::surfaceFormat, std::to_string(photoFormat_));
         photoSurfaceListener_ = new SurfaceListener(testName_, SurfaceType::PHOTO, fd_, photoSurface_);
+        if (!photoSurfaceListener_) {
+            MEDIA_ERR_LOG("Failed to create new SurfaceListener");
+            return result;
+        }
         photoSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)photoSurfaceListener_);
         photoOutput_ = cameraManager_->CreatePhotoOutput(photoSurface_);
         if (photoOutput_ == nullptr) {
@@ -533,11 +583,24 @@ int32_t CameraCaptureVideo::InitVideoOutput()
 {
     int32_t result = -1;
 
+    if (!cameraManager_) {
+        MEDIA_ERR_LOG("cameraManager_ is null");
+        return result;
+    }
+
     if (videoOutput_ == nullptr) {
         videoSurface_ = Surface::CreateSurfaceAsConsumer();
+        if (!videoSurface_) {
+            MEDIA_ERR_LOG("videoSurface_ is null");
+            return result;
+        }
         videoSurface_->SetDefaultWidthAndHeight(videoWidth_, videoHeight_);
         videoSurface_->SetUserData(CameraManager::surfaceFormat, std::to_string(videoFormat_));
         videoSurfaceListener_ = new SurfaceListener(testName_, SurfaceType::VIDEO, fd_, videoSurface_);
+        if (!videoSurfaceListener_) {
+            MEDIA_ERR_LOG("Failed to create new SurfaceListener");
+            return result;
+        }
         videoSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)videoSurfaceListener_);
         videoOutput_ = cameraManager_->CreateVideoOutput(videoSurface_);
         if (videoOutput_ == nullptr) {
@@ -555,6 +618,10 @@ int32_t CameraCaptureVideo::AddOutputbyState()
 {
     int32_t result = -1;
 
+    if (!captureSession_) {
+        MEDIA_ERR_LOG("captureSession_ is null");
+        return result;
+    }
     switch (currentState_) {
         case State::PHOTO_CAPTURE:
             result = InitPhotoOutput();
@@ -632,3 +699,4 @@ int32_t main(int32_t argc, char **argv)
     DisplayMenu(testObj);
     return 0;
 }
+

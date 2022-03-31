@@ -64,7 +64,7 @@ public:
 class CameraInput : public CaptureInput {
 public:
     CameraInput(sptr<ICameraDeviceService> &deviceObj, sptr<CameraInfo> &camera);
-    ~CameraInput() {};
+    ~CameraInput() {}
     void LockForControl();
     int32_t UnlockForControl();
     std::vector<camera_format_t> GetSupportedPhotoFormats();
@@ -113,3 +113,4 @@ private:
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_CAMERA_INPUT_H
+

@@ -35,3 +35,4 @@ private:
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_HCAMERA_SERVICE_CALLBACK_PROXY_H
+

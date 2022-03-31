@@ -56,14 +56,14 @@ napi_value CameraInfoNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER("connectionType", GetConnectionType)
     };
 
-    status = napi_define_class(env, CAMERA_OBJECT_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
+    status = napi_define_class(env, CAMERA_OBJECT_NAPI_CLASS_NAME, NAPI_AUTO_LENGTH,
                                CameraInfoNapiConstructor, nullptr,
                                sizeof(camera_object_props) / sizeof(camera_object_props[PARAM0]),
                                camera_object_props, &ctorObj);
     if (status == napi_ok) {
         status = napi_create_reference(env, ctorObj, refCount, &sConstructor_);
         if (status == napi_ok) {
-            status = napi_set_named_property(env, exports, CAMERA_OBJECT_NAPI_CLASS_NAME.c_str(), ctorObj);
+            status = napi_set_named_property(env, exports, CAMERA_OBJECT_NAPI_CLASS_NAME, ctorObj);
             if (status == napi_ok) {
                 return exports;
             }

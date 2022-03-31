@@ -33,8 +33,7 @@ int32_t HStreamCaptureProxy::Capture(const std::shared_ptr<CameraMetadata> &capt
         MEDIA_ERR_LOG("HStreamCaptureProxy Capture Write interface token failed");
         return IPC_PROXY_ERR;
     }
-    bool bRet = MetadataUtils::EncodeCameraMetadata(captureSettings, data);
-    if (!bRet) {
+    if (!(MetadataUtils::EncodeCameraMetadata(captureSettings, data))) {
         MEDIA_ERR_LOG("HStreamCaptureProxy Capture EncodeCameraMetadata failed");
         return IPC_PROXY_ERR;
     }

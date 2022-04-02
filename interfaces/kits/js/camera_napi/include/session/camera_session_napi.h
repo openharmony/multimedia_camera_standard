@@ -53,8 +53,18 @@ public:
     void OnError(int32_t errorCode) override;
 
 private:
+    void OnErrorCallback(int32_t errorCode) const;
+    void OnErrorCallbackAsync(int32_t errorCode) const;
+
     napi_env env_;
     napi_ref callbackRef_ = nullptr;
+};
+
+struct SessionCallbackInfo {
+    int32_t errorCode_;
+    const SessionCallbackListener *listener_;
+    SessionCallbackInfo(int32_t errorCode, const SessionCallbackListener *listener)
+        : errorCode_(errorCode), listener_(listener) {}
 };
 
 class CameraSessionNapi {

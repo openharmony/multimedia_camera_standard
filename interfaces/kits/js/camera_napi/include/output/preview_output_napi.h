@@ -56,11 +56,20 @@ public:
 
 private:
     void UpdateJSCallback(std::string propName, const int32_t value) const;
+    void UpdateJSCallbackAsync(std::string propName, const int32_t value) const;
 
     napi_env env_;
     napi_ref frameStartCallbackRef_ = nullptr;
     napi_ref frameEndCallbackRef_ = nullptr;
     napi_ref errorCallbackRef_ = nullptr;
+};
+
+struct PreviewOutputCallbackInfo {
+    std::string eventName_;
+    int32_t value_;
+    const PreviewOutputCallback *listener_;
+    PreviewOutputCallbackInfo(std::string eventName, int32_t value, const PreviewOutputCallback *listener)
+        : eventName_(eventName), value_(value), listener_(listener) {}
 };
 
 class PreviewOutputNapi {

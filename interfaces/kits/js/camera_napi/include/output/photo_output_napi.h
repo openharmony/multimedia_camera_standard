@@ -65,12 +65,21 @@ public:
 
 private:
     void UpdateJSCallback(std::string propName, const CallbackInfo &info) const;
+    void UpdateJSCallbackAsync(std::string propName, const CallbackInfo &info) const;
 
     napi_env env_;
     napi_ref captureStartCallbackRef_ = nullptr;
     napi_ref captureEndCallbackRef_ = nullptr;
     napi_ref frameShutterCallbackRef_ = nullptr;
     napi_ref errorCallbackRef_ = nullptr;
+};
+
+struct PhotoOutputCallbackInfo {
+    std::string eventName_;
+    CallbackInfo info_;
+    const PhotoOutputCallback *listener_;
+    PhotoOutputCallbackInfo(std::string eventName, CallbackInfo info, const PhotoOutputCallback *listener)
+        : eventName_(eventName), info_(info), listener_(listener) {}
 };
 
 class PhotoOutputNapi {

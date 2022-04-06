@@ -32,24 +32,14 @@ config("camera_config") {
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",
   ]
 
-  if ("${product_name}" == "m40") {
-    include_dirs += [
-      "//drivers/peripheral/adapter/camera/interfaces/include",
-      "//drivers/peripheral/adapter/camera/interfaces/include/server",
-      "//drivers/peripheral/adapter/camera/interfaces/include/callback/device",
-      "//drivers/peripheral/adapter/camera/interfaces/include/callback/operator",
-      "//drivers/peripheral/adapter/camera/interfaces/include/callback/host",
-    ]
-  } else {
-    include_dirs += [
-      "//drivers/peripheral/camera/interfaces/include",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/device",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/operator",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host",
-    ]
-  }
+  include_dirs += [
+    "//drivers/peripheral/camera/interfaces/include",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/device",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/operator",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host",
+  ]
 }
 
 ohos_executable("camera_video") {

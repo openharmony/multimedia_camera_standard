@@ -52,19 +52,19 @@ ohos_moduletest("camera_framework_moduletest") {
     "hiviewdfx_hilog_native:libhilog",
   ]
 
+  include_dirs += [
+    "//drivers/peripheral/camera/interfaces/include",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
+  ]
+
   cflags = [ "-fPIC" ]
   if ("${product_name}" == "m40") {
     cflags += [ "-DPRODUCT_M40" ]
-    include_dirs += [ "//drivers/peripheral/adapter/camera/interfaces/include" ]
   } else {
     if (device_name == "rk3566" || device_name == "rk3568") {
       cflags += [ "-DRK_CAMERA" ]
     }
-    include_dirs += [
-      "//drivers/peripheral/camera/interfaces/include",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
-    ]
   }
   cflags_cc = cflags
 }

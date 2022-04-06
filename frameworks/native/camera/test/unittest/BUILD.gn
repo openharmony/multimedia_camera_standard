@@ -56,26 +56,22 @@ ohos_unittest("camera_framework_unittest") {
   ]
 
   cflags = [ "-fPIC" ]
+
+  include_dirs += [
+    "//drivers/peripheral/camera/interfaces/include",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/device/include",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/operator/include",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host/include",
+  ]
+
   if ("${product_name}" == "m40") {
     cflags += [ "-DPRODUCT_M40" ]
-    include_dirs += [
-      "//drivers/peripheral/adapter/camera/interfaces/include",
-      "//drivers/peripheral/adapter/camera/interfaces/include/callback/device",
-      "//drivers/peripheral/adapter/camera/interfaces/include/callback/operator",
-      "//drivers/peripheral/adapter/camera/interfaces/include/callback/host",
-    ]
   } else {
     if (device_name == "rk3566" || device_name == "rk3568") {
       cflags += [ "-DRK_CAMERA" ]
     }
-    include_dirs += [
-      "//drivers/peripheral/camera/interfaces/include",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/device/include",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/operator/include",
-      "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host/include",
-    ]
   }
   cflags_cc = cflags
 }

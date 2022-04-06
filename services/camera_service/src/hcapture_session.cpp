@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace CameraStandard {
 static std::map<int32_t, sptr<HCaptureSession>> session_;
+static std::mutex sessionLock_;
 HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     sptr<StreamOperatorCallback> streamOperatorCb)
     : cameraHostManager_(cameraHostManager), streamOperatorCallback_(streamOperatorCb),
@@ -36,6 +37,16 @@ HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     sessionState_.insert(std::make_pair(CaptureSessionState::SESSION_CONFIG_COMMITTED, "Committed"));
 
     MEDIA_DEBUG_LOG("HCaptureSession: camera stub services(%{public}zu) pid(%{public}d).", session_.size(), pid_);
+    std::map<int32_t, sptr<HCaptureSession>> oldSessions;
+    for (auto it = session_.begin(); it != session_.end(); it++) {
+        sptr<HCaptureSession> session = it->second;
+        oldSessions[it->first] = session;
+    }
+    for (auto it = oldSessions.begin(); it != oldSessions.end(); it++) {
+        sptr<HCaptureSession> session = it->second;
+        session->Release(it->first);
+        MEDIA_ERR_LOG("currently multi-session not supported, release session for pid(%{public}d)", it->first);
+    }
     it = session_.find(pid_);
     if (it != session_.end()) {
         MEDIA_ERR_LOG("HCaptureSession::HCaptureSession doesn't support multiple sessions per pid");
@@ -667,7 +678,13 @@ void HCaptureSession::ReleaseStreams()
 
 int32_t HCaptureSession::Release(pid_t pid)
 {
-    ClearCaptureSession(pid);
+    std::lock_guard<std::mutex> lock(sessionLock_);
+    MEDIA_DEBUG_LOG("HCaptureSession::Release pid(%{public}d).", pid);
+    auto it = session_.find(pid);
+    if (it == session_.end()) {
+        MEDIA_DEBUG_LOG("HCaptureSession::Release session for pid(%{public}d) already released.", pid);
+        return CAMERA_OK;
+    }
     ReleaseStreams();
     if (streamOperatorCallback_ != nullptr) {
         streamOperatorCallback_->SetCaptureSession(nullptr);
@@ -677,6 +694,7 @@ int32_t HCaptureSession::Release(pid_t pid)
         cameraDevice_->Close();
         cameraDevice_ = nullptr;
     }
+    ClearCaptureSession(pid);
     return CAMERA_OK;
 }
 

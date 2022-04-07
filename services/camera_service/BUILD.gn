@@ -90,9 +90,8 @@ ohos_shared_library("camera_service") {
     "//drivers/peripheral/camera/interfaces/hdi_ipc/callback/host/include",
   ]
 
-  deps += [
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/client:camera_client",
-  ]
+  deps +=
+      [ "//drivers/peripheral/camera/interfaces/hdi_ipc/client:camera_client" ]
 
   if ("${product_name}" == "m40") {
     cflags += [ "-DPRODUCT_M40" ]

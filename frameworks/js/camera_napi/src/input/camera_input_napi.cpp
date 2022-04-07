@@ -317,11 +317,17 @@ void GetCameraIdAsyncCallbackComplete(napi_env env, napi_status status, void *da
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
-    status = napi_create_string_utf8(env, context->cameraId.c_str(), NAPI_AUTO_LENGTH, &jsContext->data);
-    if (status != napi_ok) {
-        napi_get_undefined(env, &jsContext->data);
-        MEDIA_ERR_LOG("Failed to get cameraId");
+    if (context->status) {
+        status = napi_create_string_utf8(env, context->cameraId.c_str(), NAPI_AUTO_LENGTH, &jsContext->data);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG("GetCameraIdAsyncCallbackComplete:napi_create_string_utf8() failed");
+            CameraNapiUtils::CreateNapiErrorObject(env,
+                "GetCameraIdAsyncCallbackComplete:napi_create_string_utf8() failed", jsContext);
+        }
+    } else {
+        CameraNapiUtils::CreateNapiErrorObject(env, context->errorMsg.c_str(), jsContext);
     }
+
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
                                              context->work, *jsContext);
@@ -418,9 +424,19 @@ void CommonCompleteCallback(napi_env env, napi_status status, void* data)
         return;
     }
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
-    jsContext->status = true;
-    napi_get_undefined(env, &jsContext->error);
-    napi_get_boolean(env, context->status, &jsContext->data);
+
+    if (!context->status) {
+        CameraNapiUtils::CreateNapiErrorObject(env, context->errorMsg.c_str(), jsContext);
+    } else {
+        jsContext->status = true;
+        napi_get_undefined(env, &jsContext->error);
+        if (context->bRetBool) {
+            napi_get_boolean(env, context->isSupported, &jsContext->data);
+        } else {
+            napi_get_undefined(env, &jsContext->data);
+        }
+    }
+
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
                                              context->work, *jsContext);
@@ -455,13 +471,19 @@ napi_value CameraInputNapi::GetCameraId(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
-                    context->cameraId = context->objectInfo->cameraId_;
                     context->status = true;
+                    context->cameraId = context->objectInfo->cameraId_;
+                    if (context->cameraId.empty()) {
+                        context->status = false;
+                        context->errorMsg = "GetCameraId( ) Failed";
+                    }
                 }
             },
             GetCameraIdAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetCameraId");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -511,14 +533,23 @@ napi_value CameraInputNapi::HasFlash(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
+                    context->bRetBool = true;
                     std::vector<camera_flash_mode_enum_t> list;
                     list = context->objectInfo->cameraInput_->GetSupportedFlashModes();
-                    context->status = !(list.empty());
+                    if (list.empty()) {
+                        context->status = false;
+                        context->errorMsg = "GetSupportedFlashModes( ) Failed";
+                    } else {
+                        context->status = true;
+                        context->isSupported = !(list.empty());
+                    }
                 }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for HasFlash");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -554,12 +585,16 @@ napi_value CameraInputNapi::IsFlashModeSupported(napi_env env, napi_callback_inf
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
-                    context->status = IsFlashSupported(context->objectInfo->cameraInput_, context->flashMode);
+                    context->bRetBool = true;
+                    context->isSupported = IsFlashSupported(context->objectInfo->cameraInput_, context->flashMode);
+                    context->status = true;
                 }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for IsFlashModeSupported");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -568,32 +603,6 @@ napi_value CameraInputNapi::IsFlashModeSupported(napi_env env, napi_callback_inf
     }
 
     return result;
-}
-
-void ReturnVoidInCompleteCallback(napi_env env, napi_status status, void* data)
-{
-    auto context = static_cast<CameraInputAsyncContext*>(data);
-    if (context == nullptr) {
-        MEDIA_ERR_LOG("Async context is null");
-        return;
-    }
-    std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
-    jsContext->status = true;
-    napi_get_undefined(env, &jsContext->data);
-    napi_get_undefined(env, &jsContext->error);
-
-    if (!context->status) {
-        napi_value napiErrorMsg = nullptr;
-        napi_create_string_utf8(env, "Set function failed", NAPI_AUTO_LENGTH, &napiErrorMsg);
-        napi_create_error(env, nullptr, napiErrorMsg, &jsContext->error);
-        jsContext->status = false;
-    }
-
-    if (context->work != nullptr) {
-        CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
-                                             context->work, *jsContext);
-    }
-    delete context;
 }
 
 napi_value CameraInputNapi::SetFlashMode(napi_env env, napi_callback_info info)
@@ -621,7 +630,9 @@ napi_value CameraInputNapi::SetFlashMode(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
                     sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
                     if (IsFlashSupported(cameraInput, context->flashMode)) {
                         cameraInput->LockForControl();
@@ -631,12 +642,13 @@ napi_value CameraInputNapi::SetFlashMode(napi_env env, napi_callback_info info)
                         context->status = true;
                     } else {
                         MEDIA_ERR_LOG("Flash mode is not supported");
-                        context->status = false;
+                        context->errorMsg = "Flash mode is not supported";
                     }
                 }
             },
-            ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for SetFlashMode");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -656,8 +668,9 @@ void GetFlashModeAsyncCallbackComplete(napi_env env, napi_status status, void *d
     napi_get_undefined(env, &jsContext->error);
     status = napi_create_int32(env, context->flashMode, &jsContext->data);
     if (status != napi_ok) {
-        napi_get_undefined(env, &jsContext->data);
-        MEDIA_ERR_LOG("Failed to get flashMode");
+        MEDIA_ERR_LOG("GetFlashModeAsyncCallbackComplete:napi_create_int32() failed");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "GetFlashModeAsyncCallbackComplete:napi_create_int32() failed", jsContext);
     }
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
@@ -692,6 +705,7 @@ napi_value CameraInputNapi::GetFlashMode(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->flashMode = context->objectInfo->cameraInput_->GetFlashMode();
                     context->status = true;
@@ -699,6 +713,7 @@ napi_value CameraInputNapi::GetFlashMode(napi_env env, napi_callback_info info)
             },
             GetFlashModeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetFlashMode");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -734,10 +749,13 @@ napi_value CameraInputNapi::IsExposureModeSupported(napi_env env, napi_callback_
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->bRetBool = true;
                 context->status = true;
+                context->isSupported = true;
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for IsExposureModeSupported");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -760,8 +778,9 @@ void GetExposureModeAsyncCallbackComplete(napi_env env, napi_status status, void
 
     status = napi_create_int32(env, context->exposureMode, &jsContext->data);
     if (status != napi_ok) {
-        napi_get_undefined(env, &jsContext->data);
-        MEDIA_ERR_LOG("Failed to get exposureMode");
+        MEDIA_ERR_LOG("GetExposureModeAsyncCallbackComplete:napi_create_int32() failed");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "GetExposureModeAsyncCallbackComplete:napi_create_int32() failed", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -798,6 +817,7 @@ napi_value CameraInputNapi::GetExposureMode(napi_env env, napi_callback_info inf
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->exposureMode = context->objectInfo->cameraInput_->GetExposureMode();
                     context->status = true;
@@ -805,6 +825,7 @@ napi_value CameraInputNapi::GetExposureMode(napi_env env, napi_callback_info inf
             },
             GetExposureModeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetExposureMode");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -840,14 +861,17 @@ napi_value CameraInputNapi::SetExposureMode(napi_env env, napi_callback_info inf
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
                     context->objectInfo->cameraInput_->
-                                    SetExposureMode(static_cast<camera_ae_mode_t>(context->exposureMode));
+                                SetExposureMode(static_cast<camera_ae_mode_t>(context->exposureMode));
                     context->status = true;
                 }
             },
-            ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for SetExposureMode");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -883,10 +907,12 @@ napi_value CameraInputNapi::IsFocusModeSupported(napi_env env, napi_callback_inf
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
+                    context->bRetBool = true;
+                    context->status = true;
                     if (context->focusModeLocked) {
                         MEDIA_INFO_LOG("FOCUS_MODE_LOCKED is supported");
-                        context->status = true;
                         return;
                     }
 
@@ -894,14 +920,15 @@ napi_value CameraInputNapi::IsFocusModeSupported(napi_env env, napi_callback_inf
                     vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
                     if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),
                         context->focusMode) != vecSupportedFocusModeList.end()) {
-                        context->status = true;
+                        context->isSupported = true;
                     } else {
-                        context->status = false;
+                        context->isSupported = false;
                     }
                 }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for IsFocusModeSupported");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -937,11 +964,13 @@ void GetSupportedPhotoFormatsAsyncCallbackComplete(napi_env env, napi_status sta
             }
             jsContext->data = photoFormats;
         } else {
-            napi_get_undefined(env, &jsContext->data);
+            MEDIA_ERR_LOG("GetSupportedPhotoFormatsAsyncCallbackComplete:napi_create_array() failed");
+            CameraNapiUtils::CreateNapiErrorObject(env,
+                "GetSupportedPhotoFormatsAsyncCallbackComplete:napi_create_array() failed", jsContext);
         }
     } else {
         MEDIA_ERR_LOG("No PhotoFormats found!");
-        napi_get_undefined(env, &jsContext->data);
+        CameraNapiUtils::CreateNapiErrorObject(env, "No PhotoFormats found!", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -977,6 +1006,7 @@ napi_value CameraInputNapi::GetSupportedPhotoFormats(napi_env env, napi_callback
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->vecSupportedPhotoFormatList =
                         context->objectInfo->cameraInput_->GetSupportedPhotoFormats();
@@ -985,6 +1015,7 @@ napi_value CameraInputNapi::GetSupportedPhotoFormats(napi_env env, napi_callback
             },
             GetSupportedPhotoFormatsAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetSupportedPhotoFormats");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -1020,11 +1051,13 @@ void GetSupportedVideoFormatsAsyncCallbackComplete(napi_env env, napi_status sta
             }
             jsContext->data = videoFormats;
         } else {
-            napi_get_undefined(env, &jsContext->data);
+            MEDIA_ERR_LOG("GetSupportedVideoFormatsAsyncCallbackComplete:napi_create_array() failed");
+            CameraNapiUtils::CreateNapiErrorObject(env,
+                "GetSupportedVideoFormatsAsyncCallbackComplete:napi_create_array() failed", jsContext);
         }
     } else {
         MEDIA_ERR_LOG("No VideoFormats found!");
-        napi_get_undefined(env, &jsContext->data);
+        CameraNapiUtils::CreateNapiErrorObject(env, "No VideoFormats found!", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -1059,6 +1092,7 @@ napi_value CameraInputNapi::GetSupportedVideoFormats(napi_env env, napi_callback
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->vecSupportedVideoFormatList =
                         context->objectInfo->cameraInput_->GetSupportedVideoFormats();
@@ -1067,6 +1101,7 @@ napi_value CameraInputNapi::GetSupportedVideoFormats(napi_env env, napi_callback
             },
             GetSupportedVideoFormatsAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetSupportedVideoFormats");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -1101,11 +1136,13 @@ void GetSupportedPreviewFormatsAsyncCallbackComplete(napi_env env, napi_status s
             }
             jsContext->data = previewFormats;
         } else {
-            napi_get_undefined(env, &jsContext->data);
+            MEDIA_ERR_LOG("GetSupportedPreviewFormatsAsyncCallbackComplete:napi_create_array() failed");
+            CameraNapiUtils::CreateNapiErrorObject(env,
+                "GetSupportedPreviewFormatsAsyncCallbackComplete:napi_create_array() failed", jsContext);
         }
     } else {
         MEDIA_ERR_LOG("No previewFormats found!");
-        napi_get_undefined(env, &jsContext->data);
+        CameraNapiUtils::CreateNapiErrorObject(env, "No previewFormats found!", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -1141,6 +1178,7 @@ napi_value CameraInputNapi::GetSupportedPreviewFormats(napi_env env, napi_callba
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->vecSupportedPreviewFormatList =
                         context->objectInfo->cameraInput_->GetSupportedPreviewFormats();
@@ -1150,6 +1188,7 @@ napi_value CameraInputNapi::GetSupportedPreviewFormats(napi_env env, napi_callba
             GetSupportedPreviewFormatsAsyncCallbackComplete,
             static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetSupportedPreviewFormats");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -1174,8 +1213,9 @@ void GetFocusModeAsyncCallbackComplete(napi_env env, napi_status status, void *d
     CameraNapiUtils::MapFocusModeEnum(context->focusMode, jsFocusMode);
     status = napi_create_int32(env, jsFocusMode, &jsContext->data);
     if (status != napi_ok) {
-        napi_get_undefined(env, &jsContext->data);
-        MEDIA_ERR_LOG("Failed to get focusMode");
+        MEDIA_ERR_LOG("GetFocusModeAsyncCallbackComplete:napi_create_int32() failed");
+            CameraNapiUtils::CreateNapiErrorObject(env,
+                "GetFocusModeAsyncCallbackComplete:napi_create_int32() failed", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -1212,6 +1252,7 @@ napi_value CameraInputNapi::GetFocusMode(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->focusMode = context->objectInfo->cameraInput_->GetFocusMode();
                     context->status = true;
@@ -1255,7 +1296,9 @@ napi_value CameraInputNapi::SetFocusMode(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
                     sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
                     context->status = true;
                     if (context->focusModeLocked) {
@@ -1273,10 +1316,11 @@ napi_value CameraInputNapi::SetFocusMode(napi_env env, napi_callback_info info)
                     } else {
                         MEDIA_ERR_LOG("Focus mode is not supported");
                         context->status = false;
+                        context->errorMsg = "Focus mode is not supported";
                     }
                 }
             },
-            ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             MEDIA_ERR_LOG("Failed to create napi_create_async_work for SetFocusMode");
             napi_get_undefined(env, &result);
@@ -1307,7 +1351,8 @@ void GetSupportedSizesAsyncCallbackComplete(napi_env env, napi_status status, vo
                 cameraSize = CameraSizeNapi::CreateCameraSize(env, context->vecSupportedSizeList[i]);
                 if (cameraSize == nullptr || napi_set_element(env, cameraSizeArray, i, cameraSize) != napi_ok) {
                     HiLog::Error(LABEL, "Failed to get CameraSize napi object");
-                    napi_get_undefined(env, &jsContext->data);
+                    CameraNapiUtils::CreateNapiErrorObject(env,
+                        "Failed to get CameraSize napi object", jsContext);
                     break;
                 }
             }
@@ -1315,11 +1360,11 @@ void GetSupportedSizesAsyncCallbackComplete(napi_env env, napi_status status, vo
                 jsContext->data = cameraSizeArray;
             }
         } else {
-            napi_get_undefined(env, &jsContext->data);
+            CameraNapiUtils::CreateNapiErrorObject(env, "GetSupportedSizes() failed", jsContext);
         }
     } else {
         HiLog::Error(LABEL, "No supported size found!");
-        napi_get_undefined(env, &jsContext->data);
+        CameraNapiUtils::CreateNapiErrorObject(env, "No supported size found!", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -1353,6 +1398,7 @@ napi_value CameraInputNapi::GetSupportedSizes(napi_env env, napi_callback_info i
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->vecSupportedSizeList =
                         context->objectInfo->cameraInput_->getSupportedSizes(context->cameraFormat);
@@ -1361,6 +1407,7 @@ napi_value CameraInputNapi::GetSupportedSizes(napi_env env, napi_callback_info i
             },
             GetSupportedSizesAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetSupportedSizes");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -1394,7 +1441,8 @@ void GetZoomRatioRangeAsyncCallbackComplete(napi_env env, napi_status status, vo
         jsContext->data = zoomRatioRange;
     } else {
         MEDIA_ERR_LOG("vecSupportedZoomRatioList is empty or failed to create array!");
-        napi_get_undefined(env, &jsContext->data);
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "vecSupportedZoomRatioList is empty or failed to create array!", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -1431,6 +1479,7 @@ napi_value CameraInputNapi::GetZoomRatioRange(napi_env env, napi_callback_info i
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->vecZoomRatioList = context->objectInfo->cameraInput_->GetSupportedZoomRatioRange();
                     context->status = true;
@@ -1438,6 +1487,7 @@ napi_value CameraInputNapi::GetZoomRatioRange(napi_env env, napi_callback_info i
             },
             GetZoomRatioRangeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetZoomRatioRange");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -1460,8 +1510,9 @@ void GetZoomRatioAsyncCallbackComplete(napi_env env, napi_status status, void *d
 
     status = napi_create_double(env, context->zoomRatio, &jsContext->data);
     if (status != napi_ok) {
-        napi_get_undefined(env, &jsContext->data);
-        MEDIA_ERR_LOG("Failed to get zoomRatio");
+        MEDIA_ERR_LOG("GetZoomRatioAsyncCallbackComplete:napi_create_double() failed");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "GetZoomRatioAsyncCallbackComplete:napi_create_double() failed", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -1498,6 +1549,7 @@ napi_value CameraInputNapi::GetZoomRatio(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->zoomRatio = context->objectInfo->cameraInput_->GetZoomRatio();
                     context->status = true;
@@ -1505,7 +1557,7 @@ napi_value CameraInputNapi::GetZoomRatio(napi_env env, napi_callback_info info)
             },
             GetZoomRatioAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetFocusMode");
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetZoomRatio");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -1541,7 +1593,9 @@ napi_value CameraInputNapi::SetZoomRatio(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
                     sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
                     cameraInput->LockForControl();
                     cameraInput->SetZoomRatio(context->zoomRatio);
@@ -1549,7 +1603,7 @@ napi_value CameraInputNapi::SetZoomRatio(napi_env env, napi_callback_info info)
                     context->status = true;
                 }
             },
-            ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             MEDIA_ERR_LOG("Failed to create napi_create_async_work for SetZoomRatio");
             napi_get_undefined(env, &result);
@@ -1589,14 +1643,16 @@ napi_value CameraInputNapi::Release(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
+                context->status = false;
                 if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
                     context->objectInfo->cameraInput_->Release();
                     context->status = true;
                 }
             },
-            ReturnVoidInCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            MEDIA_ERR_LOG("Failed to create napi_create_async_work for Release");
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for CameraInputNapi::Release");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);

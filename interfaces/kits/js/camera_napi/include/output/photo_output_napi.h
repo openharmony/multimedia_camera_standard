@@ -126,6 +126,8 @@ struct PhotoOutputAsyncContext {
     PhotoOutputNapi* objectInfo;
     int32_t status;
     bool hasPhotoSettings = false;
+    std::string errorMsg;
+    bool bRetBool;
 };
 } // namespace CameraStandard
 } // namespace OHOS

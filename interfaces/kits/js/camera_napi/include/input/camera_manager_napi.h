@@ -85,6 +85,7 @@ struct CameraManagerNapiAsyncContext {
     sptr<CameraInput> cameraInput;
     sptr<CameraInfo> cameraInfo;
     std::vector<sptr<CameraInfo>> cameraObjList;
+    std::string errString;
 };
 } // namespace CameraStandard
 } // namespace OHOS

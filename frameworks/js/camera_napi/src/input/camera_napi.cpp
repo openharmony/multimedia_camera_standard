@@ -184,15 +184,14 @@ void CreateCameraManagerAsyncCallbackComplete(napi_env env, napi_status status, 
     CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "CameraNapiAsyncContext is null");
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
-
     napi_get_undefined(env, &jsContext->error);
 
     MEDIA_INFO_LOG("CreateCameraManagerInstance created");
     jsContext->data = CameraManagerNapi::CreateCameraManagerInstance(env);
-
     if (jsContext->data == nullptr) {
-        napi_get_undefined(env, &jsContext->data);
         MEDIA_ERR_LOG("Failed to Create camera manager napi instance");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "Failed to Create camera manager napi instance", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -228,11 +227,10 @@ napi_value CameraNapi::CreateCameraManagerInstance(napi_env env, napi_callback_i
         [](napi_env env, void* data) {},
         CreateCameraManagerAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
-        MEDIA_ERR_LOG("CreateCameraManagerInstance napi_create_async_work failed");
+        MEDIA_ERR_LOG("Failed to create napi_create_async_work for CreateCameraManagerInstance");
         napi_get_undefined(env, &result);
     } else {
         napi_queue_async_work(env, asyncContext->work);
-        MEDIA_INFO_LOG("CreateCameraManagerInstance napi_queue_async_work done");
         asyncContext.release();
     }
     MEDIA_ERR_LOG("CreateCameraManagerInstance return undefined");
@@ -248,11 +246,14 @@ void CreateCameraSessionAsyncCallbackComplete(napi_env env, napi_status status, 
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
 
+    MEDIA_INFO_LOG("CreateCameraSessionInstance created");
     jsContext->data = CameraSessionNapi::CreateCameraSession(env);
     if (jsContext->data == nullptr) {
-        napi_get_undefined(env, &jsContext->data);
         MEDIA_ERR_LOG("Failed to create fetch CreateCameraSession result instance");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "Failed to create fetch CreateCameraSession result instance", jsContext);
     }
+
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
                                              context->work, *jsContext);
@@ -289,6 +290,7 @@ napi_value CameraNapi::CreateCameraSessionInstance(napi_env env, napi_callback_i
         [](napi_env env, void* data) {},
         CreateCameraSessionAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
+        MEDIA_ERR_LOG("Failed to create napi_create_async_work for CreateCameraSessionInstance");
         napi_get_undefined(env, &result);
     } else {
         napi_queue_async_work(env, asyncContext->work);
@@ -383,15 +385,14 @@ void CreatePreviewOutputAsyncCallbackComplete(napi_env env, napi_status status, 
     CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
-
     napi_get_undefined(env, &jsContext->error);
 
     MEDIA_ERR_LOG("context->surfaceId : %{public}" PRIu64, context->surfaceId);
     jsContext->data = PreviewOutputNapi::CreatePreviewOutput(env, context->surfaceId);
-
     if (jsContext->data == nullptr) {
-        napi_get_undefined(env, &jsContext->data);
         MEDIA_ERR_LOG("Failed to Create preview output napi instance");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "Failed to Create preview output napi instance", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -425,6 +426,7 @@ napi_value CameraNapi::CreatePreviewOutputInstance(napi_env env, napi_callback_i
         [](napi_env env, void* data) {},
         CreatePreviewOutputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
+        MEDIA_ERR_LOG("Failed to create napi_create_async_work for CreatePreviewOutputInstance");
         napi_get_undefined(env, &result);
     } else {
         napi_queue_async_work(env, asyncContext->work);
@@ -445,10 +447,10 @@ void CreatePhotoOutputAsyncCallbackComplete(napi_env env, napi_status status, vo
 
     MEDIA_ERR_LOG("context->photoSurfaceId : %{public}s", context->photoSurfaceId.c_str());
     jsContext->data = PhotoOutputNapi::CreatePhotoOutput(env, context->photoSurfaceId);
-
     if (jsContext->data == nullptr) {
-        napi_get_undefined(env, &jsContext->data);
         MEDIA_ERR_LOG("Failed to Create photo output napi instance");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "Failed to Create photo output napi instance", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -481,6 +483,7 @@ napi_value CameraNapi::CreatePhotoOutputInstance(napi_env env, napi_callback_inf
         [](napi_env env, void* data) {},
         CreatePhotoOutputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
+        MEDIA_ERR_LOG("Failed to create napi_create_async_work for CreatePhotoOutputInstance");
         napi_get_undefined(env, &result);
     } else {
         napi_queue_async_work(env, asyncContext->work);
@@ -497,11 +500,13 @@ void CreateVideoOutputAsyncCallbackComplete(napi_env env, napi_status status, vo
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
-    MEDIA_ERR_LOG("context->surfaceId : %{public}" PRIu64, context->surfaceId);
+
+    MEDIA_DEBUG_LOG("context->surfaceId : %{public}" PRIu64, context->surfaceId);
     jsContext->data = VideoOutputNapi::CreateVideoOutput(env, context->surfaceId);
     if (jsContext->data == nullptr) {
-        napi_get_undefined(env, &jsContext->data);
-        MEDIA_ERR_LOG("Failed to create video vutput instance");
+        MEDIA_ERR_LOG("Failed to create video output instance");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "Failed to create video output instance", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -534,6 +539,7 @@ napi_value CameraNapi::CreateVideoOutputInstance(napi_env env, napi_callback_inf
         [](napi_env env, void* data) {},
         CreateVideoOutputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
+        MEDIA_ERR_LOG("Failed to create napi_create_async_work for CreateVideoOutputInstance");
         napi_get_undefined(env, &result);
     } else {
         napi_queue_async_work(env, asyncContext->work);

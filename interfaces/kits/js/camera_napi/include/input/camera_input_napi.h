@@ -165,8 +165,11 @@ struct CameraInputAsyncContext {
     napi_ref callbackRef;
     CameraInputNapi* objectInfo;
     bool status;
+    bool bRetBool;
+    bool isSupported;
     std::string cameraId;
     std::string enumType;
+    std::string errorMsg;
     camera_format_t cameraFormat;
     int32_t flashMode;
     int32_t exposureMode;

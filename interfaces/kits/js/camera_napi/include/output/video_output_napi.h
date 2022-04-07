@@ -118,6 +118,8 @@ struct VideoOutputAsyncContext {
     napi_ref callbackRef;
     VideoOutputNapi* objectInfo;
     int32_t status;
+    std::string errorMsg;
+    bool bRetBool;
 };
 } // namespace CameraStandard
 } // namespace OHOS

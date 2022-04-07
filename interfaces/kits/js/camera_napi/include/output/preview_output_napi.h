@@ -106,6 +106,8 @@ struct PreviewOutputAsyncContext {
     napi_ref callbackRef;
     PreviewOutputNapi* objectInfo;
     bool status;
+    std::string errorMsg;
+    bool bRetBool;
 };
 } // namespace CameraStandard
 } // namespace OHOS

@@ -278,9 +278,18 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
     }
 
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
-    jsContext->status = true;
-    napi_get_undefined(env, &jsContext->error);
-    napi_get_undefined(env, &jsContext->data);
+
+    if (!context->status) {
+        CameraNapiUtils::CreateNapiErrorObject(env, context->errorMsg.c_str(), jsContext);
+    } else {
+        jsContext->status = true;
+        napi_get_undefined(env, &jsContext->error);
+        if (context->bRetBool) {
+            napi_get_boolean(env, context->status, &jsContext->data);
+        } else {
+            napi_get_undefined(env, &jsContext->data);
+        }
+    }
 
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
@@ -375,18 +384,20 @@ napi_value VideoOutputNapi::Start(napi_env env, napi_callback_info info)
         status = napi_create_async_work(env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<VideoOutputAsyncContext*>(data);
-                if (context != nullptr) {
-                    if (context->objectInfo->videoOutput_ != nullptr) {
-                        context->status = ((sptr<VideoOutput> &)(context->objectInfo->videoOutput_))->Start();
-                    } else {
-                        MEDIA_ERR_LOG("videoOutput_ is null");
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = ((sptr<VideoOutput> &)(context->objectInfo->videoOutput_))->Start();
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "VideoOutputNapi::Start failure";
                     }
-                } else {
-                    MEDIA_ERR_LOG("context is null ");
                 }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for VideoOutputNapi::Start");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -422,18 +433,20 @@ napi_value VideoOutputNapi::Stop(napi_env env, napi_callback_info info)
         status = napi_create_async_work(env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<VideoOutputAsyncContext*>(data);
-                if (context != nullptr) {
-                    if (context->objectInfo->videoOutput_ != nullptr) {
-                        context->status = ((sptr<VideoOutput> &)(context->objectInfo->videoOutput_))->Stop();
-                    } else {
-                        MEDIA_ERR_LOG("videoOutput_ is null");
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = ((sptr<VideoOutput> &)(context->objectInfo->videoOutput_))->Stop();
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "VideoOutputNapi::Stop failure";
                     }
-                } else {
-                    MEDIA_ERR_LOG("context is null ");
                 }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for VideoOutputNapi::Stop");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -471,19 +484,16 @@ napi_value VideoOutputNapi::Release(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<VideoOutputAsyncContext*>(data);
-                if (context != nullptr) {
-                    if (context->objectInfo->videoOutput_ != nullptr) {
-                        ((sptr<VideoOutput> &)(context->objectInfo->videoOutput_))->Release();
-                        context->status = 0;
-                    } else {
-                        MEDIA_ERR_LOG("videoOutput_ is null");
-                    }
-                } else {
-                    MEDIA_ERR_LOG("context is null ");
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    ((sptr<VideoOutput> &)(context->objectInfo->videoOutput_))->Release();
                 }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for VideoOutputNapi::Release");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);

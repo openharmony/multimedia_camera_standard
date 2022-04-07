@@ -34,6 +34,7 @@ PhotoOutputCallback::PhotoOutputCallback(napi_env env) : env_(env) {}
 
 void PhotoOutputCallback::UpdateJSCallbackAsync(std::string propName, const CallbackInfo &info) const
 {
+    return;
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     if (!loop) {

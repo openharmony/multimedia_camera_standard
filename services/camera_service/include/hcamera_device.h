@@ -62,6 +62,7 @@ private:
     sptr<CameraDeviceCallback> deviceHDICallback_;
     std::shared_ptr<CameraMetadata> updateSettings_;
     sptr<Camera::IStreamOperator> streamOperator_;
+    std::mutex deviceLock_;
 };
 
 class CameraDeviceCallback : public Camera::CameraDeviceCallbackStub {

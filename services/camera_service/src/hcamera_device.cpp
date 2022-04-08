@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
+static bool isCameraOpened = false;
 HCameraDevice::HCameraDevice(sptr<HCameraHostManager> &cameraHostManager,
                              sptr<CameraDeviceCallback> deviceCallback, std::string cameraID)
 {
@@ -68,9 +69,14 @@ std::shared_ptr<CameraMetadata> HCameraDevice::GetSettings()
 int32_t HCameraDevice::Open()
 {
     int32_t errorCode;
+    std::lock_guard<std::mutex> lock(deviceLock_);
+    if (isCameraOpened) {
+        MEDIA_ERR_LOG("HCameraDevice::Open failed, camera is busy");
+    }
     MEDIA_INFO_LOG("HCameraDevice::Open Opening camera device: %{public}s", cameraID_.c_str());
     errorCode = cameraHostManager_->OpenCameraDevice(cameraID_, deviceHDICallback_, hdiCameraDevice_);
     if (errorCode == CAMERA_OK) {
+        isCameraOpened = true;
         if (updateSettings_ != nullptr) {
             Camera::CamRetCode rc = hdiCameraDevice_->UpdateSettings(updateSettings_);
             if (rc != Camera::NO_ERROR) {
@@ -87,10 +93,12 @@ int32_t HCameraDevice::Open()
 
 int32_t HCameraDevice::Close()
 {
+    std::lock_guard<std::mutex> lock(deviceLock_);
     if (hdiCameraDevice_ != nullptr) {
         MEDIA_INFO_LOG("HCameraDevice::Close Closing camera device: %{public}s", cameraID_.c_str());
         hdiCameraDevice_->Close();
     }
+    isCameraOpened = false;
     hdiCameraDevice_ = nullptr;
     return CAMERA_OK;
 }

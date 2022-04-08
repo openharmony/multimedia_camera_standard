@@ -202,7 +202,6 @@ void HCameraHostManager::CameraHostInfo::OnCameraStatus(const std::string& camer
         case Camera::UN_AVAILABLE: {
             MEDIA_INFO_LOG("CameraHostInfo::OnCameraStatus, camera %{public}s unavailable", cameraId.c_str());
             svcStatus = CAMERA_STATUS_UNAVAILABLE;
-            RemoveDevice(cameraId);
             break;
         }
         case Camera::AVAILABLE: {

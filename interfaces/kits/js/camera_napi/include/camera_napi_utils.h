@@ -127,6 +127,7 @@ struct JSAsyncContextOutput {
     napi_value error;
     napi_value data;
     bool status;
+    bool bRetBool;
 };
 
 enum JSCameraPosition {
@@ -485,15 +486,14 @@ public:
         }
     }
 
-    static void CreateNapiErrorObject(napi_env env, napi_value &errorObj,
-        const int32_t errCode, const std::string errMsg)
+    static void CreateNapiErrorObject(napi_env env, const char *errString,
+        std::unique_ptr<JSAsyncContextOutput> &jsContext)
     {
-        napi_value napiErrorCode = nullptr;
+        napi_get_undefined(env, &jsContext->data);
         napi_value napiErrorMsg = nullptr;
-
-        napi_create_int32(env, errCode, &napiErrorCode);
-        napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &napiErrorMsg);
-        napi_create_error(env, napiErrorCode, napiErrorMsg, &errorObj);
+        napi_create_string_utf8(env, errString, NAPI_AUTO_LENGTH, &napiErrorMsg);
+        napi_create_error(env, nullptr, napiErrorMsg, &jsContext->error);
+        jsContext->status = false;
     }
 
     static void InvokeJSAsyncMethod(napi_env env, napi_deferred deferred,

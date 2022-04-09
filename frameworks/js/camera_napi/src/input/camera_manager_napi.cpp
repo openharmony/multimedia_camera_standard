@@ -216,8 +216,9 @@ void GetCamerasAsyncCallbackComplete(napi_env env, napi_status status, void* dat
 
     jsContext->data = CreateCameraJSArray(env, status, context->cameraObjList);
     if (jsContext->data == nullptr) {
-        napi_get_undefined(env, &jsContext->data);
         MEDIA_ERR_LOG("Failed to create napi cameraArray");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "Failed to create napi cameraArray", jsContext);
     }
 
     if (context->work != nullptr) {
@@ -253,13 +254,17 @@ napi_value CameraManagerNapi::GetCameras(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
-                context->cameraObjList = context->objectInfo->cameraManager_->GetCameras();
-                MEDIA_INFO_LOG("GetCameras cameraManager_->GetCameras() : %{public}zu", context->cameraObjList.size());
-                context->status = true;
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->cameraObjList = context->objectInfo->cameraManager_->GetCameras();
+                    MEDIA_INFO_LOG("GetCameras cameraManager_->GetCameras() : %{public}zu",
+                        context->cameraObjList.size());
+                    context->status = true;
+                }
             },
             GetCamerasAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
-            MEDIA_ERR_LOG("GetCameras napi_create_async_work failed ");
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetCameras");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -281,13 +286,14 @@ void CreateCameraInputAsyncCallbackComplete(napi_env env, napi_status status, vo
     if (context->status) {
         jsContext->data = CameraInputNapi::CreateCameraInput(env, context->cameraId,
             context->cameraInput);
+        if (jsContext->data == nullptr) {
+            MEDIA_ERR_LOG("Failed to create camera input instance");
+            CameraNapiUtils::CreateNapiErrorObject(env,
+                "Failed to create camera input instance", jsContext);
+        }
     } else {
-        jsContext->data = nullptr;
-    }
-
-    if (jsContext->data == nullptr) {
-        napi_get_undefined(env, &jsContext->data);
-        MEDIA_ERR_LOG("Failed to create camera input instance");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            context->errString.c_str(), jsContext);
     }
 
     if (context->work != nullptr) {
@@ -324,7 +330,13 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
     status = napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
             auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
+            if (context->objectInfo == nullptr) {
+                context->status = false;
+                return;
+            }
+            context->status = true;
             context->cameraObjList = CameraManager::GetInstance()->GetCameras();
+
             sptr<CameraInfo> camInfo = nullptr;
             size_t i;
             for (i = 0; i < context->cameraObjList.size(); i += 1) {
@@ -343,14 +355,19 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
             }
             if (camInfo != nullptr && i < context->cameraObjList.size()) {
                 context->cameraInput = context->objectInfo->cameraManager_->CreateCameraInput(camInfo);
-                context->status = true;
+                if (context->cameraInput == nullptr) {
+                    context->status = false;
+                    context->errString = "CreateCameraInput( ) failed";
+                }
             } else {
                 MEDIA_ERR_LOG("Error: unable to get camera Info!");
                 context->status = false;
+                context->errString = "unable to get camera Info";
             }
         },
         CreateCameraInputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
+        MEDIA_ERR_LOG("Failed to create napi_create_async_work for CreateCameraInputInstance");
         napi_get_undefined(env, &result);
     } else {
         napi_queue_async_work(env, asyncContext->work);

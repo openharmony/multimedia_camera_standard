@@ -265,6 +265,8 @@ int main(int argc, char **argv)
         permissionName, OHOS::Security::AccessToken::PERMISSION_USER_FIXED);
     if (ret != 0) {
         MEDIA_ERR_LOG("GrantPermission( ) failed");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     } else {
         MEDIA_DEBUG_LOG("GrantPermission( ) success");
@@ -276,6 +278,8 @@ int main(int argc, char **argv)
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     if (cameraObjList.size() == 0) {
         MEDIA_DEBUG_LOG("No camera devices");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -287,6 +291,8 @@ int main(int argc, char **argv)
     sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
     if (captureSession == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create capture session");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -295,6 +301,8 @@ int main(int argc, char **argv)
     sptr<CaptureInput> captureInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
     if (captureInput == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create camera input");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -357,6 +365,8 @@ int main(int argc, char **argv)
     ret = captureSession->AddInput(captureInput);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Add input to session is failed, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -369,6 +379,8 @@ int main(int argc, char **argv)
     sptr<CaptureOutput> previewOutput = camManagerObj->CreatePreviewOutput(previewSurface);
     if (previewOutput == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create preview output");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -377,6 +389,8 @@ int main(int argc, char **argv)
     ret = captureSession->AddOutput(previewOutput);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to Add output to session, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -386,17 +400,23 @@ int main(int argc, char **argv)
         int32_t videoSourceId = 0;
         if (!CreateAndConfigureRecorder(recorder, videoSourceId, videoWidth, videoHeight)) {
             MEDIA_DEBUG_LOG("Failed to create and configure recorder");
+            (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+                tokenIdEx.tokenIdExStruct.tokenID);
             return 0;
         }
 
         if (recorder->Prepare()) {
             MEDIA_DEBUG_LOG("Failed to prepare recorder");
+            (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+                tokenIdEx.tokenIdExStruct.tokenID);
             return 0;
         }
 
         videoSurface = recorder->GetSurface(videoSourceId);
         if (videoSurface == nullptr) {
             MEDIA_DEBUG_LOG("Failed to get surface from recorder");
+            (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+                tokenIdEx.tokenIdExStruct.tokenID);
             return 0;
         }
         videoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(videoFormat));
@@ -411,6 +431,8 @@ int main(int argc, char **argv)
     sptr<CaptureOutput> videoOutput = camManagerObj->CreateVideoOutput(videoSurface);
     if (videoOutput == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create video output");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -419,18 +441,24 @@ int main(int argc, char **argv)
     ret = captureSession->AddOutput(videoOutput);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to Add output to session, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
     ret = captureSession->CommitConfig();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to commit session config, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
     ret = captureSession->Start();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to start session, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -441,6 +469,8 @@ int main(int argc, char **argv)
     ret = ((sptr<VideoOutput> &)videoOutput)->Start();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to start video output, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -449,6 +479,8 @@ int main(int argc, char **argv)
         if (ret != 0) {
             MEDIA_DEBUG_LOG("Failed to start recorder, return: %{public}s",
                 OHOS::Media::MSErrorToString(static_cast<OHOS::Media::MediaServiceErrCode>(ret)).c_str());
+            (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+                tokenIdEx.tokenIdExStruct.tokenID);
             return 0;
         }
     }
@@ -459,6 +491,8 @@ int main(int argc, char **argv)
     ret = ((sptr<VideoOutput> &)videoOutput)->Pause();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to pause video output, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -474,6 +508,8 @@ int main(int argc, char **argv)
     ret = ((sptr<VideoOutput> &)videoOutput)->Resume();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to resume video output, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -490,6 +526,8 @@ int main(int argc, char **argv)
     ret = ((sptr<VideoOutput> &)videoOutput)->Stop();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to stop video output, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -517,6 +555,8 @@ int main(int argc, char **argv)
     ret = captureSession->Stop();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to stop session, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 

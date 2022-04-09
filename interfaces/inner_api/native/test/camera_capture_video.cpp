@@ -256,12 +256,16 @@ int32_t CameraCaptureVideo::TakePhoto()
 
     if (!photoOutput_) {
         MEDIA_ERR_LOG("photoOutput_ is null");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
 
     result = ((sptr<PhotoOutput> &)photoOutput_)->Capture();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to capture, result: %{public}d", result);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     sleep(GAP_AFTER_CAPTURE);
@@ -274,18 +278,24 @@ int32_t CameraCaptureVideo::RecordVideo()
 
     if (!videoOutput_) {
         MEDIA_ERR_LOG("videoOutput_ is null");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
 
     result = ((sptr<VideoOutput> &)videoOutput_)->Start();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to start recording, result: %{public}d", result);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     sleep(VIDEO_CAPTURE_DURATION);
     result = ((sptr<VideoOutput> &)videoOutput_)->Stop();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to stop recording, result: %{public}d", result);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     sleep(GAP_AFTER_CAPTURE);
@@ -653,40 +663,60 @@ int32_t CameraCaptureVideo::StartPreview()
 
     result = InitCameraManager();
     if (result != CAMERA_OK) {
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = InitCameraInput();
     if (result != CAMERA_OK) {
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     captureSession_ = cameraManager_->CreateCaptureSession();
     if (captureSession_ == nullptr) {
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     captureSession_->BeginConfig();
     result = captureSession_->AddInput(cameraInput_);
     if (CAMERA_OK != result) {
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = AddOutputbyState();
     if (result != CAMERA_OK) {
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = InitPreviewOutput();
     if (result != CAMERA_OK) {
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = captureSession_->AddOutput(previewOutput_);
     if (CAMERA_OK != result) {
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = captureSession_->CommitConfig();
     if (CAMERA_OK != result) {
         MEDIA_ERR_LOG("Failed to Commit config");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = captureSession_->Start();
     MEDIA_DEBUG_LOG("Preview started, result: %{public}d", result);
+    if (CAMERA_OK != result) {
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
+    }
     return result;
 }
 

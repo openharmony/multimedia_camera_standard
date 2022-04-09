@@ -110,6 +110,8 @@ struct CameraSessionAsyncContext {
     sptr<CaptureInput> cameraInput;
     sptr<CaptureOutput> cameraOutput;
     bool status;
+    std::string errorMsg;
+    bool bRetBool;
 };
 } // namespace CameraStandard
 } // namespace OHOS

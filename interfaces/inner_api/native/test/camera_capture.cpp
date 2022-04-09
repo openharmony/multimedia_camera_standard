@@ -133,6 +133,8 @@ int main(int argc, char **argv)
         permissionName, OHOS::Security::AccessToken::PERMISSION_USER_FIXED);
     if (ret != 0) {
         MEDIA_ERR_LOG("GrantPermission( ) failed");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     } else {
         MEDIA_DEBUG_LOG("GrantPermission( ) success");
@@ -144,6 +146,8 @@ int main(int argc, char **argv)
     std::vector<sptr<CameraInfo>> cameraObjList = camManagerObj->GetCameras();
     if (cameraObjList.size() == 0) {
         MEDIA_DEBUG_LOG("No camera devices");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -155,6 +159,8 @@ int main(int argc, char **argv)
     sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
     if (captureSession == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create capture session");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -163,6 +169,8 @@ int main(int argc, char **argv)
     sptr<CaptureInput> captureInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
     if (captureInput == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create camera input");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -222,12 +230,16 @@ int main(int argc, char **argv)
     ret = captureSession->AddInput(captureInput);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Add input to session is failed, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
     sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
     if (photoSurface == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create photoSurface");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
     photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
@@ -237,6 +249,8 @@ int main(int argc, char **argv)
     sptr<CaptureOutput> photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
     if (photoOutput == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create PhotoOutput");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -245,12 +259,16 @@ int main(int argc, char **argv)
     ret = captureSession->AddOutput(photoOutput);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to Add output to session, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
     sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
     if (previewSurface == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create previewSurface");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
     previewSurface->SetDefaultWidthAndHeight(previewWidth, previewHeight);
@@ -261,6 +279,8 @@ int main(int argc, char **argv)
         previewWidth, previewHeight);
     if (previewOutput == nullptr) {
         MEDIA_DEBUG_LOG("Failed to create previewOutput");
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -269,18 +289,24 @@ int main(int argc, char **argv)
     ret = captureSession->AddOutput(previewOutput);
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to Add output to session, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
     ret = captureSession->CommitConfig();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to commit session config, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
     ret = captureSession->Start();
     if (ret != 0) {
         MEDIA_DEBUG_LOG("Failed to start session, ret: %{public}d", ret);
+        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+            tokenIdEx.tokenIdExStruct.tokenID);
         return 0;
     }
 
@@ -291,6 +317,8 @@ int main(int argc, char **argv)
         ret = ((sptr<PhotoOutput> &)photoOutput)->Capture();
         if (ret != 0) {
             MEDIA_DEBUG_LOG("Failed to capture, ret: %{public}d", ret);
+            (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
+                tokenIdEx.tokenIdExStruct.tokenID);
             return 0;
         }
         sleep(gapAfterCapture);

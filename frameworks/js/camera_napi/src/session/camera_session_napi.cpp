@@ -42,17 +42,24 @@ void SessionCallbackListener::OnErrorCallbackAsync(int32_t errorCode) const
         MEDIA_ERR_LOG("SessionCallbackListener:OnErrorCallbackAsync() failed to allocate work");
         return;
     }
-    std::unique_ptr<SessionCallbackInfo> callbackInfo = std::make_unique<SessionCallbackInfo>(errorCode, this);
-    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    SessionCallbackInfo *callbackInfo = new(std::nothrow) SessionCallbackInfo(errorCode, this);
+    if (!callbackInfo) {
+        MEDIA_ERR_LOG("SessionCallbackListener:OnErrorCallbackAsync() failed to allocate callback info");
+        delete work;
+        return;
+    }
+    work->data = callbackInfo;
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         SessionCallbackInfo *callbackInfo = reinterpret_cast<SessionCallbackInfo *>(work->data);
         if (callbackInfo) {
             callbackInfo->listener_->OnErrorCallback(callbackInfo->errorCode_);
+            delete callbackInfo;
         }
         delete work;
     });
     if (ret) {
         MEDIA_ERR_LOG("SessionCallbackListener:OnErrorCallbackAsync() failed to execute work");
+        delete callbackInfo;
         delete work;
     }
 }

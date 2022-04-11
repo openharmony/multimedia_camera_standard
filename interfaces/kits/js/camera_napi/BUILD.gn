@@ -57,7 +57,11 @@ ohos_shared_library("camera_napi") {
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
   cflags = [ "-fPIC" ]
   if ("${product_name}" == "m40") {
     cflags += [ "-DPRODUCT_M40" ]

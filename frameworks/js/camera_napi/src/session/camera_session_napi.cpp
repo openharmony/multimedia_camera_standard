@@ -28,6 +28,7 @@ namespace {
 
 napi_ref CameraSessionNapi::sConstructor_ = nullptr;
 sptr<CaptureSession> CameraSessionNapi::sCameraSession_ = nullptr;
+uint32_t CameraSessionNapi::cameraSessionTaskId = CAMERA_SESSION_TASKID;
 
 void SessionCallbackListener::OnErrorCallbackAsync(int32_t errorCode) const
 {
@@ -176,6 +177,7 @@ napi_value CameraSessionNapi::CameraSessionNapiConstructor(napi_env env, napi_ca
 
 napi_value CameraSessionNapi::CreateCameraSession(napi_env env)
 {
+    CAMERA_SYNC_TRACE;
     napi_status status;
     napi_value result = nullptr;
     napi_value constructor;
@@ -225,6 +227,11 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
         }
     }
 
+    if (!context->funcName.empty() && context->taskId > 0) {
+        // Finish async trace
+        CAMERA_FINISH_ASYNC_TRACE(context->funcName, context->taskId);
+    }
+
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
                                              context->work, *jsContext);
@@ -262,6 +269,10 @@ napi_value CameraSessionNapi::BeginConfig(napi_env env, napi_callback_info info)
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraSessionNapi::BeginConfig";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraSessionTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -315,6 +326,10 @@ napi_value CameraSessionNapi::CommitConfig(napi_env env, napi_callback_info info
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraSessionNapi::CommitConfig";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraSessionTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -399,6 +414,10 @@ napi_value CameraSessionNapi::AddInput(napi_env env, napi_callback_info info)
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraSessionNapi::AddInput";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraSessionTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -448,6 +467,10 @@ napi_value CameraSessionNapi::RemoveInput(napi_env env, napi_callback_info info)
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraSessionNapi::RemoveInput";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraSessionTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -544,6 +567,10 @@ napi_value CameraSessionNapi::AddOutput(napi_env env, napi_callback_info info)
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraSessionNapi::AddOutput";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraSessionTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -594,6 +621,10 @@ napi_value CameraSessionNapi::RemoveOutput(napi_env env, napi_callback_info info
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraSessionNapi::RemoveOutput";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraSessionTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -647,6 +678,10 @@ napi_value CameraSessionNapi::Start(napi_env env, napi_callback_info info)
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraSessionNapi::Start";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraSessionTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -700,6 +735,10 @@ napi_value CameraSessionNapi::Stop(napi_env env, napi_callback_info info)
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraSessionNapi::Stop";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraSessionTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -752,6 +791,10 @@ napi_value CameraSessionNapi::Release(napi_env env, napi_callback_info info)
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraSessionNapi::Release";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraSessionTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -773,6 +816,7 @@ napi_value CameraSessionNapi::Release(napi_env env, napi_callback_info info)
 
 napi_value CameraSessionNapi::On(napi_env env, napi_callback_info info)
 {
+    CAMERA_SYNC_TRACE;
     napi_value undefinedResult = nullptr;
     size_t argCount = ARGS_TWO;
     napi_value argv[ARGS_TWO] = {nullptr};

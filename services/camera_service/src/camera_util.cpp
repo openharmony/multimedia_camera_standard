@@ -15,7 +15,7 @@
 
 #include "camera_util.h"
 #include <securec.h>
-#include "media_log.h"
+#include "camera_log.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -90,6 +90,20 @@ int32_t HdiToServiceError(Camera::CamRetCode ret)
             break;
     }
     return err;
+}
+
+std::string CreateMsg(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    char msg[MAX_STRING_SIZE] = {0};
+    if (vsnprintf_s(msg, sizeof(msg), sizeof(msg) - 1, format, args) < 0) {
+        MEDIA_ERR_LOG("failed to call vsnprintf_s");
+        va_end(args);
+        return "";
+    }
+    va_end(args);
+    return msg;
 }
 
 bool IsValidSize(std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height)

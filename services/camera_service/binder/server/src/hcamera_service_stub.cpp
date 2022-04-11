@@ -18,7 +18,7 @@
 #include <cinttypes>
 
 #include "camera_util.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "metadata_utils.h"
 #include "remote_request_code.h"
 #include "input/camera_death_recipient.h"

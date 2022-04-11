@@ -19,7 +19,7 @@
 #include <vector>
 #include "camera_device_ability_items.h"
 #include "input/camera_input.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "output/photo_output.h"
@@ -203,6 +203,15 @@ enum JSCameraStatus {
     JS_CAMERA_STATUS_DISAPPEAR = 1,
     JS_CAMERA_STATUS_AVAILABLE = 2,
     JS_CAMERA_STATUS_UNAVAILABLE = 3
+};
+
+enum CameraTaskId {
+    CAMERA_MANAGER_TASKID = 0x01000000,
+    CAMERA_INPUT_TASKID = 0x02000000,
+    CAMERA_PHOTO_OUTPUT_TASKID = 0x03000000,
+    CAMERA_PREVIEW_OUTPUT_TASKID = 0x04000000,
+    CAMERA_VIDEO_OUTPUT_TASKID = 0x05000000,
+    CAMERA_SESSION_TASKID = 0x06000000
 };
 
 /* Util class used by napi asynchronous methods for making call to js callback function */
@@ -518,6 +527,16 @@ public:
             napi_delete_reference(env, callbackRef);
         }
         napi_delete_async_work(env, work);
+    }
+
+    static int32_t IncreamentAndGet(uint32_t &num)
+    {
+        int32_t temp = num & 0x00ffffff;
+        if (temp >= 0xffff) {
+            num = num & 0xff000000;
+        }
+        num++;
+        return num;
     }
 };
 } // namespace CameraStandard

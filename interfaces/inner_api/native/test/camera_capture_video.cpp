@@ -17,7 +17,7 @@
 #include <securec.h>
 #include <unistd.h>
 #include "camera_util.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "test_common.h"
 
 #include "ipc_skeleton.h"

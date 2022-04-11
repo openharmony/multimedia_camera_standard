@@ -23,6 +23,7 @@ using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
 
 napi_ref CameraManagerNapi::sConstructor_ = nullptr;
+uint32_t CameraManagerNapi::cameraManagerTaskId = CAMERA_MANAGER_TASKID;
 
 namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CameraManager"};
@@ -30,6 +31,7 @@ namespace {
 
 CameraManagerNapi::CameraManagerNapi() : env_(nullptr), wrapper_(nullptr)
 {
+    CAMERA_SYNC_TRACE;
 }
 
 CameraManagerNapi::~CameraManagerNapi()
@@ -210,6 +212,8 @@ void GetCamerasAsyncCallbackComplete(napi_env env, napi_status status, void* dat
 
     CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
 
+    // Finish async trace
+    CAMERA_FINISH_ASYNC_TRACE(context->funcName, context->taskId);
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
@@ -255,6 +259,10 @@ napi_value CameraManagerNapi::GetCameras(napi_env env, napi_callback_info info)
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraManagerNapi::GetCameras";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraManagerTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->cameraObjList = context->objectInfo->cameraManager_->GetCameras();
                     MEDIA_INFO_LOG("GetCameras cameraManager_->GetCameras() : %{public}zu",
@@ -280,6 +288,8 @@ void CreateCameraInputAsyncCallbackComplete(napi_env env, napi_status status, vo
     auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
     CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
 
+    // Finish async trace
+    CAMERA_FINISH_ASYNC_TRACE(context->funcName, context->taskId);
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
     jsContext->status = true;
     napi_get_undefined(env, &jsContext->error);
@@ -330,6 +340,10 @@ napi_value CameraManagerNapi::CreateCameraInputInstance(napi_env env, napi_callb
     status = napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
             auto context = static_cast<CameraManagerNapiAsyncContext*>(data);
+            // Start async trace
+            context->funcName = "CameraManagerNapi::CreateCameraInputInstance";
+            context->taskId = CameraNapiUtils::IncreamentAndGet(cameraManagerTaskId);
+            CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
             if (context->objectInfo == nullptr) {
                 context->status = false;
                 return;

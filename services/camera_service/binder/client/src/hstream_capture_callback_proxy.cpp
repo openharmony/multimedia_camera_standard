@@ -14,7 +14,7 @@
  */
 
 #include "hstream_capture_callback_proxy.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "remote_request_code.h"
 
 namespace OHOS {

@@ -47,18 +47,24 @@ void PreviewOutputCallback::UpdateJSCallbackAsync(std::string propName, const in
         MEDIA_ERR_LOG("PreviewOutputCallback:UpdateJSCallbackAsync() failed to allocate work");
         return;
     }
-    std::unique_ptr<PreviewOutputCallbackInfo> callbackInfo =
-        std::make_unique<PreviewOutputCallbackInfo>(propName, value, this);
-    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    PreviewOutputCallbackInfo *callbackInfo = new(std::nothrow) PreviewOutputCallbackInfo(propName, value, this);
+    if (!callbackInfo) {
+        MEDIA_ERR_LOG("PreviewOutputCallback:UpdateJSCallbackAsync() failed to allocate callback info");
+        delete work;
+        return;
+    }
+    work->data = callbackInfo;
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         PreviewOutputCallbackInfo *callbackInfo = reinterpret_cast<PreviewOutputCallbackInfo *>(work->data);
         if (callbackInfo) {
             callbackInfo->listener_->UpdateJSCallback(callbackInfo->eventName_, callbackInfo->value_);
+            delete callbackInfo;
         }
         delete work;
     });
     if (ret) {
         MEDIA_ERR_LOG("PreviewOutputCallback:UpdateJSCallbackAsync() failed to execute work");
+        delete callbackInfo;
         delete work;
     }
 }

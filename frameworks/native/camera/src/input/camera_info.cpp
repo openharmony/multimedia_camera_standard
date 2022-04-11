@@ -15,7 +15,7 @@
 #include "input/camera_info.h"
 #include <securec.h>
 #include "camera_metadata_info.h"
-#include "media_log.h"
+#include "camera_log.h"
 
 using namespace std;
 

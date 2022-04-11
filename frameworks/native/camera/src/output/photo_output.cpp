@@ -17,7 +17,7 @@
 #include <securec.h>
 #include "camera_util.h"
 #include "hstream_capture_callback_stub.h"
-#include "media_log.h"
+#include "camera_log.h"
 
 using namespace std;
 
@@ -182,6 +182,7 @@ public:
 
     int32_t OnCaptureStarted(const int32_t captureId) override
     {
+        CAMERA_SYNC_TRACE;
         if (photoOutput_ != nullptr && photoOutput_->GetApplicationCallback() != nullptr) {
             photoOutput_->GetApplicationCallback()->OnCaptureStarted(captureId);
         } else {
@@ -192,6 +193,7 @@ public:
 
     int32_t OnCaptureEnded(const int32_t captureId, const int32_t frameCount) override
     {
+        CAMERA_SYNC_TRACE;
         if (photoOutput_ != nullptr && photoOutput_->GetApplicationCallback() != nullptr) {
             photoOutput_->GetApplicationCallback()->OnCaptureEnded(captureId, frameCount);
         } else {
@@ -203,6 +205,8 @@ public:
     int32_t OnCaptureError(const int32_t captureId, const int32_t errorCode) override
     {
         if (photoOutput_ != nullptr && photoOutput_->GetApplicationCallback() != nullptr) {
+            CAMERA_SYSEVENT_FAULT(CreateMsg("Photo OnCaptureError! captureId:%d & "
+                                            "errorCode:%{public}d", captureId, errorCode));
             photoOutput_->GetApplicationCallback()->OnCaptureError(captureId, errorCode);
         } else {
             MEDIA_INFO_LOG("Discarding HStreamCaptureCallbackImpl::OnCaptureError callback");
@@ -212,6 +216,7 @@ public:
 
     int32_t OnFrameShutter(const int32_t captureId, const uint64_t timestamp) override
     {
+        CAMERA_SYNC_TRACE;
         if (photoOutput_ != nullptr && photoOutput_->GetApplicationCallback() != nullptr) {
             photoOutput_->GetApplicationCallback()->OnFrameShutter(captureId, timestamp);
         } else {

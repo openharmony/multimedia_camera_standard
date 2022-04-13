@@ -20,50 +20,9 @@
 #include "media_log.h"
 #include "test_common.h"
 
-#include "ipc_skeleton.h"
-#include "access_token.h"
-#include "hap_token_info.h"
-#include "accesstoken_kit.h"
-#include "token_setproc.h"
-
 using namespace OHOS;
 using namespace OHOS::CameraStandard;
 
-static std::string permissionName = "ohos.permission.CAMERA";
-static OHOS::Security::AccessToken::HapInfoParams g_infoManagerTestInfoParms = {
-    .userID = 1,
-    .bundleName = permissionName,
-    .instIndex = 0,
-    .appIDDesc = "testtesttesttest"
-};
-
-static OHOS::Security::AccessToken::PermissionDef g_infoManagerTestPermDef1 = {
-    .permissionName = "ohos.permission.CAMERA",
-    .bundleName = "ohos.permission.CAMERA",
-    .grantMode = 1,
-    .availableLevel = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
-    .label = "label",
-    .labelId = 1,
-    .description = "camera test",
-    .descriptionId = 1
-};
-
-static OHOS::Security::AccessToken::PermissionStateFull g_infoManagerTestState1 = {
-    .permissionName = "ohos.permission.CAMERA",
-    .isGeneral = true,
-    .resDeviceID = {"local"},
-    .grantStatus = {OHOS::Security::AccessToken::PermissionState::PERMISSION_GRANTED},
-    .grantFlags = {1}
-};
-
-static OHOS::Security::AccessToken::HapPolicyParams g_infoManagerTestPolicyPrams = {
-    .apl = OHOS::Security::AccessToken::ATokenAplEnum::APL_NORMAL,
-    .domain = "test.domain",
-    .permList = {g_infoManagerTestPermDef1},
-    .permStateList = {g_infoManagerTestState1}
-};
-
-static OHOS::Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
 
 static void PhotoModeUsage(FILE *fp)
 {
@@ -253,16 +212,12 @@ int32_t CameraCaptureVideo::TakePhoto()
 
     if (!photoOutput_) {
         MEDIA_ERR_LOG("photoOutput_ is null");
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
 
     result = ((sptr<PhotoOutput> &)photoOutput_)->Capture();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to capture, result: %{public}d", result);
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     sleep(GAP_AFTER_CAPTURE);
@@ -275,24 +230,18 @@ int32_t CameraCaptureVideo::RecordVideo()
 
     if (!videoOutput_) {
         MEDIA_ERR_LOG("videoOutput_ is null");
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
 
     result = ((sptr<VideoOutput> &)videoOutput_)->Start();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to start recording, result: %{public}d", result);
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     sleep(VIDEO_CAPTURE_DURATION);
     result = ((sptr<VideoOutput> &)videoOutput_)->Stop();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to stop recording, result: %{public}d", result);
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     sleep(GAP_AFTER_CAPTURE);
@@ -337,27 +286,6 @@ int32_t CameraCaptureVideo::InitCameraManager()
     int32_t result = -1;
 
     if (cameraManager_ == nullptr) {
-        /* Grant the permission so that create camera test can be success */
-        tokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::AllocHapToken(
-            g_infoManagerTestInfoParms,
-            g_infoManagerTestPolicyPrams);
-        if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
-            MEDIA_DEBUG_LOG("Alloc TokenID failure \n");
-            return 0;
-        }
-
-        (void)SetSelfTokenID(tokenIdEx.tokenIdExStruct.tokenID);
-
-        result = Security::AccessToken::AccessTokenKit::GrantPermission(
-            tokenIdEx.tokenIdExStruct.tokenID,
-            permissionName, OHOS::Security::AccessToken::PERMISSION_USER_FIXED);
-        if (result != 0) {
-            MEDIA_ERR_LOG("GrantPermission( ) failed");
-            return 0;
-        } else {
-            MEDIA_DEBUG_LOG("GrantPermission( ) success");
-        }
-
         cameraManager_ = CameraManager::GetInstance();
         if (cameraManager_ == nullptr) {
             MEDIA_ERR_LOG("Failed to get camera manager!");
@@ -603,59 +531,41 @@ int32_t CameraCaptureVideo::StartPreview()
 
     result = InitCameraManager();
     if (result != CAMERA_OK) {
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = InitCameraInput();
     if (result != CAMERA_OK) {
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     captureSession_ = cameraManager_->CreateCaptureSession();
     if (captureSession_ == nullptr) {
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     captureSession_->BeginConfig();
     result = captureSession_->AddInput(cameraInput_);
     if (CAMERA_OK != result) {
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = AddOutputbyState();
     if (result != CAMERA_OK) {
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = InitPreviewOutput();
     if (result != CAMERA_OK) {
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = captureSession_->AddOutput(previewOutput_);
     if (CAMERA_OK != result) {
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = captureSession_->CommitConfig();
     if (CAMERA_OK != result) {
         MEDIA_ERR_LOG("Failed to Commit config");
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
         return result;
     }
     result = captureSession_->Start();
     MEDIA_DEBUG_LOG("Preview started, result: %{public}d", result);
     if (CAMERA_OK != result) {
-        (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
-            tokenIdEx.tokenIdExStruct.tokenID);
     }
     return result;
 }

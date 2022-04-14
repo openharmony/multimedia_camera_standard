@@ -26,17 +26,55 @@ class PreviewCallback {
 public:
     PreviewCallback() = default;
     virtual ~PreviewCallback() = default;
+
+    /**
+     * @brief Called when preview frame is started rendering.
+     */
     virtual void OnFrameStarted() const = 0;
+
+    /**
+     * @brief Called when preview frame is ended.
+     *
+     * @param frameCount Indicates number of frames captured.
+     */
     virtual void OnFrameEnded(const int32_t frameCount) const = 0;
+
+    /**
+     * @brief Called when error occured during preview rendering.
+     *
+     * @param errorCode Indicates a {@link ErrorCode} which will give information for preview callback error.
+     */
     virtual void OnError(const int32_t errorCode) const = 0;
 };
 
 class PreviewOutput : public CaptureOutput {
 public:
     explicit PreviewOutput(sptr<IStreamRepeat> &streamRepeat);
+
+    /**
+     * @brief Set the preview callback for the preview output.
+     *
+     * @param PreviewCallback to be triggered.
+     */
     void SetCallback(std::shared_ptr<PreviewCallback> callback);
+
+    /**
+     * @brief Releases a instance of the preview output.
+     */
     void Release() override;
+
+    /**
+     * @brief Get repeat stream for the preview output.
+     *
+     * @return Returns the pointer to IStreamRepeat.
+     */
     sptr<IStreamRepeat> GetStreamRepeat();
+
+    /**
+     * @brief Get the application callback information.
+     *
+     * @return Returns the pointer application callback.
+     */
     std::shared_ptr<PreviewCallback> GetApplicationCallback();
 
 private:

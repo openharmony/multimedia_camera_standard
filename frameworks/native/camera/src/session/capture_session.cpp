@@ -136,7 +136,7 @@ void CaptureSession::SetCallback(std::shared_ptr<SessionCallback> callback)
     appCallback_ = callback;
     if (appCallback_ != nullptr) {
         if (captureSessionCallback_ == nullptr) {
-            captureSessionCallback_ = new CaptureSessionCallback(this);
+            captureSessionCallback_ = new(std::nothrow) CaptureSessionCallback(this);
         }
         errorCode = captureSession_->SetCallback(captureSessionCallback_);
         if (errorCode != CAMERA_OK) {

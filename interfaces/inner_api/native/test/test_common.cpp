@@ -238,7 +238,7 @@ void SurfaceListener::OnBufferAvailable()
     MEDIA_DEBUG_LOG("SurfaceListener::OnBufferAvailable(), testName_: %{public}s, surfaceType_: %{public}d",
                     testName_, surfaceType_);
     OHOS::sptr<OHOS::SurfaceBuffer> buffer = nullptr;
-    if (!surface_) {
+    if (surface_ == nullptr) {
         MEDIA_ERR_LOG("OnBufferAvailable:surface_ is null");
         return;
     }

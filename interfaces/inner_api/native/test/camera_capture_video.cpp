@@ -254,7 +254,7 @@ int32_t CameraCaptureVideo::TakePhoto()
 {
     int32_t result = -1;
 
-    if (!photoOutput_) {
+    if (photoOutput_ == nullptr) {
         MEDIA_ERR_LOG("photoOutput_ is null");
         (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
             tokenIdEx.tokenIdExStruct.tokenID);
@@ -276,7 +276,7 @@ int32_t CameraCaptureVideo::RecordVideo()
 {
     int32_t result = -1;
 
-    if (!videoOutput_) {
+    if (videoOutput_ == nullptr) {
         MEDIA_ERR_LOG("videoOutput_ is null");
         (void)OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(
             tokenIdEx.tokenIdExStruct.tokenID);
@@ -457,7 +457,7 @@ int32_t CameraCaptureVideo::InitCameraInput()
 {
     int32_t result = -1;
 
-    if (!cameraManager_) {
+    if (cameraManager_ == nullptr) {
         MEDIA_ERR_LOG("cameraManager_ is null");
         return result;
     }
@@ -489,20 +489,21 @@ int32_t CameraCaptureVideo::InitPreviewOutput()
 {
     int32_t result = -1;
 
-    if (!cameraManager_) {
+    if (cameraManager_ == nullptr) {
         MEDIA_ERR_LOG("cameraManager_ is null");
         return result;
     }
 
     if (previewOutput_ == nullptr) {
         previewSurface_ = Surface::CreateSurfaceAsConsumer();
-        if (!previewSurface_) {
+        if (previewSurface_ ==  nullptr) {
             MEDIA_ERR_LOG("previewSurface_ is null");
             return result;
         }
         previewSurface_->SetDefaultWidthAndHeight(previewWidth_, previewHeight_);
         previewSurface_->SetUserData(CameraManager::surfaceFormat, std::to_string(previewFormat_));
-        previewSurfaceListener_ = new SurfaceListener(testName_, SurfaceType::PREVIEW, fd_, previewSurface_);
+        previewSurfaceListener_ = new(std::nothrow) SurfaceListener(testName_, SurfaceType::PREVIEW,
+                                                                    fd_, previewSurface_);
         previewSurface_->RegisterConsumerListener((sptr<IBufferConsumerListener> &)previewSurfaceListener_);
         previewOutput_ = cameraManager_->CreatePreviewOutput(previewSurface_);
         if (previewOutput_ == nullptr) {
@@ -520,22 +521,22 @@ int32_t CameraCaptureVideo::InitSecondPreviewOutput()
 {
     int32_t result = -1;
 
-    if (!cameraManager_) {
+    if (cameraManager_ == nullptr) {
         MEDIA_ERR_LOG("cameraManager_ is null");
         return result;
     }
 
     if (secondPreviewOutput_ == nullptr) {
         secondPreviewSurface_ = Surface::CreateSurfaceAsConsumer();
-        if (!secondPreviewSurface_) {
+        if (secondPreviewSurface_ == nullptr) {
             MEDIA_ERR_LOG("secondPreviewSurface_ is null");
             return result;
         }
         secondPreviewSurface_->SetDefaultWidthAndHeight(previewWidth_, previewHeight_);
         secondPreviewSurface_->SetUserData(CameraManager::surfaceFormat, std::to_string(previewFormat_));
-        secondPreviewSurfaceListener_ = new SurfaceListener(testName_,
+        secondPreviewSurfaceListener_ = new(std::nothrow) SurfaceListener(testName_,
             SurfaceType::SECOND_PREVIEW, fd_, secondPreviewSurface_);
-        if (!secondPreviewSurfaceListener_) {
+        if (secondPreviewSurfaceListener_ ==  nullptr) {
             MEDIA_ERR_LOG("Failed to create new SurfaceListener");
             return result;
         }
@@ -558,21 +559,21 @@ int32_t CameraCaptureVideo::InitPhotoOutput()
 {
     int32_t result = -1;
 
-    if (!cameraManager_) {
+    if (cameraManager_ == nullptr) {
         MEDIA_ERR_LOG("cameraManager_ is null");
         return result;
     }
 
     if (photoOutput_ == nullptr) {
         photoSurface_ = Surface::CreateSurfaceAsConsumer();
-        if (!photoSurface_) {
+        if (photoSurface_ == nullptr) {
             MEDIA_ERR_LOG("photoSurface_ is null");
             return result;
         }
         photoSurface_->SetDefaultWidthAndHeight(photoWidth_, photoHeight_);
         photoSurface_->SetUserData(CameraManager::surfaceFormat, std::to_string(photoFormat_));
-        photoSurfaceListener_ = new SurfaceListener(testName_, SurfaceType::PHOTO, fd_, photoSurface_);
-        if (!photoSurfaceListener_) {
+        photoSurfaceListener_ = new(std::nothrow) SurfaceListener(testName_, SurfaceType::PHOTO, fd_, photoSurface_);
+        if (photoSurfaceListener_ == nullptr) {
             MEDIA_ERR_LOG("Failed to create new SurfaceListener");
             return result;
         }
@@ -593,21 +594,21 @@ int32_t CameraCaptureVideo::InitVideoOutput()
 {
     int32_t result = -1;
 
-    if (!cameraManager_) {
+    if (cameraManager_ == nullptr) {
         MEDIA_ERR_LOG("cameraManager_ is null");
         return result;
     }
 
     if (videoOutput_ == nullptr) {
         videoSurface_ = Surface::CreateSurfaceAsConsumer();
-        if (!videoSurface_) {
+        if (videoSurface_ == nullptr) {
             MEDIA_ERR_LOG("videoSurface_ is null");
             return result;
         }
         videoSurface_->SetDefaultWidthAndHeight(videoWidth_, videoHeight_);
         videoSurface_->SetUserData(CameraManager::surfaceFormat, std::to_string(videoFormat_));
-        videoSurfaceListener_ = new SurfaceListener(testName_, SurfaceType::VIDEO, fd_, videoSurface_);
-        if (!videoSurfaceListener_) {
+        videoSurfaceListener_ = new(std::nothrow) SurfaceListener(testName_, SurfaceType::VIDEO, fd_, videoSurface_);
+        if (videoSurfaceListener_ == nullptr) {
             MEDIA_ERR_LOG("Failed to create new SurfaceListener");
             return result;
         }
@@ -628,7 +629,7 @@ int32_t CameraCaptureVideo::AddOutputbyState()
 {
     int32_t result = -1;
 
-    if (!captureSession_) {
+    if (captureSession_ == nullptr) {
         MEDIA_ERR_LOG("captureSession_ is null");
         return result;
     }

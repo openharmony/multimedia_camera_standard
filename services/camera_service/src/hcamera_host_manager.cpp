@@ -134,7 +134,7 @@ int32_t HCameraHostManager::CameraHostInfo::GetCameraAbility(std::string& camera
         ability = deviceInfo->ability;
     } else {
         std::lock_guard<std::mutex> lock(deviceInfo->mutex);
-        if (!cameraHostProxy_) {
+        if (cameraHostProxy_ == nullptr) {
             MEDIA_ERR_LOG("CameraHostInfo::GetCameraAbility cameraHostProxy_ is null");
             return CAMERA_UNKNOWN_ERROR;
         }
@@ -162,7 +162,7 @@ int32_t HCameraHostManager::CameraHostInfo::OpenCamera(std::string& cameraId,
     }
 
     std::lock_guard<std::mutex> lock(deviceInfo->mutex);
-    if (!cameraHostProxy_) {
+    if (cameraHostProxy_ == nullptr) {
         MEDIA_ERR_LOG("CameraHostInfo::OpenCamera cameraHostProxy_ is null");
         return CAMERA_UNKNOWN_ERROR;
     }
@@ -177,7 +177,7 @@ int32_t HCameraHostManager::CameraHostInfo::OpenCamera(std::string& cameraId,
 int32_t HCameraHostManager::CameraHostInfo::SetFlashlight(const std::string& cameraId, bool isEnable)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!cameraHostProxy_) {
+    if (cameraHostProxy_ == nullptr) {
         MEDIA_ERR_LOG("CameraHostInfo::SetFlashlight cameraHostProxy_ is null");
         return CAMERA_UNKNOWN_ERROR;
     }
@@ -378,7 +378,7 @@ int32_t HCameraHostManager::GetCameraAbility(std::string &cameraId,
                                              std::shared_ptr<CameraMetadata> &ability)
 {
     auto cameraHostInfo = FindCameraHostInfo(cameraId);
-    if (!cameraHostInfo) {
+    if (cameraHostInfo == nullptr) {
         MEDIA_ERR_LOG("HCameraHostManager::OpenCameraDevice failed with invalid device info.");
         return CAMERA_INVALID_ARG;
     }
@@ -390,7 +390,7 @@ int32_t HCameraHostManager::OpenCameraDevice(std::string &cameraId,
                                              sptr<Camera::ICameraDevice> &pDevice)
 {
     auto cameraHostInfo = FindCameraHostInfo(cameraId);
-    if (!cameraHostInfo) {
+    if (cameraHostInfo == nullptr) {
         MEDIA_ERR_LOG("HCameraHostManager::OpenCameraDevice failed with invalid device info");
         return CAMERA_INVALID_ARG;
     }
@@ -400,7 +400,7 @@ int32_t HCameraHostManager::OpenCameraDevice(std::string &cameraId,
 int32_t HCameraHostManager::SetFlashlight(const std::string& cameraId, bool isEnable)
 {
     auto cameraHostInfo = FindCameraHostInfo(cameraId);
-    if (!cameraHostInfo) {
+    if (cameraHostInfo == nullptr) {
         MEDIA_ERR_LOG("HCameraHostManager::OpenCameraDevice failed with invalid device info");
         return CAMERA_INVALID_ARG;
     }
@@ -437,7 +437,8 @@ void HCameraHostManager::AddCameraHost(const std::string& svcName)
         MEDIA_INFO_LOG("HCameraHostManager::AddCameraHost camera host  %{public}s already exists", svcName.c_str());
         return;
     }
-    sptr<HCameraHostManager::CameraHostInfo> cameraHost = new HCameraHostManager::CameraHostInfo(this, svcName);
+    sptr<HCameraHostManager::CameraHostInfo> cameraHost = new(std::nothrow) HCameraHostManager::CameraHostInfo
+                                                          (this, svcName);
     if (!cameraHost->Init()) {
         MEDIA_ERR_LOG("HCameraHostManager::AddCameraHost failed due to init failure");
         return;

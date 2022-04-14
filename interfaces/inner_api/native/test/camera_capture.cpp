@@ -14,7 +14,6 @@
  */
 
 #include <unistd.h>
-
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
 #include "media_log.h"
@@ -90,7 +89,7 @@ int main(int argc, char **argv)
     int32_t photoCaptureCount = 1;
     bool isResolutionConfigured = false;
 
-    MEDIA_DEBUG_LOG("Camera new sample begin.");
+    MEDIA_DEBUG_LOG("Camera new(std::nothrow) sample begin.");
     // Update sizes if enough number of valid arguments are passed
     if (argc == validArgCount) {
         // Validate arguments
@@ -244,7 +243,8 @@ int main(int argc, char **argv)
     }
     photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
     photoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(photoFormat));
-    sptr<SurfaceListener> captureListener = new SurfaceListener("Photo", SurfaceType::PHOTO, photoFd, photoSurface);
+    sptr<SurfaceListener> captureListener = new(std::nothrow) SurfaceListener("Photo", SurfaceType::PHOTO,
+                                                                              photoFd, photoSurface);
     photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)captureListener);
     sptr<CaptureOutput> photoOutput = camManagerObj->CreatePhotoOutput(photoSurface);
     if (photoOutput == nullptr) {
@@ -273,7 +273,8 @@ int main(int argc, char **argv)
     }
     previewSurface->SetDefaultWidthAndHeight(previewWidth, previewHeight);
     previewSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(previewFormat));
-    sptr<SurfaceListener> listener = new SurfaceListener("Preview", SurfaceType::PREVIEW, previewFd, previewSurface);
+    sptr<SurfaceListener> listener = new(std::nothrow) SurfaceListener("Preview", SurfaceType::PREVIEW,
+                                                                       previewFd, previewSurface);
     previewSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)listener);
     sptr<CaptureOutput> previewOutput = camManagerObj->CreateCustomPreviewOutput(previewSurface,
         previewWidth, previewHeight);

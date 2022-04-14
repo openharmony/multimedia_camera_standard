@@ -129,7 +129,7 @@
     int32_t photoHeight = 960;
     photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
     photoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_JPEG));
-    sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
+    sptr<CaptureSurfaceListener> capturelistener = new(std::nothrow) CaptureSurfaceListener();
     capturelistener->mode_ = MODE_PHOTO;
     capturelistener->surface_ = photoSurface;
     photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);
@@ -428,7 +428,7 @@
     int32_t photoHeight = 960;
     photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
     photoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_JPEG));
-    sptr<CaptureSurfaceListener> capturelistener = new CaptureSurfaceListener();
+    sptr<CaptureSurfaceListener> capturelistener = new(std::nothrow) CaptureSurfaceListener();
     capturelistener->mode_ = MODE_PHOTO;
     capturelistener->surface_ = photoSurface;
     photoSurface->RegisterConsumerListener((sptr<IBufferConsumerListener> &)capturelistener);

@@ -818,6 +818,9 @@ napi_value CameraSessionNapi::On(napi_env env, napi_callback_info info)
             obj->cameraSession_->SetCallback(callback);
         } else {
             MEDIA_ERR_LOG("Failed to Register Callback: event type is empty!");
+            if (callbackRef != nullptr) {
+                napi_delete_reference(env, callbackRef);
+            }
         }
     }
 

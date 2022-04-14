@@ -27,9 +27,36 @@ class PhotoCallback {
 public:
     PhotoCallback() = default;
     virtual ~PhotoCallback() = default;
+
+    /**
+     * @brief Called when camera capture started.
+     *
+     * @param captureID Obtain the constant capture id for the photo capture callback.
+     */
     virtual void OnCaptureStarted(const int32_t captureID) const = 0;
+
+    /**
+     * @brief Called when camera capture ended.
+     *
+     * @param captureID Obtain the constant capture id for the photo capture callback.
+     * @param frameCount Obtain the constant number of frames for the photo capture callback.
+     */
     virtual void OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const = 0;
+
+    /**
+     * @brief Called when camera capture ended.
+     *
+     * @param captureId Obtain the constant capture id for the photo capture callback.
+     * @param timestamp Represents timestamp information for the photo capture callback
+     */
     virtual void OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const = 0;
+
+    /**
+     * @brief Called when error occured during camera capture.
+     *
+     * @param captureId Indicates the pointer in which captureId will be requested.
+     * @param errorCode Indicates a {@link ErrorCode} which will give information for photo capture callback error
+     */
     virtual void OnCaptureError(const int32_t captureId, const int32_t errorCode) const = 0;
 };
 class PhotoCaptureSetting {
@@ -47,13 +74,62 @@ public:
     };
     PhotoCaptureSetting();
     virtual ~PhotoCaptureSetting() = default;
+
+    /**
+     * @brief Get the quality level for the photo capture settings.
+     *
+     * @return Returns the quality level.
+     */
     QualityLevel GetQuality();
+
+    /**
+     * @brief Set the quality level for the photo capture settings.
+     *
+     * @param qualityLevel to be set.
+     */
     void SetQuality(QualityLevel qualityLevel);
+
+    /**
+     * @brief Get rotation information for the photo capture settings.
+     *
+     * @return Returns the RotationConfig.
+     */
     RotationConfig GetRotation();
+
+    /**
+     * @brief Set the Rotation for the photo capture settings.
+     *
+     * @param rotationvalue to be set.
+     */
     void SetRotation(RotationConfig rotationvalue);
+
+    /**
+     * @brief Set the GPS Location for the photo capture settings.
+     *
+     * @param latitude value to be set.
+     * @param longitude value to be set.
+     */
     void SetGpsLocation(double latitude, double longitude);
+
+    /**
+     * @brief To check the photo capture is mirrored or not.
+     *
+     * @return Returns true/false if the photo capture is mirrored/not-mirrored respectively.
+     */
     bool IsMirrored();
+
+    /**
+     * @brief Set the mirror option for the photo capture.
+     *
+     * @param boolean true/false to set/unset mirror respectively.
+     */
     void SetMirror(bool enable);
+
+    /**
+     * @brief Get the photo capture settings metadata information.
+     *
+     * @return Returns the pointer where CameraMetadata information is present.
+     */
     std::shared_ptr<CameraMetadata> GetCaptureMetadataSetting();
 
 private:
@@ -63,12 +139,48 @@ private:
 class PhotoOutput : public CaptureOutput {
 public:
     explicit PhotoOutput(sptr<IStreamCapture> &streamCapture);
+    /**
+     * @brief Get capture stream information.
+     *
+     * @return Returns the pointer where IStreamCapture is present.
+     */
     sptr<IStreamCapture> GetStreamCapture();
+
+    /**
+     * @brief Set the photo callback.
+     *
+     * @param callback Requested for the pointer where photo callback is present.
+     */
     void SetCallback(std::shared_ptr<PhotoCallback> callback);
+
+    /**
+     * @brief Photo capture request using photocapturesettings.
+     *
+     * @param photoCaptureSettings Requested for the photoCaptureSettings object which has metadata
+     * information such as: Rotation, Location, Mirror & Quality.
+     */
     int32_t Capture(std::shared_ptr<PhotoCaptureSetting> photoCaptureSettings);
+
+    /**
+     * @brief Initiate for the photo capture.
+     */
     int32_t Capture();
+
+    /**
+     * @brief cancelling the photo capture. Applicable only for burst/ continuous capture.
+     */
     int32_t CancelCapture();
+
+    /**
+     * @brief Releases the instance of PhotoOutput.
+     */
     void Release() override;
+
+    /**
+     * @brief Get the application callback information.
+     *
+     * @return Returns the pointer to PhotoCallback.
+     */
     std::shared_ptr<PhotoCallback> GetApplicationCallback();
 
 private:

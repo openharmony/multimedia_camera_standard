@@ -54,7 +54,7 @@ struct CallbackInfo {
 
 class PhotoOutputCallback : public PhotoCallback {
 public:
-    PhotoOutputCallback(napi_env env);
+    explicit PhotoOutputCallback(napi_env env);
     ~PhotoOutputCallback() = default;
 
     void OnCaptureStarted(const int32_t captureID) const override;

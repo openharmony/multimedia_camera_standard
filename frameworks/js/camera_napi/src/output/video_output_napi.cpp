@@ -127,6 +127,9 @@ void VideoCallbackListener::UpdateJSCallback(std::string propName, const int32_t
         napi_create_int32(env_, jsErrorCodeUnknown, &propValue);
         napi_set_named_property(env_, result[PARAM1], "code", propValue);
         napi_get_reference_value(env_, errorCallbackRef_, &callback); // should errorcode be valued as -1
+        if (errorCallbackRef_ != nullptr) {
+            napi_delete_reference(env_, errorCallbackRef_);
+        }
     }
 
     napi_call_function(env_, nullptr, callback, ARGS_TWO, result, &retVal);

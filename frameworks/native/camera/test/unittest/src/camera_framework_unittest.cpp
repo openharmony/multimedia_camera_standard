@@ -168,7 +168,7 @@ public:
 sptr<CaptureOutput> CameraFrameworkUnitTest::CreatePhotoOutput(int32_t width, int32_t height)
 {
     sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
-    if (!surface) {
+    if (surface == nullptr) {
         return nullptr;
     }
     surface->SetDefaultWidthAndHeight(width, height);
@@ -179,7 +179,7 @@ sptr<CaptureOutput> CameraFrameworkUnitTest::CreatePhotoOutput(int32_t width, in
 sptr<CaptureOutput> CameraFrameworkUnitTest::CreatePreviewOutput(int32_t width, int32_t height)
 {
     sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
-    if (!surface) {
+    if (surface == nullptr) {
         return nullptr;
     }
     surface->SetDefaultWidthAndHeight(width, height);
@@ -190,7 +190,7 @@ sptr<CaptureOutput> CameraFrameworkUnitTest::CreatePreviewOutput(int32_t width, 
 sptr<CaptureOutput> CameraFrameworkUnitTest::CreateVideoOutput(int32_t width, int32_t height)
 {
     sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
-    if (!surface) {
+    if (surface == nullptr) {
         return nullptr;
     }
     surface->SetDefaultWidthAndHeight(width, height);

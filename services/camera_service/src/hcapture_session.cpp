@@ -511,7 +511,7 @@ int32_t HCaptureSession::HandleCaptureOuputsConfig(sptr<HCameraDevice> &device)
     streamId = streamId_;
     for (auto item = tempStreamCaptures_.begin(); item != tempStreamCaptures_.end(); ++item) {
         curStreamCapture = *item;
-        if (!curStreamCapture) {
+        if (curStreamCapture == nullptr) {
             MEDIA_ERR_LOG("HCaptureSession::HandleCaptureOuputsConfig() curStreamCapture is null");
             return CAMERA_UNKNOWN_ERROR;
         }

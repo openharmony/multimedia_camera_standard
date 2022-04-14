@@ -42,9 +42,7 @@ int HCaptureSessionCallbackStub::OnRemoteRequest(
 
 int HCaptureSessionCallbackStub::HandleSessionOnError(MessageParcel& data)
 {
-    int32_t errorCode = 0;
-
-    errorCode = data.ReadInt32();
+    int32_t errorCode = data.ReadInt32();
     return OnError(errorCode);
 }
 } // namespace CameraStandard

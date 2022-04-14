@@ -56,9 +56,8 @@ int HCameraDeviceCallbackStub::HandleDeviceOnError(MessageParcel& data)
 int HCameraDeviceCallbackStub::HandleDeviceOnResult(MessageParcel& data)
 {
     std::shared_ptr<CameraStandard::CameraMetadata> metadata = nullptr;
-    uint64_t timestamp = 0;
+    uint64_t timestamp = timestamp = data.ReadUint64();
 
-    timestamp = data.ReadUint64();
     MetadataUtils::DecodeCameraMetadata(data, metadata);
     return OnResult(timestamp, metadata);
 }

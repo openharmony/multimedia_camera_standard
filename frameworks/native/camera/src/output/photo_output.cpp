@@ -20,8 +20,13 @@
 #include "media_log.h"
 
 using namespace std;
+
 namespace OHOS {
 namespace CameraStandard {
+namespace {
+    constexpr uint8_t QUALITY_NORMAL = 90;
+    constexpr uint8_t QUALITY_LOW = 50;
+}
 PhotoCaptureSetting::PhotoCaptureSetting()
 {
     int32_t items = 10;
@@ -31,8 +36,6 @@ PhotoCaptureSetting::PhotoCaptureSetting()
 
 PhotoCaptureSetting::QualityLevel PhotoCaptureSetting::GetQuality()
 {
-    uint8_t normalQuality = 90;
-    uint8_t lowQuality = 50;
     QualityLevel quality = LOW_QUALITY;
     camera_metadata_item_t item;
 
@@ -40,9 +43,9 @@ PhotoCaptureSetting::QualityLevel PhotoCaptureSetting::GetQuality()
     if (ret != CAM_META_SUCCESS) {
         return NORMAL_QUALITY;
     }
-    if (item.data.u8[0] > normalQuality) {
+    if (item.data.u8[0] > QUALITY_NORMAL) {
         quality = HIGH_QUALITY;
-    } else if (item.data.u8[0] > lowQuality) {
+    } else if (item.data.u8[0] > QUALITY_LOW) {
         quality = NORMAL_QUALITY;
     }
     return quality;
@@ -229,8 +232,8 @@ void PhotoOutput::SetCallback(std::shared_ptr<PhotoCallback> callback)
     appCallback_ = callback;
     if (appCallback_ != nullptr) {
         if (cameraSvcCallback_ == nullptr) {
-            cameraSvcCallback_ = new HStreamCaptureCallbackImpl(this);
-            if (!cameraSvcCallback_) {
+            cameraSvcCallback_ = new(std::nothrow) HStreamCaptureCallbackImpl(this);
+            if (cameraSvcCallback_ == nullptr) {
                 MEDIA_ERR_LOG("PhotoOutput::SetCallback new HStreamCaptureCallbackImpl Failed to register callback");
                 appCallback_ = nullptr;
                 return;

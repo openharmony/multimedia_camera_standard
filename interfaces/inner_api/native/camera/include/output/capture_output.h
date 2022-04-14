@@ -29,6 +29,10 @@ class CaptureOutput : public RefBase {
 public:
     explicit CaptureOutput(CAPTURE_OUTPUT_TYPE type);
     virtual ~CaptureOutput() {}
+
+    /**
+     * @brief Releases the instance of CaptureOutput.
+     */
     virtual void Release() = 0;
     CAPTURE_OUTPUT_TYPE GetType();
 

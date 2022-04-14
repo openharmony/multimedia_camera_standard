@@ -123,8 +123,8 @@ bool CameraMetadata::updateEntry(uint32_t tag, const void *data, size_t dataCoun
         METADATA_ERR_LOG("Failed to update tag tagname = %{public}s : not present", (name ? name : "<unknown>"));
         return false;
     }
-    METADATA_INFO_LOG("updateEntry Metadata pointer: %{public}p, item id: %{public}d, name: %{public}s, "
-                      "dataCount: %{public}zu", metadata_, tag, name ? name : "<unknown>", dataCount);
+    METADATA_INFO_LOG("updateEntry item id: %{public}d, name: %{public}s, "
+                      "dataCount: %{public}zu", tag, name ? name : "<unknown>", dataCount);
     ret = UpdateCameraMetadataItemByIndex(metadata_, item.index, data, dataCount, nullptr);
     if (ret) {
         const char *name_ = GetCameraMetadataItemName(tag);

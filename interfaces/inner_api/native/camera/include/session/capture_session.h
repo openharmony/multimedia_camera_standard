@@ -29,6 +29,11 @@ class SessionCallback {
 public:
     SessionCallback() = default;
     virtual ~SessionCallback() = default;
+    /**
+     * @brief Called when error occured during capture session callback.
+     *
+     * @param errorCode Indicates a {@link ErrorCode} which will give information for capture session callback error.
+     */
     virtual void OnError(int32_t errorCode) = 0;
 };
 
@@ -36,16 +41,72 @@ class CaptureSession : public RefBase {
 public:
     explicit CaptureSession(sptr<ICaptureSession> &captureSession);
     ~CaptureSession() {}
+
+    /**
+     * @brief Begin the capture session config.
+     */
     int32_t BeginConfig();
+
+    /**
+     * @brief Commit the capture session config.
+     */
     int32_t CommitConfig();
+
+    /**
+     * @brief Add CaptureInput for the capture session.
+     *
+     * @param CaptureInput to be added to session.
+     */
     int32_t AddInput(sptr<CaptureInput> &input);
+
+    /**
+     * @brief Add CaptureOutput for the capture session.
+     *
+     * @param CaptureOutput to be added to session.
+     */
     int32_t AddOutput(sptr<CaptureOutput> &output);
+
+    /**
+     * @brief Remove CaptureInput for the capture session.
+     *
+     * @param CaptureInput to be removed from session.
+     */
     int32_t RemoveInput(sptr<CaptureInput> &input);
+
+    /**
+     * @brief Remove CaptureOutput for the capture session.
+     *
+     * @param CaptureOutput to be removed from session.
+     */
     int32_t RemoveOutput(sptr<CaptureOutput> &output);
+
+    /**
+     * @brief Starts session and preview.
+     */
     int32_t Start();
+
+    /**
+     * @brief Stop session and preview..
+     */
     int32_t Stop();
+
+    /**
+     * @brief Set the session callback for the capture session.
+     *
+     * @param SessionCallback pointer to be triggered.
+     */
     void SetCallback(std::shared_ptr<SessionCallback> callback);
+
+    /**
+     * @brief Get the application callback information.
+     *
+     * @return Returns the pointer to SessionCallback set by application.
+     */
     std::shared_ptr<SessionCallback> GetApplicationCallback();
+
+    /**
+     * @brief Releases CaptureSession instance.
+     */
     void Release();
 
 private:

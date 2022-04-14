@@ -1674,6 +1674,9 @@ napi_value CameraInputNapi::Release(napi_env env, napi_callback_info info)
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             MEDIA_ERR_LOG("Failed to create napi_create_async_work for CameraInputNapi::Release");
+            if (asyncContext->callbackRef != nullptr) {
+                napi_delete_reference(env, asyncContext->callbackRef);
+            }
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);

@@ -28,13 +28,60 @@ public:
     CameraInfo() = default;
     CameraInfo(std::string cameraID, std::shared_ptr<CameraMetadata> metadata);
     ~CameraInfo();
+    /**
+    * @brief Get the camera Id.
+    *
+    * @return Returns the camera Id.
+    */
     std::string GetID();
+
+    /**
+    * @brief Get the metadata corresponding to current camera object.
+    *
+    * @return Returns the metadata corresponding to current object.
+    */
     std::shared_ptr<CameraMetadata> GetMetadata();
+
+    /**
+    * @brief Set the metadata to current camera object.
+    *
+    * @param Metadat to set.
+    */
     void SetMetadata(std::shared_ptr<CameraMetadata> metadata);
+
+    /**
+    * @brief Get the position of the camera.
+    *
+    * @return Returns the position of the camera.
+    */
     camera_position_enum_t GetPosition();
+
+    /**
+    * @brief Get the Camera type of the camera.
+    *
+    * @return Returns the Camera type of the camera.
+    */
     camera_type_enum_t GetCameraType();
+
+    /**
+    * @brief Get the Camera connection type.
+    *
+    * @return Returns the Camera type of the camera.
+    */
     camera_connection_type_t GetConnectionType();
+
+    /**
+    * @brief Check if mirror mode supported.
+    *
+    * @return Returns True is supported.
+    */
     bool IsMirrorSupported();
+
+    /**
+    * @brief Get the supported Zoom Ratio range.
+    *
+    * @return Returns vector<float> of supported Zoom ratio range.
+    */
     std::vector<float> GetZoomRatioRange();
 
 private:

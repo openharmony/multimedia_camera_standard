@@ -76,8 +76,8 @@ void VideoOutput::SetCallback(std::shared_ptr<VideoCallback> callback)
     appCallback_ = callback;
     if (appCallback_ != nullptr) {
         if (svcCallback_ == nullptr) {
-            svcCallback_ = new HStreamRepeatCallbackImpl(this);
-            if (!svcCallback_) {
+            svcCallback_ = new(std::nothrow) HStreamRepeatCallbackImpl(this);
+            if (svcCallback_ == nullptr) {
                 MEDIA_ERR_LOG("VideoOutput::SetCallback: new HStreamRepeatCallbackImpl Failed to register callback");
                 appCallback_ = nullptr;
                 return;
@@ -104,6 +104,7 @@ float VideoOutput::GetFps()
 
 int32_t VideoOutput::SetFps(float fps)
 {
+    (void)fps;
     return CAMERA_OK;
 }
 

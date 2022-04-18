@@ -326,9 +326,18 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
     }
 
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
-    jsContext->status = true;
-    napi_get_undefined(env, &jsContext->error);
-    napi_get_undefined(env, &jsContext->data);
+
+    if (!context->status) {
+        CameraNapiUtils::CreateNapiErrorObject(env, context->errorMsg.c_str(), jsContext);
+    } else {
+        jsContext->status = true;
+        napi_get_undefined(env, &jsContext->error);
+        if (context->bRetBool) {
+            napi_get_boolean(env, context->status, &jsContext->data);
+        } else {
+            napi_get_undefined(env, &jsContext->data);
+        }
+    }
 
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
@@ -481,31 +490,45 @@ napi_value PhotoOutputNapi::Capture(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 PhotoOutputAsyncContext* context = static_cast<PhotoOutputAsyncContext*>(data);
+                if (context->objectInfo == nullptr) {
+                    context->status = false;
+                    return;
+                }
+                context->bRetBool = false;
+                context->status = true;
                 sptr<PhotoOutput> photoOutput = ((sptr<PhotoOutput> &)(context->objectInfo->photoOutput_));
+                int32_t ret;
                 if (context->hasPhotoSettings) {
                     std::shared_ptr<PhotoCaptureSetting> capSettings = make_shared<PhotoCaptureSetting>();
                     if (context->mirror != -1) {
                         capSettings->SetMirror(context->mirror);
                     }
-
+ 
                     if (context->quality != -1) {
-                        capSettings->SetQuality(static_cast<PhotoCaptureSetting::QualityLevel>(context->quality));
+                        capSettings->SetQuality(
+                            static_cast<PhotoCaptureSetting::QualityLevel>(context->quality));
                     }
 
                     if (context->rotation != -1) {
-                        capSettings->SetRotation(static_cast<PhotoCaptureSetting::RotationConfig>(context->rotation));
+                        capSettings->SetRotation(
+                            static_cast<PhotoCaptureSetting::RotationConfig>(context->rotation));
                     }
 
                     if (context->latitude != -1.0 && context->longitude != -1.0) {
                         capSettings->SetGpsLocation(context->latitude, context->longitude);
                     }
 
-                    context->status = photoOutput->Capture(capSettings);
+                    ret = photoOutput->Capture(capSettings);
                 } else {
-                    context->status = photoOutput->Capture();
+                    ret = photoOutput->Capture();
+                }
+                if (ret != 0) {
+                    context->status = false;
+                    context->errorMsg = "Photo output capture failure";
                 }
             }, CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for PhotoOutputNapi::Capture");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -543,11 +566,16 @@ napi_value PhotoOutputNapi::Release(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<PhotoOutputAsyncContext*>(data);
-                ((sptr<PhotoOutput> &)(context->objectInfo->photoOutput_))->Release();
-                context->status = 0;
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    ((sptr<PhotoOutput> &)(context->objectInfo->photoOutput_))->Release();
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for PhotoOutputNapi::Release");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);

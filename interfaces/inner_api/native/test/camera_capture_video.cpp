@@ -23,6 +23,7 @@
 using namespace OHOS;
 using namespace OHOS::CameraStandard;
 
+
 static void PhotoModeUsage(FILE *fp)
 {
     int32_t result = 0;
@@ -209,6 +210,11 @@ int32_t CameraCaptureVideo::TakePhoto()
 {
     int32_t result = -1;
 
+    if (!photoOutput_) {
+        MEDIA_ERR_LOG("photoOutput_ is null");
+        return result;
+    }
+
     result = ((sptr<PhotoOutput> &)photoOutput_)->Capture();
     if (result != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to capture, result: %{public}d", result);
@@ -221,6 +227,11 @@ int32_t CameraCaptureVideo::TakePhoto()
 int32_t CameraCaptureVideo::RecordVideo()
 {
     int32_t result = -1;
+
+    if (!videoOutput_) {
+        MEDIA_ERR_LOG("videoOutput_ is null");
+        return result;
+    }
 
     result = ((sptr<VideoOutput> &)videoOutput_)->Start();
     if (result != CAMERA_OK) {
@@ -554,6 +565,8 @@ int32_t CameraCaptureVideo::StartPreview()
     }
     result = captureSession_->Start();
     MEDIA_DEBUG_LOG("Preview started, result: %{public}d", result);
+    if (CAMERA_OK != result) {
+    }
     return result;
 }
 

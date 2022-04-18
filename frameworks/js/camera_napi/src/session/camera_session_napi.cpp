@@ -211,16 +211,24 @@ napi_value CameraSessionNapi::CreateCameraSession(napi_env env)
 static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
 {
     auto context = static_cast<CameraSessionAsyncContext*>(data);
-
     if (context == nullptr) {
         MEDIA_ERR_LOG("Async context is null");
         return;
     }
 
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
-    jsContext->status = true;
-    napi_get_undefined(env, &jsContext->error);
-    napi_get_boolean(env, context->status, &jsContext->data);
+
+    if (!context->status) {
+        CameraNapiUtils::CreateNapiErrorObject(env, context->errorMsg.c_str(), jsContext);
+    } else {
+        jsContext->status = true;
+        napi_get_undefined(env, &jsContext->error);
+        if (context->bRetBool) {
+            napi_get_boolean(env, context->status, &jsContext->data);
+        } else {
+            napi_get_undefined(env, &jsContext->data);
+        }
+    }
 
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
@@ -258,11 +266,21 @@ napi_value CameraSessionNapi::BeginConfig(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
-                context->status = context->objectInfo->cameraSession_->BeginConfig();
-                MEDIA_INFO_LOG("BeginConfig status : %{public}d", context->status);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = context->objectInfo->cameraSession_->BeginConfig();
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "BeginConfig( ) failure";
+                    }
+                    MEDIA_INFO_LOG("BeginConfig return : %{public}d", ret);
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for BeginConfig");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -301,11 +319,21 @@ napi_value CameraSessionNapi::CommitConfig(napi_env env, napi_callback_info info
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
-                context->status = context->objectInfo->cameraSession_->CommitConfig();
-                MEDIA_INFO_LOG("CommitConfig status : %{public}d", context->status);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = context->objectInfo->cameraSession_->CommitConfig();
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "CommitConfig( ) failure";
+                    }
+                    MEDIA_INFO_LOG("CommitConfig return : %{public}d", ret);
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for CommitConfig");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -375,11 +403,21 @@ napi_value CameraSessionNapi::AddInput(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
-                context->status = context->objectInfo->cameraSession_->AddInput(context->cameraInput);
-                MEDIA_INFO_LOG("AddInput status : %{public}d", context->status);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = context->objectInfo->cameraSession_->AddInput(context->cameraInput);
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "AddInput( ) failure";
+                    }
+                    MEDIA_INFO_LOG("AddInput status : %{public}d", context->status);
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for AddInput");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -414,12 +452,21 @@ napi_value CameraSessionNapi::RemoveInput(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
-                int status = context->objectInfo->cameraSession_->RemoveInput(context->cameraInput);
-                context->status = (status == 0) ? true : false;
-                MEDIA_INFO_LOG("RemoveInput status : %{public}d", status);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = context->objectInfo->cameraSession_->RemoveInput(context->cameraInput);
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "RemoveInput( ) failure";
+                    }
+                    MEDIA_INFO_LOG("RemoveInput return : %{public}d", ret);
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for RemoveInput");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -501,11 +548,21 @@ napi_value CameraSessionNapi::AddOutput(napi_env env, napi_callback_info info)
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
-                context->status = context->objectInfo->cameraSession_->AddOutput(context->cameraOutput);
-                MEDIA_INFO_LOG("AddOutput status : %{public}d", context->status);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = context->objectInfo->cameraSession_->AddOutput(context->cameraOutput);
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "AddOutput( ) failure";
+                    }
+                    MEDIA_INFO_LOG("AddOutput return : %{public}d", ret);
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for AddOutput");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -541,12 +598,21 @@ napi_value CameraSessionNapi::RemoveOutput(napi_env env, napi_callback_info info
             env, nullptr, resource,
             [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
-                int status = context->objectInfo->cameraSession_->RemoveOutput(context->cameraOutput);
-                context->status = (status == 0) ? true : false;
-                MEDIA_INFO_LOG("RemoveOutput status : %{public}d", status);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = context->objectInfo->cameraSession_->RemoveOutput(context->cameraOutput);
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "RemoveOutput( ) failure";
+                    }
+                    MEDIA_INFO_LOG("RemoveOutput return : %{public}d", ret);
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for RemoveOutput");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -585,12 +651,21 @@ napi_value CameraSessionNapi::Start(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
-                int status = context->objectInfo->cameraSession_->Start();
-                context->status = (status == 0) ? true : false;
-                MEDIA_INFO_LOG("Start status : %{public}d", status);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = context->objectInfo->cameraSession_->Start();
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "Start( ) failure";
+                    }
+                    MEDIA_INFO_LOG("Start return : %{public}d", ret);
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for CameraSessionNapi::Start");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -629,11 +704,21 @@ napi_value CameraSessionNapi::Stop(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
-                context->status = context->objectInfo->cameraSession_->Stop();
-                MEDIA_INFO_LOG("Stop status : %{public}d", context->status);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    int32_t ret = context->objectInfo->cameraSession_->Stop();
+                    if (ret != 0) {
+                        context->status = false;
+                        context->errorMsg = "Stop( ) failure";
+                    }
+                    MEDIA_INFO_LOG("Stop return : %{public}d", ret);
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for CameraSessionNapi::Stop");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);
@@ -671,12 +756,16 @@ napi_value CameraSessionNapi::Release(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraSessionAsyncContext*>(data);
-                context->objectInfo->cameraSession_->Release();
-                context->status = true;
-                CameraManager::GetInstance()->SetPermissionCheck(false);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->status = true;
+                    context->objectInfo->cameraSession_->Release();
+                }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for CameraSessionNapi::Release");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);

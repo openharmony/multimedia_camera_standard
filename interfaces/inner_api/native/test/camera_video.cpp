@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <unistd.h>
 
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
@@ -21,7 +22,6 @@
 #include "surface.h"
 #include "test_common.h"
 
-#include <unistd.h>
 
 using namespace std;
 using namespace OHOS;

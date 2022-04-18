@@ -55,7 +55,7 @@ void CameraInfo::init(common_metadata_header_t *metadata)
     if (ret == CAM_META_SUCCESS) {
         isMirrorSupported_ = (item.data.u8[0] > 0);
     }
-    MEDIA_INFO_LOG("camera position: %{public}d, camera type: %{public}d, camera connection type: %{public}d"
+    MEDIA_INFO_LOG("camera position: %{public}d, camera type: %{public}d, camera connection type: %{public}d, "
                     "Mirror Supported: %{public}d ",
                    cameraPosition_, cameraType_, connectionType_, isMirrorSupported_);
 }

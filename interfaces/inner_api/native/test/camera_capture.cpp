@@ -13,17 +13,19 @@
  * limitations under the License.
  */
 
+#include <unistd.h>
+
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
 #include "media_log.h"
 #include "surface.h"
 #include "test_common.h"
 
-#include <unistd.h>
-
 using namespace std;
 using namespace OHOS;
 using namespace OHOS::CameraStandard;
+
+
 
 int main(int argc, char **argv)
 {
@@ -164,6 +166,10 @@ int main(int argc, char **argv)
     }
 
     sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
+    if (photoSurface == nullptr) {
+        MEDIA_DEBUG_LOG("Failed to create photoSurface");
+        return 0;
+    }
     photoSurface->SetDefaultWidthAndHeight(photoWidth, photoHeight);
     photoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(photoFormat));
     sptr<SurfaceListener> captureListener = new SurfaceListener("Photo", SurfaceType::PHOTO, photoFd, photoSurface);
@@ -183,6 +189,10 @@ int main(int argc, char **argv)
     }
 
     sptr<Surface> previewSurface = Surface::CreateSurfaceAsConsumer();
+    if (previewSurface == nullptr) {
+        MEDIA_DEBUG_LOG("Failed to create previewSurface");
+        return 0;
+    }
     previewSurface->SetDefaultWidthAndHeight(previewWidth, previewHeight);
     previewSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(previewFormat));
     sptr<SurfaceListener> listener = new SurfaceListener("Preview", SurfaceType::PREVIEW, previewFd, previewSurface);

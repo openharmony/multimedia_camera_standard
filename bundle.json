@@ -1,5 +1,5 @@
 {
-    "name": "@ohos/multimedia_camera_standard",
+    "name": "@ohos/camera_standard",
     "description": "Camera standard provides managers and provides the camera resources to application to capture photo/preview/videos",
     "version": "3.1",
     "license": "Apache License 2.0",
@@ -10,13 +10,11 @@
     "dirs": {},
     "scripts": {},
     "component": {
-        "name": "camera_standard",
+        "name": "multimedia_camera_standard",
         "subsystem": "multimedia",
         "syscap": [],
         "features": [],
-        "adapted_system_type": [
-            "camera_standard"
-        ],
+        "adapted_system_type": [ "standard" ],
         "rom": "",
         "ram": "",
         "deps": {
@@ -35,14 +33,18 @@
         },
         "build": {
           "sub_component": [
-            "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
+            "//foundation/multimedia/camera_standard/sa_profile:camera_service_sa_profile",
             "//foundation/multimedia/camera_standard/services/etc:camera_service.rc",
-            "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_napi",
+            "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
             "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-            "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata"
+            "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
+            "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_napi",
+            "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_js"
           ],
           "inner_kits": [
             {
+              "type": "none",
+              "name": "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
               "header": {
                 "header_base": [
                     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include/input",
@@ -60,10 +62,11 @@
                   "video_output.h",
                   "capture_session.h"
                 ]
-              },
-              "name": "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework"
+              }
             },
             {
+              "type": "none",
+              "name": "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_napi",
               "header": {
                 "header_base": [
                     "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi/include",
@@ -85,17 +88,16 @@
                   "camera_napi_utils.h",
                   "native_module_ohos_camera.h"
                 ]
-              },
-              "name": "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_napi"
+              }
             }
           ],
           "test": [
             "//foundation/multimedia/camera_standard/frameworks/native/camera/test/moduletest:camera_framework_moduletest",
             "//foundation/multimedia/camera_standard/frameworks/native/camera/test/unittest:camera_framework_unittest",
             "//foundation/multimedia/camera_standard/frameworks/native/metadata/test/unittest:camera_metadata_unittest",
-            "//foundation/multimedia/camera_standard/nterfaces/inner_api/native/test:camera_video",
-            "//foundation/multimedia/camera_standard/nterfaces/inner_api/native/test:camera_capture",
-            "//foundation/multimedia/camera_standard/nterfaces/inner_api/native/test:camera_capture_video"
+            "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test:camera_video",
+            "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test:camera_capture",
+            "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test:camera_capture_video"
           ]
         }
     }

@@ -47,13 +47,9 @@ void VideoCallbackListener::UpdateJSCallbackAsync(std::string propName, const in
         MEDIA_ERR_LOG("VideoCallbackListener:UpdateJSCallbackAsync() failed to allocate work");
         return;
     }
-    VideoOutputCallbackInfo *callbackInfo = new(std::nothrow) VideoOutputCallbackInfo(propName, value, this);
-    if (!callbackInfo) {
-        MEDIA_ERR_LOG("VideoCallbackListener:UpdateJSCallbackAsync() failed to allocate callback info");
-        delete work;
-        return;
-    }
-    work->data = callbackInfo;
+    std::unique_ptr<VideoOutputCallbackInfo> callbackInfo =
+        std::make_unique<VideoOutputCallbackInfo>(propName, value, this);
+    work->data = callbackInfo.get();
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         VideoOutputCallbackInfo *callbackInfo = reinterpret_cast<VideoOutputCallbackInfo *>(work->data);
         if (callbackInfo) {
@@ -64,8 +60,9 @@ void VideoCallbackListener::UpdateJSCallbackAsync(std::string propName, const in
     });
     if (ret) {
         MEDIA_ERR_LOG("VideoCallbackListener:UpdateJSCallbackAsync() failed to execute work");
-        delete callbackInfo;
         delete work;
+    }  else {
+        callbackInfo.release();
     }
 }
 

@@ -57,7 +57,7 @@ private:
 
     napi_env env_;
     napi_ref wrapper_;
-    CameraPicSize *cameraPicSize_;
+    CameraPicSize cameraPicSize_;
 
     static napi_ref sConstructor_;
 };

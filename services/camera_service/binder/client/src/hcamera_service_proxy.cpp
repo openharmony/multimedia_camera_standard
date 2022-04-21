@@ -47,7 +47,7 @@ int32_t HCameraServiceProxy::GetCameras(std::vector<std::string> &cameraIds,
     }
 
     int32_t count = reply.ReadInt32();
-    if ((cameraIds.size() != count) || (count > MAX_SUPPORTED_CAMERAS)) {
+    if ((cameraIds.size() != static_cast<uint32_t>(count)) || (count > MAX_SUPPORTED_CAMERAS)) {
         MEDIA_ERR_LOG("HCameraServiceProxy GetCameras Malformed camera count value");
         return IPC_PROXY_ERR;
     }

@@ -27,7 +27,7 @@ CameraPicSize *CameraSizeNapi::sCameraPicSize_ = nullptr;
 
 CameraSizeNapi::CameraSizeNapi() : env_(nullptr), wrapper_(nullptr)
 {
-    cameraPicSize_ = nullptr;
+    cameraPicSize_ = {0};
 }
 
 CameraSizeNapi::~CameraSizeNapi()
@@ -87,7 +87,7 @@ napi_value CameraSizeNapi::CameraSizeNapiConstructor(napi_env env, napi_callback
         std::unique_ptr<CameraSizeNapi> obj = std::make_unique<CameraSizeNapi>();
         if (obj != nullptr) {
             obj->env_ = env;
-            obj->cameraPicSize_ = sCameraPicSize_;
+            obj->cameraPicSize_ = *sCameraPicSize_;
             status = napi_wrap(env, thisVar, reinterpret_cast<void*>(obj.get()),
                                CameraSizeNapi::CameraSizeNapiDestructor, nullptr, &(obj->wrapper_));
             if (status == napi_ok) {
@@ -141,8 +141,8 @@ napi_value CameraSizeNapi::GetCameraSizeWidth(napi_env env, napi_callback_info i
     }
 
     status = napi_unwrap(env, thisVar, reinterpret_cast<void **>(&obj));
-    if ((status == napi_ok) && (obj != nullptr) && (obj->cameraPicSize_)) {
-        cameraSizeWidth = obj->cameraPicSize_->width;
+    if ((status == napi_ok) && (obj != nullptr)) {
+        cameraSizeWidth = obj->cameraPicSize_.width;
         status = napi_create_uint32(env, cameraSizeWidth, &jsResult);
         if (status == napi_ok) {
             return jsResult;
@@ -172,8 +172,8 @@ napi_value CameraSizeNapi::GetCameraSizeHeight(napi_env env, napi_callback_info 
     }
 
     status = napi_unwrap(env, thisVar, reinterpret_cast<void **>(&obj));
-    if ((status == napi_ok) && (obj != nullptr) && (obj->cameraPicSize_)) {
-        cameraSizeHeight = obj->cameraPicSize_->height;
+    if ((status == napi_ok) && (obj != nullptr)) {
+        cameraSizeHeight = obj->cameraPicSize_.height;
         status = napi_create_uint32(env, cameraSizeHeight, &jsResult);
         if (status == napi_ok) {
             return jsResult;

@@ -167,7 +167,7 @@ std::string MetadataUtils::EncodeToString(std::shared_ptr<CameraStandard::Camera
     }
 
     common_metadata_header_t *meta = metadata->get();
-    int32_t encodeDataLen = headerLength + (itemLen * meta->item_count) + meta->data_count;
+    uint32_t encodeDataLen = headerLength + (itemLen * meta->item_count) + meta->data_count;
     std::string s(encodeDataLen, '\0');
     char *encodeData = &s[0];
     ret = memcpy_s(encodeData, encodeDataLen, meta, headerLength);
@@ -176,7 +176,7 @@ std::string MetadataUtils::EncodeToString(std::shared_ptr<CameraStandard::Camera
         return {};
     }
     encodeData += headerLength;
-    encodeDataLen -= headerLength;
+    encodeDataLen -= static_cast<uint32_t>(headerLength);
     camera_metadata_item_entry_t *item = GetMetadataItems(meta);
     for (uint32_t index = 0; index < meta->item_count; index++, item++) {
         ret = memcpy_s(encodeData, encodeDataLen, item, itemFixedLen);
@@ -185,7 +185,7 @@ std::string MetadataUtils::EncodeToString(std::shared_ptr<CameraStandard::Camera
             return {};
         }
         encodeData += itemFixedLen;
-        encodeDataLen -= itemFixedLen;
+        encodeDataLen -= static_cast<uint32_t>(itemFixedLen);
         dataLen = itemLen - itemFixedLen;
         ret = memcpy_s(encodeData, encodeDataLen,  &(item->data), dataLen);
         if (ret != EOK) {
@@ -193,7 +193,7 @@ std::string MetadataUtils::EncodeToString(std::shared_ptr<CameraStandard::Camera
             return {};
         }
         encodeData += dataLen;
-        encodeDataLen -= dataLen;
+        encodeDataLen -= static_cast<uint32_t>(dataLen);
     }
 
     if (meta->data_count != 0) {

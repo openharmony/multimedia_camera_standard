@@ -60,7 +60,7 @@ HStreamRepeat::~HStreamRepeat()
 {}
 
 int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-                                 std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
+                                 std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId)
 {
     int32_t previewWidth = 0;
     int32_t previewHeight = 0;
@@ -345,7 +345,7 @@ void HStreamRepeat::dumpRepeatStreamInfo(std::string& dumpString)
 void HStreamRepeat::SetStreamTransform()
 {
     camera_metadata_item_t item;
-    int ret = FindCameraMetadataItem(cameraAbility_->get(), OHOS_SENSOR_ORIENTATION, &item);
+    int ret = Camera::FindCameraMetadataItem(cameraAbility_->get(), OHOS_SENSOR_ORIENTATION, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("HStreamRepeat::SetStreamTransform get sensor orientation failed");
         return;

@@ -33,7 +33,7 @@ public:
     int32_t SetCallback(sptr<ICameraServiceCallback>& callback) override;
 
     int32_t GetCameras(std::vector<std::string> &cameraIds,
-        std::vector<std::shared_ptr<CameraMetadata>> &cameraAbilityList) override;
+        std::vector<std::shared_ptr<Camera::CameraMetadata>> &cameraAbilityList) override;
 
     int32_t CreateCaptureSession(sptr<ICaptureSession>& session) override;
 

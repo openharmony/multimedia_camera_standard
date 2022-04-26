@@ -38,7 +38,7 @@ public:
     int32_t Open() override;
     int32_t Close() override;
     int32_t Release() override;
-    int32_t UpdateSetting(const std::shared_ptr<CameraMetadata> &settings) override;
+    int32_t UpdateSetting(const std::shared_ptr<Camera::CameraMetadata> &settings) override;
     int32_t GetEnabledResults(std::vector<int32_t> &results) override;
     int32_t EnableResult(std::vector<int32_t> &results) override;
     int32_t DisableResult(std::vector<int32_t> &results) override;
@@ -47,8 +47,8 @@ public:
     sptr<Camera::IStreamOperator> GetStreamOperator();
     int32_t SetCallback(sptr<ICameraDeviceServiceCallback> &callback) override;
     int32_t OnError(const Camera::ErrorType type, const int32_t errorMsg);
-    int32_t OnResult(const uint64_t timestamp, const std::shared_ptr<CameraStandard::CameraMetadata> &result);
-    std::shared_ptr<CameraMetadata> GetSettings();
+    int32_t OnResult(const uint64_t timestamp, const std::shared_ptr<Camera::CameraMetadata> &result);
+    std::shared_ptr<Camera::CameraMetadata> GetSettings();
     std::string GetCameraId();
     bool IsReleaseCameraDevice();
     int32_t SetReleaseCameraDevice(bool isRelease);
@@ -60,7 +60,7 @@ private:
     bool isReleaseCameraDevice_;
     sptr<ICameraDeviceServiceCallback> deviceSvcCallback_;
     sptr<CameraDeviceCallback> deviceHDICallback_;
-    std::shared_ptr<CameraMetadata> updateSettings_;
+    std::shared_ptr<Camera::CameraMetadata> updateSettings_;
     sptr<Camera::IStreamOperator> streamOperator_;
     std::mutex deviceLock_;
 };
@@ -72,7 +72,7 @@ public:
     virtual ~CameraDeviceCallback() = default;
     void OnError(Camera::ErrorType type, int32_t errorMsg) override;
     void OnResult(const uint64_t timestamp,
-                  const std::shared_ptr<CameraStandard::CameraMetadata> &result) override;
+                  const std::shared_ptr<Camera::CameraMetadata> &result) override;
     void SetHCameraDevice(sptr<HCameraDevice> hcameraDevice);
 
 private:

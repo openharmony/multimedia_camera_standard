@@ -18,10 +18,16 @@
 #include <iostream>
 
 #include "camera_util.h"
+#include "display.h"
+#include "display_manager.h"
 #include "media_log.h"
 
 namespace OHOS {
 namespace CameraStandard {
+static const int32_t STREAM_ROTATE_90 = 90;
+static const int32_t STREAM_ROTATE_180 = 180;
+static const int32_t STREAM_ROTATE_270 = 270;
+static const int32_t STREAM_ROTATE_360 = 360;
 int32_t HStreamRepeat::videoCaptureId_ = VIDEO_CAPTURE_ID_START;
 int32_t HStreamRepeat::previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
 
@@ -77,6 +83,9 @@ int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
     streamId_ = streamId;
     streamOperator_ = streamOperator;
     cameraAbility_ = cameraAbility;
+    if (!isVideo_) {
+        SetStreamTransform();
+    }
     return CAMERA_OK;
 }
 
@@ -330,6 +339,44 @@ void HStreamRepeat::dumpRepeatStreamInfo(std::string& dumpString)
         dumpString += "]    Encoding Type:[" + std::to_string(curStreamInfo->encodeType_) + "]:\n";
     } else {
         dumpString += "]    StreamType:[" + std::to_string(curStreamInfo->intent_) + "]:\n";
+    }
+}
+
+void HStreamRepeat::SetStreamTransform()
+{
+    camera_metadata_item_t item;
+    int ret = FindCameraMetadataItem(cameraAbility_->get(), OHOS_SENSOR_ORIENTATION, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("HStreamRepeat::SetStreamTransform get sensor orientation failed");
+        return;
+    }
+    int32_t sensorOrientation = item.data.i32[0];
+    MEDIA_INFO_LOG("HStreamRepeat::SetStreamTransform sensor orientation %{public}d", sensorOrientation);
+    auto display = OHOS::Rosen::DisplayManager::GetInstance().GetDefaultDisplay();
+    if (display->GetWidth() < display->GetHeight()) {
+        ret = SurfaceError::SURFACE_ERROR_OK;
+        int32_t streamRotation = STREAM_ROTATE_360 - sensorOrientation;
+        switch (streamRotation) {
+            case STREAM_ROTATE_90: {
+                ret = producer_->SetTransform(ROTATE_90);
+                break;
+            }
+            case STREAM_ROTATE_180: {
+                ret = producer_->SetTransform(ROTATE_180);
+                break;
+            }
+            case STREAM_ROTATE_270: {
+                ret = producer_->SetTransform(ROTATE_270);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+        MEDIA_INFO_LOG("HStreamRepeat::SetStreamTransform rotate %{public}d", streamRotation);
+        if (ret != SurfaceError::SURFACE_ERROR_OK) {
+            MEDIA_ERR_LOG("HStreamRepeat::SetStreamTransform failed %{public}d", ret);
+        }
     }
 }
 } // namespace Standard

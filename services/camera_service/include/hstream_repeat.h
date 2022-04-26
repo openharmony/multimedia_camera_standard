@@ -58,6 +58,7 @@ private:
     int32_t StartPreview();
     int32_t StartVideo();
     bool IsvalidCaptureID();
+    void SetStreamTransform();
     int32_t curCaptureID_;
     bool isVideo_;
     bool isReleaseStream_;

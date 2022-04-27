@@ -33,9 +33,9 @@ public:
 
     static void ResetCaptureId();
     int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-        std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId);
+        std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId);
     void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo);
-    int32_t Capture(const std::shared_ptr<CameraMetadata> &captureSettings) override;
+    int32_t Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings) override;
     int32_t CancelCapture() override;
     int32_t Release() override;
     int32_t SetCallback(sptr<IStreamCaptureCallback> &callback) override;
@@ -57,7 +57,7 @@ private:
     bool isReleaseStream_;
     sptr<OHOS::IBufferProducer> producer_;
     sptr<IStreamCaptureCallback> streamCaptureCallback_;
-    std::shared_ptr<CameraMetadata> cameraAbility_;
+    std::shared_ptr<Camera::CameraMetadata> cameraAbility_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

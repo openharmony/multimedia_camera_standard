@@ -36,7 +36,7 @@ HStreamCapture::~HStreamCapture()
 {}
 
 int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-    std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
+    std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId)
 {
     if (streamOperator == nullptr || cameraAbility == nullptr) {
         MEDIA_ERR_LOG("HStreamCapture::LinkInput streamOperator is null");
@@ -92,7 +92,7 @@ bool HStreamCapture::IsValidCaptureID()
     return (photoCaptureId_ >= PHOTO_CAPTURE_ID_START && photoCaptureId_ <= PHOTO_CAPTURE_ID_END);
 }
 
-int32_t HStreamCapture::Capture(const std::shared_ptr<CameraMetadata> &captureSettings)
+int32_t HStreamCapture::Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings)
 {
     Camera::CamRetCode rc = Camera::NO_ERROR;
     int32_t CurCaptureId = 0;
@@ -108,7 +108,7 @@ int32_t HStreamCapture::Capture(const std::shared_ptr<CameraMetadata> &captureSe
     photoCaptureId_++;
     std::shared_ptr<Camera::CaptureInfo> captureInfoPhoto = std::make_shared<Camera::CaptureInfo>();
     captureInfoPhoto->streamIds_ = {photoStreamId_};
-    if (!GetCameraMetadataItemCount(captureSettings->get())) {
+    if (!Camera::GetCameraMetadataItemCount(captureSettings->get())) {
         captureInfoPhoto->captureSetting_ = cameraAbility_;
     } else {
         captureInfoPhoto->captureSetting_ = captureSettings;

@@ -26,7 +26,7 @@ namespace CameraStandard {
 class CameraInfo : public RefBase {
 public:
     CameraInfo() = default;
-    CameraInfo(std::string cameraID, std::shared_ptr<CameraMetadata> metadata);
+    CameraInfo(std::string cameraID, std::shared_ptr<Camera::CameraMetadata> metadata);
     ~CameraInfo();
     /**
     * @brief Get the camera Id.
@@ -40,14 +40,14 @@ public:
     *
     * @return Returns the metadata corresponding to current object.
     */
-    std::shared_ptr<CameraMetadata> GetMetadata();
+    std::shared_ptr<Camera::CameraMetadata> GetMetadata();
 
     /**
     * @brief Set the metadata to current camera object.
     *
     * @param Metadat to set.
     */
-    void SetMetadata(std::shared_ptr<CameraMetadata> metadata);
+    void SetMetadata(std::shared_ptr<Camera::CameraMetadata> metadata);
 
     /**
     * @brief Get the position of the camera.
@@ -86,7 +86,7 @@ public:
 
 private:
     std::string cameraID_;
-    std::shared_ptr<CameraMetadata> metadata_;
+    std::shared_ptr<Camera::CameraMetadata> metadata_;
     camera_position_enum_t cameraPosition_ = OHOS_CAMERA_POSITION_OTHER;
     camera_type_enum_t cameraType_ = OHOS_CAMERA_TYPE_UNSPECIFIED;
     camera_connection_type_t connectionType_ = OHOS_CAMERA_CONNECTION_TYPE_BUILTIN;

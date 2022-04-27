@@ -90,7 +90,7 @@ int HCameraServiceStub::OnRemoteRequest(
 int HCameraServiceStub::HandleGetCameras(MessageParcel& reply)
 {
     std::vector<std::string> cameraIds;
-    std::vector<std::shared_ptr<CameraMetadata>> cameraAbilityList;
+    std::vector<std::shared_ptr<Camera::CameraMetadata>> cameraAbilityList;
 
     int errCode = GetCameras(cameraIds, cameraAbilityList);
     if (!reply.WriteStringVector(cameraIds)) {
@@ -105,7 +105,7 @@ int HCameraServiceStub::HandleGetCameras(MessageParcel& reply)
     }
 
     for (auto cameraAbility : cameraAbilityList) {
-        if (!(MetadataUtils::EncodeCameraMetadata(cameraAbility, reply))) {
+        if (!(Camera::MetadataUtils::EncodeCameraMetadata(cameraAbility, reply))) {
             MEDIA_ERR_LOG("HCameraServiceStub HandleGetCameras write ability failed");
             return IPC_STUB_WRITE_PARCEL_ERR;
         }

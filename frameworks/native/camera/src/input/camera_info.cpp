@@ -21,7 +21,7 @@ using namespace std;
 
 namespace OHOS {
 namespace CameraStandard {
-CameraInfo::CameraInfo(std::string cameraID, std::shared_ptr<CameraMetadata> metadata)
+CameraInfo::CameraInfo(std::string cameraID, std::shared_ptr<Camera::CameraMetadata> metadata)
 {
     cameraID_ = cameraID;
     metadata_ = metadata;
@@ -37,22 +37,22 @@ void CameraInfo::init(common_metadata_header_t *metadata)
 {
     camera_metadata_item_t item;
 
-    int ret = FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_POSITION, &item);
+    int ret = Camera::FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_POSITION, &item);
     if (ret == CAM_META_SUCCESS) {
         cameraPosition_ = static_cast<camera_position_enum_t>(item.data.u8[0]);
     }
 
-    ret = FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_TYPE, &item);
+    ret = Camera::FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_TYPE, &item);
     if (ret == CAM_META_SUCCESS) {
         cameraType_ = static_cast<camera_type_enum_t>(item.data.u8[0]);
     }
 
-    ret = FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_CONNECTION_TYPE, &item);
+    ret = Camera::FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_CONNECTION_TYPE, &item);
     if (ret == CAM_META_SUCCESS) {
         connectionType_ = static_cast<camera_connection_type_t>(item.data.u8[0]);
     }
 
-    ret = FindCameraMetadataItem(metadata, OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED, &item);
+    ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED, &item);
     if (ret == CAM_META_SUCCESS) {
         isMirrorSupported_ = (item.data.u8[0] > 0);
     }
@@ -66,12 +66,12 @@ std::string CameraInfo::GetID()
     return cameraID_;
 }
 
-std::shared_ptr<CameraMetadata> CameraInfo::GetMetadata()
+std::shared_ptr<Camera::CameraMetadata> CameraInfo::GetMetadata()
 {
     return metadata_;
 }
 
-void CameraInfo::SetMetadata(std::shared_ptr<CameraMetadata> metadata)
+void CameraInfo::SetMetadata(std::shared_ptr<Camera::CameraMetadata> metadata)
 {
     metadata_ = metadata;
 }
@@ -108,7 +108,7 @@ std::vector<float> CameraInfo::CalculateZoomRange()
     float tempZoom;
     camera_metadata_item_t item;
 
-    ret = FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_ZOOM_CAP, &item);
+    ret = Camera::FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_ZOOM_CAP, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("Failed to get zoom cap with return code %{public}d", ret);
         return {};
@@ -122,7 +122,7 @@ std::vector<float> CameraInfo::CalculateZoomRange()
     minZoom = item.data.i32[minIndex] / factor;
     maxZoom = item.data.i32[maxIndex] / factor;
 
-    ret = FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_SCENE_ZOOM_CAP, &item);
+    ret = Camera::FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_SCENE_ZOOM_CAP, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("Failed to get scene zoom cap with return code %{public}d", ret);
         return {};
@@ -159,7 +159,7 @@ std::vector<float> CameraInfo::GetZoomRatioRange()
     uint32_t zoomRangeCount = 2;
     camera_metadata_item_t item;
 
-    ret = FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_ZOOM_RATIO_RANGE, &item);
+    ret = Camera::FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_ZOOM_RATIO_RANGE, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("Failed to get zoom ratio range with return code %{public}d", ret);
         return {};

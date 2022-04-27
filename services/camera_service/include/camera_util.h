@@ -67,7 +67,7 @@ extern std::map<int, std::string> g_cameraFlashMode;
 
 int32_t HdiToServiceError(Camera::CamRetCode ret);
 
-bool IsValidSize(std::shared_ptr<CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height);
+bool IsValidSize(std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height);
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_UTIL_H

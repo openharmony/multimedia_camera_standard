@@ -37,7 +37,6 @@
             "//foundation/multimedia/camera_standard/services/etc:camera_service.rc",
             "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
             "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-            "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
             "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_napi",
             "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_js"
           ],
@@ -94,7 +93,6 @@
           "test": [
             "//foundation/multimedia/camera_standard/frameworks/native/camera/test/moduletest:camera_framework_moduletest",
             "//foundation/multimedia/camera_standard/frameworks/native/camera/test/unittest:camera_framework_unittest",
-            "//foundation/multimedia/camera_standard/frameworks/native/metadata/test/unittest:camera_metadata_unittest",
             "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test:camera_video",
             "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test:camera_capture",
             "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test:camera_capture_video"

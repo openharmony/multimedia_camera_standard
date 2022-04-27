@@ -45,7 +45,6 @@ ohos_shared_library("camera_framework") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
-    "//foundation/multimedia/camera_standard/frameworks/native/metadata/include",
     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
     "//foundation/graphic/standard/frameworks/surface/include",
     "//utils/system/safwk/native/include",
@@ -55,8 +54,8 @@ ohos_shared_library("camera_framework") {
   ]
 
   deps = [
+    "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/standard:libsurface",
-    "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
     "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
   ]
 
@@ -71,6 +70,7 @@ ohos_shared_library("camera_framework") {
     "//drivers/peripheral/camera/interfaces/include",
     "//drivers/peripheral/camera/interfaces/hdi_ipc",
     "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
+    "//drivers/peripheral/camera/interfaces/metadata/include",
   ]
 
   if ("${product_name}" == "m40") {

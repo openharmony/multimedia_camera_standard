@@ -69,12 +69,12 @@ private:
     int32_t ValidateSessionOutputs();
     int32_t GetCameraDevice(sptr<HCameraDevice> &device);
     int32_t HandleCaptureOuputsConfig(sptr<HCameraDevice> &device);
-    int32_t CreateAndCommitStreams(sptr<HCameraDevice> &device, std::shared_ptr<CameraMetadata> &deviceSettings,
+    int32_t CreateAndCommitStreams(sptr<HCameraDevice> &device, std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
                                    std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);
-    int32_t CheckAndCommitStreams(sptr<HCameraDevice> &device, std::shared_ptr<CameraMetadata> &deviceSettings,
+    int32_t CheckAndCommitStreams(sptr<HCameraDevice> &device, std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
                                   std::vector<std::shared_ptr<Camera::StreamInfo>> &allStreamInfos,
                                   std::vector<std::shared_ptr<Camera::StreamInfo>> &newStreamInfos);
-    int32_t GetCurrentStreamInfos(sptr<HCameraDevice> &device, std::shared_ptr<CameraMetadata> &deviceSettings,
+    int32_t GetCurrentStreamInfos(sptr<HCameraDevice> &device, std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
                                   std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);
     void UpdateSessionConfig(sptr<HCameraDevice> &device);
     void DeleteReleasedStream();

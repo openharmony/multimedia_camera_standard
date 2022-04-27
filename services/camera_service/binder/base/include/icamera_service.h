@@ -34,7 +34,7 @@ public:
     virtual int32_t SetCallback(sptr<ICameraServiceCallback>& callback) = 0;
 
     virtual int32_t GetCameras(std::vector<std::string> &cameraIds,
-        std::vector<std::shared_ptr<CameraMetadata>> &cameraAbilityList) = 0;
+        std::vector<std::shared_ptr<Camera::CameraMetadata>> &cameraAbilityList) = 0;
 
     virtual int32_t CreateCaptureSession(sptr<ICaptureSession> &session) = 0;
 

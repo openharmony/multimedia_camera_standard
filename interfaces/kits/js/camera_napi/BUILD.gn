@@ -52,7 +52,7 @@ ohos_shared_library("camera_napi") {
     "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/session/camera_session_napi.cpp",
   ]
   deps = [
-    "//foundation/ace/napi:ace_napi",
+    "//foundation/arkui/napi:ace_napi",
     "//foundation/graphic/standard/frameworks/surface:surface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",

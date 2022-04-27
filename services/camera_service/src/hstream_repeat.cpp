@@ -54,7 +54,7 @@ HStreamRepeat::~HStreamRepeat()
 {}
 
 int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-                                 std::shared_ptr<CameraMetadata> cameraAbility, int32_t streamId)
+                                 std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId)
 {
     int32_t previewWidth = 0;
     int32_t previewHeight = 0;

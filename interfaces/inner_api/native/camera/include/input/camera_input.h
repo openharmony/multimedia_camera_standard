@@ -230,7 +230,7 @@ public:
     *
     * @param result metadata got from callback from service layer.
     */
-    void ProcessAutoFocusUpdates(const std::shared_ptr<CameraMetadata> &result);
+    void ProcessAutoFocusUpdates(const std::shared_ptr<Camera::CameraMetadata> &result);
 
     /**
     * @brief Get current Camera Settings.
@@ -249,7 +249,7 @@ public:
 
 private:
     std::mutex changeMetaMutex_;
-    std::shared_ptr<CameraMetadata> changedMetadata_;
+    std::shared_ptr<Camera::CameraMetadata> changedMetadata_;
     sptr<CameraInfo> cameraObj_;
     sptr<ICameraDeviceService> deviceObj_;
     std::shared_ptr<ErrorCallback> errorCallback_;
@@ -262,7 +262,7 @@ private:
     static void getVector(DataPtr data, size_t count, Vec &vect, VecType dataType);
     int32_t SetCropRegion(float zoomRatio);
     int32_t StartFocus(camera_af_mode_t focusMode);
-    int32_t UpdateSetting(std::shared_ptr<CameraMetadata> changedMetadata);
+    int32_t UpdateSetting(std::shared_ptr<Camera::CameraMetadata> changedMetadata);
 };
 } // namespace CameraStandard
 } // namespace OHOS

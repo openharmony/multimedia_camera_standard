@@ -24,7 +24,7 @@ HCameraServiceProxy::HCameraServiceProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<ICameraService>(impl) { }
 
 int32_t HCameraServiceProxy::GetCameras(std::vector<std::string> &cameraIds,
-    std::vector<std::shared_ptr<CameraMetadata>> &cameraAbilityList)
+    std::vector<std::shared_ptr<Camera::CameraMetadata>> &cameraAbilityList)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -52,9 +52,9 @@ int32_t HCameraServiceProxy::GetCameras(std::vector<std::string> &cameraIds,
         return IPC_PROXY_ERR;
     }
 
-    std::shared_ptr<CameraMetadata> cameraAbility;
+    std::shared_ptr<Camera::CameraMetadata> cameraAbility;
     for (int i = 0; i < count; i++) {
-        MetadataUtils::DecodeCameraMetadata(reply, cameraAbility);
+        Camera::MetadataUtils::DecodeCameraMetadata(reply, cameraAbility);
         cameraAbilityList.emplace_back(cameraAbility);
     }
 

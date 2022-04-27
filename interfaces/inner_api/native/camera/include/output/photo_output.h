@@ -130,10 +130,10 @@ public:
      *
      * @return Returns the pointer where CameraMetadata information is present.
      */
-    std::shared_ptr<CameraMetadata> GetCaptureMetadataSetting();
+    std::shared_ptr<Camera::CameraMetadata> GetCaptureMetadataSetting();
 
 private:
-    std::shared_ptr<CameraMetadata> captureMetadataSetting_;
+    std::shared_ptr<Camera::CameraMetadata> captureMetadataSetting_;
 };
 
 class PhotoOutput : public CaptureOutput {

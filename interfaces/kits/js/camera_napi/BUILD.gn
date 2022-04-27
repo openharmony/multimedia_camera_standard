@@ -28,6 +28,7 @@ ohos_copy("camera_declaration") {
 
 ohos_shared_library("camera_napi") {
   include_dirs = [
+    "//drivers/peripheral/camera/interfaces/metadata/include",
     "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi/include",
     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
@@ -35,7 +36,6 @@ ohos_shared_library("camera_napi") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include/",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
-    "//foundation/multimedia/camera_standard/frameworks/native/metadata/include",
     "//foundation/multimedia/graphic/standard/interfaces/inner_api/surface",
   ]
   sources = [

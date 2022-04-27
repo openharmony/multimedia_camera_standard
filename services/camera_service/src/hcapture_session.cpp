@@ -282,7 +282,7 @@ int32_t HCaptureSession::GetCameraDevice(sptr<HCameraDevice> &device)
 }
 
 int32_t HCaptureSession::GetCurrentStreamInfos(sptr<HCameraDevice> &device,
-                                               std::shared_ptr<CameraMetadata> &deviceSettings,
+                                               std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
                                                std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos)
 {
     int32_t rc;
@@ -337,7 +337,7 @@ int32_t HCaptureSession::GetCurrentStreamInfos(sptr<HCameraDevice> &device,
 }
 
 int32_t HCaptureSession::CreateAndCommitStreams(sptr<HCameraDevice> &device,
-                                                std::shared_ptr<CameraMetadata> &deviceSettings,
+                                                std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
                                                 std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos)
 {
     Camera::CamRetCode hdiRc = Camera::NO_ERROR;
@@ -368,7 +368,7 @@ int32_t HCaptureSession::CreateAndCommitStreams(sptr<HCameraDevice> &device,
 }
 
 int32_t HCaptureSession::CheckAndCommitStreams(sptr<HCameraDevice> &device,
-                                               std::shared_ptr<CameraMetadata> &deviceSettings,
+                                               std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
                                                std::vector<std::shared_ptr<Camera::StreamInfo>> &allStreamInfos,
                                                std::vector<std::shared_ptr<Camera::StreamInfo>> &newStreamInfos)
 {
@@ -414,7 +414,7 @@ void HCaptureSession::RestorePreviousState(sptr<HCameraDevice> &device, bool isC
 {
     std::vector<std::shared_ptr<Camera::StreamInfo>> streamInfos;
     std::shared_ptr<Camera::StreamInfo> streamInfo;
-    std::shared_ptr<CameraMetadata> settings;
+    std::shared_ptr<Camera::CameraMetadata> settings;
     sptr<HStreamCapture> curStreamCapture;
     sptr<HStreamRepeat> curStreamRepeat;
 
@@ -487,7 +487,7 @@ int32_t HCaptureSession::HandleCaptureOuputsConfig(sptr<HCameraDevice> &device)
     std::vector<std::shared_ptr<Camera::StreamInfo>> newStreamInfos;
     std::vector<std::shared_ptr<Camera::StreamInfo>> allStreamInfos;
     std::shared_ptr<Camera::StreamInfo> curStreamInfo;
-    std::shared_ptr<CameraMetadata> settings;
+    std::shared_ptr<Camera::CameraMetadata> settings;
     sptr<Camera::IStreamOperator> streamOperator;
     sptr<HStreamCapture> curStreamCapture;
     sptr<HStreamRepeat> curStreamRepeat;

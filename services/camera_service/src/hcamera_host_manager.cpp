@@ -25,7 +25,7 @@ namespace OHOS {
 namespace CameraStandard {
 struct HCameraHostManager::CameraDeviceInfo {
     std::string cameraId;
-    std::shared_ptr<CameraMetadata> ability;
+    std::shared_ptr<Camera::CameraMetadata> ability;
     std::mutex mutex;
 
     explicit CameraDeviceInfo(const std::string& cameraId, sptr<Camera::ICameraDevice> device = nullptr)
@@ -44,7 +44,7 @@ public:
     bool IsCameraSupported(const std::string& cameraId);
     const std::string& GetName();
     int32_t GetCameras(std::vector<std::string>& cameraIds);
-    int32_t GetCameraAbility(std::string& cameraId, std::shared_ptr<CameraMetadata>& ability);
+    int32_t GetCameraAbility(std::string& cameraId, std::shared_ptr<Camera::CameraMetadata>& ability);
     int32_t OpenCamera(std::string& cameraId, const sptr<Camera::ICameraDeviceCallback>& callback,
                        sptr<Camera::ICameraDevice>& pDevice);
     int32_t SetFlashlight(const std::string& cameraId, bool isEnable);
@@ -122,7 +122,7 @@ int32_t HCameraHostManager::CameraHostInfo::GetCameras(std::vector<std::string>&
 }
 
 int32_t HCameraHostManager::CameraHostInfo::GetCameraAbility(std::string& cameraId,
-    std::shared_ptr<CameraMetadata>& ability)
+    std::shared_ptr<Camera::CameraMetadata>& ability)
 {
     auto deviceInfo = FindCameraDeviceInfo(cameraId);
     if (deviceInfo == nullptr) {
@@ -375,7 +375,7 @@ int32_t HCameraHostManager::GetCameras(std::vector<std::string>& cameraIds)
 }
 
 int32_t HCameraHostManager::GetCameraAbility(std::string &cameraId,
-                                             std::shared_ptr<CameraMetadata> &ability)
+                                             std::shared_ptr<Camera::CameraMetadata> &ability)
 {
     auto cameraHostInfo = FindCameraHostInfo(cameraId);
     if (cameraHostInfo == nullptr) {

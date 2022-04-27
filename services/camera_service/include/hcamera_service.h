@@ -38,7 +38,7 @@ public:
     explicit HCameraService(int32_t systemAbilityId, bool runOnCreate = true);
     ~HCameraService() override;
     int32_t GetCameras(std::vector<std::string> &cameraIds,
-        std::vector<std::shared_ptr<CameraMetadata>> &cameraAbilityList) override;
+        std::vector<std::shared_ptr<Camera::CameraMetadata>> &cameraAbilityList) override;
     int32_t CreateCameraDevice(std::string cameraId, sptr<ICameraDeviceService> &device) override;
     int32_t CreateCaptureSession(sptr<ICaptureSession> &session) override;
     int32_t CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,

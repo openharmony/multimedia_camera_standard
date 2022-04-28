@@ -23,7 +23,7 @@ namespace CameraStandard {
 HStreamCaptureProxy::HStreamCaptureProxy(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStreamCapture>(impl) { }
 
-int32_t HStreamCaptureProxy::Capture(const std::shared_ptr<CameraMetadata> &captureSettings)
+int32_t HStreamCaptureProxy::Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -33,7 +33,7 @@ int32_t HStreamCaptureProxy::Capture(const std::shared_ptr<CameraMetadata> &capt
         MEDIA_ERR_LOG("HStreamCaptureProxy Capture Write interface token failed");
         return IPC_PROXY_ERR;
     }
-    bool bRet = MetadataUtils::EncodeCameraMetadata(captureSettings, data);
+    bool bRet = Camera::MetadataUtils::EncodeCameraMetadata(captureSettings, data);
     if (!bRet) {
         MEDIA_ERR_LOG("HStreamCaptureProxy Capture EncodeCameraMetadata failed");
         return IPC_PROXY_ERR;

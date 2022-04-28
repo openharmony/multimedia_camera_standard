@@ -415,7 +415,7 @@ sptr<CameraManager> &CameraManager::GetInstance()
 std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
 {
     std::vector<std::string> cameraIds;
-    std::vector<std::shared_ptr<CameraMetadata>> cameraAbilityList;
+    std::vector<std::shared_ptr<Camera::CameraMetadata>> cameraAbilityList;
     int32_t retCode = -1;
     sptr<CameraInfo> cameraObj = nullptr;
     int32_t index = 0;

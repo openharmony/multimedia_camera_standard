@@ -25,7 +25,7 @@ PhotoCaptureSetting::PhotoCaptureSetting()
 {
     int32_t items = 10;
     int32_t dataLength = 100;
-    captureMetadataSetting_ = std::make_shared<CameraMetadata>(items, dataLength);
+    captureMetadataSetting_ = std::make_shared<Camera::CameraMetadata>(items, dataLength);
 }
 
 PhotoCaptureSetting::QualityLevel PhotoCaptureSetting::GetQuality()
@@ -35,7 +35,7 @@ PhotoCaptureSetting::QualityLevel PhotoCaptureSetting::GetQuality()
     QualityLevel quality = LOW_QUALITY;
     camera_metadata_item_t item;
 
-    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_QUALITY, &item);
+    int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_QUALITY, &item);
     if (ret != CAM_META_SUCCESS) {
         return NORMAL_QUALITY;
     }
@@ -60,7 +60,7 @@ void PhotoCaptureSetting::SetQuality(PhotoCaptureSetting::QualityLevel qualityLe
     } else if (qualityLevel == NORMAL_QUALITY) {
         quality = normalQuality;
     }
-    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_QUALITY, &item);
+    int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_QUALITY, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = captureMetadataSetting_->addEntry(OHOS_JPEG_QUALITY, &quality, 1);
     } else if (ret == CAM_META_SUCCESS) {
@@ -78,7 +78,7 @@ PhotoCaptureSetting::RotationConfig PhotoCaptureSetting::GetRotation()
     RotationConfig rotation;
     camera_metadata_item_t item;
 
-    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_ORIENTATION, &item);
+    int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_ORIENTATION, &item);
     if (ret == CAM_META_SUCCESS) {
         rotation = static_cast<RotationConfig>(item.data.i32[0]);
         return rotation;
@@ -92,7 +92,7 @@ void PhotoCaptureSetting::SetRotation(PhotoCaptureSetting::RotationConfig rotati
     camera_metadata_item_t item;
     int32_t rotation = rotationValue;
 
-    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_ORIENTATION, &item);
+    int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_ORIENTATION, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = captureMetadataSetting_->addEntry(OHOS_JPEG_ORIENTATION, &rotation, 1);
     } else if (ret == CAM_META_SUCCESS) {
@@ -113,7 +113,7 @@ void PhotoCaptureSetting::SetGpsLocation(double latitude, double longitude)
     bool status = false;
     camera_metadata_item_t item;
 
-    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_GPS_COORDINATES, &item);
+    int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_GPS_COORDINATES, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = captureMetadataSetting_->addEntry(OHOS_JPEG_GPS_COORDINATES, gpsCoordinates,
             sizeof(gpsCoordinates) / sizeof(gpsCoordinates[0]));
@@ -132,7 +132,7 @@ bool PhotoCaptureSetting::IsMirrored()
 {
     bool isMirrorEnabled = false;
     camera_metadata_item_t item;
-    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_CONTROL_CAPTURE_MIRROR, &item);
+    int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_CONTROL_CAPTURE_MIRROR, &item);
     if (ret == CAM_META_SUCCESS) {
         isMirrorEnabled = (item.data.u8[0] > 0) ? true : false;
     }
@@ -145,7 +145,7 @@ void PhotoCaptureSetting::SetMirror(bool enable)
     camera_metadata_item_t item;
     uint8_t mirror = enable;
 
-    int ret = FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_CONTROL_CAPTURE_MIRROR, &item);
+    int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_CONTROL_CAPTURE_MIRROR, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = captureMetadataSetting_->addEntry(OHOS_CONTROL_CAPTURE_MIRROR, &mirror, 1);
     } else if (ret == CAM_META_SUCCESS) {
@@ -158,7 +158,7 @@ void PhotoCaptureSetting::SetMirror(bool enable)
     return;
 }
 
-std::shared_ptr<CameraMetadata> PhotoCaptureSetting::GetCaptureMetadataSetting()
+std::shared_ptr<Camera::CameraMetadata> PhotoCaptureSetting::GetCaptureMetadataSetting()
 {
     return captureMetadataSetting_;
 }
@@ -260,8 +260,8 @@ int32_t PhotoOutput::Capture()
 {
     int32_t items = 0;
     int32_t dataLength = 0;
-    std::shared_ptr<CameraMetadata> captureMetadataSetting =
-        std::make_shared<CameraMetadata>(items, dataLength);
+    std::shared_ptr<Camera::CameraMetadata> captureMetadataSetting =
+        std::make_shared<Camera::CameraMetadata>(items, dataLength);
     return streamCapture_->Capture(captureMetadataSetting);
 }
 

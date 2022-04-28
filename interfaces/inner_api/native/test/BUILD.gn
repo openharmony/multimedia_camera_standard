@@ -22,7 +22,7 @@ config("camera_config") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
     "//foundation/graphic/standard/frameworks/surface/include",
-    "//foundation/multimedia/camera_standard/frameworks/native/metadata/include",
+    "//drivers/peripheral/camera/interfaces/metadata/include",
     "//utils/system/safwk/native/include",
     "//drivers/framework/include/utils",
     "//drivers/adapter/uhdf2/osal/include",
@@ -63,9 +63,9 @@ ohos_executable("camera_video") {
   configs = [ ":camera_config" ]
 
   deps = [
+    "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-    "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
     "//utils/native/base:utils",
   ]
 
@@ -91,9 +91,9 @@ ohos_executable("camera_capture") {
   configs = [ ":camera_config" ]
 
   deps = [
+    "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-    "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
     "//utils/native/base:utils",
   ]
 
@@ -118,9 +118,9 @@ ohos_executable("camera_capture_video") {
   configs = [ ":camera_config" ]
 
   deps = [
+    "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-    "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
     "//utils/native/base:utils",
   ]
 

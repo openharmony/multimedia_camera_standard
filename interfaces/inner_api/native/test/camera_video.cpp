@@ -153,10 +153,7 @@ namespace {
             return false;
         }
 
-        if (recorder->SetOutputPath("/data/media")) {
-            MEDIA_DEBUG_LOG("Set output Path Failed");
-            return false;
-        }
+        // need use fd not path
 
         if (recorder->SetRecorderCallback(std::make_shared<TestVideoRecorderCallback>())) {
             MEDIA_DEBUG_LOG("Set Recorder Callback Failed");

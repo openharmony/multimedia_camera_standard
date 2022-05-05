@@ -129,7 +129,6 @@ void PhotoCaptureSetting::SetGpsLocation(double latitude, double longitude)
     if (!status) {
         MEDIA_ERR_LOG("PhotoCaptureSetting::SetGpsLocation Failed to set GPS co-ordinates");
     }
-    return;
 }
 
 void PhotoCaptureSetting::SetMirror(bool enable)

@@ -75,6 +75,8 @@ private:
     std::string& dumpString);
     void CameraDumpAF(common_metadata_header_t *metadataEntry,
     std::string& dumpString);
+    void CameraDumpAE(common_metadata_header_t *metadataEntry,
+    std::string& dumpString);
     void CameraDumpSensorInfo(common_metadata_header_t *metadataEntry,
     std::string& dumpString);
 

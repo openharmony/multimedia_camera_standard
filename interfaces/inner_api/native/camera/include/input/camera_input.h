@@ -31,6 +31,11 @@ typedef struct {
     uint32_t width;
 } CameraPicSize;
 
+typedef struct {
+    float x;
+    float y;
+}Point;
+
 class ErrorCallback {
 public:
     ErrorCallback() = default;
@@ -90,33 +95,99 @@ public:
     std::vector<camera_format_t> GetSupportedPreviewFormats();
 
     /**
-    * @brief Get the supported sizes for given format.
+    * @brief Get the supported sizes for given photo format.
     *
     * @param camera_format_t for which you want to get supported sizes.
     * @return Returns vector of CameraPicSize supported sizes.
     */
-    std::vector<CameraPicSize> getSupportedSizes(camera_format_t format);
+    std::vector<CameraPicSize> GetSupportedPhotoSizes(camera_format_t format);
+
+    /**
+    * @brief Get the supported sizes for given preview format.
+    *
+    * @param camera_format_t for which you want to get supported sizes.
+    * @return Returns vector of CameraPicSize supported sizes.
+    */
+    std::vector<CameraPicSize> GetSupportedPreviewSizes(camera_format_t format);
+
+    /**
+    * @brief Get the supported sizes for given video format.
+    *
+    * @param camera_format_t for which you want to get supported sizes.
+    * @return Returns vector of CameraPicSize supported sizes.
+    */
+    std::vector<CameraPicSize> GetSupportedVideoSizes(camera_format_t format);
 
     /**
     * @brief Get the supported exposure modes.
     *
-    * @return Returns vector of camera_ae_mode_t supported exposure modes.
+    * @return Returns vector of camera_exposure_mode_enum_t supported exposure modes.
     */
-    std::vector<camera_ae_mode_t> GetSupportedExposureModes();
+    std::vector<camera_exposure_mode_enum_t> GetSupportedExposureModes();
+
+    /**
+    * @brief Query whether given exposure mode supported.
+    *
+    * @param camera_exposure_mode_enum_t exposure mode to query.
+    * @return True is supported false otherwise.
+    */
+    bool IsExposureModeSupported(camera_exposure_mode_enum_t exposureMode);
 
     /**
     * @brief Set exposure mode.
     *
-    * @param camera_ae_mode_t exposure mode to be set.
+    * @param camera_exposure_mode_enum_t exposure mode to be set.
     */
-    void SetExposureMode(camera_ae_mode_t exposureMode);
+    void SetExposureMode(camera_exposure_mode_enum_t exposureMode);
 
     /**
     * @brief Get the current exposure mode.
     *
     * @return Returns current exposure mode.
     */
-    camera_ae_mode_t GetExposureMode();
+    camera_exposure_mode_enum_t GetExposureMode();
+
+    /**
+    * @brief Set the exposure area.
+    *
+    * @param Point which specifies the area to expose.
+    */
+    void SetExposurePoint(Point exposurePoint);
+
+    /**
+    * @brief Get the supported Focus modes.
+    *
+    * @return Returns vector of camera_focus_mode_enum_t supported exposure modes.
+    */
+    std::vector<camera_focus_mode_enum_t> GetSupportedFocusModes();
+
+    /**
+    * @brief Get centre point of exposure area.
+    *
+    * @return Returns current exposure point.
+    */
+    Point GetExposurePoint();
+
+    /**
+    * @brief Get exposure compensation range.
+    *
+    * @return Returns supported exposure compensation range.
+    */
+    std::vector<int32_t> GetExposureBiasRange();
+
+    /**
+    * @brief Set exposure compensation value.
+    *
+    * @param exposure compensation value to be set.
+    */
+    void SetExposureBias(int32_t exposureBias);
+
+    /**
+    * @brief Get exposure compensation value.
+    *
+    * @return Returns current exposure compensation value.
+    */
+    int32_t GetExposureValue();
 
     /**
     * @brief Set the exposure callback.
@@ -127,13 +198,6 @@ public:
     void SetExposureCallback(std::shared_ptr<ExposureCallback> exposureCallback);
 
     /**
-    * @brief Get the supported Focus modes.
-    *
-    * @return Returns vector of camera_af_mode_t supported exposure modes.
-    */
-    std::vector<camera_af_mode_t> GetSupportedFocusModes();
-
-    /**
     * @brief Set the focus callback.
     * which will be called when there is focus state change.
     *
@@ -142,18 +206,47 @@ public:
     void SetFocusCallback(std::shared_ptr<FocusCallback> focusCallback);
 
     /**
-    * @brief Set exposure mode.
+    * @brief Query whether given focus mode supported.
     *
-    * @param camera_ae_mode_t exposure mode to be set.
+    * @param camera_focus_mode_enum_t focus mode to query.
+    * @return True is supported false otherwise.
     */
-    void SetFocusMode(camera_af_mode_t focusMode);
+    bool IsFocusModeSupported(camera_focus_mode_enum_t focusMode);
+
+    /**
+    * @brief Set Focus mode.
+    *
+    * @param camera_focus_mode_enum_t focus mode to be set.
+    */
+    void SetFocusMode(camera_focus_mode_enum_t focusMode);
 
     /**
     * @brief Get the current focus mode.
     *
     * @return Returns current focus mode.
     */
-    camera_af_mode_t GetFocusMode();
+    camera_focus_mode_enum_t GetFocusMode();
+
+    /**
+    * @brief Set the Focus area.
+    *
+    * @param Point which specifies the area to focus.
+    */
+    void SetFocusPoint(Point focusPoint);
+
+    /**
+    * @brief Get centre point of focus area.
+    *
+    * @return Returns current focus point.
+    */
+    Point GetFocusPoint();
+
+    /**
+    * @brief Get focal length.
+    *
+    * @return Returns focal length value.
+    */
+    float GetFocalLength();
 
     /**
     * @brief Get the supported Zoom Ratio range.
@@ -179,7 +272,7 @@ public:
     /**
     * @brief Get the supported Focus modes.
     *
-    * @return Returns vector of camera_af_mode_t supported exposure modes.
+    * @return Returns vector of camera_focus_mode_enum_t supported exposure modes.
     */
     std::vector<camera_flash_mode_enum_t> GetSupportedFlashModes();
 
@@ -233,6 +326,14 @@ public:
     void ProcessAutoFocusUpdates(const std::shared_ptr<Camera::CameraMetadata> &result);
 
     /**
+    * @brief This function is called when there is exposure state change
+    * and process the exposure state callback.
+    *
+    * @param result metadata got from callback from service layer.
+    */
+    void ProcessAutoExposureUpdates(const std::shared_ptr<Camera::CameraMetadata> &result);
+
+    /**
     * @brief Get current Camera Settings.
     *
     * @return Returns string encoded metadata setting.
@@ -254,14 +355,15 @@ private:
     sptr<ICameraDeviceService> deviceObj_;
     std::shared_ptr<ErrorCallback> errorCallback_;
     sptr<ICameraDeviceServiceCallback> CameraDeviceSvcCallback_;
-    std::shared_ptr<ExposureCallback> exposurecallback_;
+    std::shared_ptr<ExposureCallback> exposureCallback_;
     std::shared_ptr<FocusCallback> focusCallback_;
-    static const std::unordered_map<camera_af_state_t, FocusCallback::FocusState> mapFromMetadataFocus_;
+    static const std::unordered_map<camera_focus_state_t, FocusCallback::FocusState> mapFromMetadataFocus_;
+    static const std::unordered_map<camera_exposure_state_t, ExposureCallback::ExposureState> mapFromMetadataExposure_;
 
     template<typename DataPtr, typename Vec, typename VecType>
     static void getVector(DataPtr data, size_t count, Vec &vect, VecType dataType);
     int32_t SetCropRegion(float zoomRatio);
-    int32_t StartFocus(camera_af_mode_t focusMode);
+    int32_t StartFocus(camera_focus_mode_enum_t focusMode);
     int32_t UpdateSetting(std::shared_ptr<Camera::CameraMetadata> changedMetadata);
 };
 } // namespace CameraStandard

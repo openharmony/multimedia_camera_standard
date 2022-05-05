@@ -185,5 +185,41 @@ std::vector<float> CameraInfo::GetZoomRatioRange()
     zoomRatioRange_ = range;
     return zoomRatioRange_;
 }
+
+std::vector<int32_t> CameraInfo::GetExposureBiasRange()
+{
+    int32_t minIndex = 0;
+    int32_t maxIndex = 1;
+    std::vector<int32_t> range;
+
+    if (!exposureBiasRange_.empty()) {
+        return exposureBiasRange_;
+    }
+
+    int ret;
+    uint32_t biasRangeCount = 2;
+    camera_metadata_item_t item;
+
+    ret = Camera::FindCameraMetadataItem(metadata_->get(), OHOS_CONTROL_AE_COMPENSATION_RANGE, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to get exposure compensation range with return code %{public}d", ret);
+        return {};
+    }
+    if (item.count != biasRangeCount) {
+        MEDIA_ERR_LOG("Invalid exposure compensation range count: %{public}d", item.count);
+        return {};
+    }
+
+    range = {item.data.i32[minIndex], item.data.i32[maxIndex]};
+    if (range[minIndex] > range[maxIndex]) {
+        MEDIA_ERR_LOG("Invalid exposure compensation range. min: %{public}d, max: %{public}d",
+                      range[minIndex], range[maxIndex]);
+        return {};
+    }
+    MEDIA_DEBUG_LOG("Exposure compensation min: %{public}d, max: %{public}d", range[minIndex], range[maxIndex]);
+
+    exposureBiasRange_ = range;
+    return exposureBiasRange_;
+}
 } // CameraStandard
 } // OHOS

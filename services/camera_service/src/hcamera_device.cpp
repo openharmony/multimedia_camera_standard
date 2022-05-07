@@ -16,7 +16,7 @@
 #include "hcamera_device.h"
 
 #include "camera_util.h"
-#include "media_log.h"
+#include "camera_log.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -68,6 +68,7 @@ std::shared_ptr<Camera::CameraMetadata> HCameraDevice::GetSettings()
 
 int32_t HCameraDevice::Open()
 {
+    CAMERA_SYNC_TRACE;
     int32_t errorCode;
     std::lock_guard<std::mutex> lock(deviceLock_);
     if (isCameraOpened) {
@@ -93,6 +94,7 @@ int32_t HCameraDevice::Open()
 
 int32_t HCameraDevice::Close()
 {
+    CAMERA_SYNC_TRACE;
     std::lock_guard<std::mutex> lock(deviceLock_);
     if (hdiCameraDevice_ != nullptr) {
         MEDIA_INFO_LOG("HCameraDevice::Close Closing camera device: %{public}s", cameraID_.c_str());
@@ -128,6 +130,7 @@ int32_t HCameraDevice::GetEnabledResults(std::vector<int32_t> &results)
 
 int32_t HCameraDevice::UpdateSetting(const std::shared_ptr<Camera::CameraMetadata> &settings)
 {
+    CAMERA_SYNC_TRACE;
     if (settings == nullptr) {
         MEDIA_ERR_LOG("HCameraDevice::UpdateSetting settings is null");
         return CAMERA_INVALID_ARG;

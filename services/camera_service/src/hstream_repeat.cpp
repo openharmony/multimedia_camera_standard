@@ -20,7 +20,7 @@
 #include "camera_util.h"
 #include "display.h"
 #include "display_manager.h"
-#include "media_log.h"
+#include "camera_log.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -173,6 +173,7 @@ bool HStreamRepeat::IsvalidCaptureID()
 
 int32_t HStreamRepeat::StartVideo()
 {
+    CAMERA_SYNC_TRACE;
     Camera::CamRetCode rc = Camera::NO_ERROR;
 
     if (!IsvalidCaptureID()) {
@@ -197,6 +198,7 @@ int32_t HStreamRepeat::StartVideo()
 
 int32_t HStreamRepeat::StartPreview()
 {
+    CAMERA_SYNC_TRACE;
     Camera::CamRetCode rc = Camera::NO_ERROR;
 
     if (!IsvalidCaptureID()) {
@@ -222,6 +224,7 @@ int32_t HStreamRepeat::StartPreview()
 
 int32_t HStreamRepeat::Stop()
 {
+    CAMERA_SYNC_TRACE;
     int32_t rc = NO_ERROR;
     Camera::CamRetCode hdiCode = Camera::NO_ERROR;
 
@@ -279,6 +282,7 @@ int32_t HStreamRepeat::SetCallback(sptr<IStreamRepeatCallback> &callback)
 
 int32_t HStreamRepeat::OnFrameStarted()
 {
+    CAMERA_SYNC_TRACE;
     if (streamRepeatCallback_ != nullptr) {
         streamRepeatCallback_->OnFrameStarted();
     }
@@ -287,6 +291,7 @@ int32_t HStreamRepeat::OnFrameStarted()
 
 int32_t HStreamRepeat::OnFrameEnded(int32_t frameCount)
 {
+    CAMERA_SYNC_TRACE;
     if (streamRepeatCallback_ != nullptr) {
         streamRepeatCallback_->OnFrameEnded(frameCount);
     }

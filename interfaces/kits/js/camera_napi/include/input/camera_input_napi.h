@@ -19,7 +19,7 @@
 #include <securec.h>
 
 #include "display_type.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "hilog/log.h"
@@ -156,6 +156,7 @@ private:
     static napi_ref sConstructor_;
     static std::string sCameraId_;
     static sptr<CameraInput> sCameraInput_;
+    static uint32_t cameraInputTaskId;
 };
 
 struct CameraInputAsyncContext {
@@ -184,6 +185,8 @@ struct CameraInputAsyncContext {
     std::vector<camera_format_t> vecSupportedPreviewFormatList;
     std::vector<CameraPicSize> vecSupportedSizeList;
     std::vector<float> vecZoomRatioList;
+    std::string funcName;
+    int32_t taskId;
 };
 } // namespace CameraStandard
 } // namespace OHOS

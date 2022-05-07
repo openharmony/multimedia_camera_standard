@@ -16,7 +16,7 @@
 #include "output/video_output.h"
 #include "camera_util.h"
 #include "hstream_repeat_callback_stub.h"
-#include "media_log.h"
+#include "camera_log.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -40,6 +40,7 @@ public:
 
     int32_t OnFrameStarted() override
     {
+        CAMERA_SYNC_TRACE;
         if (videoOutput_ != nullptr && videoOutput_->GetApplicationCallback() != nullptr) {
             videoOutput_->GetApplicationCallback()->OnFrameStarted();
         } else {
@@ -50,6 +51,7 @@ public:
 
     int32_t OnFrameEnded(const int32_t frameCount) override
     {
+        CAMERA_SYNC_TRACE;
         if (videoOutput_ != nullptr && videoOutput_->GetApplicationCallback() != nullptr) {
             videoOutput_->GetApplicationCallback()->OnFrameEnded(frameCount);
         } else {
@@ -61,6 +63,7 @@ public:
     int32_t OnFrameError(const int32_t errorCode) override
     {
         if (videoOutput_ != nullptr && videoOutput_->GetApplicationCallback() != nullptr) {
+            CAMERA_SYSEVENT_FAULT(CreateMsg("Video OnFrameError! errorCode:%d", errorCode));
             videoOutput_->GetApplicationCallback()->OnError(errorCode);
         } else {
             MEDIA_INFO_LOG("Discarding HStreamRepeatCallbackImpl::OnFrameError callback in video");

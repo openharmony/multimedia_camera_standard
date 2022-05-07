@@ -18,7 +18,7 @@
 
 #include <securec.h>
 
-#include "media_log.h"
+#include "camera_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "output/preview_output.h"
@@ -97,6 +97,7 @@ private:
     static uint64_t sSurfaceId_;
     static sptr<CaptureOutput> sPreviewOutput_;
     std::shared_ptr<PreviewOutputCallback> previewCallback_;
+    static uint32_t previewOutputTaskId;
 };
 
 struct PreviewOutputAsyncContext {
@@ -108,6 +109,8 @@ struct PreviewOutputAsyncContext {
     bool status;
     std::string errorMsg;
     bool bRetBool;
+    std::string funcName;
+    int32_t taskId;
 };
 } // namespace CameraStandard
 } // namespace OHOS

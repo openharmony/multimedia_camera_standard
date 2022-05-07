@@ -18,7 +18,7 @@
 #include <iostream>
 
 #include "camera_util.h"
-#include "media_log.h"
+#include "camera_log.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -94,6 +94,7 @@ bool HStreamCapture::IsValidCaptureID()
 
 int32_t HStreamCapture::Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings)
 {
+    CAMERA_SYNC_TRACE;
     Camera::CamRetCode rc = Camera::NO_ERROR;
     int32_t CurCaptureId = 0;
 
@@ -151,6 +152,7 @@ int32_t HStreamCapture::SetCallback(sptr<IStreamCaptureCallback> &callback)
 
 int32_t HStreamCapture::OnCaptureStarted(int32_t captureId)
 {
+    CAMERA_SYNC_TRACE;
     if (streamCaptureCallback_ != nullptr) {
         streamCaptureCallback_->OnCaptureStarted(captureId);
     }
@@ -159,6 +161,7 @@ int32_t HStreamCapture::OnCaptureStarted(int32_t captureId)
 
 int32_t HStreamCapture::OnCaptureEnded(int32_t captureId, int32_t frameCount)
 {
+    CAMERA_SYNC_TRACE;
     if (streamCaptureCallback_ != nullptr) {
         streamCaptureCallback_->OnCaptureEnded(captureId, frameCount);
     }
@@ -179,6 +182,7 @@ int32_t HStreamCapture::OnCaptureError(int32_t captureId, int32_t errorCode)
 
 int32_t HStreamCapture::OnFrameShutter(int32_t captureId, uint64_t timestamp)
 {
+    CAMERA_SYNC_TRACE;
     if (streamCaptureCallback_ != nullptr) {
         streamCaptureCallback_->OnFrameShutter(captureId, timestamp);
     }

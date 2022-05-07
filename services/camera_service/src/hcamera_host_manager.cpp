@@ -19,7 +19,7 @@
 #include "camera_util.h"
 #include "hdf_io_service_if.h"
 #include "iservmgr_hdi.h"
-#include "media_log.h"
+#include "camera_log.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -360,7 +360,7 @@ void HCameraHostManager::DeInit()
 
 int32_t HCameraHostManager::GetCameras(std::vector<std::string>& cameraIds)
 {
-    MEDIA_INFO_LOG("HCameraHostManager::GetCameras");
+    CAMERA_SYNC_TRACE;
     if (cameraHostInfos_.size() == 0) {
         MEDIA_INFO_LOG("HCameraHostManager::GetCameras host info is empty, start add host");
         AddCameraHost("camera_service");

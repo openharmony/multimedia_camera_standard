@@ -14,7 +14,7 @@
  */
 
 #include "hcapture_session_callback_stub.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "metadata_utils.h"
 #include "remote_request_code.h"
 

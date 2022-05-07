@@ -20,7 +20,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include "camera_util.h"
-#include "media_log.h"
+#include "camera_log.h"
 
 namespace OHOS {
 namespace CameraStandard {

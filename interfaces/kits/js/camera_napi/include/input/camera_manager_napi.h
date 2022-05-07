@@ -19,7 +19,7 @@
 #include <securec.h>
 
 #include "display_type.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "hilog/log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -70,6 +70,7 @@ private:
     napi_env env_;
     napi_ref wrapper_;
     sptr<CameraManager> cameraManager_;
+    static uint32_t cameraManagerTaskId;
 };
 
 struct CameraManagerNapiAsyncContext {
@@ -86,6 +87,8 @@ struct CameraManagerNapiAsyncContext {
     sptr<CameraInfo> cameraInfo;
     std::vector<sptr<CameraInfo>> cameraObjList;
     std::string errString;
+    std::string funcName;
+    int32_t taskId;
 };
 } // namespace CameraStandard
 } // namespace OHOS

@@ -16,7 +16,7 @@
 #include "hcapture_session.h"
 
 #include "camera_util.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "surface.h"
 #include "ipc_skeleton.h"
 
@@ -61,6 +61,7 @@ HCaptureSession::~HCaptureSession()
 
 int32_t HCaptureSession::BeginConfig()
 {
+    CAMERA_SYNC_TRACE;
     if (curState_ == CaptureSessionState::SESSION_CONFIG_INPROGRESS) {
         MEDIA_ERR_LOG("HCaptureSession::BeginConfig Already in config inprogress state!");
         return CAMERA_INVALID_STATE;
@@ -76,6 +77,7 @@ int32_t HCaptureSession::BeginConfig()
 
 int32_t HCaptureSession::AddInput(sptr<ICameraDeviceService> cameraDevice)
 {
+    CAMERA_SYNC_TRACE;
     sptr<HCameraDevice> localCameraDevice = nullptr;
 
     if (curState_ != CaptureSessionState::SESSION_CONFIG_INPROGRESS) {

@@ -31,6 +31,7 @@ napi_ref VideoOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> VideoOutputNapi::sVideoOutput_ = nullptr;
 uint64_t VideoOutputNapi::sSurfaceId_ = 0;
 sptr<SurfaceListener> VideoOutputNapi::listener = nullptr;
+uint32_t VideoOutputNapi::videoOutputTaskId = CAMERA_VIDEO_OUTPUT_TASKID;
 
 VideoCallbackListener::VideoCallbackListener(napi_env env) : env_(env) {}
 
@@ -68,12 +69,14 @@ void VideoCallbackListener::UpdateJSCallbackAsync(std::string propName, const in
 
 void VideoCallbackListener::OnFrameStarted() const
 {
+    CAMERA_SYNC_TRACE;
     MEDIA_INFO_LOG("VideoCallbackListener::OnFrameStarted");
     UpdateJSCallbackAsync("OnFrameStarted", -1);
 }
 
 void VideoCallbackListener::OnFrameEnded(const int32_t frameCount) const
 {
+    CAMERA_SYNC_TRACE;
     MEDIA_INFO_LOG("VideoCallbackListener::OnFrameEnded frameCount: %{public}d", frameCount);
     UpdateJSCallbackAsync("OnFrameEnded", frameCount);
 }
@@ -294,6 +297,11 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
         }
     }
 
+    if (!context->funcName.empty() && context->taskId > 0) {
+        // Finish async trace
+        CAMERA_FINISH_ASYNC_TRACE(context->funcName, context->taskId);
+    }
+
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
                                              context->work, *jsContext);
@@ -325,6 +333,7 @@ bool VideoOutputNapi::IsVideoOutput(napi_env env, napi_value obj)
 
 napi_value VideoOutputNapi::CreateVideoOutput(napi_env env, uint64_t surfaceId)
 {
+    CAMERA_SYNC_TRACE;
     napi_status status;
     napi_value result = nullptr;
     napi_value constructor;
@@ -387,6 +396,10 @@ napi_value VideoOutputNapi::Start(napi_env env, napi_callback_info info)
             [](napi_env env, void* data) {
                 auto context = static_cast<VideoOutputAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "VideoOutputNapi::Start";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(videoOutputTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -436,6 +449,10 @@ napi_value VideoOutputNapi::Stop(napi_env env, napi_callback_info info)
             [](napi_env env, void* data) {
                 auto context = static_cast<VideoOutputAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "VideoOutputNapi::Stop";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(videoOutputTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -487,6 +504,10 @@ napi_value VideoOutputNapi::Release(napi_env env, napi_callback_info info)
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<VideoOutputAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "VideoOutputNapi::Release";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(videoOutputTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -508,6 +529,7 @@ napi_value VideoOutputNapi::Release(napi_env env, napi_callback_info info)
 
 napi_value VideoOutputNapi::On(napi_env env, napi_callback_info info)
 {
+    CAMERA_SYNC_TRACE;
     napi_value undefinedResult = nullptr;
     size_t argCount = ARGS_TWO;
     napi_value argv[ARGS_TWO] = {nullptr};

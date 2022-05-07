@@ -29,6 +29,7 @@ namespace {
 napi_ref PhotoOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> PhotoOutputNapi::sPhotoOutput_ = nullptr;
 std::string PhotoOutputNapi::sSurfaceId_ = "invalid";
+uint32_t PhotoOutputNapi::photoOutputTaskId = CAMERA_PHOTO_OUTPUT_TASKID;
 
 PhotoOutputCallback::PhotoOutputCallback(napi_env env) : env_(env) {}
 
@@ -66,6 +67,7 @@ void PhotoOutputCallback::UpdateJSCallbackAsync(std::string propName, const Call
 
 void PhotoOutputCallback::OnCaptureStarted(const int32_t captureID) const
 {
+    CAMERA_SYNC_TRACE;
     MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureStarted() is called!, captureID: %{public}d", captureID);
     CallbackInfo info;
     info.captureID = captureID;
@@ -74,6 +76,7 @@ void PhotoOutputCallback::OnCaptureStarted(const int32_t captureID) const
 
 void PhotoOutputCallback::OnCaptureEnded(const int32_t captureID, const int32_t frameCount) const
 {
+    CAMERA_SYNC_TRACE;
     MEDIA_INFO_LOG("PhotoOutputCallback:OnCaptureEnded() is called!, captureID: %{public}d, frameCount: %{public}d",
                    captureID, frameCount);
     CallbackInfo info;
@@ -84,6 +87,7 @@ void PhotoOutputCallback::OnCaptureEnded(const int32_t captureID, const int32_t 
 
 void PhotoOutputCallback::OnFrameShutter(const int32_t captureId, const uint64_t timestamp) const
 {
+    CAMERA_SYNC_TRACE;
     MEDIA_INFO_LOG("PhotoOutputCallback:OnFrameShutter() called, captureID: %{public}d, timestamp: %{public}" PRIu64,
         captureId, timestamp);
     CallbackInfo info;
@@ -278,6 +282,7 @@ bool PhotoOutputNapi::IsPhotoOutput(napi_env env, napi_value obj)
 
 napi_value PhotoOutputNapi::CreatePhotoOutput(napi_env env, std::string surfaceId)
 {
+    CAMERA_SYNC_TRACE;
     napi_status status;
     napi_value result = nullptr;
     napi_value constructor;
@@ -336,6 +341,11 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
         } else {
             napi_get_undefined(env, &jsContext->data);
         }
+    }
+
+    if (!context->funcName.empty() && context->taskId > 0) {
+        // Finish async trace
+        CAMERA_FINISH_ASYNC_TRACE(context->funcName, context->taskId);
     }
 
     if (context->work != nullptr) {
@@ -489,6 +499,10 @@ napi_value PhotoOutputNapi::Capture(napi_env env, napi_callback_info info)
         status = napi_create_async_work(
             env, nullptr, resource, [](napi_env env, void* data) {
                 PhotoOutputAsyncContext* context = static_cast<PhotoOutputAsyncContext*>(data);
+                // Start async trace
+                context->funcName = "PhotoOutputNapi::Capture";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(photoOutputTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo == nullptr) {
                     context->status = false;
                     return;
@@ -566,6 +580,10 @@ napi_value PhotoOutputNapi::Release(napi_env env, napi_callback_info info)
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<PhotoOutputAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "PhotoOutputNapi::Release";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(photoOutputTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;
@@ -587,6 +605,7 @@ napi_value PhotoOutputNapi::Release(napi_env env, napi_callback_info info)
 
 napi_value PhotoOutputNapi::On(napi_env env, napi_callback_info info)
 {
+    CAMERA_SYNC_TRACE;
     napi_value undefinedResult = nullptr;
     size_t argCount = ARGS_TWO;
     napi_value argv[ARGS_TWO] = {nullptr};

@@ -21,7 +21,7 @@
 #include "camera_device_ability_items.h"
 #include "camera_util.h"
 #include "hcamera_device_callback_stub.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "metadata_utils.h"
 
 namespace OHOS {
@@ -51,6 +51,8 @@ public:
         MEDIA_ERR_LOG("CameraDeviceServiceCallback::OnError() is called!, errorType: %{public}d, errorMsg: %{public}d",
                       errorType, errorMsg);
         if (camInput_ != nullptr && camInput_->GetErrorCallback() != nullptr) {
+            CAMERA_SYSEVENT_FAULT(CreateMsg("CameraDeviceServiceCallback::OnError() is called!, errorType: %d,"
+                                            "errorMsg: %d", errorType, errorMsg));
             camInput_->GetErrorCallback()->OnError(errorType, errorMsg);
         } else {
             MEDIA_INFO_LOG("CameraDeviceServiceCallback::ErrorCallback not set!, Discarding callback");
@@ -66,16 +68,22 @@ public:
         if (ret == 0) {
             MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASH_STATE is %{public}d",
                            item.data.u8[0]);
+            CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashStateChanged! current OHOS_CONTROL_FLASH_STATE is %d",
+                                               item.data.u8[0]));
         }
         ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASHMODE, &item);
         if (ret == 0) {
             MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASHMODE is %{public}d",
                            item.data.u8[0]);
+            CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashModeChanged! current OHOS_CONTROL_FLASHMODE is %d",
+                                               item.data.u8[0]));
         }
         ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_AE_MODE, &item);
         if (ret == 0) {
             MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_AE_MODE is %{public}d",
                            item.data.u8[0]);
+            CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("AutoExposureModeChanged! current OHOS_CONTROL_AE_MODE is %d",
+                                               item.data.u8[0]));
         }
         camInput_->ProcessAutoFocusUpdates(result);
         return CAMERA_OK;
@@ -118,6 +126,7 @@ void CameraInput::LockForControl()
 
 int32_t CameraInput::UpdateSetting(std::shared_ptr<Camera::CameraMetadata> changedMetadata)
 {
+    CAMERA_SYNC_TRACE;
     if (!Camera::GetCameraMetadataItemCount(changedMetadata->get())) {
         MEDIA_INFO_LOG("CameraInput::UpdateSetting No configuration to update");
         return CAMERA_OK;
@@ -307,6 +316,7 @@ std::vector<camera_ae_mode_t> CameraInput::GetSupportedExposureModes()
 
 void CameraInput::SetExposureMode(camera_ae_mode_t exposureMode)
 {
+    CAMERA_SYNC_TRACE;
     if (changedMetadata_ == nullptr) {
         MEDIA_ERR_LOG("CameraInput::SetExposureMode Need to call LockForControl() before setting camera properties");
         return;
@@ -409,6 +419,7 @@ int32_t CameraInput::StartFocus(camera_af_mode_t focusMode)
 
 void CameraInput::SetFocusMode(camera_af_mode_t focusMode)
 {
+    CAMERA_SYNC_TRACE;
     if (changedMetadata_ == nullptr) {
         MEDIA_ERR_LOG("CameraInput::SetFocusMode Need to call LockForControl() before setting camera properties");
         return;
@@ -533,6 +544,7 @@ int32_t CameraInput::SetCropRegion(float zoomRatio)
 
 void CameraInput::SetZoomRatio(float zoomRatio)
 {
+    CAMERA_SYNC_TRACE;
     if (changedMetadata_ == nullptr) {
         MEDIA_ERR_LOG("CameraInput::SetZoomRatio Need to call LockForControl() before setting camera properties");
         return;
@@ -615,6 +627,7 @@ camera_flash_mode_enum_t CameraInput::GetFlashMode()
 
 void CameraInput::SetFlashMode(camera_flash_mode_enum_t flashMode)
 {
+    CAMERA_SYNC_TRACE;
     if (changedMetadata_ == nullptr) {
         MEDIA_ERR_LOG("CameraInput::SetFlashMode Need to call LockForControl() before setting camera properties");
         return;
@@ -663,10 +676,14 @@ void CameraInput::ProcessAutoFocusUpdates(const std::shared_ptr<Camera::CameraMe
     int ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_AF_MODE, &item);
     if (ret == CAM_META_SUCCESS) {
         MEDIA_DEBUG_LOG("Focus mode: %{public}d", item.data.u8[0]);
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusModeChanged! current OHOS_CONTROL_AF_MODE is %d",
+                                           item.data.u8[0]));
     }
     ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_AF_STATE, &item);
     if (ret == CAM_META_SUCCESS) {
         MEDIA_INFO_LOG("Focus state: %{public}d", item.data.u8[0]);
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusStateChanged! current OHOS_CONTROL_AF_STATE is %d",
+                                           item.data.u8[0]));
         if (focusCallback_ != nullptr) {
             camera_af_state_t focusState = static_cast<camera_af_state_t>(item.data.u8[0]);
             auto itr = mapFromMetadataFocus_.find(focusState);

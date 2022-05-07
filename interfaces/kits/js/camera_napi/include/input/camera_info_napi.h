@@ -17,7 +17,7 @@
 #define CAMERA_INFO_NAPI_H_
 
 #include "display_type.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "input/camera_manager.h"

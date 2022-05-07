@@ -16,7 +16,7 @@
 #ifndef CAMERA_SESSION_NAPI_H_
 #define CAMERA_SESSION_NAPI_H_
 
-#include "media_log.h"
+#include "camera_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
@@ -98,6 +98,7 @@ private:
 
     static napi_ref sConstructor_;
     static sptr<CaptureSession> sCameraSession_;
+    static uint32_t cameraSessionTaskId;
 };
 
 struct CameraSessionAsyncContext {
@@ -112,6 +113,8 @@ struct CameraSessionAsyncContext {
     bool status;
     std::string errorMsg;
     bool bRetBool;
+    std::string funcName;
+    int32_t taskId;
 };
 } // namespace CameraStandard
 } // namespace OHOS

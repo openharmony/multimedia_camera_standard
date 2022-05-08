@@ -46,7 +46,7 @@ ohos_shared_library("camera_framework") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
-    "//foundation/graphic/standard/frameworks/surface/include",
+    "//foundation/graphic/graphic/frameworks/surface/include",
     "//utils/system/safwk/native/include",
     "//drivers/framework/include/utils",
     "//drivers/adapter/uhdf2/osal/include",
@@ -55,7 +55,7 @@ ohos_shared_library("camera_framework") {
 
   deps = [
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
-    "//foundation/graphic/standard:libsurface",
+    "//foundation/graphic/graphic:libsurface",
     "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
   ]
 

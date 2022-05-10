@@ -56,7 +56,7 @@ public:
         std::vector<std::shared_ptr<Camera::StreamAttribute>> &attributes));
     MOCK_METHOD1(DetachBufferQueue, Camera::CamRetCode(int streamId));
     MOCK_METHOD2(CommitStreams, Camera::CamRetCode(Camera::OperationMode mode,
-        const std::shared_ptr<CameraStandard::CameraMetadata> &modeSetting));
+        const std::shared_ptr<Camera::CameraMetadata> &modeSetting));
     MOCK_METHOD2(AttachBufferQueue, Camera::CamRetCode(int streamId,
         const OHOS::sptr<OHOS::IBufferProducer> &producer));
     MOCK_METHOD3(Capture, Camera::CamRetCode(int captureId, const std::shared_ptr<Camera::CaptureInfo> &info,
@@ -65,10 +65,10 @@ public:
         OHOS::sptr<Camera::IStreamOperatorCallback> &callback,
         OHOS::sptr<Camera::IOfflineStreamOperator> &offlineOperator));
     MOCK_METHOD4(IsStreamsSupported, Camera::CamRetCode(Camera::OperationMode mode,
-        const std::shared_ptr<CameraStandard::CameraMetadata> &modeSetting,
+        const std::shared_ptr<Camera::CameraMetadata> &modeSetting,
         const std::shared_ptr<Camera::StreamInfo> &info, Camera::StreamSupportType &type));
     MOCK_METHOD4(IsStreamsSupported, Camera::CamRetCode(Camera::OperationMode mode,
-        const std::shared_ptr<CameraStandard::CameraMetadata> &modeSetting,
+        const std::shared_ptr<Camera::CameraMetadata> &modeSetting,
         const std::vector<std::shared_ptr<Camera::StreamInfo>> &info, Camera::StreamSupportType &type));
 };
 
@@ -113,10 +113,10 @@ public:
             return CAMERA_OK;
         });
         ON_CALL(*this, GetCameraAbility).WillByDefault([this](std::string &cameraId,
-                                                            std::shared_ptr<CameraMetadata> &ability) {
+                                                            std::shared_ptr<Camera::CameraMetadata> &ability) {
             int32_t itemCount = 10;
             int32_t dataSize = 100;
-            ability = std::make_shared<CameraMetadata>(itemCount, dataSize);
+            ability = std::make_shared<Camera::CameraMetadata>(itemCount, dataSize);
             int32_t streams[9] = {
                 OHOS_CAMERA_FORMAT_YCRCB_420_SP, CameraFrameworkUnitTest::PREVIEW_DEFAULT_WIDTH,
                 CameraFrameworkUnitTest::PREVIEW_DEFAULT_HEIGHT, OHOS_CAMERA_FORMAT_YCRCB_420_SP,
@@ -140,7 +140,7 @@ public:
     ~MockHCameraHostManager() {}
     MOCK_METHOD1(GetCameras, int32_t(std::vector<std::string> &cameraIds));
     MOCK_METHOD1(SetCallback, int32_t(sptr<Camera::ICameraHostCallback> &callback));
-    MOCK_METHOD2(GetCameraAbility, int32_t(std::string &cameraId, std::shared_ptr<CameraMetadata> &ability));
+    MOCK_METHOD2(GetCameraAbility, int32_t(std::string &cameraId, std::shared_ptr<Camera::CameraMetadata> &ability));
     MOCK_METHOD2(SetFlashlight, int32_t(const std::string &cameraId, bool isEnable));
     MOCK_METHOD3(OpenCameraDevice, int32_t(std::string &cameraId,
         const sptr<Camera::ICameraDeviceCallback> &callback, sptr<Camera::ICameraDevice> &pDevice));

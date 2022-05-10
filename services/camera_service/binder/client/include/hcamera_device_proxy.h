@@ -35,7 +35,7 @@ public:
 
     int32_t SetCallback(sptr<ICameraDeviceServiceCallback> &callback) override;
 
-    int32_t UpdateSetting(const std::shared_ptr<CameraMetadata> &settings) override;
+    int32_t UpdateSetting(const std::shared_ptr<Camera::CameraMetadata> &settings) override;
 
     int32_t GetEnabledResults(std::vector<int32_t> &results) override;
 

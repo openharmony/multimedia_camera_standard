@@ -27,7 +27,7 @@ ohos_moduletest("camera_framework_moduletest") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
-    "//foundation/multimedia/camera_standard/frameworks/native/metadata/include",
+    "//drivers/peripheral/camera/interfaces/metadata/include",
     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test",
   ]
@@ -38,9 +38,9 @@ ohos_moduletest("camera_framework_moduletest") {
   ]
 
   deps = [
+    "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/standard:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-    "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
     "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
   ]
 

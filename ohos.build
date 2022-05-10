@@ -6,16 +6,16 @@
         "phone"
       ],
       "module_list": [
+        "//drivers/peripheral/camera/interfaces/metadata:metadata",
         "//foundation/multimedia/camera_standard/sa_profile:camera_service_sa_profile",
         "//foundation/multimedia/camera_standard/services/etc:camera_service.rc",
         "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
         "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-        "//foundation/multimedia/camera_standard/frameworks/native/metadata:metadata",
         "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_napi",
         "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi:camera_js"
       ],
       "test_list": [
-        "//foundation/multimedia/camera_standard/frameworks/native/metadata/test:camerametadatatest",
+        "//drivers/peripheral/camera/interfaces/metadata/test:camerametadatatest",
         "//foundation/multimedia/camera_standard/frameworks/native/camera/test:cameraframeworktest",
         "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test:camera_video",
         "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test:camera_capture",

@@ -48,10 +48,10 @@ bool HCameraDevice::IsReleaseCameraDevice()
     return isReleaseCameraDevice_;
 }
 
-std::shared_ptr<CameraMetadata> HCameraDevice::GetSettings()
+std::shared_ptr<Camera::CameraMetadata> HCameraDevice::GetSettings()
 {
     int32_t errCode;
-    std::shared_ptr<CameraMetadata> ability = nullptr;
+    std::shared_ptr<Camera::CameraMetadata> ability = nullptr;
     errCode = cameraHostManager_->GetCameraAbility(cameraID_, ability);
     if (errCode != CAMERA_OK) {
         MEDIA_ERR_LOG("HCameraDevice::GetSettings Failed to get Camera Ability: %{public}d", errCode);
@@ -116,14 +116,14 @@ int32_t HCameraDevice::GetEnabledResults(std::vector<int32_t> &results)
     return CAMERA_OK;
 }
 
-int32_t HCameraDevice::UpdateSetting(const std::shared_ptr<CameraMetadata> &settings)
+int32_t HCameraDevice::UpdateSetting(const std::shared_ptr<Camera::CameraMetadata> &settings)
 {
     if (settings == nullptr) {
         MEDIA_ERR_LOG("HCameraDevice::UpdateSetting settings is null");
         return CAMERA_INVALID_ARG;
     }
 
-    if (!GetCameraMetadataItemCount(settings->get())) {
+    if (!Camera::GetCameraMetadataItemCount(settings->get())) {
         return CAMERA_OK;
     }
     updateSettings_ = settings;
@@ -229,7 +229,7 @@ int32_t HCameraDevice::OnError(const Camera::ErrorType type, const int32_t error
 }
 
 int32_t HCameraDevice::OnResult(const uint64_t timestamp,
-                                const std::shared_ptr<CameraStandard::CameraMetadata> &result)
+                                const std::shared_ptr<Camera::CameraMetadata> &result)
 {
     if (deviceSvcCallback_ != nullptr) {
         deviceSvcCallback_->OnResult(timestamp, result);
@@ -250,7 +250,7 @@ void CameraDeviceCallback::OnError(const Camera::ErrorType type, const int32_t e
 }
 
 void CameraDeviceCallback::OnResult(const uint64_t timestamp,
-                                    const std::shared_ptr<CameraStandard::CameraMetadata> &result)
+                                    const std::shared_ptr<Camera::CameraMetadata> &result)
 {
     if (hCameraDevice_ != nullptr) {
         hCameraDevice_->OnResult(timestamp, result);

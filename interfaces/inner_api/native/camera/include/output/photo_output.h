@@ -60,6 +60,22 @@ public:
      */
     virtual void OnCaptureError(const int32_t captureId, const int32_t errorCode) const = 0;
 };
+
+typedef struct {
+    /**
+     * Latitude.
+     */
+    double latitude;
+    /**
+     * Longitude.
+     */
+    double longitude;
+    /**
+     * Altitude.
+     */
+    double altitude;
+} Location;
+
 class PhotoCaptureSetting {
 public:
     enum QualityLevel {
@@ -107,10 +123,9 @@ public:
     /**
      * @brief Set the GPS Location for the photo capture settings.
      *
-     * @param latitude value to be set.
-     * @param longitude value to be set.
+     * @param location value to be set.
      */
-    void SetGpsLocation(double latitude, double longitude);
+    void SetLocation(std::unique_ptr<Location> &location);
 
     /**
      * @brief Set the mirror option for the photo capture.

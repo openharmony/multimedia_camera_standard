@@ -1804,5 +1804,155 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_034, TestSize.Le
     intResult = session_->RemoveInput(input);
     EXPECT_NE(intResult, 0);
 }
+
+/*
+ * Feature: Framework
+ * Function: Test Capture with location setting [lat:1 ,long:1 ,alt:1]
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Capture with location setting
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_035, TestSize.Level0)
+{
+    std::shared_ptr<PhotoCaptureSetting> photoSetting = std::make_shared<PhotoCaptureSetting>();
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->latitude = 1;
+    location->longitude = 1;
+    location->altitude = 1;
+
+    photoSetting->SetLocation(location);
+
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session_->AddOutput(photoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture(photoSetting);
+    EXPECT_EQ(intResult, 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    session_->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Capture with location setting [lat:0.0 ,long:0.0 ,alt:0.0]
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Capture with location setting
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_036, TestSize.Level0)
+{
+    std::shared_ptr<PhotoCaptureSetting> photoSetting = std::make_shared<PhotoCaptureSetting>();
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->latitude = 0.0;
+    location->longitude = 0.0;
+    location->altitude = 0.0;
+
+    photoSetting->SetLocation(location);
+
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session_->AddOutput(photoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture(photoSetting);
+    EXPECT_EQ(intResult, 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    session_->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Capture with location setting [lat:-1 ,long:-1 ,alt:-1]
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Capture with location setting
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_037, TestSize.Level0)
+{
+    std::shared_ptr<PhotoCaptureSetting> photoSetting = std::make_shared<PhotoCaptureSetting>();
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->latitude = -1;
+    location->longitude = -1;
+    location->altitude = -1;
+
+    photoSetting->SetLocation(location);
+
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session_->AddOutput(photoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture(photoSetting);
+    EXPECT_EQ(intResult, 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    session_->Stop();
+}
 } // CameraStandard
 } // OHOS

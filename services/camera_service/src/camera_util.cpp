@@ -91,14 +91,15 @@ int32_t HdiToServiceError(Camera::CamRetCode ret)
     return err;
 }
 
-bool IsValidSize(std::shared_ptr<CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height)
+bool IsValidSize(std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height)
 {
 #ifndef BALTIMORE_CAMERA
     return true;
 #endif
     uint32_t unitLen = 3;
     camera_metadata_item_t item;
-    int ret = FindCameraMetadataItem(cameraAbility->get(), OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
+    int ret = Camera::FindCameraMetadataItem(cameraAbility->get(),
+                                             OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("Failed to find stream configuration in camera ability with return code %{public}d", ret);
         return false;

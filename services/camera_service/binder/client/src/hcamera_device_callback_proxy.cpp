@@ -49,7 +49,7 @@ int32_t HCameraDeviceCallbackProxy::OnError(const int32_t errorType, const int32
 }
 
 int32_t HCameraDeviceCallbackProxy::OnResult(const uint64_t timestamp,
-                                             const std::shared_ptr<CameraStandard::CameraMetadata> &result)
+                                             const std::shared_ptr<Camera::CameraMetadata> &result)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -64,7 +64,7 @@ int32_t HCameraDeviceCallbackProxy::OnResult(const uint64_t timestamp,
         MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnResult Write timestamp failed");
         return IPC_PROXY_ERR;
     }
-    bRet = MetadataUtils::EncodeCameraMetadata(result, data);
+    bRet = Camera::MetadataUtils::EncodeCameraMetadata(result, data);
     if (!bRet) {
         MEDIA_ERR_LOG("HCameraDeviceCallbackProxy OnResult EncodeCameraMetadata failed");
         return IPC_PROXY_ERR;

@@ -54,10 +54,10 @@ public:
     void SetGpsLocation(double latitude, double longitude);
     bool IsMirrored();
     void SetMirror(bool enable);
-    std::shared_ptr<CameraMetadata> GetCaptureMetadataSetting();
+    std::shared_ptr<Camera::CameraMetadata> GetCaptureMetadataSetting();
 
 private:
-    std::shared_ptr<CameraMetadata> captureMetadataSetting_;
+    std::shared_ptr<Camera::CameraMetadata> captureMetadataSetting_;
 };
 
 class PhotoOutput : public CaptureOutput {

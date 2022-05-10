@@ -78,8 +78,8 @@ int HCameraDeviceStub::HandleSetCallback(MessageParcel &data)
 
 int HCameraDeviceStub::HandleUpdateSetting(MessageParcel &data)
 {
-    std::shared_ptr<CameraStandard::CameraMetadata> metadata = nullptr;
-    MetadataUtils::DecodeCameraMetadata(data, metadata);
+    std::shared_ptr<Camera::CameraMetadata> metadata = nullptr;
+    Camera::MetadataUtils::DecodeCameraMetadata(data, metadata);
 
     return UpdateSetting(metadata);
 }

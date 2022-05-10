@@ -45,7 +45,7 @@ public:
     int32_t Init(void);
     void DeInit(void);
     virtual int32_t GetCameras(std::vector<std::string> &cameraIds);
-    virtual int32_t GetCameraAbility(std::string &cameraId, std::shared_ptr<CameraMetadata> &ability);
+    virtual int32_t GetCameraAbility(std::string &cameraId, std::shared_ptr<Camera::CameraMetadata> &ability);
     virtual int32_t OpenCameraDevice(std::string &cameraId,
                                      const sptr<Camera::ICameraDeviceCallback> &callback,
                                      sptr<Camera::ICameraDevice> &pDevice);

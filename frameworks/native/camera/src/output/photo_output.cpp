@@ -28,6 +28,7 @@ namespace {
     constexpr uint8_t QUALITY_NORMAL = 90;
     constexpr uint8_t QUALITY_LOW = 50;
 }
+
 PhotoCaptureSetting::PhotoCaptureSetting()
 {
     int32_t items = 10;
@@ -109,14 +110,14 @@ void PhotoCaptureSetting::SetRotation(PhotoCaptureSetting::RotationConfig rotati
     return;
 }
 
-void PhotoCaptureSetting::SetGpsLocation(double latitude, double longitude)
+void PhotoCaptureSetting::SetLocation(std::unique_ptr<Location> &location)
 {
-    double gpsCoordinates[2];
-    gpsCoordinates[0] = latitude;
-    gpsCoordinates[1] = longitude;
+    double gpsCoordinates[3] = {location->latitude, location->longitude, location->altitude};
     bool status = false;
     camera_metadata_item_t item;
 
+    MEDIA_DEBUG_LOG("PhotoCaptureSetting::SetLocation lat=%{public}f, long=%{public}f and alt=%{public}f",
+                    location->latitude, location->longitude, location->altitude);
     int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_JPEG_GPS_COORDINATES, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = captureMetadataSetting_->addEntry(OHOS_JPEG_GPS_COORDINATES, gpsCoordinates,
@@ -127,7 +128,7 @@ void PhotoCaptureSetting::SetGpsLocation(double latitude, double longitude)
     }
 
     if (!status) {
-        MEDIA_ERR_LOG("PhotoCaptureSetting::SetGpsLocation Failed to set GPS co-ordinates");
+        MEDIA_ERR_LOG("PhotoCaptureSetting::SetLocation Failed to set GPS co-ordinates");
     }
 }
 

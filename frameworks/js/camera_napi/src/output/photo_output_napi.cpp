@@ -374,25 +374,30 @@ int32_t QueryAndGetProperty(napi_env env, napi_value arg, const string &property
 int32_t GetLocationProperties(napi_env env, napi_value locationObj, const PhotoOutputAsyncContext &context)
 {
     PhotoOutputAsyncContext *asyncContext = const_cast<PhotoOutputAsyncContext *>(&context);
-    napi_value property1 = nullptr;
-    napi_value property2 = nullptr;
+    napi_value latproperty = nullptr;
+    napi_value lonproperty = nullptr;
+    napi_value altproperty = nullptr;
     double latitude = -1.0;
     double longitude = -1.0;
+    double altitude = -1.0;
 
-    if ((QueryAndGetProperty(env, locationObj, "latitude", property1) == 0) &&
-        (QueryAndGetProperty(env, locationObj, "longitude", property2) == 0)) {
-        if ((napi_get_value_double(env, property1, &latitude) != napi_ok) ||
-            (napi_get_value_double(env, property2, &longitude) != napi_ok)) {
+    if ((QueryAndGetProperty(env, locationObj, "latitude", latproperty) == 0) &&
+        (QueryAndGetProperty(env, locationObj, "longitude", lonproperty) == 0) &&
+        (QueryAndGetProperty(env, locationObj, "altitude", altproperty) == 0)) {
+        if ((napi_get_value_double(env, latproperty, &latitude) != napi_ok) ||
+            (napi_get_value_double(env, lonproperty, &longitude) != napi_ok) ||
+            (napi_get_value_double(env, altproperty, &altitude) != napi_ok)) {
             return -1;
         } else {
-            asyncContext->latitude = latitude;
-            asyncContext->longitude = longitude;
+            asyncContext->location = std::make_unique<Location>();
+            asyncContext->location->latitude = latitude;
+            asyncContext->location->longitude = longitude;
+            asyncContext->location->altitude = altitude;
         }
     } else {
         return -1;
     }
 
-    // Return 0 after location properties are successfully obtained
     return 0;
 }
 
@@ -509,6 +514,7 @@ napi_value PhotoOutputNapi::Capture(napi_env env, napi_callback_info info)
                 int32_t ret;
                 if ((context->hasPhotoSettings) || (enableMirror)) {
                     std::shared_ptr<PhotoCaptureSetting> capSettings = make_shared<PhotoCaptureSetting>();
+
                     if (context->quality != -1) {
                         capSettings->SetQuality(
                             static_cast<PhotoCaptureSetting::QualityLevel>(context->quality));
@@ -523,8 +529,8 @@ napi_value PhotoOutputNapi::Capture(napi_env env, napi_callback_info info)
                         capSettings->SetMirror(enableMirror);
                     }
 
-                    if (context->latitude != -1.0 && context->longitude != -1.0) {
-                        capSettings->SetGpsLocation(context->latitude, context->longitude);
+                    if (context->location != nullptr) {
+                        capSettings->SetLocation(context->location);
                     }
 
                     ret = photoOutput->Capture(capSettings);

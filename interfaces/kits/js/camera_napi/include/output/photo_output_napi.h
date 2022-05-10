@@ -132,6 +132,7 @@ struct PhotoOutputAsyncContext {
     bool hasPhotoSettings = false;
     std::string errorMsg;
     bool bRetBool;
+    std::unique_ptr<Location> location;
     std::string funcName;
     int32_t taskId;
     bool isSupported = false;

@@ -72,7 +72,7 @@
 
 #define POINTER_MASK 0x00FFFFFF
 
-#define CAMERA_SYNC_TRACE BYTRACE_NAME(BYTRACE_TAG_ZCAMERA, __PRETTY_FUNCTION__)
+#define CAMERA_SYNC_TRACE HITRACE_METER_NAME(HITRACE_TAG_ZCAMERA, __PRETTY_FUNCTION__)
 
 #define CAMERA_SYSEVENT_STATISTIC(str)                                             \
     do {                                                                           \
@@ -104,12 +104,12 @@
 
 #define CAMERA_START_ASYNC_TRACE(str, taskId)                                      \
     do {                                                                           \
-        StartAsyncTrace(BYTRACE_TAG_ZCAMERA, str, taskId, -1);                     \
+        StartAsyncTrace(HITRACE_TAG_ZCAMERA, str, taskId, -1);                     \
     } while (0)
 
 #define CAMERA_FINISH_ASYNC_TRACE(str, taskId)                                     \
     do {                                                                           \
-        FinishAsyncTrace(BYTRACE_TAG_ZCAMERA, str, taskId);                        \
+        FinishAsyncTrace(HITRACE_TAG_ZCAMERA, str, taskId);                        \
     } while (0)
 
 #endif // OHOS_CAMERA_LOG_H

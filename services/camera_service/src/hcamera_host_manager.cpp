@@ -19,7 +19,7 @@
 #include "camera_util.h"
 #include "hdf_io_service_if.h"
 #include "iservmgr_hdi.h"
-#include "media_log.h"
+#include "camera_log.h"
 
 namespace OHOS {
 namespace CameraStandard {

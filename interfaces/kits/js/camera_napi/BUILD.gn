@@ -36,7 +36,7 @@ ohos_shared_library("camera_napi") {
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include/",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
-    "//foundation/multimedia/graphic/standard/interfaces/inner_api/surface",
+    "//foundation/multimedia/graphic/graphic/interfaces/inner_api/surface",
   ]
   sources = [
     "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/input/camera_info_napi.cpp",
@@ -53,11 +53,15 @@ ohos_shared_library("camera_napi") {
   ]
   deps = [
     "//foundation/arkui/napi:ace_napi",
-    "//foundation/graphic/standard/frameworks/surface:surface",
+    "//foundation/graphic/graphic/frameworks/surface:surface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
   cflags = [ "-fPIC" ]
   if ("${product_name}" == "m40") {
     cflags += [ "-DPRODUCT_M40" ]

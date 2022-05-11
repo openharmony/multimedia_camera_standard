@@ -19,7 +19,7 @@
 #include <cinttypes>
 #include <securec.h>
 
-#include "media_log.h"
+#include "camera_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
@@ -110,6 +110,7 @@ private:
     std::string surfaceId_;
     sptr<CaptureOutput> photoOutput_;
     std::shared_ptr<PhotoOutputCallback> photoCallback_ = nullptr;
+    static uint32_t photoOutputTaskId;
 };
 
 struct PhotoOutputAsyncContext {
@@ -128,6 +129,8 @@ struct PhotoOutputAsyncContext {
     bool hasPhotoSettings = false;
     std::string errorMsg;
     bool bRetBool;
+    std::string funcName;
+    int32_t taskId;
 };
 } // namespace CameraStandard
 } // namespace OHOS

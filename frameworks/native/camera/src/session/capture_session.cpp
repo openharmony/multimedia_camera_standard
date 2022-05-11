@@ -17,7 +17,7 @@
 #include "camera_util.h"
 #include "hcapture_session_callback_stub.h"
 #include "input/camera_input.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "output/photo_output.h"
 #include "output/preview_output.h"
 #include "output/video_output.h"
@@ -45,6 +45,7 @@ public:
         MEDIA_INFO_LOG("CaptureSessionCallback::OnError() is called!, errorCode: %{public}d",
                        errorCode);
         if (captureSession_ != nullptr && captureSession_->GetApplicationCallback() != nullptr) {
+            CAMERA_SYSEVENT_FAULT(CreateMsg("Session OnError! errorCode:%d", errorCode));
             captureSession_->GetApplicationCallback()->OnError(errorCode);
         } else {
             MEDIA_INFO_LOG("CaptureSessionCallback::ApplicationCallback not set!, Discarding callback");
@@ -60,69 +61,85 @@ CaptureSession::CaptureSession(sptr<ICaptureSession> &captureSession)
 
 int32_t CaptureSession::BeginConfig()
 {
+    CAMERA_SYNC_TRACE;
     return captureSession_->BeginConfig();
 }
 
 int32_t CaptureSession::CommitConfig()
 {
+    CAMERA_SYNC_TRACE;
     return captureSession_->CommitConfig();
 }
 
 int32_t CaptureSession::AddInput(sptr<CaptureInput> &input)
 {
+    CAMERA_SYNC_TRACE;
     if (input == nullptr) {
         MEDIA_ERR_LOG("CaptureSession::AddInput input is null");
         return CAMERA_INVALID_ARG;
     }
+    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddInput"));
     return captureSession_->AddInput(((sptr<CameraInput> &)input)->GetCameraDevice());
 }
 
 int32_t CaptureSession::AddOutput(sptr<CaptureOutput> &output)
 {
+    CAMERA_SYNC_TRACE;
     if (output == nullptr) {
         MEDIA_ERR_LOG("CaptureSession::AddOutput output is null");
         return CAMERA_INVALID_ARG;
     }
     if (output->GetType() == CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT) {
+        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddPhotoOutput"));
         return captureSession_->AddOutput(((sptr<PhotoOutput> &)output)->GetStreamCapture());
     } else if (output->GetType() == CAPTURE_OUTPUT_TYPE::PREVIEW_OUTPUT) {
+        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddPreviewOutput"));
         return captureSession_->AddOutput(((sptr<PreviewOutput> &)output)->GetStreamRepeat());
     } else {
+        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddVideoOutput"));
         return captureSession_->AddOutput(((sptr<VideoOutput> &)output)->GetStreamRepeat());
     }
 }
 
 int32_t CaptureSession::RemoveInput(sptr<CaptureInput> &input)
 {
+    CAMERA_SYNC_TRACE;
     if (input == nullptr) {
         MEDIA_ERR_LOG("CaptureSession::RemoveInput input is null");
         return CAMERA_INVALID_ARG;
     }
+    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemoveInput"));
     return captureSession_->RemoveInput(((sptr<CameraInput> &)input)->GetCameraDevice());
 }
 
 int32_t CaptureSession::RemoveOutput(sptr<CaptureOutput> &output)
 {
+    CAMERA_SYNC_TRACE;
     if (output == nullptr) {
         MEDIA_ERR_LOG("CaptureSession::RemoveOutput output is null");
         return CAMERA_INVALID_ARG;
     }
     if (output->GetType() == CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT) {
+        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemovePhotoOutput"));
         return captureSession_->RemoveOutput(((sptr<PhotoOutput> &)output)->GetStreamCapture());
     } else if (output->GetType() == CAPTURE_OUTPUT_TYPE::PREVIEW_OUTPUT) {
+        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemovePreviewOutput"));
         return captureSession_->RemoveOutput(((sptr<PreviewOutput> &)output)->GetStreamRepeat());
     } else {
+        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemoveVideoOutput"));
         return captureSession_->RemoveOutput(((sptr<VideoOutput> &)output)->GetStreamRepeat());
     }
 }
 
 int32_t CaptureSession::Start()
 {
+    CAMERA_SYNC_TRACE;
     return captureSession_->Start();
 }
 
 int32_t CaptureSession::Stop()
 {
+    CAMERA_SYNC_TRACE;
     return captureSession_->Stop();
 }
 
@@ -155,6 +172,7 @@ std::shared_ptr<SessionCallback> CaptureSession::GetApplicationCallback()
 
 void CaptureSession::Release()
 {
+    CAMERA_SYNC_TRACE;
     int32_t errCode = captureSession_->Release(0);
     if (errCode != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to Release capture session!, %{public}d", errCode);

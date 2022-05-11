@@ -16,7 +16,7 @@
 #ifndef CAMERA_NAPI_H_
 #define CAMERA_NAPI_H_
 
-#include "media_log.h"
+#include "camera_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "hilog/log.h"

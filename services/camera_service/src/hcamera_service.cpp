@@ -22,7 +22,7 @@
 #include "accesstoken_kit.h"
 #include "camera_util.h"
 #include "iservice_registry.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "system_ability_definition.h"
 #include "ipc_skeleton.h"
 
@@ -79,6 +79,7 @@ void HCameraService::OnStop()
 int32_t HCameraService::GetCameras(std::vector<std::string> &cameraIds,
     std::vector<std::shared_ptr<Camera::CameraMetadata>> &cameraAbilityList)
 {
+    CAMERA_SYNC_TRACE;
     int32_t ret = cameraHostManager_->GetCameras(cameraIds);
     if (ret != CAMERA_OK) {
         MEDIA_ERR_LOG("HCameraService::GetCameras failed");
@@ -100,6 +101,7 @@ int32_t HCameraService::GetCameras(std::vector<std::string> &cameraIds,
 
 int32_t HCameraService::CreateCameraDevice(std::string cameraId, sptr<ICameraDeviceService> &device)
 {
+    CAMERA_SYNC_TRACE;
     sptr<HCameraDevice> cameraDevice;
 
     OHOS::Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
@@ -145,6 +147,7 @@ int32_t HCameraService::CreateCameraDevice(std::string cameraId, sptr<ICameraDev
 
 int32_t HCameraService::CreateCaptureSession(sptr<ICaptureSession> &session)
 {
+    CAMERA_SYNC_TRACE;
     sptr<HCaptureSession> captureSession;
     if (streamOperatorCallback_ == nullptr) {
         streamOperatorCallback_ = new(std::nothrow) StreamOperatorCallback();
@@ -166,6 +169,7 @@ int32_t HCameraService::CreateCaptureSession(sptr<ICaptureSession> &session)
 int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                           sptr<IStreamCapture> &photoOutput)
 {
+    CAMERA_SYNC_TRACE;
     if (producer == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreatePhotoOutput producer is null");
         return CAMERA_INVALID_ARG;
@@ -182,6 +186,7 @@ int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &pro
 int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                             sptr<IStreamRepeat> &previewOutput)
 {
+    CAMERA_SYNC_TRACE;
     sptr<HStreamRepeat> streamRepeatPreview;
 
     if (producer == nullptr) {
@@ -200,6 +205,7 @@ int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &p
 int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                                   int32_t width, int32_t height, sptr<IStreamRepeat> &previewOutput)
 {
+    CAMERA_SYNC_TRACE;
     sptr<HStreamRepeat> streamRepeatPreview;
 
     if ((producer == nullptr) || (width == 0) || (height == 0)) {
@@ -218,6 +224,7 @@ int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProduc
 int32_t HCameraService::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                           sptr<IStreamRepeat> &videoOutput)
 {
+    CAMERA_SYNC_TRACE;
     sptr<HStreamRepeat> streamRepeatVideo;
 
     if (producer == nullptr) {

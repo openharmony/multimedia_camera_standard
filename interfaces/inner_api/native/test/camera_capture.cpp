@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "surface.h"
 #include "test_common.h"
 

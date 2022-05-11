@@ -16,7 +16,7 @@
 #ifndef CAMERA_MANAGER_CALLBACK_NAPI_H_
 #define CAMERA_MANAGER_CALLBACK_NAPI_H_
 
-#include "media_log.h"
+#include "camera_log.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 

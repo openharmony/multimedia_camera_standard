@@ -53,7 +53,7 @@ ohos_shared_library("camera_service") {
     "//drivers/adapter/uhdf2/include/hdi/",
     "//drivers/peripheral/camera/interfaces/metadata/include",
     "//drivers/peripheral/display/interfaces/include",
-    "//foundation/graphic/standard/frameworks/surface/include",
+    "//foundation/graphic/graphic/frameworks/surface/include",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
@@ -70,13 +70,15 @@ ohos_shared_library("camera_service") {
   deps = [
     "//drivers/adapter/uhdf2/hdi:libhdi",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
-    "//foundation/graphic/standard:libsurface",
-    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/graphic/graphic:libsurface",
+    "//foundation/graphic/graphic/rosen/modules/render_service_client:librender_service_client",
     "//foundation/windowmanager/dm:libdm",
   ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "ipc:ipc_single",

@@ -17,7 +17,7 @@
 #include "input/camera_input.h"
 #include "input/camera_manager.h"
 #include "media_errors.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "recorder.h"
 #include "surface.h"
 #include "test_common.h"
@@ -153,10 +153,7 @@ namespace {
             return false;
         }
 
-        if (recorder->SetOutputPath("/data/media")) {
-            MEDIA_DEBUG_LOG("Set output Path Failed");
-            return false;
-        }
+        // need use fd not path
 
         if (recorder->SetRecorderCallback(std::make_shared<TestVideoRecorderCallback>())) {
             MEDIA_DEBUG_LOG("Set Recorder Callback Failed");

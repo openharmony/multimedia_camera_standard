@@ -31,6 +31,7 @@ namespace {
 napi_ref PreviewOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> PreviewOutputNapi::sPreviewOutput_ = nullptr;
 uint64_t PreviewOutputNapi::sSurfaceId_ = 0;
+uint32_t PreviewOutputNapi::previewOutputTaskId = CAMERA_PREVIEW_OUTPUT_TASKID;
 
 PreviewOutputCallback::PreviewOutputCallback(napi_env env) : env_(env) {}
 
@@ -68,12 +69,14 @@ void PreviewOutputCallback::UpdateJSCallbackAsync(std::string propName, const in
 
 void PreviewOutputCallback::OnFrameStarted() const
 {
+    CAMERA_SYNC_TRACE;
     MEDIA_INFO_LOG("PreviewOutputCallback:OnFrameStarted() is called!");
     UpdateJSCallbackAsync("OnFrameStarted", -1);
 }
 
 void PreviewOutputCallback::OnFrameEnded(const int32_t frameCount) const
 {
+    CAMERA_SYNC_TRACE;
     MEDIA_INFO_LOG("PreviewOutputCallback:OnFrameEnded() is called!, frameCount: %{public}d", frameCount);
     UpdateJSCallbackAsync("OnFrameEnded", frameCount);
 }
@@ -235,6 +238,11 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
         }
     }
 
+    if (!context->funcName.empty() && context->taskId > 0) {
+        // Finish async trace
+        CAMERA_FINISH_ASYNC_TRACE(context->funcName, context->taskId);
+    }
+
     if (context->work != nullptr) {
         CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
                                              context->work, *jsContext);
@@ -244,6 +252,7 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
 
 napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surfaceId)
 {
+    CAMERA_SYNC_TRACE;
     napi_status status;
     napi_value result = nullptr;
     napi_value constructor;
@@ -347,6 +356,10 @@ napi_value PreviewOutputNapi::Release(napi_env env, napi_callback_info info)
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<PreviewOutputAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "PreviewOutputNapi::Release";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(previewOutputTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->status = true;

@@ -29,6 +29,7 @@ namespace {
 napi_ref CameraInputNapi::sConstructor_ = nullptr;
 std::string CameraInputNapi::sCameraId_ = "invalid";
 sptr<CameraInput> CameraInputNapi::sCameraInput_ = nullptr;
+uint32_t CameraInputNapi::cameraInputTaskId = CAMERA_INPUT_TASKID;
 
 void ExposureCallbackListener::OnExposureStateCallbackAsync(ExposureState state) const
 {
@@ -294,6 +295,7 @@ napi_value CameraInputNapi::CameraInputNapiConstructor(napi_env env, napi_callba
 napi_value CameraInputNapi::CreateCameraInput(napi_env env, std::string cameraId,
     sptr<CameraInput> cameraInput)
 {
+    CAMERA_SYNC_TRACE;
     napi_status status;
     napi_value result = nullptr;
     napi_value constructor;
@@ -432,6 +434,7 @@ void CommonCompleteCallback(napi_env env, napi_status status, void* data)
         MEDIA_ERR_LOG("Async context is null");
         return;
     }
+
     std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
 
     if (!context->status) {
@@ -444,6 +447,11 @@ void CommonCompleteCallback(napi_env env, napi_status status, void* data)
         } else {
             napi_get_undefined(env, &jsContext->data);
         }
+    }
+
+    if (!context->funcName.empty() && context->taskId > 0) {
+        // Finish async trace
+        CAMERA_FINISH_ASYNC_TRACE(context->funcName, context->taskId);
     }
 
     if (context->work != nullptr) {
@@ -616,6 +624,7 @@ napi_value CameraInputNapi::IsFlashModeSupported(napi_env env, napi_callback_inf
 
 napi_value CameraInputNapi::SetFlashMode(napi_env env, napi_callback_info info)
 {
+    CAMERA_SYNC_TRACE;
     napi_status status;
     napi_value result = nullptr;
     napi_value resource = nullptr;
@@ -847,6 +856,7 @@ napi_value CameraInputNapi::GetExposureMode(napi_env env, napi_callback_info inf
 
 napi_value CameraInputNapi::SetExposureMode(napi_env env, napi_callback_info info)
 {
+    CAMERA_SYNC_TRACE;
     napi_status status;
     napi_value result = nullptr;
     napi_value resource = nullptr;
@@ -1282,6 +1292,7 @@ napi_value CameraInputNapi::GetFocusMode(napi_env env, napi_callback_info info)
 
 napi_value CameraInputNapi::SetFocusMode(napi_env env, napi_callback_info info)
 {
+    CAMERA_SYNC_TRACE;
     napi_status status;
     napi_value result = nullptr;
     napi_value resource = nullptr;
@@ -1579,6 +1590,7 @@ napi_value CameraInputNapi::GetZoomRatio(napi_env env, napi_callback_info info)
 
 napi_value CameraInputNapi::SetZoomRatio(napi_env env, napi_callback_info info)
 {
+    CAMERA_SYNC_TRACE;
     napi_status status;
     napi_value result = nullptr;
     napi_value resource = nullptr;
@@ -1653,6 +1665,10 @@ napi_value CameraInputNapi::Release(napi_env env, napi_callback_info info)
             env, nullptr, resource, [](napi_env env, void* data) {
                 auto context = static_cast<CameraInputAsyncContext*>(data);
                 context->status = false;
+                // Start async trace
+                context->funcName = "CameraInputNapi::Release";
+                context->taskId = CameraNapiUtils::IncreamentAndGet(cameraInputTaskId);
+                CAMERA_START_ASYNC_TRACE(context->funcName, context->taskId);
                 if (context->objectInfo != nullptr) {
                     context->bRetBool = false;
                     context->objectInfo->cameraInput_->Release();
@@ -1704,6 +1720,7 @@ void CameraInputNapi::RegisterCallback(napi_env env, const string &eventType, na
 
 napi_value CameraInputNapi::On(napi_env env, napi_callback_info info)
 {
+    CAMERA_SYNC_TRACE;
     napi_value undefinedResult = nullptr;
     size_t argCount = ARGS_TWO;
     napi_value argv[ARGS_TWO] = {nullptr};

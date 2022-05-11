@@ -20,7 +20,7 @@
 #include "camera_util.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
-#include "media_log.h"
+#include "camera_log.h"
 #include "system_ability_definition.h"
 
 using namespace std;
@@ -70,6 +70,9 @@ public:
         CameraDeviceStatus deviceStatus;
         CameraStatusInfo cameraStatusInfo;
 
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("OnCameraStatusChanged! for cameraId:%s, current Camera Status:%d",
+                                           cameraId.c_str(), status));
+
         MEDIA_INFO_LOG("OnCameraStatusChanged: cameraId: %{public}s, status: %{public}d", cameraId.c_str(), status);
         if (camMngr_ != nullptr && camMngr_->GetApplicationCallback() != nullptr) {
             switch (status) {
@@ -100,6 +103,9 @@ public:
     {
         FlashlightStatus flashlightStatus;
 
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("OnFlashlightStatusChanged! for cameraId:%s, current Flash Status:%d",
+                                           cameraId.c_str(), status));
+
         MEDIA_INFO_LOG("OnFlashlightStatusChanged: cameraId: %{public}s, status: %{public}d", cameraId.c_str(), status);
         if (camMngr_ != nullptr && camMngr_->GetApplicationCallback() != nullptr) {
             switch (status) {
@@ -129,6 +135,7 @@ public:
 
 sptr<CaptureSession> CameraManager::CreateCaptureSession()
 {
+    CAMERA_SYNC_TRACE;
     sptr<ICaptureSession> captureSession = nullptr;
     sptr<CaptureSession> result = nullptr;
     int32_t retCode = CAMERA_OK;
@@ -151,6 +158,7 @@ sptr<CaptureSession> CameraManager::CreateCaptureSession()
 
 sptr<PhotoOutput> CameraManager::CreatePhotoOutput(sptr<Surface> &surface)
 {
+    CAMERA_SYNC_TRACE;
     sptr<IStreamCapture> streamCapture = nullptr;
     sptr<PhotoOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
@@ -174,6 +182,7 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(sptr<Surface> &surface)
 
 sptr<PhotoOutput> CameraManager::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format)
 {
+    CAMERA_SYNC_TRACE;
     sptr<IStreamCapture> streamCapture = nullptr;
     sptr<PhotoOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
@@ -196,6 +205,7 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(const sptr<OHOS::IBufferProdu
 
 sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
 {
+    CAMERA_SYNC_TRACE;
     sptr<IStreamRepeat> streamRepeat = nullptr;
     sptr<PreviewOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
@@ -219,6 +229,7 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
 
 sptr<PreviewOutput> CameraManager::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format)
 {
+    CAMERA_SYNC_TRACE;
     sptr<IStreamRepeat> streamRepeat = nullptr;
     sptr<PreviewOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
@@ -241,6 +252,7 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(const sptr<OHOS::IBufferP
 
 sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(sptr<Surface> surface, int32_t width, int32_t height)
 {
+    CAMERA_SYNC_TRACE;
     sptr<IStreamRepeat> streamRepeat = nullptr;
     sptr<PreviewOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
@@ -266,6 +278,7 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(sptr<Surface> surfa
 sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer,
                                                              int32_t format, int32_t width, int32_t height)
 {
+    CAMERA_SYNC_TRACE;
     sptr<IStreamRepeat> streamRepeat = nullptr;
     sptr<PreviewOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
@@ -288,6 +301,7 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IB
 
 sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
 {
+    CAMERA_SYNC_TRACE;
     sptr<IStreamRepeat> streamRepeat = nullptr;
     sptr<VideoOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
@@ -311,6 +325,7 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
 
 sptr<VideoOutput> CameraManager::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format)
 {
+    CAMERA_SYNC_TRACE;
     sptr<IStreamRepeat> streamRepeat = nullptr;
     sptr<VideoOutput> result = nullptr;
     int32_t retCode = CAMERA_OK;
@@ -333,6 +348,7 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(const sptr<OHOS::IBufferProdu
 
 void CameraManager::Init()
 {
+    CAMERA_SYNC_TRACE;
     sptr<IRemoteObject> object = nullptr;
     cameraMngrCallback_ = nullptr;
 
@@ -386,6 +402,7 @@ void CameraManager::CameraServerDied(pid_t pid)
 
 sptr<ICameraDeviceService> CameraManager::CreateCameraDevice(std::string cameraId)
 {
+    CAMERA_SYNC_TRACE;
     sptr<ICameraDeviceService> device = nullptr;
     int32_t retCode = CAMERA_OK;
 
@@ -441,6 +458,8 @@ sptr<CameraManager> &CameraManager::GetInstance()
 
 std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
 {
+    CAMERA_SYNC_TRACE;
+
     std::vector<std::string> cameraIds;
     std::vector<std::shared_ptr<Camera::CameraMetadata>> cameraAbilityList;
     int32_t retCode = -1;
@@ -462,6 +481,10 @@ std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
                 MEDIA_ERR_LOG("CameraManager::GetCameras new CameraInfo failed for id={public}%s", it.c_str());
                 continue;
             }
+            CAMERA_SYSEVENT_STATISTIC(CreateMsg("CameraManager GetCameras camera ID:%s, Camera position:%d,"
+                                                " Camera Type:%d, Connection Type:%d, Mirror support:%d", it.c_str(),
+                                                cameraObj->GetPosition(), cameraObj->GetCameraType(),
+                                                cameraObj->GetConnectionType(), cameraObj->IsMirrorSupported()));
             cameraObjList.emplace_back(cameraObj);
         }
     } else {
@@ -472,6 +495,7 @@ std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
 
 sptr<CameraInput> CameraManager::CreateCameraInput(sptr<CameraInfo> &camera)
 {
+    CAMERA_SYNC_TRACE;
     sptr<CameraInput> cameraInput = nullptr;
     sptr<ICameraDeviceService> deviceObj = nullptr;
 
@@ -489,6 +513,8 @@ sptr<CameraInput> CameraManager::CreateCameraInput(sptr<CameraInfo> &camera)
     } else {
         MEDIA_ERR_LOG("CameraManager::CreateCameraInput: Camera object is null");
     }
+    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CameraManager_CreateCameraInput CameraId:%s", camera->GetID().c_str()));
+
     return cameraInput;
 }
 

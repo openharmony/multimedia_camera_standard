@@ -22,7 +22,7 @@ ohos_moduletest("camera_framework_moduletest") {
     "//drivers/framework/include/utils",
     "//drivers/adapter/uhdf2/osal/include",
     "//drivers/adapter/uhdf2/include/hdi",
-    "//foundation/graphic/standard/frameworks/surface/include",
+    "//foundation/graphic/graphic/frameworks/surface/include",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
@@ -41,7 +41,7 @@ ohos_moduletest("camera_framework_moduletest") {
 
   deps = [
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
-    "//foundation/graphic/standard:libsurface",
+    "//foundation/graphic/graphic:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
     "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
   ]
@@ -49,6 +49,8 @@ ohos_moduletest("camera_framework_moduletest") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libtoken_setproc",
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
   ]
 

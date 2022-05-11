@@ -17,6 +17,7 @@
         "adapted_system_type": [ "standard" ],
         "rom": "",
         "ram": "",
+	"hisysevent_config": [ "//foundation/multimedia/camera_standard/hisysevent.yaml" ],
         "deps": {
           "components": [
               "libhilog",

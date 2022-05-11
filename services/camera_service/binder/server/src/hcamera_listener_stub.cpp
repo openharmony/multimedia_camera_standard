@@ -16,7 +16,7 @@
 
 #include <cinttypes>
 
-#include "media_log.h"
+#include "camera_log.h"
 #include "camera_util.h"
 
 namespace OHOS {

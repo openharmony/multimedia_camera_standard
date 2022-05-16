@@ -419,7 +419,7 @@ void HCameraHostManager::OnReceive(const HDI::ServiceManager::V1_0::ServiceStatu
         return;
     }
     using namespace OHOS::HDI::ServiceManager::V1_0;
-    std::lock_guard<std::mutex> lock(mutex_);
+    // std::lock_guard<std::mutex> lock(mutex_);
     switch (status.status) {
         case SERVIE_STATUS_START:
             AddCameraHost(status.serviceName);

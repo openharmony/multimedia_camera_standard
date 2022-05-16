@@ -49,17 +49,20 @@ void CameraManagerCallbackNapi::OnCameraStatusCallbackAsync(const CameraStatusIn
     }
     std::unique_ptr<CameraStatusCallbackInfo> callbackInfo =
         std::make_unique<CameraStatusCallbackInfo>(cameraStatusInfo, this);
-    work->data = reinterpret_cast<void *>(callbackInfo.get());
+    work->data = callbackInfo.get();
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         CameraStatusCallbackInfo *callbackInfo = reinterpret_cast<CameraStatusCallbackInfo *>(work->data);
         if (callbackInfo) {
             callbackInfo->listener_->OnCameraStatusCallback(callbackInfo->info_);
+            delete callbackInfo;
         }
         delete work;
     });
     if (ret) {
         MEDIA_ERR_LOG("CameraManagerCallbackNapi:OnCameraStatusCallbackAsync() failed to execute work");
         delete work;
+    } else {
+        callbackInfo.release();
     }
 }
 

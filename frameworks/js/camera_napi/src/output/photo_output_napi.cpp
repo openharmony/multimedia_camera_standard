@@ -45,13 +45,9 @@ void PhotoOutputCallback::UpdateJSCallbackAsync(std::string propName, const Call
         MEDIA_ERR_LOG("PhotoOutputCallback:UpdateJSCallbackAsync() failed to allocate work");
         return;
     }
-    PhotoOutputCallbackInfo *callbackInfo = new(std::nothrow) PhotoOutputCallbackInfo(propName, info, this);
-    if (!callbackInfo) {
-        MEDIA_ERR_LOG("PhotoOutputCallback:UpdateJSCallbackAsync() failed to allocate callback info");
-        delete work;
-        return;
-    }
-    work->data = callbackInfo;
+    std::unique_ptr<PhotoOutputCallbackInfo> callbackInfo =
+        std::make_unique<PhotoOutputCallbackInfo>(propName, info, this);
+    work->data = callbackInfo.get();
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         PhotoOutputCallbackInfo *callbackInfo = reinterpret_cast<PhotoOutputCallbackInfo *>(work->data);
         if (callbackInfo) {
@@ -62,8 +58,9 @@ void PhotoOutputCallback::UpdateJSCallbackAsync(std::string propName, const Call
     });
     if (ret) {
         MEDIA_ERR_LOG("PhotoOutputCallback:UpdateJSCallbackAsync() failed to execute work");
-        delete callbackInfo;
         delete work;
+    } else {
+        callbackInfo.release();
     }
 }
 

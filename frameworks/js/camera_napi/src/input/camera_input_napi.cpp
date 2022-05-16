@@ -43,13 +43,8 @@ void ExposureCallbackListener::OnExposureStateCallbackAsync(ExposureState state)
         MEDIA_ERR_LOG("ExposureCallbackListener:OnExposureStateCallbackAsync() failed to allocate work");
         return;
     }
-    ExposureCallbackInfo *callbackInfo = new(std::nothrow) ExposureCallbackInfo(state, this);
-    if (!callbackInfo) {
-        MEDIA_ERR_LOG("ExposureCallbackListener:OnExposureStateCallbackAsync() failed to allocate callback info");
-        delete work;
-        return;
-    }
-    work->data = callbackInfo;
+    std::unique_ptr<ExposureCallbackInfo> callbackInfo = std::make_unique<ExposureCallbackInfo>(state, this);
+    work->data = callbackInfo.get();
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         ExposureCallbackInfo *callbackInfo = reinterpret_cast<ExposureCallbackInfo *>(work->data);
         if (callbackInfo) {
@@ -60,8 +55,9 @@ void ExposureCallbackListener::OnExposureStateCallbackAsync(ExposureState state)
     });
     if (ret) {
         MEDIA_ERR_LOG("ExposureCallbackListener:OnExposureStateCallbackAsync() failed to execute work");
-        delete callbackInfo;
         delete work;
+    } else {
+        callbackInfo.release();
     }
 }
 
@@ -100,13 +96,8 @@ void FocusCallbackListener::OnFocusStateCallbackAsync(FocusState state) const
         MEDIA_ERR_LOG("FocusCallbackListener:OnFocusStateCallbackAsync() failed to allocate work");
         return;
     }
-    FocusCallbackInfo *callbackInfo = new(std::nothrow) FocusCallbackInfo(state, this);
-    if (!callbackInfo) {
-        MEDIA_ERR_LOG("FocusCallbackListener:OnFocusStateCallbackAsync() failed to allocate callback info");
-        delete work;
-        return;
-    }
-    work->data = callbackInfo;
+    std::unique_ptr<FocusCallbackInfo> callbackInfo = std::make_unique<FocusCallbackInfo>(state, this);
+    work->data = callbackInfo.get();
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         FocusCallbackInfo *callbackInfo = reinterpret_cast<FocusCallbackInfo *>(work->data);
         if (callbackInfo) {
@@ -117,8 +108,9 @@ void FocusCallbackListener::OnFocusStateCallbackAsync(FocusState state) const
     });
     if (ret) {
         MEDIA_ERR_LOG("FocusCallbackListener:OnFocusStateCallbackAsync() failed to execute work");
-        delete callbackInfo;
         delete work;
+    } else {
+        callbackInfo.release();
     }
 }
 
@@ -157,13 +149,8 @@ void ErrorCallbackListener::OnErrorCallbackAsync(const int32_t errorType, const 
         MEDIA_ERR_LOG("ErrorCallbackListener:OnErrorCallbackAsync() failed to allocate work");
         return;
     }
-    ErrorCallbackInfo *callbackInfo = new(std::nothrow) ErrorCallbackInfo(errorType, errorMsg, this);
-    if (!callbackInfo) {
-        MEDIA_ERR_LOG("ErrorCallbackListener:OnErrorCallbackAsync() failed to allocate callback info");
-        delete work;
-        return;
-    }
-    work->data = callbackInfo;
+    std::unique_ptr<ErrorCallbackInfo> callbackInfo = std::make_unique<ErrorCallbackInfo>(errorType, errorMsg, this);
+    work->data = callbackInfo.get();
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         ErrorCallbackInfo *callbackInfo = reinterpret_cast<ErrorCallbackInfo *>(work->data);
         if (callbackInfo) {
@@ -174,8 +161,9 @@ void ErrorCallbackListener::OnErrorCallbackAsync(const int32_t errorType, const 
     });
     if (ret) {
         MEDIA_ERR_LOG("ErrorCallbackListener:OnErrorCallbackAsync() failed to execute work");
-        delete callbackInfo;
         delete work;
+    } else {
+        callbackInfo.release();
     }
 }
 

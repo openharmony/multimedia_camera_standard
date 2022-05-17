@@ -360,12 +360,8 @@ void HCameraHostManager::DeInit()
 
 int32_t HCameraHostManager::GetCameras(std::vector<std::string>& cameraIds)
 {
+    CAMERA_SYNC_TRACE;
     MEDIA_INFO_LOG("HCameraHostManager::GetCameras");
-    // if (cameraHostInfos_.size() == 0) {
-        // MEDIA_INFO_LOG("HCameraHostManager::GetCameras host info is empty, start add host");
-        // AddCameraHost("camera_service");
-        // AddCameraHost("distributed_camera_service");
-    // }
     if (!IsCameraHostInfoAdded("camera_service")) {
         AddCameraHost("camera_service");
     }
@@ -419,7 +415,6 @@ void HCameraHostManager::OnReceive(const HDI::ServiceManager::V1_0::ServiceStatu
         return;
     }
     using namespace OHOS::HDI::ServiceManager::V1_0;
-    // std::lock_guard<std::mutex> lock(mutex_);
     switch (status.status) {
         case SERVIE_STATUS_START:
             AddCameraHost(status.serviceName);

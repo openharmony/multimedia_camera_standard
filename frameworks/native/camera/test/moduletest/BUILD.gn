@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_output_path = "camera_standard/camera_framework_moduletest"
+module_output_path = "multimedia_camera_standard/camera_framework_moduletest"
 
 ohos_moduletest("camera_framework_moduletest") {
   module_out_path = module_output_path

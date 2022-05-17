@@ -121,7 +121,7 @@
     result = captureSession->AddInput(cameraInput);
     ```
 
-7.  创建消费者Surface并注册监听器以监听缓冲区更新。拍照的宽和高可以配置为所支持的 1280x960 分辨率。
+7.  创建消费者 Surface 并注册监听器以监听缓冲区更新。拍照的宽和高可以配置为所支持的 1280x960 分辨率。
 
     ```
     sptr<Surface> photoSurface = Surface::CreateSurfaceAsConsumer();
@@ -206,7 +206,7 @@
     result = captureSession->AddInput(cameraInput);
     ```
 
-6.  使用从窗口管理器获得的Surface创建预览输出用以在显示上渲染。预览的宽和高可以配置为所支持的 640x480 或 832x480 分辨率，如果想保存到文件，可以按照拍照流程提到步骤，创建 Surface，注册监听器以监听缓冲区更新。
+6.  使用从窗口管理器获得的 Surface 创建预览输出用以在显示上渲染。预览的宽和高可以配置为所支持的 640x480 或 832x480 分辨率，如果想保存到文件，可以按照拍照流程提到步骤，创建 Surface，注册监听器以监听缓冲区更新。
 
     ```
     int32_t previewWidth = 640;
@@ -286,7 +286,7 @@
     result = captureSession->AddInput(cameraInput);
     ```
 
-6.  通过Surface创建一个视频输出，来与音频合成并保存到文件，Surface通过Recoder获取。如果想仅保存视频缓冲数据到文件里，可以按照拍照流程提到步骤，创建 Surface，注册监听器以监听缓冲区更新。录像的分辨率可以在录制器内配置为所支持的 1280x720 或 640x360 分辨率。
+6.  通过 Surface 创建一个视频输出，来与音频合成并保存到文件，Surface 通过 Recoder 获取。如果想仅保存视频缓冲数据到文件里，可以按照拍照流程提到步骤，创建 Surface，注册监听器以监听缓冲区更新。录像的分辨率可以在录制器内配置为所支持的 1280x720 或 640x360 分辨率。
 
     ```
     videoSurface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
@@ -331,7 +331,7 @@
 
 ### 切换多个照相机设备<a name="sectionswitchcamera"></a>
 
-以下演示如何切换多个照相机设备。最初在采集会话中有一个视频输出(vedio output)。如果用户想要切换其他 照相机，现存的相机输入和输出需要县移除并加入新的相机输入和输出(示例中使用的是photo output)。
+以下演示如何切换多个照相机设备。最初在采集会话中有一个视频输出（vedio output）。如果用户想要切换其他 照相机，现存的相机输入和输出需要县移除并加入新的相机输入和输出（示例中使用的是photo output）。
 
 1.  获取相机管理器实例并获取相机对象列表。
 
@@ -419,7 +419,7 @@
     result = captureSession->AddInput(cameraInput2);
     ```
 
-15. 创建拍照输出，成功创建后将拍照输出添加到采集会话。创建消费者Surface并注册监听器以监听新的拍照输出缓冲区更新。这个Surface用于新创建的拍照输出。
+15. 创建拍照输出，成功创建后将拍照输出添加到采集会话。创建消费者 Surface 并注册监听器以监听新的拍照输出缓冲区更新。这个 Surface 用于新创建的拍照输出。
 
     ```
     // Get the surface

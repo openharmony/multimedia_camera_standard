@@ -30,6 +30,8 @@ ohos_unittest("camera_framework_unittest") {
     "//drivers/peripheral/camera/interfaces/metadata/include",
     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test",
+    "//base/security/access_token/interfaces/innerkits/accesstoken/include",
+    "//base/security/access_token/interfaces/innerkits/token_setproc/include",
   ]
 
   sources = [
@@ -47,6 +49,8 @@ ohos_unittest("camera_framework_unittest") {
   ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtoken_setproc",
     "hiviewdfx_hilog_native:libhilog",
     "safwk:system_ability_fwk",
   ]

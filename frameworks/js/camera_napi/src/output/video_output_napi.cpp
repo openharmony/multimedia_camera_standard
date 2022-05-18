@@ -339,7 +339,6 @@ napi_value VideoOutputNapi::CreateVideoOutput(napi_env env, uint64_t surfaceId)
 #else
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
 #endif
-        CameraManager::GetInstance()->SetPermissionCheck(true);
         sVideoOutput_ = CameraManager::GetInstance()->CreateVideoOutput(surface);
         if (sVideoOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create VideoOutput");

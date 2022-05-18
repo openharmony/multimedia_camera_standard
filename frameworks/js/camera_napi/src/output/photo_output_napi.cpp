@@ -298,7 +298,6 @@ napi_value PhotoOutputNapi::CreatePhotoOutput(napi_env env, std::string surfaceI
 #else
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_JPEG));
 #endif
-        CameraManager::GetInstance()->SetPermissionCheck(true);
         sPhotoOutput_ = CameraManager::GetInstance()->CreatePhotoOutput(surface);
         if (sPhotoOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create CreatePhotoOutput");

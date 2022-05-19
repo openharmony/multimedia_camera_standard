@@ -361,10 +361,9 @@ void HCameraHostManager::DeInit()
 int32_t HCameraHostManager::GetCameras(std::vector<std::string>& cameraIds)
 {
     CAMERA_SYNC_TRACE;
-    if (cameraHostInfos_.size() == 0) {
-        MEDIA_INFO_LOG("HCameraHostManager::GetCameras host info is empty, start add host");
+    MEDIA_INFO_LOG("HCameraHostManager::GetCameras");
+    if (!IsCameraHostInfoAdded("camera_service")) {
         AddCameraHost("camera_service");
-        AddCameraHost("distributed_camera_service");
     }
     std::lock_guard<std::mutex> lock(mutex_);
     cameraIds.clear();
@@ -409,13 +408,13 @@ int32_t HCameraHostManager::SetFlashlight(const std::string& cameraId, bool isEn
 
 void HCameraHostManager::OnReceive(const HDI::ServiceManager::V1_0::ServiceStatus& status)
 {
-    MEDIA_INFO_LOG("HCameraHostManager::OnReceive for camera host %{public}s", status.serviceName.c_str());
-    if (status.deviceClass != DEVICE_CLASS_CAMERA) {
+    MEDIA_INFO_LOG("HCameraHostManager::OnReceive for camera host %{public}s, status %{public}d",
+        status.serviceName.c_str(), status.status);
+    if (status.deviceClass != DEVICE_CLASS_CAMERA || status.serviceName != "distributed_camera_service") {
         MEDIA_ERR_LOG("HCameraHostManager::OnReceive invalid device class %{public}d", status.deviceClass);
         return;
     }
     using namespace OHOS::HDI::ServiceManager::V1_0;
-    std::lock_guard<std::mutex> lock(mutex_);
     switch (status.status) {
         case SERVIE_STATUS_START:
             AddCameraHost(status.serviceName);
@@ -480,6 +479,12 @@ sptr<HCameraHostManager::CameraHostInfo> HCameraHostManager::FindCameraHostInfo(
         }
     }
     return nullptr;
+}
+
+bool HCameraHostManager::IsCameraHostInfoAdded(const std::string& svcName)
+{
+    return std::any_of(cameraHostInfos_.begin(), cameraHostInfos_.end(), [&svcName](const auto& camHost) {
+        return camHost->GetName() == svcName; });
 }
 } // namespace CameraStandard
 } // namespace OHOS

@@ -61,6 +61,7 @@ private:
     void AddCameraHost(const std::string& svcName);
     void RemoveCameraHost(const std::string& svcName);
     sptr<CameraHostInfo> FindCameraHostInfo(const std::string& cameraId);
+    bool IsCameraHostInfoAdded(const std::string& svcName);
 
     std::mutex mutex_;
     StatusCallback* statusCallback_;

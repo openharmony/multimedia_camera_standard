@@ -209,6 +209,7 @@ static OHOS::Security::AccessToken::HapInfoParams g_infoManagerTestInfoParms = {
     .userID = 1,
     .bundleName = permissionName,
     .instIndex = 0,
+    .dlpType = 0,
     .appIDDesc = "testtesttesttest"
 };
 
@@ -583,7 +584,7 @@ OHOS::Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
 void CameraFrameworkModuleTest::SetUp()
 {
     int32_t ret = -1;
-    
+    unsigned int tokenIdOld = 0;
     SetUpInit();
 
     /* Grant the permission so that create camera test can be success */
@@ -591,8 +592,27 @@ void CameraFrameworkModuleTest::SetUp()
         g_infoManagerTestInfoParms,
         g_infoManagerTestPolicyPrams);
     if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
-        MEDIA_DEBUG_LOG("Alloc TokenID failure \n");
-        return;
+        MEDIA_DEBUG_LOG("Alloc TokenID failure, cleaning the old token ID \n");
+        tokenIdOld = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(
+            1, permissionName, 0);
+        if (tokenIdOld == 0) {
+            MEDIA_DEBUG_LOG("Unable to get the Old Token ID, need to reflash the board");
+            return;
+        }
+        ret = OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(tokenIdOld);
+        if (ret != 0) {
+            MEDIA_DEBUG_LOG("Unable to delete the Old Token ID, need to reflash the board");
+            return;
+        }
+
+        /* Retry the token allocation again */
+        tokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::AllocHapToken(
+            g_infoManagerTestInfoParms,
+            g_infoManagerTestPolicyPrams);
+        if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
+            MEDIA_DEBUG_LOG("Alloc TokenID failure, need to reflash the board \n");
+            return;
+        }
     }
 
     (void)SetSelfTokenID(tokenIdEx.tokenIdExStruct.tokenID);

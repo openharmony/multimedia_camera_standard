@@ -99,11 +99,14 @@ private:
 
     static napi_value Capture(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
+    static napi_value IsMirrorSupported(napi_env env, napi_callback_info info);
+    static napi_value SetMirror(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
 
     static thread_local napi_ref sConstructor_;
     static thread_local std::string sSurfaceId_;
     static thread_local sptr<CaptureOutput> sPhotoOutput_;
+    static thread_local bool enableMirror;
 
     napi_env env_;
     napi_ref wrapper_;
@@ -131,6 +134,7 @@ struct PhotoOutputAsyncContext {
     bool bRetBool;
     std::string funcName;
     int32_t taskId;
+    bool isSupported = false;
 };
 } // namespace CameraStandard
 } // namespace OHOS

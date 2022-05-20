@@ -98,7 +98,6 @@ void CameraSessionNapi::CameraSessionNapiDestructor(napi_env env, void *nativeOb
 {
     CameraSessionNapi *cameraObj = reinterpret_cast<CameraSessionNapi*>(nativeObject);
     if (cameraObj != nullptr) {
-        CameraManager::GetInstance()->SetPermissionCheck(false);
         cameraObj->~CameraSessionNapi();
     }
 }
@@ -182,7 +181,6 @@ napi_value CameraSessionNapi::CreateCameraSession(napi_env env)
 
     status = napi_get_reference_value(env, sConstructor_, &constructor);
     if (status == napi_ok) {
-        CameraManager::GetInstance()->SetPermissionCheck(true);
         sCameraSession_ = CameraManager::GetInstance()->CreateCaptureSession();
         if (sCameraSession_ == nullptr) {
             MEDIA_ERR_LOG("Failed to create Camera session instance");

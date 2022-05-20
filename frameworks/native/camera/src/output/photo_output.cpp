@@ -17,6 +17,7 @@
 #include <securec.h>
 #include "camera_util.h"
 #include "hstream_capture_callback_stub.h"
+#include "input/camera_info.h"
 #include "camera_log.h"
 
 using namespace std;
@@ -131,23 +132,13 @@ void PhotoCaptureSetting::SetGpsLocation(double latitude, double longitude)
     return;
 }
 
-bool PhotoCaptureSetting::IsMirrored()
-{
-    bool isMirrorEnabled = false;
-    camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_CONTROL_CAPTURE_MIRROR, &item);
-    if (ret == CAM_META_SUCCESS) {
-        isMirrorEnabled = (item.data.u8[0] > 0) ? true : false;
-    }
-    return isMirrorEnabled;
-}
-
 void PhotoCaptureSetting::SetMirror(bool enable)
 {
     bool status = false;
     camera_metadata_item_t item;
     uint8_t mirror = enable;
 
+    MEDIA_DEBUG_LOG("PhotoCaptureSetting::SetMirror value=%{public}d", enable);
     int ret = Camera::FindCameraMetadataItem(captureMetadataSetting_->get(), OHOS_CONTROL_CAPTURE_MIRROR, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = captureMetadataSetting_->addEntry(OHOS_CONTROL_CAPTURE_MIRROR, &mirror, 1);
@@ -227,7 +218,7 @@ public:
 };
 
 PhotoOutput::PhotoOutput(sptr<IStreamCapture> &streamCapture)
-    : CaptureOutput(CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT), streamCapture_(streamCapture)
+    : CaptureOutput(CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT), streamCapture_(streamCapture), captureSession_(nullptr)
 {}
 
 void PhotoOutput::SetCallback(std::shared_ptr<PhotoCallback> callback)
@@ -289,6 +280,30 @@ void PhotoOutput::Release()
         MEDIA_ERR_LOG("Failed to release Camera Input!, retCode: %{public}d", retCode);
     }
     return;
+}
+
+bool PhotoOutput::IsMirrorSupported()
+{
+    bool isMirrorEnabled = false;
+    camera_metadata_item_t item;
+    sptr<CameraInfo> cameraObj_;
+
+    if (captureSession_ == nullptr || captureSession_->inputDevice_ == nullptr) {
+        return isMirrorEnabled;
+    }
+    cameraObj_ = captureSession_->inputDevice_->GetCameraDeviceInfo();
+    std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
+
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED, &item);
+    if (ret == CAM_META_SUCCESS) {
+        isMirrorEnabled = ((item.data.u8[0] == 1) || (item.data.u8[0] == 0));
+    }
+    return isMirrorEnabled;
+}
+
+void PhotoOutput::SetSession(CaptureSession *captureSession)
+{
+    captureSession_ = captureSession;
 }
 } // CameraStandard
 } // OHOS

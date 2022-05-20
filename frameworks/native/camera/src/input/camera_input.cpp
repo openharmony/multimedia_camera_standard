@@ -708,5 +708,10 @@ int32_t CameraInput::SetCameraSettings(std::string setting)
     }
     return UpdateSetting(metadata);
 }
+
+sptr<CameraInfo> CameraInput::GetCameraDeviceInfo()
+{
+    return cameraObj_;
+}
 } // CameraStandard
 } // OHOS

@@ -17,6 +17,7 @@
 #define OHOS_CAMERA_CAPTURE_INPUT_H
 
 #include <refbase.h>
+#include "camera_info.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -28,6 +29,13 @@ public:
     * @brief Release camera input.
     */
     virtual void Release() = 0;
+
+    /**
+    * @brief get the camera info associated with the device.
+    *
+    * @return Returns camera info.
+    */
+    virtual sptr<CameraInfo> GetCameraDeviceInfo() = 0;
 };
 } // namespace CameraStandard
 } // namespace OHOS

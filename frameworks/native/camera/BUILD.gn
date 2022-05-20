@@ -51,7 +51,6 @@ ohos_shared_library("camera_framework") {
     "//drivers/framework/include/utils",
     "//drivers/adapter/uhdf2/osal/include",
     "//drivers/adapter/uhdf2/include/hdi",
-    "//base/security/access_token/interfaces/innerkits/accesstoken/include",
   ]
 
   deps = [
@@ -61,10 +60,8 @@ ohos_shared_library("camera_framework") {
   ]
 
   external_deps = [
-    "access_token:libaccesstoken_sdk",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
   ]

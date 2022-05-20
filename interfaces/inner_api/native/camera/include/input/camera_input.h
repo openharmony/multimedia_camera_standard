@@ -247,6 +247,13 @@ public:
     */
     int32_t SetCameraSettings(std::string setting);
 
+    /**
+    * @brief get the camera info associated with the device.
+    *
+    * @return Returns camera info.
+    */
+    sptr<CameraInfo> GetCameraDeviceInfo() override;
+
 private:
     std::mutex changeMetaMutex_;
     std::shared_ptr<Camera::CameraMetadata> changedMetadata_;

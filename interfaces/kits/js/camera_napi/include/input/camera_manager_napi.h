@@ -65,7 +65,7 @@ private:
     static napi_value GetCameras(napi_env env, napi_callback_info info);
     static napi_value CreateCameraInputInstance(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
 
     napi_env env_;
     napi_ref wrapper_;

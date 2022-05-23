@@ -26,7 +26,7 @@ namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CameraNapi"};
 }
 
-napi_ref CameraSessionNapi::sConstructor_ = nullptr;
+thread_local napi_ref CameraSessionNapi::sConstructor_ = nullptr;
 sptr<CaptureSession> CameraSessionNapi::sCameraSession_ = nullptr;
 uint32_t CameraSessionNapi::cameraSessionTaskId = CAMERA_SESSION_TASKID;
 

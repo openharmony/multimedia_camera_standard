@@ -101,7 +101,7 @@ private:
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static std::string sSurfaceId_;
     static sptr<CaptureOutput> sPhotoOutput_;
 

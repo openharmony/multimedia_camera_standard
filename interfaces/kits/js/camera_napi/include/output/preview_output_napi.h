@@ -93,7 +93,7 @@ private:
     uint64_t surfaceId_;
     sptr<CaptureOutput> previewOutput_;
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static uint64_t sSurfaceId_;
     static sptr<CaptureOutput> sPreviewOutput_;
     std::shared_ptr<PreviewOutputCallback> previewCallback_;

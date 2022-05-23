@@ -59,7 +59,7 @@ private:
     napi_ref wrapper_;
     CameraPicSize cameraPicSize_;
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

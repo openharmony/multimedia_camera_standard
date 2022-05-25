@@ -21,21 +21,21 @@ using namespace std;
 using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
 
-napi_ref CameraNapi::sConstructor_ = nullptr;
+thread_local napi_ref CameraNapi::sConstructor_ = nullptr;
 
-napi_ref CameraNapi::exposureModeRef_ = nullptr;
-napi_ref CameraNapi::focusModeRef_ = nullptr;
-napi_ref CameraNapi::flashModeRef_ = nullptr;
-napi_ref CameraNapi::cameraFormatRef_ = nullptr;
-napi_ref CameraNapi::cameraStatusRef_ = nullptr;
-napi_ref CameraNapi::connectionTypeRef_ = nullptr;
-napi_ref CameraNapi::cameraPositionRef_ = nullptr;
-napi_ref CameraNapi::cameraTypeRef_ = nullptr;
-napi_ref CameraNapi::imageRotationRef_ = nullptr;
-napi_ref CameraNapi::errorUnknownRef_ = nullptr;
-napi_ref CameraNapi::exposureStateRef_ = nullptr;
-napi_ref CameraNapi::focusStateRef_ = nullptr;
-napi_ref CameraNapi::qualityLevelRef_ = nullptr;
+thread_local napi_ref CameraNapi::exposureModeRef_ = nullptr;
+thread_local napi_ref CameraNapi::focusModeRef_ = nullptr;
+thread_local napi_ref CameraNapi::flashModeRef_ = nullptr;
+thread_local napi_ref CameraNapi::cameraFormatRef_ = nullptr;
+thread_local napi_ref CameraNapi::cameraStatusRef_ = nullptr;
+thread_local napi_ref CameraNapi::connectionTypeRef_ = nullptr;
+thread_local napi_ref CameraNapi::cameraPositionRef_ = nullptr;
+thread_local napi_ref CameraNapi::cameraTypeRef_ = nullptr;
+thread_local napi_ref CameraNapi::imageRotationRef_ = nullptr;
+thread_local napi_ref CameraNapi::errorUnknownRef_ = nullptr;
+thread_local napi_ref CameraNapi::exposureStateRef_ = nullptr;
+thread_local napi_ref CameraNapi::focusStateRef_ = nullptr;
+thread_local napi_ref CameraNapi::qualityLevelRef_ = nullptr;
 
 std::unordered_map<std::string, int32_t> mapImageRotation = {
     {"ROTATION_0", 0},

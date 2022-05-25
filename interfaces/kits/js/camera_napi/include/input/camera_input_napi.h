@@ -153,7 +153,7 @@ private:
 
     void RegisterCallback(napi_env env, const std::string &eventType, napi_ref callbackRef);
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static std::string sCameraId_;
     static sptr<CameraInput> sCameraInput_;
 };

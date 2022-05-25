@@ -27,7 +27,7 @@ namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoOutputNapi"};
 }
 
-napi_ref VideoOutputNapi::sConstructor_ = nullptr;
+thread_local napi_ref VideoOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> VideoOutputNapi::sVideoOutput_ = nullptr;
 uint64_t VideoOutputNapi::sSurfaceId_ = 0;
 sptr<SurfaceListener> VideoOutputNapi::listener = nullptr;

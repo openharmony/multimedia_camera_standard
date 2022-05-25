@@ -28,7 +28,7 @@ namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PreviewOutputNapi"};
 }
 
-napi_ref PreviewOutputNapi::sConstructor_ = nullptr;
+thread_local napi_ref PreviewOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> PreviewOutputNapi::sPreviewOutput_ = nullptr;
 uint64_t PreviewOutputNapi::sSurfaceId_ = 0;
 uint32_t PreviewOutputNapi::previewOutputTaskId = CAMERA_PREVIEW_OUTPUT_TASKID;

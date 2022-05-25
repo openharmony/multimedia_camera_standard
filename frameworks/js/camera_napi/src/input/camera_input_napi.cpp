@@ -26,7 +26,7 @@ namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CameraNapi"};
 }
 
-napi_ref CameraInputNapi::sConstructor_ = nullptr;
+thread_local napi_ref CameraInputNapi::sConstructor_ = nullptr;
 std::string CameraInputNapi::sCameraId_ = "invalid";
 sptr<CameraInput> CameraInputNapi::sCameraInput_ = nullptr;
 uint32_t CameraInputNapi::cameraInputTaskId = CAMERA_INPUT_TASKID;

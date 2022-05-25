@@ -22,7 +22,7 @@ using namespace std;
 using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
 
-napi_ref CameraManagerNapi::sConstructor_ = nullptr;
+thread_local napi_ref CameraManagerNapi::sConstructor_ = nullptr;
 uint32_t CameraManagerNapi::cameraManagerTaskId = CAMERA_MANAGER_TASKID;
 
 namespace {

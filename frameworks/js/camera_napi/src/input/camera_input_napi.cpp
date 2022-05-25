@@ -547,13 +547,8 @@ napi_value CameraInputNapi::HasFlash(napi_env env, napi_callback_info info)
                     context->bRetBool = true;
                     std::vector<camera_flash_mode_enum_t> list;
                     list = context->objectInfo->cameraInput_->GetSupportedFlashModes();
-                    if (list.empty()) {
-                        context->status = false;
-                        context->errorMsg = "GetSupportedFlashModes( ) Failed";
-                    } else {
-                        context->status = true;
-                        context->isSupported = !(list.empty());
-                    }
+                    context->status = true;
+                    context->isSupported = !(list.empty());
                 }
             },
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);

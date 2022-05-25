@@ -157,22 +157,22 @@ private:
     static napi_value CreateFocusStateEnum(napi_env env);
     static napi_value CreateQualityLevelEnum(napi_env env);
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static sptr<Surface> captureSurface_;
 
-    static napi_ref flashModeRef_;
-    static napi_ref exposureModeRef_;
-    static napi_ref exposureStateRef_;
-    static napi_ref focusModeRef_;
-    static napi_ref focusStateRef_;
-    static napi_ref cameraFormatRef_;
-    static napi_ref cameraStatusRef_;
-    static napi_ref connectionTypeRef_;
-    static napi_ref cameraPositionRef_;
-    static napi_ref cameraTypeRef_;
-    static napi_ref imageRotationRef_;
-    static napi_ref qualityLevelRef_;
-    static napi_ref errorUnknownRef_;
+    static thread_local napi_ref flashModeRef_;
+    static thread_local napi_ref exposureModeRef_;
+    static thread_local napi_ref exposureStateRef_;
+    static thread_local napi_ref focusModeRef_;
+    static thread_local napi_ref focusStateRef_;
+    static thread_local napi_ref cameraFormatRef_;
+    static thread_local napi_ref cameraStatusRef_;
+    static thread_local napi_ref connectionTypeRef_;
+    static thread_local napi_ref cameraPositionRef_;
+    static thread_local napi_ref cameraTypeRef_;
+    static thread_local napi_ref imageRotationRef_;
+    static thread_local napi_ref qualityLevelRef_;
+    static thread_local napi_ref errorUnknownRef_;
 
     napi_env env_;
     napi_ref wrapper_;

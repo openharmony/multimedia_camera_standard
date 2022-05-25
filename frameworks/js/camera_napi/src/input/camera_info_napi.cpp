@@ -21,7 +21,7 @@ using namespace std;
 using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
 
-napi_ref CameraInfoNapi::sConstructor_ = nullptr;
+thread_local napi_ref CameraInfoNapi::sConstructor_ = nullptr;
 sptr<CameraInfo> CameraInfoNapi::sCameraInfo_ = nullptr;
 
 CameraInfoNapi::CameraInfoNapi() : env_(nullptr), wrapper_(nullptr)

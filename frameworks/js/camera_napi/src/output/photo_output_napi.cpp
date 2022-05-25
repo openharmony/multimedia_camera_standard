@@ -26,7 +26,7 @@ namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PhotoOutputNapi"};
 }
 
-napi_ref PhotoOutputNapi::sConstructor_ = nullptr;
+thread_local napi_ref PhotoOutputNapi::sConstructor_ = nullptr;
 sptr<CaptureOutput> PhotoOutputNapi::sPhotoOutput_ = nullptr;
 std::string PhotoOutputNapi::sSurfaceId_ = "invalid";
 uint32_t PhotoOutputNapi::photoOutputTaskId = CAMERA_PHOTO_OUTPUT_TASKID;
@@ -444,9 +444,9 @@ static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_va
     PhotoOutputAsyncContext &asyncContext)
 {
     const int32_t refCount = 1;
-    napi_value result;
+    napi_value result = nullptr;
     auto context = &asyncContext;
-    bool err;
+    bool err = false;
 
     NAPI_ASSERT(env, argv != nullptr, "Argument list is empty");
 

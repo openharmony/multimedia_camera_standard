@@ -32,15 +32,11 @@ int32_t HStreamRepeat::videoCaptureId_ = VIDEO_CAPTURE_ID_START;
 int32_t HStreamRepeat::previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format)
+    : HStreamCommon(HStreamCommon::REPEAT, producer, format)
 {
-    producer_ = producer;
-    format_ = format;
     isVideo_ = false;
-    streamId_ = 0;
     customPreviewWidth_ = 0;
     customPreviewHeight_ = 0;
-    curCaptureID_ = 0;
-    isReleaseStream_ = false;
 }
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, int32_t width, int32_t height)
@@ -121,17 +117,6 @@ void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
     } else {
         streamInfo->intent_ = Camera::PREVIEW;
     }
-}
-
-int32_t HStreamRepeat::SetReleaseStream(bool isReleaseStream)
-{
-    isReleaseStream_ = isReleaseStream;
-    return CAMERA_OK;
-}
-
-bool HStreamRepeat::IsReleaseStream()
-{
-    return isReleaseStream_;
 }
 
 int32_t HStreamRepeat::Start()
@@ -253,21 +238,12 @@ int32_t HStreamRepeat::SetFps(float Fps)
 int32_t HStreamRepeat::Release()
 {
     streamRepeatCallback_ = nullptr;
-    curCaptureID_ = 0;
-    streamOperator_ = nullptr;
-    streamId_ = 0;
-    cameraAbility_ = nullptr;
-    return CAMERA_OK;
+    return HStreamCommon::Release();
 }
 
 bool HStreamRepeat::IsVideo()
 {
     return isVideo_;
-}
-
-sptr<OHOS::IBufferProducer> HStreamRepeat::GetBufferProducer()
-{
-    return producer_;
 }
 
 int32_t HStreamRepeat::SetCallback(sptr<IStreamRepeatCallback> &callback)
@@ -310,18 +286,13 @@ int32_t HStreamRepeat::OnFrameError(int32_t errorType)
     return CAMERA_OK;
 }
 
-int32_t HStreamRepeat::GetStreamId()
-{
-    return streamId_;
-}
-
 void HStreamRepeat::ResetCaptureIds()
 {
     videoCaptureId_ = VIDEO_CAPTURE_ID_START;
     previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
 }
 
-void HStreamRepeat::dumpRepeatStreamInfo(std::string& dumpString)
+void HStreamRepeat::DumpStreamInfo(std::string& dumpString)
 {
     std::shared_ptr<Camera::StreamInfo> curStreamInfo;
     curStreamInfo = std::make_shared<Camera::StreamInfo>();

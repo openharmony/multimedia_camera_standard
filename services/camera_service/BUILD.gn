@@ -39,6 +39,7 @@ ohos_shared_library("camera_service") {
     "src/hcamera_service.cpp",
     "src/hcapture_session.cpp",
     "src/hstream_capture.cpp",
+    "src/hstream_common.cpp",
     "src/hstream_repeat.cpp",
   ]
   cflags = [

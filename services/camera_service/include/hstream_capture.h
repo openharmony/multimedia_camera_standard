@@ -22,19 +22,20 @@
 #include "camera_metadata_info.h"
 #include "display_type.h"
 #include "hstream_capture_stub.h"
+#include "hstream_common.h"
 #include "istream_operator.h"
 
 namespace OHOS {
 namespace CameraStandard {
-class HStreamCapture : public HStreamCaptureStub {
+class HStreamCapture : public HStreamCaptureStub, public HStreamCommon {
 public:
     HStreamCapture(sptr<OHOS::IBufferProducer> surface, int32_t format);
     ~HStreamCapture();
 
     static void ResetCaptureId();
     int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-        std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId);
-    void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo);
+        std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
+    void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo) override;
     int32_t Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings) override;
     int32_t CancelCapture() override;
     int32_t Release() override;
@@ -43,21 +44,12 @@ public:
     int32_t OnCaptureEnded(int32_t captureId, int32_t frameCount);
     int32_t OnCaptureError(int32_t captureId, int32_t errorType);
     int32_t OnFrameShutter(int32_t captureId, uint64_t timestamp);
-    int32_t GetStreamId();
-    bool IsReleaseStream();
-    int32_t SetReleaseStream(bool isReleaseStream);
-    void dumpCaptureStreamInfo(std::string& dumpString);
+    void DumpStreamInfo(std::string& dumpString) override;
 
 private:
     static int32_t photoCaptureId_;
     bool IsValidCaptureID();
-    sptr<Camera::IStreamOperator> streamOperator_;
-    int32_t photoStreamId_;
-    int32_t format_;
-    bool isReleaseStream_;
-    sptr<OHOS::IBufferProducer> producer_;
     sptr<IStreamCaptureCallback> streamCaptureCallback_;
-    std::shared_ptr<Camera::CameraMetadata> cameraAbility_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

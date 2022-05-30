@@ -601,12 +601,12 @@ int32_t HCaptureSession::CommitConfig()
 
 int32_t HCaptureSession::Start()
 {
-    int32_t rc = CAMERA_INVALID_STATE;
+    int32_t rc = CAMERA_OK;
     sptr<HStreamRepeat> curStreamRepeat;
 
     if (curState_ != CaptureSessionState::SESSION_CONFIG_COMMITTED) {
         MEDIA_ERR_LOG("HCaptureSession::Start(), Invalid session state: %{public}d", rc);
-        return rc;
+        return CAMERA_INVALID_STATE;
     }
     for (auto item = streamRepeats_.begin(); item != streamRepeats_.end(); ++item) {
         curStreamRepeat = *item;
@@ -623,11 +623,11 @@ int32_t HCaptureSession::Start()
 
 int32_t HCaptureSession::Stop()
 {
-    int32_t rc = CAMERA_INVALID_STATE;
+    int32_t rc = CAMERA_OK;
     sptr<HStreamRepeat> curStreamRepeat;
 
     if (curState_ != CaptureSessionState::SESSION_CONFIG_COMMITTED) {
-        return rc;
+        return CAMERA_INVALID_STATE;
     }
 
     for (auto item = streamRepeats_.begin(); item != streamRepeats_.end(); ++item) {

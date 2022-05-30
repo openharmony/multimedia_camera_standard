@@ -937,11 +937,11 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_030, TestSize.Level0
 
     EXPECT_CALL(*mockStreamOperator, Capture(PREVIEW_CAPTURE_ID_START, _, true)).Times(0);
     ret = session->Start();
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
 
     EXPECT_CALL(*mockStreamOperator, CancelCapture(PREVIEW_CAPTURE_ID_START)).Times(0);
     ret = session->Stop();
-    EXPECT_NE(ret, 0);
+    EXPECT_EQ(ret, 0);
 
     EXPECT_CALL(*mockStreamOperator, ReleaseStreams(_));
     EXPECT_CALL(*mockCameraDevice, Close());

@@ -1200,10 +1200,10 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_022, TestSize.Le
     EXPECT_EQ(intResult, 0);
 
     intResult = session_->Start();
-    EXPECT_NE(intResult, 0);
+    EXPECT_EQ(intResult, 0);
 
     intResult = session_->Stop();
-    EXPECT_NE(intResult, 0);
+    EXPECT_EQ(intResult, 0);
 }
 
 /*

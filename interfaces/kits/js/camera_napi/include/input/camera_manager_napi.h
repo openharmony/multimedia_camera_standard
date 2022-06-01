@@ -70,7 +70,7 @@ private:
     napi_env env_;
     napi_ref wrapper_;
     sptr<CameraManager> cameraManager_;
-    static uint32_t cameraManagerTaskId;
+    static thread_local uint32_t cameraManagerTaskId;
 };
 
 struct CameraManagerNapiAsyncContext {

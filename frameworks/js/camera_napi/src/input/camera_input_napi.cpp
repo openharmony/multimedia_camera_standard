@@ -27,9 +27,9 @@ namespace {
 }
 
 thread_local napi_ref CameraInputNapi::sConstructor_ = nullptr;
-std::string CameraInputNapi::sCameraId_ = "invalid";
-sptr<CameraInput> CameraInputNapi::sCameraInput_ = nullptr;
-uint32_t CameraInputNapi::cameraInputTaskId = CAMERA_INPUT_TASKID;
+thread_local std::string CameraInputNapi::sCameraId_ = "invalid";
+thread_local sptr<CameraInput> CameraInputNapi::sCameraInput_ = nullptr;
+thread_local uint32_t CameraInputNapi::cameraInputTaskId = CAMERA_INPUT_TASKID;
 
 void ExposureCallbackListener::OnExposureStateCallbackAsync(ExposureState state) const
 {

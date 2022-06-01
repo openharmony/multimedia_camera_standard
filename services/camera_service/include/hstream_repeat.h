@@ -19,6 +19,7 @@
 #include "camera_metadata_info.h"
 #include "display_type.h"
 #include "hstream_repeat_stub.h"
+#include "hstream_common.h"
 #include "istream_operator.h"
 
 #include <refbase.h>
@@ -26,7 +27,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-class HStreamRepeat : public HStreamRepeatStub {
+class HStreamRepeat : public HStreamRepeatStub, public HStreamCommon {
 public:
     HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format);
     HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, int32_t width, int32_t height);
@@ -35,22 +36,18 @@ public:
 
     static void ResetCaptureIds();
     int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-    std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId);
-    void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo);
+        std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
+    void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo) override;
     int32_t Release() override;
     int32_t Start() override;
     int32_t Stop() override;
-    sptr<OHOS::IBufferProducer> GetBufferProducer();
     int32_t SetFps(float Fps) override;
     int32_t SetCallback(sptr<IStreamRepeatCallback> &callback) override;
     int32_t OnFrameStarted();
     int32_t OnFrameEnded(int32_t frameCount);
     int32_t OnFrameError(int32_t errorType);
     bool IsVideo();
-    bool IsReleaseStream();
-    int32_t SetReleaseStream(bool isReleaseStream);
-    int32_t GetStreamId();
-    void dumpRepeatStreamInfo(std::string& dumpString);
+    void DumpStreamInfo(std::string& dumpString) override;
 
 private:
     static int32_t videoCaptureId_;
@@ -59,17 +56,10 @@ private:
     int32_t StartVideo();
     bool IsvalidCaptureID();
     void SetStreamTransform();
-    int32_t curCaptureID_;
     bool isVideo_;
-    bool isReleaseStream_;
     int32_t customPreviewWidth_;
     int32_t customPreviewHeight_;
-    sptr<Camera::IStreamOperator> streamOperator_;
-    int32_t streamId_;
-    int32_t format_;
-    sptr<OHOS::IBufferProducer> producer_;
     sptr<IStreamRepeatCallback> streamRepeatCallback_;
-    std::shared_ptr<Camera::CameraMetadata> cameraAbility_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

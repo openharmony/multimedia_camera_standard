@@ -46,7 +46,7 @@ public:
     CameraSizeNapi();
     ~CameraSizeNapi();
 
-    static CameraPicSize *sCameraPicSize_;
+    static thread_local CameraPicSize *sCameraPicSize_;
 
 private:
     static void CameraSizeNapiDestructor(napi_env env, void* nativeObject, void* finalize_hint);

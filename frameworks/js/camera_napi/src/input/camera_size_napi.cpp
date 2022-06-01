@@ -23,7 +23,7 @@ using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
 
 thread_local napi_ref CameraSizeNapi::sConstructor_ = nullptr;
-CameraPicSize *CameraSizeNapi::sCameraPicSize_ = nullptr;
+thread_local CameraPicSize *CameraSizeNapi::sCameraPicSize_ = nullptr;
 
 CameraSizeNapi::CameraSizeNapi() : env_(nullptr), wrapper_(nullptr)
 {

@@ -29,9 +29,9 @@ namespace {
 }
 
 thread_local napi_ref PreviewOutputNapi::sConstructor_ = nullptr;
-sptr<CaptureOutput> PreviewOutputNapi::sPreviewOutput_ = nullptr;
-uint64_t PreviewOutputNapi::sSurfaceId_ = 0;
-uint32_t PreviewOutputNapi::previewOutputTaskId = CAMERA_PREVIEW_OUTPUT_TASKID;
+thread_local sptr<CaptureOutput> PreviewOutputNapi::sPreviewOutput_ = nullptr;
+thread_local uint64_t PreviewOutputNapi::sSurfaceId_ = 0;
+thread_local uint32_t PreviewOutputNapi::previewOutputTaskId = CAMERA_PREVIEW_OUTPUT_TASKID;
 
 PreviewOutputCallback::PreviewOutputCallback(napi_env env) : env_(env) {}
 

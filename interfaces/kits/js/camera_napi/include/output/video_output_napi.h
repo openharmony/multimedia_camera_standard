@@ -99,17 +99,17 @@ private:
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
 
-    static uint64_t sSurfaceId_;
+    static thread_local uint64_t sSurfaceId_;
     static thread_local napi_ref sConstructor_;
-    static sptr<CaptureOutput> sVideoOutput_;
-    static sptr<SurfaceListener> listener;
+    static thread_local sptr<CaptureOutput> sVideoOutput_;
+    static thread_local sptr<SurfaceListener> listener;
 
     napi_env env_;
     napi_ref wrapper_;
     uint64_t surfaceId_;
     sptr<CaptureOutput> videoOutput_;
     std::shared_ptr<VideoCallbackListener> videoCallback_;
-    static uint32_t videoOutputTaskId;
+    static thread_local uint32_t videoOutputTaskId;
 };
 
 struct VideoOutputAsyncContext {

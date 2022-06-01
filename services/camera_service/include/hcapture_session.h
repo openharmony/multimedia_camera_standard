@@ -67,6 +67,8 @@ public:
 private:
     int32_t ValidateSessionInputs();
     int32_t ValidateSessionOutputs();
+    int32_t AddOutputStream(sptr<HStreamCommon> stream);
+    int32_t RemoveOutputStream(sptr<HStreamCommon> stream);
     int32_t GetCameraDevice(sptr<HCameraDevice> &device);
     int32_t HandleCaptureOuputsConfig(sptr<HCameraDevice> &device);
     int32_t CreateAndCommitStreams(sptr<HCameraDevice> &device, std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
@@ -86,11 +88,11 @@ private:
     CaptureSessionState curState_ = CaptureSessionState::SESSION_INIT;
     CaptureSessionState prevState_ = CaptureSessionState::SESSION_INIT;
     sptr<HCameraDevice> cameraDevice_;
-    std::vector<sptr<HStreamRepeat>> streamRepeats_;
-    std::vector<sptr<HStreamCapture>> streamCaptures_;
+    std::vector<sptr<HStreamCommon>> streamRepeats_;
+    std::vector<sptr<HStreamCommon>> streamCaptures_;
+    std::vector<sptr<HStreamCommon>> streams_;
     std::vector<sptr<HCameraDevice>> cameraDevices_;
-    std::vector<sptr<HStreamRepeat>> tempStreamRepeats_;
-    std::vector<sptr<HStreamCapture>> tempStreamCaptures_;
+    std::vector<sptr<HStreamCommon>> tempStreams_;
     std::vector<sptr<HCameraDevice>> tempCameraDevices_;
     std::vector<int32_t> deletedStreamIds_;
     sptr<HCameraHostManager> cameraHostManager_;
@@ -118,8 +120,7 @@ public:
     void SetCaptureSession(sptr<HCaptureSession> captureSession);
 
 private:
-    sptr<HStreamCapture> GetStreamCaptureByStreamID(std::int32_t streamId);
-    sptr<HStreamRepeat> GetStreamRepeatByStreamID(std::int32_t streamId);
+    sptr<HStreamCommon> GetStreamByStreamID(int32_t streamId);
     sptr<HCaptureSession> captureSession_;
 };
 } // namespace CameraStandard

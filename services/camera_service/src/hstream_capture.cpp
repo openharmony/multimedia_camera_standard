@@ -25,12 +25,8 @@ namespace CameraStandard {
 int32_t HStreamCapture::photoCaptureId_ = PHOTO_CAPTURE_ID_START;
 
 HStreamCapture::HStreamCapture(sptr<OHOS::IBufferProducer> producer, int32_t format)
-{
-    producer_ = producer;
-    format_ = format;
-    photoStreamId_ = 0;
-    isReleaseStream_ = false;
-}
+    : HStreamCommon(HStreamCommon::CAPTURE, producer, format)
+{}
 
 HStreamCapture::~HStreamCapture()
 {}
@@ -46,7 +42,7 @@ int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
         return CAMERA_INVALID_SESSION_CFG;
     }
     streamOperator_ = streamOperator;
-    photoStreamId_ = streamId;
+    streamId_ = streamId;
     cameraAbility_ = cameraAbility;
     return CAMERA_OK;
 }
@@ -65,7 +61,7 @@ void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInf
 #endif
     }
     MEDIA_INFO_LOG("HStreamCapture::SetStreamInfo pixelFormat is %{public}d", pixelFormat);
-    streamInfoPhoto->streamId_ = photoStreamId_;
+    streamInfoPhoto->streamId_ = streamId_;
     streamInfoPhoto->width_ = producer_->GetDefaultWidth();
     streamInfoPhoto->height_ = producer_->GetDefaultHeight();
     streamInfoPhoto->format_ = pixelFormat;
@@ -74,17 +70,6 @@ void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInf
     streamInfoPhoto->tunneledMode_ = true;
     streamInfoPhoto->bufferQueue_ = producer_;
     streamInfoPhoto->encodeType_ = Camera::ENCODE_TYPE_JPEG;
-}
-
-int32_t HStreamCapture::SetReleaseStream(bool isReleaseStream)
-{
-    isReleaseStream_ = isReleaseStream;
-    return CAMERA_OK;
-}
-
-bool HStreamCapture::IsReleaseStream()
-{
-    return isReleaseStream_;
 }
 
 bool HStreamCapture::IsValidCaptureID()
@@ -96,19 +81,19 @@ int32_t HStreamCapture::Capture(const std::shared_ptr<Camera::CameraMetadata> &c
 {
     CAMERA_SYNC_TRACE;
     Camera::CamRetCode rc = Camera::NO_ERROR;
-    int32_t CurCaptureId = 0;
 
     if (streamOperator_ == nullptr) {
         return CAMERA_INVALID_STATE;
     }
     if (!IsValidCaptureID()) {
-        MEDIA_ERR_LOG("HStreamCapture::Capture crossed the allowed limit, CurCaptureId: %{public}d", photoCaptureId_);
+        MEDIA_ERR_LOG("HStreamCapture::Capture crossed the allowed limit, photoCaptureId_: %{public}d",
+                      photoCaptureId_);
         return CAMERA_CAPTURE_LIMIT_EXCEED;
     }
-    CurCaptureId = photoCaptureId_;
+    curCaptureID_ = photoCaptureId_;
     photoCaptureId_++;
     std::shared_ptr<Camera::CaptureInfo> captureInfoPhoto = std::make_shared<Camera::CaptureInfo>();
-    captureInfoPhoto->streamIds_ = {photoStreamId_};
+    captureInfoPhoto->streamIds_ = {streamId_};
     if (!Camera::GetCameraMetadataItemCount(captureSettings->get())) {
         captureInfoPhoto->captureSetting_ = cameraAbility_;
     } else {
@@ -116,8 +101,8 @@ int32_t HStreamCapture::Capture(const std::shared_ptr<Camera::CameraMetadata> &c
     }
     captureInfoPhoto->enableShutterCallback_ = true;
 
-    MEDIA_INFO_LOG("HStreamCapture::Capture() Starting photo capture with capture ID: %{public}d", CurCaptureId);
-    rc = streamOperator_->Capture(CurCaptureId, captureInfoPhoto, false);
+    MEDIA_INFO_LOG("HStreamCapture::Capture() Starting photo capture with capture ID: %{public}d", curCaptureID_);
+    rc = streamOperator_->Capture(curCaptureID_, captureInfoPhoto, false);
     if (rc != Camera::NO_ERROR) {
         MEDIA_ERR_LOG("HStreamCapture::Capture failed with error Code: %{public}d", rc);
         return HdiToServiceError(rc);
@@ -134,10 +119,7 @@ int32_t HStreamCapture::CancelCapture()
 int32_t HStreamCapture::Release()
 {
     streamCaptureCallback_ = nullptr;
-    streamOperator_ = nullptr;
-    photoStreamId_ = 0;
-    cameraAbility_ = nullptr;
-    return CAMERA_OK;
+    return HStreamCommon::Release();
 }
 
 int32_t HStreamCapture::SetCallback(sptr<IStreamCaptureCallback> &callback)
@@ -189,17 +171,12 @@ int32_t HStreamCapture::OnFrameShutter(int32_t captureId, uint64_t timestamp)
     return CAMERA_OK;
 }
 
-int32_t HStreamCapture::GetStreamId()
-{
-    return photoStreamId_;
-}
-
 void HStreamCapture::ResetCaptureId()
 {
     photoCaptureId_ = PHOTO_CAPTURE_ID_START;
 }
 
-void HStreamCapture::dumpCaptureStreamInfo(std::string& dumpString)
+void HStreamCapture::DumpStreamInfo(std::string& dumpString)
 {
     std::shared_ptr<Camera::StreamInfo> curStreamInfo;
     curStreamInfo = std::make_shared<Camera::StreamInfo>();

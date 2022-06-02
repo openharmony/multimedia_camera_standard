@@ -97,7 +97,7 @@ static const std::vector<std::string> vecConnectionTypeMode {
 };
 
 static const std::vector<std::string> vecCameraFormat {
-    "CAMERA_FORMAT_YCRCb_420_SP", "CAMERA_FORMAT_JPEG"
+    "CAMERA_FORMAT_YUV_420_SP", "CAMERA_FORMAT_H264", "CAMERA_FORMAT_H265", "CAMERA_FORMAT_JPEG"
 };
 
 static const std::vector<std::string> vecCameraStatus {

@@ -141,7 +141,7 @@ enum JSCameraType {
     CAMERA_TYPE_WIDE_ANGLE,
     CAMERA_TYPE_ULTRA_WIDE,
     CAMERA_TYPE_TELEPHOTO,
-    CAMERA_TYPE_TRUE_DEAPTH
+    CAMERA_TYPE_TRUE_DEPTH
 };
 
 enum JSConnectionType {
@@ -151,8 +151,10 @@ enum JSConnectionType {
 };
 
 enum JSCameraFormat {
-    CAMERA_FORMAT_YCRCb_420_SP = 1003,
-    CAMERA_FORMAT_JPEG = 2000,
+    CAMERA_FORMAT_YUV_420_SP = 1003,
+    CAMERA_FORMAT_H264,
+    CAMERA_FORMAT_H265,
+    CAMERA_FORMAT_JPEG = 2000
 };
 
 enum JSFlashMode {
@@ -334,7 +336,7 @@ public:
         MEDIA_INFO_LOG("native cam format = %{public}d", static_cast<int32_t>(nativeCamFormat));
         switch (nativeCamFormat) {
             case OHOS_CAMERA_FORMAT_YCRCB_420_SP:
-                jsCameraFormat = CAMERA_FORMAT_YCRCb_420_SP;
+                jsCameraFormat = CAMERA_FORMAT_YUV_420_SP;
                 break;
             case OHOS_CAMERA_FORMAT_JPEG:
                 jsCameraFormat = CAMERA_FORMAT_JPEG;
@@ -351,14 +353,16 @@ public:
     {
         MEDIA_INFO_LOG("js cam format = %{public}d", jsCameraFormat);
         switch (jsCameraFormat) {
-            case CAMERA_FORMAT_YCRCb_420_SP:
+            case CAMERA_FORMAT_YUV_420_SP:
                 nativeCamFormat = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
                 break;
             case CAMERA_FORMAT_JPEG:
                 nativeCamFormat = OHOS_CAMERA_FORMAT_JPEG;
                 break;
+            case CAMERA_FORMAT_H264:
+            case CAMERA_FORMAT_H265:
             default:
-                MEDIA_ERR_LOG("Invalid camera format value received from application");
+                MEDIA_ERR_LOG("Invalid or unsupported camera format value received from application");
                 return -1;
         }
 
@@ -379,7 +383,7 @@ public:
                 jsCameraType = CAMERA_TYPE_TELEPHOTO;
                 break;
             case OHOS_CAMERA_TYPE_TRUE_DEAPTH:
-                jsCameraType = CAMERA_TYPE_TRUE_DEAPTH;
+                jsCameraType = CAMERA_TYPE_TRUE_DEPTH;
                 break;
             case OHOS_CAMERA_TYPE_LOGICAL:
                 MEDIA_ERR_LOG("Logical camera type is not supported with JS");
@@ -404,7 +408,7 @@ public:
             case CAMERA_TYPE_TELEPHOTO:
                 nativeCamType = OHOS_CAMERA_TYPE_TELTPHOTO;
                 break;
-            case CAMERA_TYPE_TRUE_DEAPTH:
+            case CAMERA_TYPE_TRUE_DEPTH:
                 nativeCamType = OHOS_CAMERA_TYPE_TRUE_DEAPTH;
                 break;
             case CAMERA_TYPE_UNSPECIFIED:

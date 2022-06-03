@@ -19,8 +19,7 @@
 #include "icamera_device_service.h"
 #include "icapture_session_callback.h"
 #include "iremote_broker.h"
-#include "istream_repeat.h"
-#include "istream_capture.h"
+#include "istream_common.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -30,15 +29,11 @@ public:
 
     virtual int32_t AddInput(sptr<ICameraDeviceService> cameraDevice) = 0;
 
-    virtual int32_t AddOutput(sptr<IStreamRepeat> streamRepeat) = 0;
-
-    virtual int32_t AddOutput(sptr<IStreamCapture> streamCapture) = 0;
+    virtual int32_t AddOutput(StreamType streamType, sptr<IStreamCommon> stream) = 0;
 
     virtual int32_t RemoveInput(sptr<ICameraDeviceService> cameraDevice) = 0;
 
-    virtual int32_t RemoveOutput(sptr<IStreamCapture> streamCapture) = 0;
-
-    virtual int32_t RemoveOutput(sptr<IStreamRepeat> streamRepeat) = 0;
+    virtual int32_t RemoveOutput(StreamType streamType, sptr<IStreamCommon> stream) = 0;
 
     virtual int32_t CommitConfig() = 0;
 

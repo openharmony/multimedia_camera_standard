@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,29 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_CAMERA_ISTREAM_REPEAT_H
-#define OHOS_CAMERA_ISTREAM_REPEAT_H
+#ifndef OHOS_CAMERA_ISTREAM_COMMON_H
+#define OHOS_CAMERA_ISTREAM_COMMON_H
 
 #include "iremote_broker.h"
-#include "istream_common.h"
-#include "istream_repeat_callback.h"
 
 namespace OHOS {
 namespace CameraStandard {
-class IStreamRepeat : public IStreamCommon {
+enum class StreamType : uint32_t {
+    CAPTURE = 1,
+    REPEAT,
+};
+class IStreamCommon : public IRemoteBroker {
 public:
-    virtual int32_t Start() = 0;
-
-    virtual int32_t Stop() = 0;
-
-    virtual int32_t SetFps(float Fps) = 0;
-
-    virtual int32_t SetCallback(sptr<IStreamRepeatCallback> &callback) = 0;
-
-    virtual int32_t Release() = 0;
-
-    DECLARE_INTERFACE_DESCRIPTOR(u"IStreamRepeat");
+    DECLARE_INTERFACE_DESCRIPTOR(u"IStreamCommon");
 };
 } // namespace CameraStandard
 } // namespace OHOS
-#endif // OHOS_CAMERA_ISTREAM_REPEAT_H
+#endif // OHOS_CAMERA_ISTREAM_COMMON_H

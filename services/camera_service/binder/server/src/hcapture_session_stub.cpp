@@ -35,20 +35,14 @@ int HCaptureSessionStub::OnRemoteRequest(
         case CAMERA_CAPTURE_SESSION_ADD_INPUT:
             errCode = HCaptureSessionStub::HandleAddInput(data);
             break;
-        case CAMERA_CAPTURE_SESSION_ADD_OUTPUT_CAPTURE:
-            errCode = HCaptureSessionStub::HandleAddCaptureOutput(data);
-            break;
-        case CAMERA_CAPTURE_SESSION_ADD_OUTPUT_REPEAT:
-            errCode = HCaptureSessionStub::HandleAddRepeatOutput(data);
+        case CAMERA_CAPTURE_SESSION_ADD_OUTPUT:
+            errCode = HCaptureSessionStub::HandleAddOutput(data);
             break;
         case CAMERA_CAPTURE_SESSION_REMOVE_INPUT:
             errCode = HCaptureSessionStub::HandleRemoveInput(data);
             break;
-        case CAMERA_CAPTURE_SESSION_REMOVE_OUTPUT_CAPTURE:
-            errCode = HCaptureSessionStub::HandleRemoveCaptureOutput(data);
-            break;
-        case CAMERA_CAPTURE_SESSION_REMOVE_OUTPUT_REPEAT:
-            errCode = HCaptureSessionStub::HandleRemoveRepeatOutput(data);
+        case CAMERA_CAPTURE_SESSION_REMOVE_OUTPUT:
+            errCode = HCaptureSessionStub::HandleRemoveOutput(data);
             break;
         case CAMERA_CAPTURE_SESSION_COMMIT_CONFIG:
             errCode = CommitConfig();
@@ -102,56 +96,32 @@ int HCaptureSessionStub::HandleRemoveInput(MessageParcel &data)
     return RemoveInput(cameraDevice);
 }
 
-int HCaptureSessionStub::HandleAddCaptureOutput(MessageParcel &data)
+int HCaptureSessionStub::HandleAddOutput(MessageParcel &data)
 {
+    StreamType streamType = static_cast<StreamType>(data.ReadUint32());
     sptr<IRemoteObject> remoteObj = data.ReadRemoteObject();
     if (remoteObj == nullptr) {
-        MEDIA_ERR_LOG("HCaptureSessionStub HandleAddCaptureOutput StreamCapture is null");
+        MEDIA_ERR_LOG("HCaptureSessionStub HandleAddOutput remoteObj is null");
         return IPC_STUB_INVALID_DATA_ERR;
     }
 
-    sptr<IStreamCapture> streamCapture = iface_cast<IStreamCapture>(remoteObj);
+    sptr<IStreamCommon> stream = iface_cast<IStreamCommon>(remoteObj);
 
-    return AddOutput(streamCapture);
+    return AddOutput(streamType, stream);
 }
 
-int HCaptureSessionStub::HandleAddRepeatOutput(MessageParcel &data)
+int HCaptureSessionStub::HandleRemoveOutput(MessageParcel &data)
 {
+    StreamType streamType = static_cast<StreamType>(data.ReadUint32());
     sptr<IRemoteObject> remoteObj = data.ReadRemoteObject();
     if (remoteObj == nullptr) {
-        MEDIA_ERR_LOG("HCaptureSessionStub HandleAddRepeatOutput streamRepeat is null");
+        MEDIA_ERR_LOG("HCaptureSessionStub HandleRemoveOutput remoteObj is null");
         return IPC_STUB_INVALID_DATA_ERR;
     }
 
-    sptr<IStreamRepeat> streamRepeat = iface_cast<IStreamRepeat>(remoteObj);
+    sptr<IStreamCommon> stream = iface_cast<IStreamCommon>(remoteObj);
 
-    return AddOutput(streamRepeat);
-}
-
-int HCaptureSessionStub::HandleRemoveCaptureOutput(MessageParcel &data)
-{
-    sptr<IRemoteObject> remoteObj = data.ReadRemoteObject();
-    if (remoteObj == nullptr) {
-        MEDIA_ERR_LOG("HCaptureSessionStub HandleRemoveCaptureOutput StreamCapture is null");
-        return IPC_STUB_INVALID_DATA_ERR;
-    }
-
-    sptr<IStreamCapture> streamCapture = iface_cast<IStreamCapture>(remoteObj);
-
-    return RemoveOutput(streamCapture);
-}
-
-int HCaptureSessionStub::HandleRemoveRepeatOutput(MessageParcel &data)
-{
-    sptr<IRemoteObject> remoteObj = data.ReadRemoteObject();
-    if (remoteObj == nullptr) {
-        MEDIA_ERR_LOG("HCaptureSessionStub HandleRemoveRepeatOutput streamRepeat is null");
-        return IPC_STUB_INVALID_DATA_ERR;
-    }
-
-    sptr<IStreamRepeat> streamRepeat = iface_cast<IStreamRepeat>(remoteObj);
-
-    return RemoveOutput(streamRepeat);
+    return RemoveOutput(streamType, stream);
 }
 
 int HCaptureSessionStub::HandleSetCallback(MessageParcel &data)

@@ -120,24 +120,22 @@ int32_t HCaptureSession::AddOutputStream(sptr<HStreamCommon> stream)
     return CAMERA_OK;
 }
 
-int32_t HCaptureSession::AddOutput(sptr<IStreamRepeat> streamRepeat)
+int32_t HCaptureSession::AddOutput(StreamType streamType, sptr<IStreamCommon> stream)
 {
-    if (streamRepeat == nullptr) {
-        MEDIA_ERR_LOG("HCaptureSession::AddOutput streamRepeat is null");
+    if (stream == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSession::AddOutput stream is null");
         return CAMERA_INVALID_ARG;
     }
     // Temp hack to fix the library linking issue
     sptr<Surface> captureSurface = Surface::CreateSurfaceAsConsumer();
-    return AddOutputStream(static_cast<HStreamRepeat *>(streamRepeat.GetRefPtr()));
-}
 
-int32_t HCaptureSession::AddOutput(sptr<IStreamCapture> streamCapture)
-{
-    if (streamCapture == nullptr) {
-        MEDIA_ERR_LOG("HCaptureSession::AddOutput streamCapture is null");
-        return CAMERA_INVALID_ARG;
+    int32_t rc = CAMERA_INVALID_ARG;
+    if (streamType == StreamType::CAPTURE) {
+        rc = AddOutputStream(static_cast<HStreamCapture *>(stream.GetRefPtr()));
+    } else if (streamType == StreamType::REPEAT) {
+        rc = AddOutputStream(static_cast<HStreamRepeat *>(stream.GetRefPtr()));
     }
-    return AddOutputStream(static_cast<HStreamCapture *>(streamCapture.GetRefPtr()));
+    return rc;
 }
 
 int32_t HCaptureSession::RemoveInput(sptr<ICameraDeviceService> cameraDevice)
@@ -193,22 +191,20 @@ int32_t HCaptureSession::RemoveOutputStream(sptr<HStreamCommon> stream)
     return CAMERA_OK;
 }
 
-int32_t HCaptureSession::RemoveOutput(sptr<IStreamRepeat> streamRepeat)
+int32_t HCaptureSession::RemoveOutput(StreamType streamType, sptr<IStreamCommon> stream)
 {
-    if (streamRepeat == nullptr) {
-        MEDIA_ERR_LOG("HCaptureSession::RemoveOutput streamRepeat is null");
+    if (stream == nullptr) {
+        MEDIA_ERR_LOG("HCaptureSession::RemoveOutput stream is null");
         return CAMERA_INVALID_ARG;
     }
-    return RemoveOutputStream(static_cast<HStreamRepeat *>(streamRepeat.GetRefPtr()));
-}
 
-int32_t HCaptureSession::RemoveOutput(sptr<IStreamCapture> streamCapture)
-{
-    if (streamCapture == nullptr) {
-        MEDIA_ERR_LOG("HCaptureSession::RemoveOutput streamCapture is null");
-        return CAMERA_INVALID_ARG;
+    int32_t rc = CAMERA_INVALID_ARG;
+    if (streamType == StreamType::CAPTURE) {
+        rc = RemoveOutputStream(static_cast<HStreamCapture *>(stream.GetRefPtr()));
+    } else if (streamType == StreamType::REPEAT) {
+        rc = RemoveOutputStream(static_cast<HStreamRepeat *>(stream.GetRefPtr()));
     }
-    return RemoveOutputStream(static_cast<HStreamCapture *>(streamCapture.GetRefPtr()));
+    return rc;
 }
 
 int32_t HCaptureSession::ValidateSessionInputs()
@@ -410,9 +406,9 @@ void HCaptureSession::UpdateSessionConfig(sptr<HCameraDevice> &device)
     sptr<HStreamCommon> curStream;
     for (auto item = tempStreams_.begin(); item != tempStreams_.end(); ++item) {
         curStream = *item;
-        if (curStream->GetStreamType() == HStreamCommon::REPEAT) {
+        if (curStream->GetStreamType() == StreamType::REPEAT) {
             streamRepeats_.emplace_back(curStream);
-        } else if (curStream->GetStreamType() == HStreamCommon::CAPTURE) {
+        } else if (curStream->GetStreamType() == StreamType::CAPTURE) {
             streamCaptures_.emplace_back(curStream);
         }
         streams_.emplace_back(curStream);
@@ -726,9 +722,9 @@ void StreamOperatorCallback::OnCaptureStarted(int32_t captureId,
         curStream = GetStreamByStreamID(*item);
         if (curStream == nullptr) {
             MEDIA_ERR_LOG("StreamOperatorCallback::OnCaptureStarted StreamId: %{public}d not found", *item);
-        } else if (curStream->GetStreamType() == HStreamCommon::REPEAT) {
+        } else if (curStream->GetStreamType() == StreamType::REPEAT) {
             static_cast<HStreamRepeat *>(curStream.GetRefPtr())->OnFrameStarted();
-        } else if (curStream->GetStreamType() == HStreamCommon::CAPTURE) {
+        } else if (curStream->GetStreamType() == StreamType::CAPTURE) {
             static_cast<HStreamCapture *>(curStream.GetRefPtr())->OnCaptureStarted(captureId);
         }
     }
@@ -746,9 +742,9 @@ void StreamOperatorCallback::OnCaptureEnded(int32_t captureId,
         if (curStream == nullptr) {
             MEDIA_ERR_LOG("StreamOperatorCallback::OnCaptureEnded StreamId: %{public}d not found."
                           " Framecount: %{public}d", captureInfo->streamId_, captureInfo->frameCount_);
-        } else if (curStream->GetStreamType() == HStreamCommon::REPEAT) {
+        } else if (curStream->GetStreamType() == StreamType::REPEAT) {
             static_cast<HStreamRepeat *>(curStream.GetRefPtr())->OnFrameEnded(captureInfo->frameCount_);
-        } else if (curStream->GetStreamType() == HStreamCommon::CAPTURE) {
+        } else if (curStream->GetStreamType() == StreamType::CAPTURE) {
             static_cast<HStreamCapture *>(curStream.GetRefPtr())->OnCaptureEnded(captureId, captureInfo->frameCount_);
         }
     }
@@ -766,9 +762,9 @@ void StreamOperatorCallback::OnCaptureError(int32_t captureId,
         if (curStream == nullptr) {
             MEDIA_ERR_LOG("StreamOperatorCallback::OnCaptureError StreamId: %{public}d not found."
                           " Error: %{public}d", errInfo->streamId_, errInfo->error_);
-        } else if (curStream->GetStreamType() == HStreamCommon::REPEAT) {
+        } else if (curStream->GetStreamType() == StreamType::REPEAT) {
             static_cast<HStreamRepeat *>(curStream.GetRefPtr())->OnFrameError(errInfo->error_);
-        } else if (curStream->GetStreamType() == HStreamCommon::CAPTURE) {
+        } else if (curStream->GetStreamType() == StreamType::CAPTURE) {
             static_cast<HStreamCapture *>(curStream.GetRefPtr())->OnCaptureError(captureId, errInfo->error_);
         }
     }
@@ -781,7 +777,7 @@ void StreamOperatorCallback::OnFrameShutter(int32_t captureId,
 
     for (auto item = streamIds.begin(); item != streamIds.end(); ++item) {
         curStream = GetStreamByStreamID(*item);
-        if ((curStream != nullptr) && (curStream->GetStreamType() == HStreamCommon::CAPTURE)) {
+        if ((curStream != nullptr) && (curStream->GetStreamType() == StreamType::CAPTURE)) {
             static_cast<HStreamCapture *>(curStream.GetRefPtr())->OnFrameShutter(captureId, timestamp);
         } else {
             MEDIA_ERR_LOG("StreamOperatorCallback::OnFrameShutter StreamId: %{public}d not found", *item);

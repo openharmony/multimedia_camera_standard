@@ -25,7 +25,7 @@ namespace CameraStandard {
 int32_t HStreamCapture::photoCaptureId_ = PHOTO_CAPTURE_ID_START;
 
 HStreamCapture::HStreamCapture(sptr<OHOS::IBufferProducer> producer, int32_t format)
-    : HStreamCommon(HStreamCommon::CAPTURE, producer, format)
+    : HStreamCommon(StreamType::CAPTURE, producer, format)
 {}
 
 HStreamCapture::~HStreamCapture()

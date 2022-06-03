@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace CameraStandard {
 VideoOutput::VideoOutput(sptr<IStreamRepeat> &streamRepeat)
-    : CaptureOutput(CAPTURE_OUTPUT_TYPE::VIDEO_OUTPUT), streamRepeat_(streamRepeat) {
+    : CaptureOutput(CAPTURE_OUTPUT_TYPE_VIDEO, StreamType::REPEAT, streamRepeat) {
 }
 
 class HStreamRepeatCallbackImpl : public HStreamRepeatCallbackStub {
@@ -86,7 +86,7 @@ void VideoOutput::SetCallback(std::shared_ptr<VideoCallback> callback)
                 return;
             }
         }
-        errorCode = streamRepeat_->SetCallback(svcCallback_);
+        errorCode = static_cast<IStreamRepeat *>(GetStream().GetRefPtr())->SetCallback(svcCallback_);
         if (errorCode != CAMERA_OK) {
             MEDIA_ERR_LOG("VideoOutput::SetCallback: Failed to register callback, errorCode: %{public}d", errorCode);
             svcCallback_ = nullptr;
@@ -113,36 +113,31 @@ int32_t VideoOutput::SetFps(float fps)
 
 int32_t VideoOutput::Start()
 {
-    return streamRepeat_->Start();
+    return static_cast<IStreamRepeat *>(GetStream().GetRefPtr())->Start();
 }
 
 int32_t VideoOutput::Stop()
 {
-    return streamRepeat_->Stop();
+    return static_cast<IStreamRepeat *>(GetStream().GetRefPtr())->Stop();
 }
 
 int32_t VideoOutput::Resume()
 {
-    return streamRepeat_->Start();
+    return static_cast<IStreamRepeat *>(GetStream().GetRefPtr())->Start();
 }
 
 int32_t VideoOutput::Pause()
 {
-    return streamRepeat_->Stop();
+    return static_cast<IStreamRepeat *>(GetStream().GetRefPtr())->Stop();
 }
 
 void VideoOutput::Release()
 {
-    int32_t errCode = streamRepeat_->Release();
+    int32_t errCode = static_cast<IStreamRepeat *>(GetStream().GetRefPtr())->Release();
     if (errCode != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to release VideoOutput!, errCode: %{public}d", errCode);
     }
     return;
-}
-
-sptr<IStreamRepeat> VideoOutput::GetStreamRepeat()
-{
-    return streamRepeat_;
 }
 
 std::shared_ptr<VideoCallback> VideoOutput::GetApplicationCallback()

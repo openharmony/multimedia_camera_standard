@@ -59,7 +59,7 @@ private:
     napi_ref wrapper_;
     sptr<CameraInfo> cameraInfo_;
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static sptr<CameraInfo> sCameraInfo_;
 };
 } // namespace CameraStandard

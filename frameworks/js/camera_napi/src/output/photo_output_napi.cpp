@@ -27,9 +27,9 @@ namespace {
 }
 
 thread_local napi_ref PhotoOutputNapi::sConstructor_ = nullptr;
-sptr<CaptureOutput> PhotoOutputNapi::sPhotoOutput_ = nullptr;
-std::string PhotoOutputNapi::sSurfaceId_ = "invalid";
-uint32_t PhotoOutputNapi::photoOutputTaskId = CAMERA_PHOTO_OUTPUT_TASKID;
+thread_local sptr<CaptureOutput> PhotoOutputNapi::sPhotoOutput_ = nullptr;
+thread_local std::string PhotoOutputNapi::sSurfaceId_ = "invalid";
+thread_local uint32_t PhotoOutputNapi::photoOutputTaskId = CAMERA_PHOTO_OUTPUT_TASKID;
 
 PhotoOutputCallback::PhotoOutputCallback(napi_env env) : env_(env) {}
 

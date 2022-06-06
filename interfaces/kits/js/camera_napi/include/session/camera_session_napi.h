@@ -97,8 +97,8 @@ private:
     sptr<CaptureSession> cameraSession_;
 
     static thread_local napi_ref sConstructor_;
-    static sptr<CaptureSession> sCameraSession_;
-    static uint32_t cameraSessionTaskId;
+    static thread_local sptr<CaptureSession> sCameraSession_;
+    static thread_local uint32_t cameraSessionTaskId;
 };
 
 struct CameraSessionAsyncContext {

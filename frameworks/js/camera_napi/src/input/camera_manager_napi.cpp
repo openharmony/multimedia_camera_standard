@@ -23,7 +23,7 @@ using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
 
 thread_local napi_ref CameraManagerNapi::sConstructor_ = nullptr;
-uint32_t CameraManagerNapi::cameraManagerTaskId = CAMERA_MANAGER_TASKID;
+thread_local uint32_t CameraManagerNapi::cameraManagerTaskId = CAMERA_MANAGER_TASKID;
 
 namespace {
     constexpr HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CameraManager"};

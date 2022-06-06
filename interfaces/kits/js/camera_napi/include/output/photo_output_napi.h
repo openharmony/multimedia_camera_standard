@@ -102,15 +102,15 @@ private:
     static napi_value On(napi_env env, napi_callback_info info);
 
     static thread_local napi_ref sConstructor_;
-    static std::string sSurfaceId_;
-    static sptr<CaptureOutput> sPhotoOutput_;
+    static thread_local std::string sSurfaceId_;
+    static thread_local sptr<CaptureOutput> sPhotoOutput_;
 
     napi_env env_;
     napi_ref wrapper_;
     std::string surfaceId_;
     sptr<CaptureOutput> photoOutput_;
     std::shared_ptr<PhotoOutputCallback> photoCallback_ = nullptr;
-    static uint32_t photoOutputTaskId;
+    static thread_local uint32_t photoOutputTaskId;
 };
 
 struct PhotoOutputAsyncContext {

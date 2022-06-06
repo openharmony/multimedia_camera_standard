@@ -158,7 +158,6 @@ private:
     static napi_value CreateQualityLevelEnum(napi_env env);
 
     static thread_local napi_ref sConstructor_;
-    static sptr<Surface> captureSurface_;
 
     static thread_local napi_ref flashModeRef_;
     static thread_local napi_ref exposureModeRef_;

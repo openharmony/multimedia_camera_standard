@@ -154,9 +154,9 @@ private:
     void RegisterCallback(napi_env env, const std::string &eventType, napi_ref callbackRef);
 
     static thread_local napi_ref sConstructor_;
-    static std::string sCameraId_;
-    static sptr<CameraInput> sCameraInput_;
-    static uint32_t cameraInputTaskId;
+    static thread_local std::string sCameraId_;
+    static thread_local sptr<CameraInput> sCameraInput_;
+    static thread_local uint32_t cameraInputTaskId;
 };
 
 struct CameraInputAsyncContext {

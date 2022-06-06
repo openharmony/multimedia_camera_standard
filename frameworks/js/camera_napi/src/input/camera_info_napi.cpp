@@ -22,7 +22,7 @@ using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
 
 thread_local napi_ref CameraInfoNapi::sConstructor_ = nullptr;
-sptr<CameraInfo> CameraInfoNapi::sCameraInfo_ = nullptr;
+thread_local sptr<CameraInfo> CameraInfoNapi::sCameraInfo_ = nullptr;
 
 CameraInfoNapi::CameraInfoNapi() : env_(nullptr), wrapper_(nullptr)
 {

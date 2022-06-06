@@ -100,7 +100,7 @@ private:
     static napi_value On(napi_env env, napi_callback_info info);
 
     static uint64_t sSurfaceId_;
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static sptr<CaptureOutput> sVideoOutput_;
     static sptr<SurfaceListener> listener;
 

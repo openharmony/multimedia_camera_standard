@@ -96,7 +96,7 @@ private:
     napi_ref wrapper_;
     sptr<CaptureSession> cameraSession_;
 
-    static napi_ref sConstructor_;
+    static thread_local napi_ref sConstructor_;
     static sptr<CaptureSession> sCameraSession_;
 };
 

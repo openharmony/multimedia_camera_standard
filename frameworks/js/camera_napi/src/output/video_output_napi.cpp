@@ -28,10 +28,10 @@ namespace {
 }
 
 thread_local napi_ref VideoOutputNapi::sConstructor_ = nullptr;
-sptr<CaptureOutput> VideoOutputNapi::sVideoOutput_ = nullptr;
-uint64_t VideoOutputNapi::sSurfaceId_ = 0;
-sptr<SurfaceListener> VideoOutputNapi::listener = nullptr;
-uint32_t VideoOutputNapi::videoOutputTaskId = CAMERA_VIDEO_OUTPUT_TASKID;
+thread_local sptr<CaptureOutput> VideoOutputNapi::sVideoOutput_ = nullptr;
+thread_local uint64_t VideoOutputNapi::sSurfaceId_ = 0;
+thread_local sptr<SurfaceListener> VideoOutputNapi::listener = nullptr;
+thread_local uint32_t VideoOutputNapi::videoOutputTaskId = CAMERA_VIDEO_OUTPUT_TASKID;
 
 VideoCallbackListener::VideoCallbackListener(napi_env env) : env_(env) {}
 

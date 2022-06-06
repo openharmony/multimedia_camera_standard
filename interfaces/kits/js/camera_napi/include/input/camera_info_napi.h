@@ -60,7 +60,7 @@ private:
     sptr<CameraInfo> cameraInfo_;
 
     static thread_local napi_ref sConstructor_;
-    static sptr<CameraInfo> sCameraInfo_;
+    static thread_local sptr<CameraInfo> sCameraInfo_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

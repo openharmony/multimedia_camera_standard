@@ -27,8 +27,8 @@ namespace {
 }
 
 thread_local napi_ref CameraSessionNapi::sConstructor_ = nullptr;
-sptr<CaptureSession> CameraSessionNapi::sCameraSession_ = nullptr;
-uint32_t CameraSessionNapi::cameraSessionTaskId = CAMERA_SESSION_TASKID;
+thread_local sptr<CaptureSession> CameraSessionNapi::sCameraSession_ = nullptr;
+thread_local uint32_t CameraSessionNapi::cameraSessionTaskId = CAMERA_SESSION_TASKID;
 
 void SessionCallbackListener::OnErrorCallbackAsync(int32_t errorCode) const
 {

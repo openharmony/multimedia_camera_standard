@@ -94,10 +94,10 @@ private:
     sptr<CaptureOutput> previewOutput_;
 
     static thread_local napi_ref sConstructor_;
-    static uint64_t sSurfaceId_;
-    static sptr<CaptureOutput> sPreviewOutput_;
+    static thread_local uint64_t sSurfaceId_;
+    static thread_local sptr<CaptureOutput> sPreviewOutput_;
     std::shared_ptr<PreviewOutputCallback> previewCallback_;
-    static uint32_t previewOutputTaskId;
+    static thread_local uint32_t previewOutputTaskId;
 };
 
 struct PreviewOutputAsyncContext {

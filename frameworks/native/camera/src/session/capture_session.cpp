@@ -57,6 +57,7 @@ public:
 CaptureSession::CaptureSession(sptr<ICaptureSession> &captureSession)
 {
     captureSession_ = captureSession;
+    inputDevice_ = nullptr;
 }
 
 int32_t CaptureSession::BeginConfig()
@@ -79,6 +80,7 @@ int32_t CaptureSession::AddInput(sptr<CaptureInput> &input)
         return CAMERA_INVALID_ARG;
     }
     CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddInput"));
+    inputDevice_ = input;
     return captureSession_->AddInput(((sptr<CameraInput> &)input)->GetCameraDevice());
 }
 
@@ -91,6 +93,7 @@ int32_t CaptureSession::AddOutput(sptr<CaptureOutput> &output)
     }
     if (output->GetType() == CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT) {
         CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddPhotoOutput"));
+        ((sptr<PhotoOutput> &)output)->SetSession(this);
         return captureSession_->AddOutput(((sptr<PhotoOutput> &)output)->GetStreamCapture());
     } else if (output->GetType() == CAPTURE_OUTPUT_TYPE::PREVIEW_OUTPUT) {
         CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddPreviewOutput"));

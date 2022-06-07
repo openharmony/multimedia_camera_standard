@@ -39,6 +39,7 @@ public:
 
 class CaptureSession : public RefBase {
 public:
+    sptr<CaptureInput> inputDevice_;
     explicit CaptureSession(sptr<ICaptureSession> &captureSession);
     ~CaptureSession() {}
 

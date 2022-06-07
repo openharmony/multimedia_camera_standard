@@ -20,6 +20,7 @@
 #include "camera_metadata_info.h"
 #include "capture_output.h"
 #include "istream_capture.h"
+#include "session/capture_session.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -112,13 +113,6 @@ public:
     void SetGpsLocation(double latitude, double longitude);
 
     /**
-     * @brief To check the photo capture is mirrored or not.
-     *
-     * @return Returns true/false if the photo capture is mirrored/not-mirrored respectively.
-     */
-    bool IsMirrored();
-
-    /**
      * @brief Set the mirror option for the photo capture.
      *
      * @param boolean true/false to set/unset mirror respectively.
@@ -183,10 +177,25 @@ public:
      */
     std::shared_ptr<PhotoCallback> GetApplicationCallback();
 
+    /**
+     * @brief To check the photo capture is mirrored or not.
+     *
+     * @return Returns true/false if the photo capture is mirrored/not-mirrored respectively.
+     */
+    bool IsMirrorSupported();
+
+    /**
+     * @brief set the capture session.
+     *
+     * @param session pointer.
+     */
+    void SetSession(CaptureSession *captureSession);
+
 private:
     sptr<IStreamCapture> streamCapture_;
     std::shared_ptr<PhotoCallback> appCallback_;
     sptr<IStreamCaptureCallback> cameraSvcCallback_;
+    CaptureSession *captureSession_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

@@ -332,13 +332,13 @@ int main(int argc, char **argv)
             MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported video formats");
         }
         std::vector<CameraPicSize> previewSizes
-            = cameraInput->getSupportedSizes(static_cast<camera_format_t>(previewFormat));
+            = cameraInput->GetSupportedPreviewSizes(static_cast<camera_format_t>(previewFormat));
         MEDIA_DEBUG_LOG("Supported sizes for preview:");
         for (auto &size : previewSizes) {
             MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
         }
         std::vector<CameraPicSize> videoSizes
-            = cameraInput->getSupportedSizes(static_cast<camera_format_t>(videoFormat));
+            = cameraInput->GetSupportedVideoSizes(static_cast<camera_format_t>(videoFormat));
         MEDIA_DEBUG_LOG("Supported sizes for video:");
         for (auto &sizeVideo : videoSizes) {
             MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", sizeVideo.width, sizeVideo.height);

@@ -309,16 +309,40 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput,
         camInput->SetZoomRatio(zoomRatioRange[0]);
     }
 
+    // GetExposureBiasRange
+    std::vector<int32_t> exposureBiasRange = camInput->GetExposureBiasRange();
+    if (!exposureBiasRange.empty()) {
+        camInput->SetExposureBias(exposureBiasRange[0]);
+    }
+
+    // Get/Set Exposurepoint
+    Point exposurePoint = {1, 2};
+    camInput->SetExposurePoint(exposurePoint);
+    Point exposurePointGet = camInput->GetExposurePoint();
+    EXPECT_EQ(exposurePointGet.x, exposurePoint.x);
+    EXPECT_EQ(exposurePointGet.y, exposurePoint.y);
+
+    // GetFocalLength
+    float focalLength = camInput->GetFocalLength();
+    ASSERT_NE(focalLength, 0);
+
+    // Get/Set focuspoint
+    Point focusPoint = {1, 2};
+    camInput->SetFocusPoint(focusPoint);
+    Point focusPointGet = camInput->GetFocusPoint();
+    EXPECT_EQ(focusPointGet.x, focusPoint.x);
+    EXPECT_EQ(focusPointGet.y, focusPoint.y);
+
     camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_OPEN;
     if (video) {
         flash = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
     }
     camInput->SetFlashMode(flash);
 
-    camera_af_mode_t focus = OHOS_CAMERA_AF_MODE_AUTO;
+    camera_focus_mode_enum_t focus = OHOS_CAMERA_FOCUS_MODE_AUTO;
     camInput->SetFocusMode(focus);
 
-    camera_ae_mode_t exposure = OHOS_CAMERA_AE_MODE_ON;
+    camera_exposure_mode_enum_t exposure = OHOS_CAMERA_EXPOSURE_MODE_AUTO;
     camInput->SetExposureMode(exposure);
 
     camInput->UnlockForControl();
@@ -326,6 +350,12 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput,
     if (!zoomRatioRange.empty()) {
         EXPECT_EQ(camInput->GetZoomRatio(), zoomRatioRange[0]);
     }
+
+    // exposureBiasRange
+    if (!exposureBiasRange.empty()) {
+        EXPECT_EQ(camInput->GetExposureValue(), exposureBiasRange[0]);
+    }
+
     EXPECT_EQ(camInput->GetFlashMode(), flash);
     EXPECT_EQ(camInput->GetFocusMode(), focus);
     EXPECT_EQ(camInput->GetExposureMode(), exposure);
@@ -658,11 +688,11 @@ void CameraFrameworkModuleTest::SetUp()
     } else {
         videoFormat_ = videoFormats_[0];
     }
-    std::vector<CameraPicSize> previewSizes = camInput->getSupportedSizes(previewFormat_);
+    std::vector<CameraPicSize> previewSizes = camInput->GetSupportedPreviewSizes(previewFormat_);
     ASSERT_TRUE(previewSizes.size() != 0);
-    std::vector<CameraPicSize> photoSizes = camInput->getSupportedSizes(photoFormat_);
+    std::vector<CameraPicSize> photoSizes = camInput->GetSupportedPhotoSizes(photoFormat_);
     ASSERT_TRUE(photoSizes.size() != 0);
-    std::vector<CameraPicSize> videoSizes = camInput->getSupportedSizes(videoFormat_);
+    std::vector<CameraPicSize> videoSizes = camInput->GetSupportedVideoSizes(videoFormat_);
     ASSERT_TRUE(videoSizes.size() != 0);
     CameraPicSize size = previewSizes.back();
     previewWidth_ = size.width;
@@ -920,7 +950,8 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_008, TestSize.Le
             continue;
         }
         previewFormat_ = format;
-        std::vector<CameraPicSize> previewSizes = ((sptr<CameraInput> &)input_)->getSupportedSizes(previewFormat_);
+        std::vector<CameraPicSize> previewSizes =
+            ((sptr<CameraInput> &)input_)->GetSupportedPreviewSizes(previewFormat_);
         for (auto &size : previewSizes) {
             TestSupportedResolution(size.width, size.height, photoWidth_, photoHeight_, videoWidth_, videoHeight_);
         }
@@ -939,7 +970,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_009, TestSize.Le
 {
     for (auto &format : photoFormats_) {
         photoFormat_ = format;
-        std::vector<CameraPicSize> photoSizes = ((sptr<CameraInput> &)input_)->getSupportedSizes(photoFormat_);
+        std::vector<CameraPicSize> photoSizes = ((sptr<CameraInput> &)input_)->GetSupportedPhotoSizes(photoFormat_);
         for (auto &size : photoSizes) {
             TestSupportedResolution(previewWidth_, previewHeight_, size.width, size.height, videoWidth_, videoHeight_);
         }
@@ -961,7 +992,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_010, TestSize.Le
             continue;
         }
         videoFormat_ = format;
-        std::vector<CameraPicSize> videoSizes = ((sptr<CameraInput> &)input_)->getSupportedSizes(videoFormat_);
+        std::vector<CameraPicSize> videoSizes = ((sptr<CameraInput> &)input_)->GetSupportedVideoSizes(videoFormat_);
         for (auto &size : videoSizes) {
             TestSupportedResolution(previewWidth_, previewHeight_, photoWidth_, photoHeight_, size.width, size.height);
         }

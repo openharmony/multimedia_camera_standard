@@ -61,6 +61,13 @@ std::map<int, std::string> g_cameraFocusMode = {
     {3, "Locked"},
 };
 
+std::map<int, std::string> g_cameraExposureMode = {
+    {0, "Manual"},
+    {1, "Continuous-Auto"},
+    {2, "Locked"},
+    {3, "Auto"},
+};
+
 std::map<int, std::string> g_cameraFlashMode = {
     {0, "Close"},
     {1, "Open"},

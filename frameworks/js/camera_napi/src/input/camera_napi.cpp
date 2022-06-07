@@ -799,7 +799,16 @@ napi_value CameraNapi::CreateCameraFormatObject(napi_env env)
     if (status == napi_ok) {
         for (unsigned int i = 0; i < vecCameraFormat.size(); i++) {
             propName = vecCameraFormat[i];
-            int32_t value = (propName.compare("CAMERA_FORMAT_JPEG") == 0) ? CAM_FORMAT_JPEG : CAM_FORMAT_YCRCb_420_SP;
+            int32_t value;
+            if (propName.compare("CAMERA_FORMAT_YUV_420_SP") == 0) {
+                value = CAM_FORMAT_YUV_420_SP;
+            } else if (propName.compare("CAMERA_FORMAT_H264") == 0) {
+                value = CAM_FORMAT_H264;
+            } else if (propName.compare("CAMERA_FORMAT_H265") == 0) {
+                value = CAM_FORMAT_H265;
+            } else {
+                value = CAM_FORMAT_JPEG;
+            }
             status = AddNamedProperty(env, result, propName, value);
             if (status != napi_ok) {
                 MEDIA_ERR_LOG("Failed to add named prop!");

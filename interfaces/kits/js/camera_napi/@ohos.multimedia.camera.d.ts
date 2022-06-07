@@ -683,22 +683,6 @@ declare namespace camera {
      * @syscap SystemCapability.Multimedia.Camera.Core
      */
     setExposureBias(exposureBias: number): Promise<void>;
-
-    /**
-     * Query exposure step size.
-     * @param callback Callback used to return the compenstation step.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Camera.Core
-     */
-    getExposureBiasStep(callback: AsyncCallback<number>): void;
-
-    /**
-     * Query exposure step size.
-     * @return Promise used to return the compenstation step.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Camera.Core
-     */
-    getExposureBiasStep(): Promise<number>;
  
     /**
      * Query the exposure value.

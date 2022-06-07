@@ -132,6 +132,11 @@ public:
             };
             ability->addEntry(OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, streams,
                               sizeof(streams) / sizeof(streams[0]));
+            int32_t compensationRange[2] = {-2, 3};
+            ability->addEntry(OHOS_CONTROL_AE_COMPENSATION_RANGE, compensationRange,
+                              sizeof(compensationRange) / sizeof(compensationRange[0]));
+            float focalLength = 1.5;
+            ability->addEntry(OHOS_ABILITY_FOCAL_LENGTH, &focalLength, sizeof(float));
             return CAMERA_OK;
         });
         ON_CALL(*this, OpenCameraDevice).WillByDefault([this](std::string &cameraId,
@@ -622,7 +627,7 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_019, TestSize.Level0
  * SubFunction: NA
  * FunctionPoints: NA
  * EnvConditions: NA
- * CaseDescription: Test set camera parameters
+ * CaseDescription: Test set camera parameters zoom, focus, flash & exposure
  */
 HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_020, TestSize.Level0)
 {
@@ -641,13 +646,18 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_020, TestSize.Level0
         input->SetZoomRatio(zoomRatioRange[0]);
     }
 
+    std::vector<int32_t> exposurebiasRange = input->GetExposureBiasRange();
+    if (!exposurebiasRange.empty()) {
+        input->SetExposureBias(exposurebiasRange[0]);
+    }
+
     camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
     input->SetFlashMode(flash);
 
-    camera_af_mode_t focus = OHOS_CAMERA_AF_MODE_AUTO;
+    camera_focus_mode_enum_t focus = OHOS_CAMERA_FOCUS_MODE_AUTO;
     input->SetFocusMode(focus);
 
-    camera_ae_mode_t exposure = OHOS_CAMERA_AE_MODE_ON;
+    camera_exposure_mode_enum_t exposure = OHOS_CAMERA_EXPOSURE_MODE_AUTO;
     input->SetExposureMode(exposure);
 
     input->UnlockForControl();
@@ -655,6 +665,11 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_020, TestSize.Level0
     if (!zoomRatioRange.empty()) {
         EXPECT_EQ(input->GetZoomRatio(), zoomRatioRange[0]);
     }
+
+    if (!exposurebiasRange.empty()) {
+        EXPECT_EQ(input->GetExposureValue(), exposurebiasRange[0]);
+    }
+
     EXPECT_EQ(input->GetFlashMode(), flash);
     EXPECT_EQ(input->GetFocusMode(), focus);
     EXPECT_EQ(input->GetExposureMode(), exposure);
@@ -1319,6 +1334,163 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_038, TestSize.Level0
     EXPECT_CALL(*mockCameraDevice, Close());
     session->Release();
 }
+
+/*
+ * Feature: Framework
+ * Function: Test GetFocalLength
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test GetFocalLength
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_040, TestSize.Level0)
+{
+    InSequence s;
+    EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+    std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    sptr<CameraInput> input = cameraManager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    float focalLength = input->GetFocalLength();
+    ASSERT_EQ(focalLength, 1.5);
+}
+
+
+/*
+ * Feature: Framework
+ * Function: Test SetExposurePoint & GetExposurePoint
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test SetExposurePoint & GetExposurePoint
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_041, TestSize.Level0)
+{
+    InSequence s;
+    EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+    std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    sptr<CameraInput> input = cameraManager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    Point exposurePoint = {1.0, 2.0};
+    input->LockForControl();
+    input->SetExposurePoint(exposurePoint);
+    input->UnlockForControl();
+    ASSERT_EQ((input->GetExposurePoint().x), exposurePoint.x);
+    ASSERT_EQ((input->GetExposurePoint().y), exposurePoint.y);
+}
+
+
+/*
+ * Feature: Framework
+ * Function: Test SetFocusPoint & GetFousPoint
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test SetFocusPoint & GetFousPoint
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_042, TestSize.Level0)
+{
+    InSequence s;
+    EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+    std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    sptr<CameraInput> input = cameraManager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    Point FocusPoint = {1.0, 2.0};
+    input->LockForControl();
+    input->SetFocusPoint(FocusPoint);
+    input->UnlockForControl();
+    ASSERT_EQ((input->GetFocusPoint().x), FocusPoint.x);
+    ASSERT_EQ((input->GetFocusPoint().y), FocusPoint.y);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test GetExposureValue and SetExposureBias
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test GetExposureValue and SetExposureBias with value less then the range
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_043, TestSize.Level0)
+{
+    InSequence s;
+    EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+    std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+    sptr<CameraInput> input = cameraManager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    std::vector<int32_t> exposurebiasRange = input->GetExposureBiasRange();
+    if (!exposurebiasRange.empty()) {
+        input->LockForControl();
+        input->SetExposureBias(exposurebiasRange[0]-1);
+        input->UnlockForControl();
+    }
+    ASSERT_EQ(input->GetExposureValue(), exposurebiasRange[0]);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test GetExposureValue and SetExposureBias
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test GetExposureValue and SetExposureBias with value between the range
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_044, TestSize.Level0)
+{
+    InSequence s;
+    EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+    std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    sptr<CameraInput> input = cameraManager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    std::vector<int32_t> exposurebiasRange = input->GetExposureBiasRange();
+    if (!exposurebiasRange.empty()) {
+        input->LockForControl();
+        input->SetExposureBias(exposurebiasRange[0]+1);
+        input->UnlockForControl();
+    }
+    EXPECT_TRUE((input->GetExposureValue()>=exposurebiasRange[0] &&
+                 input->GetExposureValue()<=exposurebiasRange[1]));
+}
+
+
+/*
+ * Feature: Framework
+ * Function: Test GetExposureValue and SetExposureBias
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test GetExposureValue and SetExposureBias with value more then the range
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_045, TestSize.Level0)
+{
+    InSequence s;
+    EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+    std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    sptr<CameraInput> input = cameraManager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    std::vector<int32_t> exposurebiasRange = input->GetExposureBiasRange();
+    if (!exposurebiasRange.empty()) {
+        input->LockForControl();
+        input->SetExposureBias(exposurebiasRange[1]+1);
+        input->UnlockForControl();
+    }
+    ASSERT_EQ(input->GetExposureValue(), exposurebiasRange[1]);
+}
 } // CameraStandard
 } // OHOS
-

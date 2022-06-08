@@ -2006,7 +2006,7 @@ napi_value CameraInputNapi::GetSupportedSizes(napi_env env, napi_callback_info i
                 context->status = false;
                 if (context->objectInfo != nullptr) {
                     context->vecSupportedSizeList =
-                        context->objectInfo->cameraInput_->GetSupportedSizes(context->cameraFormat);
+                        context->objectInfo->cameraInput_->getSupportedSizes(context->cameraFormat);
                     context->status = true;
                 }
             },

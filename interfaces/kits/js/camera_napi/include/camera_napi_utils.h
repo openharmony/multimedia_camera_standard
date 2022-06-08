@@ -152,8 +152,6 @@ enum JSConnectionType {
 
 enum JSCameraFormat {
     CAMERA_FORMAT_YUV_420_SP = 1003,
-    CAMERA_FORMAT_H264,
-    CAMERA_FORMAT_H265,
     CAMERA_FORMAT_JPEG = 2000
 };
 
@@ -165,8 +163,9 @@ enum JSFlashMode {
 };
 
 enum JSExposureMode {
-    EXPOSURE_MODE_MANUAL = 0,
-    EXPOSURE_MODE_CONTINUOUS_AUTO,
+    EXPOSURE_MODE_LOCKED = 0,
+    EXPOSURE_MODE_AUTO,
+    EXPOSURE_MODE_CONTINUOUS_AUTO
 };
 
 enum JSFocusMode {
@@ -219,49 +218,43 @@ enum CameraTaskId {
 /* Util class used by napi asynchronous methods for making call to js callback function */
 class CameraNapiUtils {
 public:
-    static int32_t MapFocusModeEnumFromJs(int32_t jsFocusMode, camera_af_mode_t &nativeFocusMode)
+    static int32_t MapExposureModeEnumFromJs(int32_t jsExposureMode, camera_exposure_mode_enum_t &nativeExposureMode)
     {
-        MEDIA_INFO_LOG("js focus mode = %{public}d", jsFocusMode);
-        switch (jsFocusMode) {
-            case FOCUS_MODE_MANUAL:
-                nativeFocusMode = OHOS_CAMERA_AF_MODE_OFF;
+        MEDIA_INFO_LOG("js exposure mode = %{public}d", jsExposureMode);
+        switch (jsExposureMode) {
+            case EXPOSURE_MODE_LOCKED:
+                nativeExposureMode = OHOS_CAMERA_EXPOSURE_MODE_LOCKED;
                 break;
-            case FOCUS_MODE_CONTINUOUS_AUTO:
-                nativeFocusMode = OHOS_CAMERA_AF_MODE_CONTINUOUS_VIDEO;
+            case EXPOSURE_MODE_AUTO:
+                nativeExposureMode = OHOS_CAMERA_EXPOSURE_MODE_AUTO;
                 break;
-            case FOCUS_MODE_AUTO:
-                nativeFocusMode = OHOS_CAMERA_AF_MODE_AUTO;
+            case EXPOSURE_MODE_CONTINUOUS_AUTO:
+                nativeExposureMode = OHOS_CAMERA_EXPOSURE_MODE_CONTINUOUS_AUTO;
                 break;
-            case FOCUS_MODE_LOCKED:
-                MEDIA_INFO_LOG("FOCUS_MODE_LOCKED is supported");
-                return 1;
             default:
-                MEDIA_ERR_LOG("Invalid focus mode value received from application");
+                MEDIA_ERR_LOG("Invalid exposure mode value received from application");
                 return -1;
         }
 
         return 0;
     }
 
-    static void MapFocusModeEnum(camera_af_mode_t nativeFocusMode, int32_t &jsFocusMode)
+    static void MapExposureModeEnum(camera_exposure_mode_enum_t nativeExposureMode, int32_t &jsExposureMode)
     {
-        MEDIA_INFO_LOG("native focus mode = %{public}d", static_cast<int32_t>(nativeFocusMode));
-        switch (nativeFocusMode) {
-            case OHOS_CAMERA_AF_MODE_OFF:
-                jsFocusMode = FOCUS_MODE_MANUAL;
+        MEDIA_INFO_LOG("native exposure mode = %{public}d", static_cast<int32_t>(nativeExposureMode));
+        switch (nativeExposureMode) {
+            case OHOS_CAMERA_EXPOSURE_MODE_LOCKED:
+                jsExposureMode = EXPOSURE_MODE_LOCKED;
                 break;
-            case OHOS_CAMERA_AF_MODE_AUTO:
-                jsFocusMode = FOCUS_MODE_AUTO;
+            case OHOS_CAMERA_EXPOSURE_MODE_AUTO:
+                jsExposureMode = EXPOSURE_MODE_AUTO;
                 break;
-            case OHOS_CAMERA_AF_MODE_CONTINUOUS_VIDEO:
-                jsFocusMode = FOCUS_MODE_CONTINUOUS_AUTO;
+            case OHOS_CAMERA_EXPOSURE_MODE_CONTINUOUS_AUTO:
+                jsExposureMode = EXPOSURE_MODE_CONTINUOUS_AUTO;
                 break;
-            case OHOS_CAMERA_AF_MODE_MACRO:
-            case OHOS_CAMERA_AF_MODE_CONTINUOUS_PICTURE:
-            case OHOS_CAMERA_AF_MODE_EDOF:
             default:
-                MEDIA_ERR_LOG("Received native focus mode is not supported with JS");
-                jsFocusMode = -1;
+                MEDIA_ERR_LOG("Received native exposure mode is not supported with JS");
+                jsExposureMode = -1;
         }
     }
 
@@ -359,8 +352,6 @@ public:
             case CAMERA_FORMAT_JPEG:
                 nativeCamFormat = OHOS_CAMERA_FORMAT_JPEG;
                 break;
-            case CAMERA_FORMAT_H264:
-            case CAMERA_FORMAT_H265:
             default:
                 MEDIA_ERR_LOG("Invalid or unsupported camera format value received from application");
                 return -1;

@@ -69,14 +69,14 @@ static const std::int32_t VIDEO_DEFAULT_HEIGHT = 360;
 static const std::int32_t SURFACE_QUEUE_SIZE = 10;
 
 static const std::int32_t CAM_FORMAT_JPEG = 2000;
-static const std::int32_t CAM_FORMAT_YCRCb_420_SP = 1003;
+static const std::int32_t CAM_FORMAT_YUV_420_SP = 1003;
 
 static const std::vector<std::string> vecFlashMode {
     "FLASH_MODE_CLOSE", "FLASH_MODE_OPEN", "FLASH_MODE_AUTO", "FLASH_MODE_ALWAYS_OPEN"
 };
 
 static const std::vector<std::string> vecExposureMode {
-    "EXPOSURE_MODE_MANUAL", "EXPOSURE_MODE_CONTINUOUS_AUTO"
+    "EXPOSURE_MODE_LOCKED", "EXPOSURE_MODE_AUTO", "EXPOSURE_MODE_CONTINUOUS_AUTO"
 };
 
 static const std::vector<std::string> vecFocusMode {
@@ -97,7 +97,7 @@ static const std::vector<std::string> vecConnectionTypeMode {
 };
 
 static const std::vector<std::string> vecCameraFormat {
-    "CAMERA_FORMAT_YUV_420_SP", "CAMERA_FORMAT_H264", "CAMERA_FORMAT_H265", "CAMERA_FORMAT_JPEG"
+    "CAMERA_FORMAT_YUV_420_SP", "CAMERA_FORMAT_JPEG"
 };
 
 static const std::vector<std::string> vecCameraStatus {
@@ -112,8 +112,9 @@ enum FlashMode {
 };
 
 enum ExposureMode {
-    EXPOSUREMODE_MANUAL = 1,
-    EXPOSUREMODE_CONTINUOUS_AUTO = 2,
+    EXPOSUREMODE_LOCKED = 1,
+    EXPOSUREMODE_AUTO = 2,
+    EXPOSUREMODE_CONTINUOUS_AUTO = 3,
 };
 
 enum FocusMode {

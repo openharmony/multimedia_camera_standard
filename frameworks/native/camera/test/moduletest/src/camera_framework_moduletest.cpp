@@ -309,16 +309,40 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput,
         camInput->SetZoomRatio(zoomRatioRange[0]);
     }
 
+    // GetExposureBiasRange
+    std::vector<int32_t> exposureBiasRange = camInput->GetExposureBiasRange();
+    if (!exposureBiasRange.empty()) {
+        camInput->SetExposureBias(exposureBiasRange[0]);
+    }
+
+    // Get/Set Exposurepoint
+    Point exposurePoint = {1, 2};
+    camInput->SetExposurePoint(exposurePoint);
+    Point exposurePointGet = camInput->GetExposurePoint();
+    EXPECT_EQ(exposurePointGet.x, exposurePoint.x);
+    EXPECT_EQ(exposurePointGet.y, exposurePoint.y);
+
+    // GetFocalLength
+    float focalLength = camInput->GetFocalLength();
+    ASSERT_NE(focalLength, 0);
+
+    // Get/Set focuspoint
+    Point focusPoint = {1, 2};
+    camInput->SetFocusPoint(focusPoint);
+    Point focusPointGet = camInput->GetFocusPoint();
+    EXPECT_EQ(focusPointGet.x, focusPoint.x);
+    EXPECT_EQ(focusPointGet.y, focusPoint.y);
+
     camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_OPEN;
     if (video) {
         flash = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
     }
     camInput->SetFlashMode(flash);
 
-    camera_af_mode_t focus = OHOS_CAMERA_AF_MODE_AUTO;
+    camera_focus_mode_enum_t focus = OHOS_CAMERA_FOCUS_MODE_AUTO;
     camInput->SetFocusMode(focus);
 
-    camera_ae_mode_t exposure = OHOS_CAMERA_AE_MODE_ON;
+    camera_exposure_mode_enum_t exposure = OHOS_CAMERA_EXPOSURE_MODE_AUTO;
     camInput->SetExposureMode(exposure);
 
     camInput->UnlockForControl();
@@ -326,6 +350,12 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput,
     if (!zoomRatioRange.empty()) {
         EXPECT_EQ(camInput->GetZoomRatio(), zoomRatioRange[0]);
     }
+
+    // exposureBiasRange
+    if (!exposureBiasRange.empty()) {
+        EXPECT_EQ(camInput->GetExposureValue(), exposureBiasRange[0]);
+    }
+
     EXPECT_EQ(camInput->GetFlashMode(), flash);
     EXPECT_EQ(camInput->GetFocusMode(), focus);
     EXPECT_EQ(camInput->GetExposureMode(), exposure);
@@ -920,7 +950,8 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_008, TestSize.Le
             continue;
         }
         previewFormat_ = format;
-        std::vector<CameraPicSize> previewSizes = ((sptr<CameraInput> &)input_)->getSupportedSizes(previewFormat_);
+        std::vector<CameraPicSize> previewSizes =
+            ((sptr<CameraInput> &)input_)->getSupportedSizes(previewFormat_);
         for (auto &size : previewSizes) {
             TestSupportedResolution(size.width, size.height, photoWidth_, photoHeight_, videoWidth_, videoHeight_);
         }
@@ -1803,6 +1834,349 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_034, TestSize.Le
     sptr<CaptureInput> input = nullptr;
     intResult = session_->RemoveInput(input);
     EXPECT_NE(intResult, 0);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Capture with location setting [lat:1 ,long:1 ,alt:1]
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Capture with location setting
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_035, TestSize.Level0)
+{
+    std::shared_ptr<PhotoCaptureSetting> photoSetting = std::make_shared<PhotoCaptureSetting>();
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->latitude = 1;
+    location->longitude = 1;
+    location->altitude = 1;
+
+    photoSetting->SetLocation(location);
+
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session_->AddOutput(photoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture(photoSetting);
+    EXPECT_EQ(intResult, 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    session_->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Capture with location setting [lat:0.0 ,long:0.0 ,alt:0.0]
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Capture with location setting
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_036, TestSize.Level0)
+{
+    std::shared_ptr<PhotoCaptureSetting> photoSetting = std::make_shared<PhotoCaptureSetting>();
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->latitude = 0.0;
+    location->longitude = 0.0;
+    location->altitude = 0.0;
+
+    photoSetting->SetLocation(location);
+
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session_->AddOutput(photoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture(photoSetting);
+    EXPECT_EQ(intResult, 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    session_->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test Capture with location setting [lat:-1 ,long:-1 ,alt:-1]
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Capture with location setting
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_037, TestSize.Level0)
+{
+    std::shared_ptr<PhotoCaptureSetting> photoSetting = std::make_shared<PhotoCaptureSetting>();
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->latitude = -1;
+    location->longitude = -1;
+    location->altitude = -1;
+
+    photoSetting->SetLocation(location);
+
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session_->AddOutput(photoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture(photoSetting);
+    EXPECT_EQ(intResult, 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    session_->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test snapshot
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test snapshot
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_038, TestSize.Level0)
+{
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session_->AddOutput(photoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput();
+    ASSERT_NE(videoOutput, nullptr);
+
+    intResult = session_->AddOutput(videoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture();
+    EXPECT_EQ(intResult, 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
+    EXPECT_EQ(intResult, 0);
+
+    TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+
+    sleep(WAIT_TIME_BEFORE_STOP);
+    session_->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test snapshot with location setting
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test snapshot with location setting
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_039, TestSize.Level0)
+{
+    std::shared_ptr<PhotoCaptureSetting> photoSetting = std::make_shared<PhotoCaptureSetting>();
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->latitude = 12.972442;
+    location->longitude = 77.580643;
+    location->altitude = 0;
+
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session_->AddOutput(photoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput();
+    ASSERT_NE(videoOutput, nullptr);
+
+    intResult = session_->AddOutput(videoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture(photoSetting);
+    EXPECT_EQ(intResult, 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
+    EXPECT_EQ(intResult, 0);
+
+    TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+
+    sleep(WAIT_TIME_BEFORE_STOP);
+    session_->Stop();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test snapshot with mirror setting
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test snapshot with mirror setting
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_040, TestSize.Level0)
+{
+    std::shared_ptr<PhotoCaptureSetting> photoSetting = std::make_shared<PhotoCaptureSetting>();
+    photoSetting->SetMirror(true);
+
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureInput> input = manager_->CreateCameraInput(cameras_[1]);
+    ASSERT_NE(input, nullptr);
+
+    intResult = session_->AddInput(input);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> photoOutput = CreatePhotoOutput();
+    ASSERT_NE(photoOutput, nullptr);
+
+    intResult = session_->AddOutput(photoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    if (!(((sptr<PhotoOutput> &)photoOutput)->IsMirrorSupported())) {
+        return;
+    }
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput();
+    ASSERT_NE(videoOutput, nullptr);
+
+    intResult = session_->AddOutput(videoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+    intResult = ((sptr<PhotoOutput> &)photoOutput)->Capture(photoSetting);
+    EXPECT_EQ(intResult, 0);
+    sleep(WAIT_TIME_AFTER_CAPTURE);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
+    EXPECT_EQ(intResult, 0);
+
+    TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+
+    sleep(WAIT_TIME_BEFORE_STOP);
+    session_->Stop();
 }
 } // CameraStandard
 } // OHOS

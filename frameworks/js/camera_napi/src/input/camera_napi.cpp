@@ -799,7 +799,7 @@ napi_value CameraNapi::CreateCameraFormatObject(napi_env env)
     if (status == napi_ok) {
         for (unsigned int i = 0; i < vecCameraFormat.size(); i++) {
             propName = vecCameraFormat[i];
-            int32_t value = (propName.compare("CAMERA_FORMAT_JPEG") == 0) ? CAM_FORMAT_JPEG : CAM_FORMAT_YCRCb_420_SP;
+            int32_t value = (propName.compare("CAMERA_FORMAT_JPEG") == 0) ? CAM_FORMAT_JPEG : CAMERA_FORMAT_YUV_420_SP;
             status = AddNamedProperty(env, result, propName, value);
             if (status != napi_ok) {
                 MEDIA_ERR_LOG("Failed to add named prop!");

@@ -20,6 +20,7 @@
 #include "camera_metadata_info.h"
 #include "capture_output.h"
 #include "istream_capture.h"
+#include "session/capture_session.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -59,6 +60,22 @@ public:
      */
     virtual void OnCaptureError(const int32_t captureId, const int32_t errorCode) const = 0;
 };
+
+typedef struct {
+    /**
+     * Latitude.
+     */
+    double latitude;
+    /**
+     * Longitude.
+     */
+    double longitude;
+    /**
+     * Altitude.
+     */
+    double altitude;
+} Location;
+
 class PhotoCaptureSetting {
 public:
     enum QualityLevel {
@@ -112,11 +129,11 @@ public:
     void SetGpsLocation(double latitude, double longitude);
 
     /**
-     * @brief To check the photo capture is mirrored or not.
+     * @brief Set the GPS Location for the photo capture settings.
      *
-     * @return Returns true/false if the photo capture is mirrored/not-mirrored respectively.
+     * @param location value to be set.
      */
-    bool IsMirrored();
+    void SetLocation(std::unique_ptr<Location> &location);
 
     /**
      * @brief Set the mirror option for the photo capture.
@@ -183,10 +200,25 @@ public:
      */
     std::shared_ptr<PhotoCallback> GetApplicationCallback();
 
+    /**
+     * @brief To check the photo capture is mirrored or not.
+     *
+     * @return Returns true/false if the photo capture is mirrored/not-mirrored respectively.
+     */
+    bool IsMirrorSupported();
+
+    /**
+     * @brief set the capture session.
+     *
+     * @param session pointer.
+     */
+    void SetSession(CaptureSession *captureSession);
+
 private:
     sptr<IStreamCapture> streamCapture_;
     std::shared_ptr<PhotoCallback> appCallback_;
     sptr<IStreamCaptureCallback> cameraSvcCallback_;
+    CaptureSession *captureSession_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

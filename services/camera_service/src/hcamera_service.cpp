@@ -391,7 +391,7 @@ void HCameraService::CameraDumpFlash(common_metadata_header_t *metadataEntry,
     int ret;
     dumpString += "    ## Flash Related Info: \n";
     dumpString += "        Available Flash Modes:[";
-    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_ABILITY_DEVICE_AVAILABLE_FLASHMODES, &item);
+    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_ABILITY_FLASH_MODES, &item);
     if (ret == CAM_META_SUCCESS) {
         for (uint32_t i = 0; i < item.count; i++) {
             std::map<int, std::string>::const_iterator iter =
@@ -403,7 +403,7 @@ void HCameraService::CameraDumpFlash(common_metadata_header_t *metadataEntry,
         dumpString += "]:\n";
     }
 
-    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_CONTROL_FLASHMODE, &item);
+    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_CONTROL_FLASH_MODE, &item);
     if (ret == CAM_META_SUCCESS) {
         std::map<int, std::string>::const_iterator iter =
             g_cameraFlashMode.find(item.data.u8[0]);
@@ -423,7 +423,7 @@ void HCameraService::CameraDumpAF(common_metadata_header_t *metadataEntry,
     dumpString += "    ## AF Related Info: \n";
     dumpString += "        Available Focus Modes:[";
 
-    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_CONTROL_AF_AVAILABLE_MODES, &item);
+    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_ABILITY_FOCUS_MODES, &item);
     if (ret == CAM_META_SUCCESS) {
         for (uint32_t i = 0; i < item.count; i++) {
             std::map<int, std::string>::const_iterator iter =
@@ -435,12 +435,44 @@ void HCameraService::CameraDumpAF(common_metadata_header_t *metadataEntry,
         dumpString += "]:\n";
     }
 
-    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_CONTROL_AF_MODE, &item);
+    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_CONTROL_FOCUS_MODE, &item);
     if (ret == CAM_META_SUCCESS) {
         std::map<int, std::string>::const_iterator iter =
             g_cameraFocusMode.find(item.data.u8[0]);
         if (iter != g_cameraFocusMode.end()) {
             dumpString += "        Set Focus Mode:["
+                + iter->second
+                + "]:\n";
+        }
+    }
+}
+
+void HCameraService::CameraDumpAE(common_metadata_header_t *metadataEntry,
+    std::string& dumpString)
+{
+    camera_metadata_item_t item;
+    int ret;
+    dumpString += "    ## AE Related Info: \n";
+    dumpString += "        Available Exposure Modes:[";
+
+    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_ABILITY_EXPOSURE_MODES, &item);
+    if (ret == CAM_META_SUCCESS) {
+        for (uint32_t i = 0; i < item.count; i++) {
+            std::map<int, std::string>::const_iterator iter =
+                g_cameraExposureMode.find(item.data.u8[i]);
+            if (iter != g_cameraExposureMode.end()) {
+                dumpString += " " + iter->second;
+            }
+        }
+        dumpString += "]:\n";
+    }
+
+    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_CONTROL_EXPOSURE_MODE, &item);
+    if (ret == CAM_META_SUCCESS) {
+        std::map<int, std::string>::const_iterator iter =
+            g_cameraExposureMode.find(item.data.u8[0]);
+        if (iter != g_cameraExposureMode.end()) {
+            dumpString += "        Set exposure Mode:["
                 + iter->second
                 + "]:\n";
         }
@@ -504,6 +536,7 @@ int32_t HCameraService::Dump(int fd, const std::vector<std::u16string>& args)
             CameraDumpZoom(metadataEntry, dumpString);
             CameraDumpFlash(metadataEntry, dumpString);
             CameraDumpAF(metadataEntry, dumpString);
+            CameraDumpAE(metadataEntry, dumpString);
             CameraDumpSensorInfo(metadataEntry, dumpString);
         }
     }

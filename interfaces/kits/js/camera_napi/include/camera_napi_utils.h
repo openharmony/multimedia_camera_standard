@@ -152,8 +152,6 @@ enum JSConnectionType {
 
 enum JSCameraFormat {
     CAMERA_FORMAT_YUV_420_SP = 1003,
-    CAMERA_FORMAT_H264,
-    CAMERA_FORMAT_H265,
     CAMERA_FORMAT_JPEG = 2000
 };
 
@@ -354,8 +352,6 @@ public:
             case CAMERA_FORMAT_JPEG:
                 nativeCamFormat = OHOS_CAMERA_FORMAT_JPEG;
                 break;
-            case CAMERA_FORMAT_H264:
-            case CAMERA_FORMAT_H265:
             default:
                 MEDIA_ERR_LOG("Invalid or unsupported camera format value received from application");
                 return -1;

@@ -95,28 +95,12 @@ public:
     std::vector<camera_format_t> GetSupportedPreviewFormats();
 
     /**
-    * @brief Get the supported sizes for given photo format.
+    * @brief Get the supported sizes for given format.
     *
     * @param camera_format_t for which you want to get supported sizes.
     * @return Returns vector of CameraPicSize supported sizes.
     */
-    std::vector<CameraPicSize> GetSupportedPhotoSizes(camera_format_t format);
-
-    /**
-    * @brief Get the supported sizes for given preview format.
-    *
-    * @param camera_format_t for which you want to get supported sizes.
-    * @return Returns vector of CameraPicSize supported sizes.
-    */
-    std::vector<CameraPicSize> GetSupportedPreviewSizes(camera_format_t format);
-
-    /**
-    * @brief Get the supported sizes for given video format.
-    *
-    * @param camera_format_t for which you want to get supported sizes.
-    * @return Returns vector of CameraPicSize supported sizes.
-    */
-    std::vector<CameraPicSize> GetSupportedVideoSizes(camera_format_t format);
+    std::vector<CameraPicSize> GetSupportedSizes(camera_format_t format);
 
     /**
     * @brief Get the supported exposure modes.

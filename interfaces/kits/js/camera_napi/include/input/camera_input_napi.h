@@ -139,9 +139,7 @@ private:
     static napi_value SetFocusPoint(napi_env env, napi_callback_info info);
     static napi_value GetFocusPoint(napi_env env, napi_callback_info info);
     static napi_value GetFocalLength(napi_env env, napi_callback_info info);
-    static napi_value GetSupportedPhotoSizes(napi_env env, napi_callback_info info);
-    static napi_value GetSupportedPreviewSizes(napi_env env, napi_callback_info info);
-    static napi_value GetSupportedVideoSizes(napi_env env, napi_callback_info info);
+    static napi_value GetSupportedSizes(napi_env env, napi_callback_info info);
     static napi_value GetSupportedPhotoFormats(napi_env env, napi_callback_info info);
     static napi_value GetSupportedVideoFormats(napi_env env, napi_callback_info info);
     static napi_value GetSupportedPreviewFormats(napi_env env, napi_callback_info info);
@@ -197,9 +195,7 @@ struct CameraInputAsyncContext {
     std::vector<camera_format_t> vecSupportedPhotoFormatList;
     std::vector<camera_format_t> vecSupportedVideoFormatList;
     std::vector<camera_format_t> vecSupportedPreviewFormatList;
-    std::vector<CameraPicSize> vecSupportedPhotoSizeList;
-    std::vector<CameraPicSize> vecSupportedPreviewSizeList;
-    std::vector<CameraPicSize> vecSupportedVideoSizeList;
+    std::vector<CameraPicSize> vecSupportedSizeList;
     std::vector<float> vecZoomRatioList;
     std::vector<int32_t> vecExposureBiasList;
     std::string funcName;

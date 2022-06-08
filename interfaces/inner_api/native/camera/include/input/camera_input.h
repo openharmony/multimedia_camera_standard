@@ -100,7 +100,7 @@ public:
     * @param camera_format_t for which you want to get supported sizes.
     * @return Returns vector of CameraPicSize supported sizes.
     */
-    std::vector<CameraPicSize> GetSupportedSizes(camera_format_t format);
+    std::vector<CameraPicSize> getSupportedSizes(camera_format_t format);
 
     /**
     * @brief Get the supported exposure modes.

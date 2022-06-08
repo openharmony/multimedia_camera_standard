@@ -259,7 +259,7 @@ std::vector<camera_format_t> CameraInput::GetSupportedPreviewFormats()
     return std::vector<camera_format_t>(formats.begin(), formats.end());
 }
 
-std::vector<CameraPicSize> CameraInput::GetSupportedSizes(camera_format_t format)
+std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format)
 {
     uint32_t widthOffset = 1;
     uint32_t heightOffset = 2;

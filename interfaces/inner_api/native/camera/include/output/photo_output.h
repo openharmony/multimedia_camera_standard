@@ -123,6 +123,14 @@ public:
     /**
      * @brief Set the GPS Location for the photo capture settings.
      *
+     * @param latitude value to be set.
+     * @param longitude value to be set.
+     */
+    void SetGpsLocation(double latitude, double longitude);
+
+    /**
+     * @brief Set the GPS Location for the photo capture settings.
+     *
      * @param location value to be set.
      */
     void SetLocation(std::unique_ptr<Location> &location);

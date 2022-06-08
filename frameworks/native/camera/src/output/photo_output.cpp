@@ -110,6 +110,15 @@ void PhotoCaptureSetting::SetRotation(PhotoCaptureSetting::RotationConfig rotati
     return;
 }
 
+void PhotoCaptureSetting::SetGpsLocation(double latitude, double longitude)
+{
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->latitude = latitude;
+    location->longitude = longitude;
+    location->altitude = 0;
+    SetLocation(location);
+}
+
 void PhotoCaptureSetting::SetLocation(std::unique_ptr<Location> &location)
 {
     double gpsCoordinates[3] = {location->latitude, location->longitude, location->altitude};

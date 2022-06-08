@@ -409,19 +409,19 @@ int32_t CameraCaptureVideo::InitCameraFormatAndResolution(sptr<CameraInput> &cam
         MEDIA_DEBUG_LOG("OHOS_CAMERA_FORMAT_YCRCB_420_SP format is not present in supported video formats");
     }
     std::vector<CameraPicSize> previewSizes
-        = cameraInput->GetSupportedSizes(static_cast<camera_format_t>(previewFormat_));
+        = cameraInput->getSupportedSizes(static_cast<camera_format_t>(previewFormat_));
     MEDIA_DEBUG_LOG("Supported sizes for preview:");
     for (auto &sizePreview : previewSizes) {
         MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", sizePreview.width, sizePreview.height);
     }
     std::vector<CameraPicSize> photoSizes =
-        cameraInput->GetSupportedSizes(static_cast<camera_format_t>(photoFormat_));
+        cameraInput->getSupportedSizes(static_cast<camera_format_t>(photoFormat_));
     MEDIA_DEBUG_LOG("Supported sizes for photo:");
     for (auto &sizePhoto : photoSizes) {
         MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", sizePhoto.width, sizePhoto.height);
     }
     std::vector<CameraPicSize> videoSizes =
-        cameraInput->GetSupportedSizes(static_cast<camera_format_t>(videoFormat_));
+        cameraInput->getSupportedSizes(static_cast<camera_format_t>(videoFormat_));
     MEDIA_DEBUG_LOG("Supported sizes for video:");
     for (auto &sizeVideo : videoSizes) {
         MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", sizeVideo.width, sizeVideo.height);

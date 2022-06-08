@@ -71,32 +71,30 @@ public:
             CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashStateChanged! current OHOS_CONTROL_FLASH_STATE is %d",
                                                item.data.u8[0]));
         }
-        ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASHMODE, &item);
+        ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASH_MODE, &item);
         if (ret == 0) {
-            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASHMODE is %{public}d",
+            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASH_MODE is %{public}d",
                            item.data.u8[0]);
-            CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashModeChanged! current OHOS_CONTROL_FLASHMODE is %d",
+            CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashModeChanged! current OHOS_CONTROL_FLASH_MODE is %d",
                                                item.data.u8[0]));
         }
-        ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_AE_MODE, &item);
-        if (ret == 0) {
-            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_AE_MODE is %{public}d",
-                           item.data.u8[0]);
-            CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("AutoExposureModeChanged! current OHOS_CONTROL_AE_MODE is %d",
-                                               item.data.u8[0]));
-        }
+
+        camInput_->ProcessAutoExposureUpdates(result);
         camInput_->ProcessAutoFocusUpdates(result);
         return CAMERA_OK;
     }
 };
 
-const std::unordered_map<camera_af_state_t, FocusCallback::FocusState> CameraInput::mapFromMetadataFocus_ = {
-    {OHOS_CAMERA_AF_STATE_PASSIVE_SCAN, FocusCallback::SCAN},
-    {OHOS_CAMERA_AF_STATE_ACTIVE_SCAN, FocusCallback::SCAN},
-    {OHOS_CAMERA_AF_STATE_PASSIVE_FOCUSED, FocusCallback::FOCUSED},
-    {OHOS_CAMERA_AF_STATE_FOCUSED_LOCKED, FocusCallback::FOCUSED},
-    {OHOS_CAMERA_AF_STATE_PASSIVE_UNFOCUSED, FocusCallback::UNFOCUSED},
-    {OHOS_CAMERA_AF_STATE_NOT_FOCUSED_LOCKED, FocusCallback::UNFOCUSED},
+const std::unordered_map<camera_focus_state_t, FocusCallback::FocusState> CameraInput::mapFromMetadataFocus_ = {
+    {OHOS_CAMERA_FOCUS_STATE_SCAN, FocusCallback::SCAN},
+    {OHOS_CAMERA_FOCUS_STATE_FOCUSED, FocusCallback::FOCUSED},
+    {OHOS_CAMERA_FOCUS_STATE_UNFOCUSED, FocusCallback::UNFOCUSED}
+};
+
+const std::unordered_map<camera_exposure_state_t,
+        ExposureCallback::ExposureState> CameraInput::mapFromMetadataExposure_ = {
+    {OHOS_CAMERA_EXPOSURE_STATE_SCAN, ExposureCallback::SCAN},
+    {OHOS_CAMERA_EXPOSURE_STATE_CONVERGED, ExposureCallback::CONVERGED}
 };
 
 CameraInput::CameraInput(sptr<ICameraDeviceService> &deviceObj,
@@ -300,21 +298,33 @@ std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format
     return sizes;
 }
 
-std::vector<camera_ae_mode_t> CameraInput::GetSupportedExposureModes()
+bool CameraInput::IsExposureModeSupported(camera_exposure_mode_enum_t exposureMode)
 {
-    std::vector<camera_ae_mode_t> supportedExposureModes;
+    std::vector<camera_exposure_mode_enum_t> vecSupportedExposureModeList;
+    vecSupportedExposureModeList = this->GetSupportedExposureModes();
+    if (find(vecSupportedExposureModeList.begin(), vecSupportedExposureModeList.end(),
+        exposureMode) != vecSupportedExposureModeList.end()) {
+        return true;
+    }
+
+    return false;
+}
+
+std::vector<camera_exposure_mode_enum_t> CameraInput::GetSupportedExposureModes()
+{
+    std::vector<camera_exposure_mode_enum_t> supportedExposureModes;
     std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AE_AVAILABLE_MODES, &item);
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_EXPOSURE_MODES, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetSupportedExposureModes Failed with return code %{public}d", ret);
         return supportedExposureModes;
     }
-    getVector(item.data.u8, item.count, supportedExposureModes, camera_ae_mode_t(0));
+    getVector(item.data.u8, item.count, supportedExposureModes, camera_exposure_mode_enum_t(0));
     return supportedExposureModes;
 }
 
-void CameraInput::SetExposureMode(camera_ae_mode_t exposureMode)
+void CameraInput::SetExposureMode(camera_exposure_mode_enum_t exposureMode)
 {
     CAMERA_SYNC_TRACE;
     if (changedMetadata_ == nullptr) {
@@ -325,11 +335,11 @@ void CameraInput::SetExposureMode(camera_ae_mode_t exposureMode)
     uint32_t count = 1;
     uint8_t exposure = exposureMode;
     camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AE_MODE, &item);
+    int ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_EXPOSURE_MODE, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
-        status = changedMetadata_->addEntry(OHOS_CONTROL_AE_MODE, &exposure, count);
+        status = changedMetadata_->addEntry(OHOS_CONTROL_EXPOSURE_MODE, &exposure, count);
     } else if (ret == CAM_META_SUCCESS) {
-        status = changedMetadata_->updateEntry(OHOS_CONTROL_AE_MODE, &exposure, count);
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_EXPOSURE_MODE, &exposure, count);
     }
 
     if (!status) {
@@ -339,34 +349,144 @@ void CameraInput::SetExposureMode(camera_ae_mode_t exposureMode)
     return;
 }
 
-camera_ae_mode_t CameraInput::GetExposureMode()
+camera_exposure_mode_enum_t CameraInput::GetExposureMode()
 {
     std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AE_MODE, &item);
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_EXPOSURE_MODE, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetExposureMode Failed with return code %{public}d", ret);
-        return OHOS_CAMERA_AE_MODE_OFF;
+        return OHOS_CAMERA_EXPOSURE_MODE_MANUAL;
     }
-    return static_cast<camera_ae_mode_t>(item.data.u8[0]);
+    return static_cast<camera_exposure_mode_enum_t>(item.data.u8[0]);
+}
+
+void CameraInput::SetExposurePoint(Point exposurePoint)
+{
+    if (changedMetadata_ == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::SetExposurePoint Need to call LockForControl() before setting camera properties");
+        return;
+    }
+    bool status = false;
+    float exposureArea[2] = {exposurePoint.x, exposurePoint.y};
+    camera_metadata_item_t item;
+
+    int ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AE_REGIONS, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_AE_REGIONS, exposureArea,
+            sizeof(exposureArea) / sizeof(exposureArea[0]));
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_AE_REGIONS, exposureArea,
+            sizeof(exposureArea) / sizeof(exposureArea[0]));
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::SetExposurePoint Failed to set exposure Area");
+    }
+}
+
+
+Point CameraInput::GetExposurePoint()
+{
+    Point exposurePoint = {0, 0};
+    std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
+    camera_metadata_item_t item;
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AE_REGIONS, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("CameraInput::GetExposurePoint Failed with return code %{public}d", ret);
+        return exposurePoint;
+    }
+    exposurePoint.x = item.data.f[0];
+    exposurePoint.y = item.data.f[1];
+
+    return exposurePoint;
+}
+
+
+std::vector<int32_t> CameraInput::GetExposureBiasRange()
+{
+    return cameraObj_->GetExposureBiasRange();
+}
+
+
+void CameraInput::SetExposureBias(int32_t exposureValue)
+{
+    if (changedMetadata_ == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::SetExposureValue Need to call LockForControl() before setting camera properties");
+        return;
+    }
+
+    bool status = false;
+    int32_t ret;
+    int32_t minIndex = 0;
+    int32_t maxIndex = 1;
+    int32_t count = 1;
+    camera_metadata_item_t item;
+
+    MEDIA_DEBUG_LOG("CameraInput::SetExposureValue exposure compensation: %{public}d", exposureValue);
+
+    std::vector<int32_t> biasRange = cameraObj_->GetExposureBiasRange();
+    if (biasRange.empty()) {
+        MEDIA_ERR_LOG("CameraInput::SetExposureValue Bias range is empty");
+        return;
+    }
+    if (exposureValue < biasRange[minIndex]) {
+        MEDIA_DEBUG_LOG("CameraInput::SetExposureValue bias value:"
+                        "%{public}d is lesser than minimum bias: %{public}d",
+                        exposureValue, biasRange[minIndex]);
+        exposureValue = biasRange[minIndex];
+    } else if (exposureValue > biasRange[maxIndex]) {
+        MEDIA_DEBUG_LOG("CameraInput::SetExposureValue bias value: %{public}d is greater than maximum bias: %{public}d",
+                        exposureValue, biasRange[maxIndex]);
+        exposureValue = biasRange[maxIndex];
+    }
+
+    if (exposureValue == 0) {
+        MEDIA_ERR_LOG("CameraInput::SetExposureValue Invalid exposure compensation value");
+        return;
+    }
+
+    ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AE_EXPOSURE_COMPENSATION, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_AE_EXPOSURE_COMPENSATION, &exposureValue, count);
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_AE_EXPOSURE_COMPENSATION, &exposureValue, count);
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::SetExposureValue Failed to set exposure compensation");
+    }
+    return;
+}
+
+int32_t CameraInput::GetExposureValue()
+{
+    std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
+    camera_metadata_item_t item;
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AE_EXPOSURE_COMPENSATION, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("CameraInput::GetExposureValue Failed with return code %{public}d", ret);
+        return 0;
+    }
+    return static_cast<int32_t>(item.data.i32[0]);
 }
 
 void CameraInput::SetExposureCallback(std::shared_ptr<ExposureCallback> exposureCallback)
 {
-    exposurecallback_ = exposureCallback;
+    exposureCallback_ = exposureCallback;
 }
 
-std::vector<camera_af_mode_t> CameraInput::GetSupportedFocusModes()
+std::vector<camera_focus_mode_enum_t> CameraInput::GetSupportedFocusModes()
 {
-    std::vector<camera_af_mode_t> supportedFocusModes;
+    std::vector<camera_focus_mode_enum_t> supportedFocusModes;
     std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AF_AVAILABLE_MODES, &item);
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_FOCUS_MODES, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetSupportedFocusModes Failed with return code %{public}d", ret);
         return supportedFocusModes;
     }
-    getVector(item.data.u8, item.count, supportedFocusModes, camera_af_mode_t(0));
+    getVector(item.data.u8, item.count, supportedFocusModes, camera_focus_mode_enum_t(0));
     return supportedFocusModes;
 }
 
@@ -376,7 +496,19 @@ void CameraInput::SetFocusCallback(std::shared_ptr<FocusCallback> focusCallback)
     return;
 }
 
-int32_t CameraInput::StartFocus(camera_af_mode_t focusMode)
+bool CameraInput::IsFocusModeSupported(camera_focus_mode_enum_t focusMode)
+{
+    std::vector<camera_focus_mode_enum_t> vecSupportedFocusModeList;
+    vecSupportedFocusModeList = this->GetSupportedFocusModes();
+    if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),
+        focusMode) != vecSupportedFocusModeList.end()) {
+        return true;
+    }
+
+    return false;
+}
+
+int32_t CameraInput::StartFocus(camera_focus_mode_enum_t focusMode)
 {
     bool status = false;
     int32_t ret;
@@ -385,8 +517,8 @@ int32_t CameraInput::StartFocus(camera_af_mode_t focusMode)
     uint8_t trigger = OHOS_CAMERA_AF_TRIGGER_START;
     camera_metadata_item_t item;
 
-    if ((focusMode == OHOS_CAMERA_AF_MODE_OFF) || (focusMode == OHOS_CAMERA_AF_MODE_CONTINUOUS_VIDEO)
-        || (focusMode == OHOS_CAMERA_AF_MODE_CONTINUOUS_PICTURE)) {
+    // Todo: recheck this condition
+    if (focusMode == OHOS_CAMERA_FOCUS_MODE_MANUAL) {
         return CAM_META_SUCCESS;
     }
 
@@ -417,7 +549,7 @@ int32_t CameraInput::StartFocus(camera_af_mode_t focusMode)
     return CAM_META_SUCCESS;
 }
 
-void CameraInput::SetFocusMode(camera_af_mode_t focusMode)
+void CameraInput::SetFocusMode(camera_focus_mode_enum_t focusMode)
 {
     CAMERA_SYNC_TRACE;
     if (changedMetadata_ == nullptr) {
@@ -440,29 +572,80 @@ void CameraInput::SetFocusMode(camera_af_mode_t focusMode)
     }
 #endif
 
-    ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AF_MODE, &item);
+    ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_FOCUS_MODE, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
-        status = changedMetadata_->addEntry(OHOS_CONTROL_AF_MODE, &focus, count);
+        status = changedMetadata_->addEntry(OHOS_CONTROL_FOCUS_MODE, &focus, count);
     } else if (ret == CAM_META_SUCCESS) {
-        status = changedMetadata_->updateEntry(OHOS_CONTROL_AF_MODE, &focus, count);
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_FOCUS_MODE, &focus, count);
     }
 
     if (!status) {
         MEDIA_ERR_LOG("CameraInput::SetFocusMode Failed to set focus mode");
     }
-    return;
 }
 
-camera_af_mode_t CameraInput::GetFocusMode()
+camera_focus_mode_enum_t CameraInput::GetFocusMode()
 {
     std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AF_MODE, &item);
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_FOCUS_MODE, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetFocusMode Failed with return code %{public}d", ret);
-        return OHOS_CAMERA_AF_MODE_OFF;
+        return OHOS_CAMERA_FOCUS_MODE_MANUAL;
     }
-    return static_cast<camera_af_mode_t>(item.data.u8[0]);
+    return static_cast<camera_focus_mode_enum_t>(item.data.u8[0]);
+}
+
+void CameraInput::SetFocusPoint(Point focusPoint)
+{
+    if (changedMetadata_ == nullptr) {
+        MEDIA_ERR_LOG("CameraInput::SetFocusPoint Need to call LockForControl() before setting camera properties");
+        return;
+    }
+    bool status = false;
+    float FocusArea[2] = {focusPoint.x, focusPoint.y};
+    camera_metadata_item_t item;
+
+    int ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_AF_REGIONS, &item);
+    if (ret == CAM_META_ITEM_NOT_FOUND) {
+        status = changedMetadata_->addEntry(OHOS_CONTROL_AF_REGIONS, FocusArea,
+            sizeof(FocusArea) / sizeof(FocusArea[0]));
+    } else if (ret == CAM_META_SUCCESS) {
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_AF_REGIONS, FocusArea,
+            sizeof(FocusArea) / sizeof(FocusArea[0]));
+    }
+
+    if (!status) {
+        MEDIA_ERR_LOG("CameraInput::SetFocusPoint Failed to set Focus Area");
+    }
+}
+
+Point CameraInput::GetFocusPoint()
+{
+    Point focusPoint = {0, 0};
+    std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
+    camera_metadata_item_t item;
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_AF_REGIONS, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("CameraInput::GetFocusPoint Failed with return code %{public}d", ret);
+        return focusPoint;
+    }
+    focusPoint.x = item.data.f[0];
+    focusPoint.y = item.data.f[1];
+
+    return focusPoint;
+}
+
+float CameraInput::GetFocalLength()
+{
+    std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
+    camera_metadata_item_t item;
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_FOCAL_LENGTH, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("CameraInput::GetFocalLength Failed with return code %{public}d", ret);
+        return 0;
+    }
+    return static_cast<float>(item.data.f[0]);
 }
 
 std::vector<float> CameraInput::GetSupportedZoomRatioRange()
@@ -604,7 +787,7 @@ std::vector<camera_flash_mode_enum_t> CameraInput::GetSupportedFlashModes()
     std::vector<camera_flash_mode_enum_t> supportedFlashModes;
     std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_DEVICE_AVAILABLE_FLASHMODES, &item);
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_FLASH_MODES, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetSupportedFlashModes Failed with return code %{public}d", ret);
         return supportedFlashModes;
@@ -617,7 +800,7 @@ camera_flash_mode_enum_t CameraInput::GetFlashMode()
 {
     std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
     camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_FLASHMODE, &item);
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_FLASH_MODE, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("CameraInput::GetFlashMode Failed with return code %{public}d", ret);
         return OHOS_CAMERA_FLASH_MODE_CLOSE;
@@ -637,11 +820,11 @@ void CameraInput::SetFlashMode(camera_flash_mode_enum_t flashMode)
     uint32_t count = 1;
     uint8_t flash = flashMode;
     camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_FLASHMODE, &item);
+    int ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_FLASH_MODE, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
-        status = changedMetadata_->addEntry(OHOS_CONTROL_FLASHMODE, &flash, count);
+        status = changedMetadata_->addEntry(OHOS_CONTROL_FLASH_MODE, &flash, count);
     } else if (ret == CAM_META_SUCCESS) {
-        status = changedMetadata_->updateEntry(OHOS_CONTROL_FLASHMODE, &flash, count);
+        status = changedMetadata_->updateEntry(OHOS_CONTROL_FLASH_MODE, &flash, count);
     }
 
     if (!status) {
@@ -673,22 +856,45 @@ void CameraInput::ProcessAutoFocusUpdates(const std::shared_ptr<Camera::CameraMe
 {
     camera_metadata_item_t item;
     common_metadata_header_t *metadata = result->get();
-    int ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_AF_MODE, &item);
+    int ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_FOCUS_MODE, &item);
     if (ret == CAM_META_SUCCESS) {
         MEDIA_DEBUG_LOG("Focus mode: %{public}d", item.data.u8[0]);
-        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusModeChanged! current OHOS_CONTROL_AF_MODE is %d",
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusModeChanged! current OHOS_CONTROL_FOCUS_MODE is %d",
                                            item.data.u8[0]));
     }
-    ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_AF_STATE, &item);
+    ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_FOCUS_STATE, &item);
     if (ret == CAM_META_SUCCESS) {
         MEDIA_INFO_LOG("Focus state: %{public}d", item.data.u8[0]);
-        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusStateChanged! current OHOS_CONTROL_AF_STATE is %d",
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusStateChanged! current OHOS_CONTROL_FOCUS_STATE is %d",
                                            item.data.u8[0]));
         if (focusCallback_ != nullptr) {
-            camera_af_state_t focusState = static_cast<camera_af_state_t>(item.data.u8[0]);
+            camera_focus_state_t focusState = static_cast<camera_focus_state_t>(item.data.u8[0]);
             auto itr = mapFromMetadataFocus_.find(focusState);
             if (itr != mapFromMetadataFocus_.end()) {
                 focusCallback_->OnFocusState(itr->second);
+            }
+        }
+    }
+}
+
+void CameraInput::ProcessAutoExposureUpdates(const std::shared_ptr<Camera::CameraMetadata> &result)
+{
+    camera_metadata_item_t item;
+    common_metadata_header_t *metadata = result->get();
+
+    int ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_EXPOSURE_MODE, &item);
+    if (ret == CAM_META_SUCCESS) {
+        MEDIA_DEBUG_LOG("exposure mode: %{public}d", item.data.u8[0]);
+    }
+
+    ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_EXPOSURE_STATE, &item);
+    if (ret == CAM_META_SUCCESS) {
+        MEDIA_INFO_LOG("Exposure state: %{public}d", item.data.u8[0]);
+        if (exposureCallback_ != nullptr) {
+            camera_exposure_state_t exposureState = static_cast<camera_exposure_state_t>(item.data.u8[0]);
+            auto itr = mapFromMetadataExposure_.find(exposureState);
+            if (itr != mapFromMetadataExposure_.end()) {
+                exposureCallback_->OnExposureState(itr->second);
             }
         }
     }
@@ -707,6 +913,11 @@ int32_t CameraInput::SetCameraSettings(std::string setting)
         return CAMERA_INVALID_ARG;
     }
     return UpdateSetting(metadata);
+}
+
+sptr<CameraInfo> CameraInput::GetCameraDeviceInfo()
+{
+    return cameraObj_;
 }
 } // CameraStandard
 } // OHOS

@@ -198,13 +198,13 @@ int main(int argc, char **argv)
             photoFormat = photoFormats[0];
         }
         std::vector<CameraPicSize> previewSizes
-            = cameraInput->GetSupportedPreviewSizes(static_cast<camera_format_t>(previewFormat));
+            = cameraInput->GetSupportedSizes(static_cast<camera_format_t>(previewFormat));
         MEDIA_DEBUG_LOG("Supported sizes for preview:");
         for (auto &size : previewSizes) {
             MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);
         }
         std::vector<CameraPicSize> photoSizes
-            = cameraInput->GetSupportedPhotoSizes(static_cast<camera_format_t>(photoFormat));
+            = cameraInput->GetSupportedSizes(static_cast<camera_format_t>(photoFormat));
         MEDIA_DEBUG_LOG("Supported sizes for photo:");
         for (auto &size : photoSizes) {
             MEDIA_DEBUG_LOG("width: %{public}d, height: %{public}d", size.width, size.height);

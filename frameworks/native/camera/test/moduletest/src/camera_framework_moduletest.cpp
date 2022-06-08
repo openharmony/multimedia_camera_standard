@@ -688,11 +688,11 @@ void CameraFrameworkModuleTest::SetUp()
     } else {
         videoFormat_ = videoFormats_[0];
     }
-    std::vector<CameraPicSize> previewSizes = camInput->GetSupportedSizes(previewFormat_);
+    std::vector<CameraPicSize> previewSizes = camInput->getSupportedSizes(previewFormat_);
     ASSERT_TRUE(previewSizes.size() != 0);
-    std::vector<CameraPicSize> photoSizes = camInput->GetSupportedSizes(photoFormat_);
+    std::vector<CameraPicSize> photoSizes = camInput->getSupportedSizes(photoFormat_);
     ASSERT_TRUE(photoSizes.size() != 0);
-    std::vector<CameraPicSize> videoSizes = camInput->GetSupportedSizes(videoFormat_);
+    std::vector<CameraPicSize> videoSizes = camInput->getSupportedSizes(videoFormat_);
     ASSERT_TRUE(videoSizes.size() != 0);
     CameraPicSize size = previewSizes.back();
     previewWidth_ = size.width;
@@ -951,7 +951,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_008, TestSize.Le
         }
         previewFormat_ = format;
         std::vector<CameraPicSize> previewSizes =
-            ((sptr<CameraInput> &)input_)->GetSupportedSizes(previewFormat_);
+            ((sptr<CameraInput> &)input_)->getSupportedSizes(previewFormat_);
         for (auto &size : previewSizes) {
             TestSupportedResolution(size.width, size.height, photoWidth_, photoHeight_, videoWidth_, videoHeight_);
         }
@@ -970,7 +970,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_009, TestSize.Le
 {
     for (auto &format : photoFormats_) {
         photoFormat_ = format;
-        std::vector<CameraPicSize> photoSizes = ((sptr<CameraInput> &)input_)->GetSupportedSizes(photoFormat_);
+        std::vector<CameraPicSize> photoSizes = ((sptr<CameraInput> &)input_)->getSupportedSizes(photoFormat_);
         for (auto &size : photoSizes) {
             TestSupportedResolution(previewWidth_, previewHeight_, size.width, size.height, videoWidth_, videoHeight_);
         }
@@ -992,7 +992,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_010, TestSize.Le
             continue;
         }
         videoFormat_ = format;
-        std::vector<CameraPicSize> videoSizes = ((sptr<CameraInput> &)input_)->GetSupportedSizes(videoFormat_);
+        std::vector<CameraPicSize> videoSizes = ((sptr<CameraInput> &)input_)->getSupportedSizes(videoFormat_);
         for (auto &size : videoSizes) {
             TestSupportedResolution(previewWidth_, previewHeight_, photoWidth_, photoHeight_, size.width, size.height);
         }

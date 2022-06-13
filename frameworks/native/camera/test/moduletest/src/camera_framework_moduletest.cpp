@@ -318,9 +318,6 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput,
     // Get/Set Exposurepoint
     Point exposurePoint = {1, 2};
     camInput->SetExposurePoint(exposurePoint);
-    Point exposurePointGet = camInput->GetExposurePoint();
-    EXPECT_EQ(exposurePointGet.x, exposurePoint.x);
-    EXPECT_EQ(exposurePointGet.y, exposurePoint.y);
 
     // GetFocalLength
     float focalLength = camInput->GetFocalLength();
@@ -329,9 +326,6 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput,
     // Get/Set focuspoint
     Point focusPoint = {1, 2};
     camInput->SetFocusPoint(focusPoint);
-    Point focusPointGet = camInput->GetFocusPoint();
-    EXPECT_EQ(focusPointGet.x, focusPoint.x);
-    EXPECT_EQ(focusPointGet.y, focusPoint.y);
 
     camera_flash_mode_enum_t flash = OHOS_CAMERA_FLASH_MODE_OPEN;
     if (video) {
@@ -346,6 +340,14 @@ void CameraFrameworkModuleTest::SetCameraParameters(sptr<CameraInput> &camInput,
     camInput->SetExposureMode(exposure);
 
     camInput->UnlockForControl();
+
+    Point exposurePointGet = camInput->GetExposurePoint();
+    EXPECT_EQ(exposurePointGet.x, exposurePoint.x);
+    EXPECT_EQ(exposurePointGet.y, exposurePoint.y);
+
+    Point focusPointGet = camInput->GetFocusPoint();
+    EXPECT_EQ(focusPointGet.x, focusPoint.x);
+    EXPECT_EQ(focusPointGet.y, focusPoint.y);
 
     if (!zoomRatioRange.empty()) {
         EXPECT_EQ(camInput->GetZoomRatio(), zoomRatioRange[0]);

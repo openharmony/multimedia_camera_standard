@@ -217,6 +217,8 @@ napi_value VideoOutputNapi::Init(napi_env env, napi_value exports)
     napi_property_descriptor video_output_props[] = {
         DECLARE_NAPI_FUNCTION("start", Start),
         DECLARE_NAPI_FUNCTION("stop", Stop),
+        DECLARE_NAPI_FUNCTION("getFrameRateRange", GetFrameRateRange),
+        DECLARE_NAPI_FUNCTION("setFrameRateRange", SetFrameRateRange),
         DECLARE_NAPI_FUNCTION("release", Release),
         DECLARE_NAPI_FUNCTION("on", On)
     };
@@ -271,6 +273,37 @@ napi_value VideoOutputNapi::VideoOutputNapiConstructor(napi_env env, napi_callba
         }
     }
 
+    return result;
+}
+
+static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_value argv[],
+    VideoOutputAsyncContext &asyncContext)
+{
+    std::string str = "";
+    std::vector<std::string> strArr;
+    std::string order = "";
+    const int32_t refCount = 1;
+    napi_value result;
+    auto context = &asyncContext;
+
+    NAPI_ASSERT(env, argv != nullptr, "Argument list is empty");
+
+    for (size_t i = PARAM0; i < argc; i++) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[i], &valueType);
+
+        if (i == PARAM0 && valueType == napi_number) {
+            napi_get_value_int32(env, argv[i], &context->minFrameRate);
+        } else if (i == PARAM1 && valueType == napi_number) {
+            napi_get_value_int32(env, argv[i], &context->maxFrameRate);
+        } else if (i == PARAM2 && valueType == napi_function) {
+            napi_create_reference(env, argv[i], refCount, &context->callbackRef);
+        } else {
+            NAPI_ASSERT(env, false, "type mismatch");
+        }
+    }
+    // Return true napi_value if params are successfully obtained
+    napi_get_boolean(env, true, &result);
     return result;
 }
 
@@ -466,6 +499,170 @@ napi_value VideoOutputNapi::Stop(napi_env env, napi_callback_info info)
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             MEDIA_ERR_LOG("Failed to create napi_create_async_work for VideoOutputNapi::Stop");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
+}
+
+void GetFrameRateRangeAsyncCallbackComplete(napi_env env, napi_status status, void *data)
+{
+    auto context = static_cast<VideoOutputAsyncContext*>(data);
+    napi_value frameRateRange = nullptr;
+
+    CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
+
+    std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
+    jsContext->status = true;
+    napi_get_undefined(env, &jsContext->error);
+    if ((!context->vecFrameRateRangeList.empty()) && (napi_create_array(env, &frameRateRange) == napi_ok)) {
+        int32_t j = 0;
+        for (size_t i = 0; i < context->vecFrameRateRangeList.size(); i++) {
+            int32_t  frameRate = context->vecFrameRateRangeList[i];
+            napi_value value;
+            if (napi_create_int32(env, frameRate, &value) == napi_ok) {
+                napi_set_element(env, frameRateRange, j, value);
+                j++;
+            }
+        }
+        jsContext->data = frameRateRange;
+    } else {
+        MEDIA_ERR_LOG("vecFrameRateRangeList is empty or failed to create array!");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "vecFrameRateRangeList is empty or failed to create array!", jsContext);
+    }
+
+    if (context->work != nullptr) {
+        CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
+                                             context->work, *jsContext);
+    }
+    delete context;
+}
+
+napi_value VideoOutputNapi::GetFrameRateRange(napi_env env, napi_callback_info info)
+{
+    CAMERA_SYNC_TRACE;
+    napi_status status;
+    napi_value result = nullptr;
+    const int32_t refCount = 1;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, (argc <= ARGS_ONE), "requires 1 parameter maximum");
+
+    napi_get_undefined(env, &result);
+    auto asyncContext = std::make_unique<VideoOutputAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        if (argc == ARGS_ONE) {
+            CAMERA_NAPI_GET_JS_ASYNC_CB_REF(env, argv[PARAM0], refCount, asyncContext->callbackRef);
+        }
+        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "GetFrameRateRange");
+        status = napi_create_async_work(
+            env, nullptr, resource, [](napi_env env, void* data) {
+                auto context = static_cast<VideoOutputAsyncContext*>(data);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->vecFrameRateRangeList = ((sptr<VideoOutput> &)
+                            (context->objectInfo->videoOutput_))->GetFrameRateRange();
+                    if (!context->vecFrameRateRangeList.empty()) {
+                        context->status = true;
+                    } else {
+                        context->status = false;
+                        MEDIA_ERR_LOG("GetFrameRateRange vecFrameRateRangeList is empty!");
+                    }
+                }
+            },
+            GetFrameRateRangeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for GetFrameRateRange");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
+}
+
+bool isFrameRateRangeAvailable(napi_env env, void *data)
+{
+    bool invalidFrameRate = true;
+    const int32_t FRAME_RATE_RANGE_STEP = 2;
+    auto context = static_cast<VideoOutputAsyncContext*>(data);
+    if (context == nullptr) {
+        MEDIA_ERR_LOG("Async context is null");
+        return invalidFrameRate;
+    }
+
+    if (!context->vecFrameRateRangeList.empty()) {
+        for (size_t i = 0; i < (context->vecFrameRateRangeList.size() - 1); i += FRAME_RATE_RANGE_STEP) {
+            int32_t minVal = context->vecFrameRateRangeList[i];
+            int32_t maxVal = context->vecFrameRateRangeList[i + 1];
+            if ((context->minFrameRate == minVal) && (context->maxFrameRate == maxVal)) {
+                invalidFrameRate = false;
+                break;
+            }
+        }
+    } else {
+        MEDIA_ERR_LOG("isFrameRateRangeAvailable: vecFrameRateRangeList is empty!");
+    }
+    return invalidFrameRate;
+}
+
+napi_value VideoOutputNapi::SetFrameRateRange(napi_env env, napi_callback_info info)
+{
+    CAMERA_SYNC_TRACE;
+    napi_status status;
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_THREE;
+    napi_value argv[ARGS_THREE] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, (argc == ARGS_TWO || argc == ARGS_THREE), "requires 3 parameters maximum");
+
+    napi_get_undefined(env, &result);
+    auto asyncContext = std::make_unique<VideoOutputAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
+        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "SetFrameRateRange");
+        status = napi_create_async_work(
+            env, nullptr, resource,
+            [](napi_env env, void* data) {
+                auto context = static_cast<VideoOutputAsyncContext*>(data);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = false;
+                    context->vecFrameRateRangeList = ((sptr<VideoOutput> &)
+                            (context->objectInfo->videoOutput_))->GetFrameRateRange();
+                    bool isValidRange = isFrameRateRangeAvailable(env, data);
+                    if (isValidRange) {
+                        ((sptr<VideoOutput> &)(context->objectInfo->videoOutput_))->
+                                SetFrameRateRange(context->minFrameRate, context->maxFrameRate);
+                        context->status = true;
+                    } else {
+                        MEDIA_ERR_LOG("Failed to get range values for SetFrameRateRange");
+                        context->errorMsg = "Failed to get range values for SetFrameRateRange";
+                    }
+                }
+            },
+            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for SetFrameRateRange");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);

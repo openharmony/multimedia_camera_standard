@@ -18,9 +18,11 @@
 
 #include <iostream>
 #include <vector>
+#include "camera_metadata_info.h"
 #include "output/capture_output.h"
 #include "istream_repeat.h"
 #include "istream_repeat_callback.h"
+#include "session/capture_session.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -66,27 +68,6 @@ public:
     void SetCallback(std::shared_ptr<VideoCallback> callback);
 
     /**
-     * @brief Get supported Fps for the video output.
-     *
-     * @return Returns the vector<float> of Fps values for the video output.
-     */
-    std::vector<float> GetSupportedFps();
-
-    /**
-     * @brief Get current Fps value.
-     *
-     * @return Returns a float current Fps for the video output.
-     */
-    float GetFps();
-
-    /**
-     * @brief Set Fps value for the video output.
-     *
-     * @param video frame rate to be set.
-     */
-    int32_t SetFps(float fps);
-
-    /**
      * @brief Start the video capture.
      */
     int32_t Start();
@@ -113,9 +94,26 @@ public:
      */
     std::shared_ptr<VideoCallback> GetApplicationCallback();
 
+    /**
+    * @brief Get the supported video frame rate range.
+    *
+    * @return Returns vector<int32_t> of supported exposure compensation range.
+    */
+    std::vector<int32_t> GetFrameRateRange();
+
+    /**
+     * @brief Set the Video fps range. If fixed frame rate
+     * to be set the both min and max framerate should be same.
+     *
+     * @param min frame rate value of range.
+     * @param max frame rate value of range.
+     */
+    void SetFrameRateRange(int32_t minFrameRate, int32_t maxFrameRate);
+
 private:
     std::shared_ptr<VideoCallback> appCallback_;
     sptr<IStreamRepeatCallback> svcCallback_;
+    std::vector<int32_t> videoFramerateRange_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

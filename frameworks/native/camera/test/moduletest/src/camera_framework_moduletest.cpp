@@ -2180,5 +2180,58 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_040, TestSize.Le
     sleep(WAIT_TIME_BEFORE_STOP);
     session_->Stop();
 }
+
+/*
+ * Feature: Framework
+ * Function: Test Video frame rate with range.
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Video frame rate with range
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_041, TestSize.Level0)
+{
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> videoOutput = CreateVideoOutput();
+    ASSERT_NE(videoOutput, nullptr);
+
+    intResult = session_->AddOutput(videoOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    std::vector<int32_t> videoFramerateRange = ((sptr<VideoOutput> &)videoOutput)->GetFrameRateRange();
+    ASSERT_EQ(videoFramerateRange.empty(), false);
+    ASSERT_GE(videoFramerateRange.size(), 2U);
+    ((sptr<VideoOutput> &)videoOutput)->SetFrameRateRange(videoFramerateRange[0], videoFramerateRange[1]);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = ((sptr<VideoOutput> &)videoOutput)->Stop();
+    EXPECT_EQ(intResult, 0);
+
+    TestUtils::SaveVideoFile(nullptr, 0, VideoSaveMode::CLOSE, g_videoFd);
+
+    sleep(WAIT_TIME_BEFORE_STOP);
+    session_->Stop();
+}
 } // CameraStandard
 } // OHOS

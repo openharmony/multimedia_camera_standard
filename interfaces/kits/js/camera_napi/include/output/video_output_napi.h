@@ -96,6 +96,8 @@ private:
 
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value Stop(napi_env env, napi_callback_info info);
+    static napi_value GetFrameRateRange(napi_env env, napi_callback_info info);
+    static napi_value SetFrameRateRange(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
 
@@ -123,6 +125,9 @@ struct VideoOutputAsyncContext {
     bool bRetBool;
     std::string funcName;
     int32_t taskId;
+    std::vector<int32_t> vecFrameRateRangeList;
+    int32_t minFrameRate;
+    int32_t maxFrameRate;
 };
 } // namespace CameraStandard
 } // namespace OHOS

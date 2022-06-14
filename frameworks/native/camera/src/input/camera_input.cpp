@@ -943,6 +943,22 @@ void SetVideoStabilizingMode(sptr<CameraInput> device, CameraVideoStabilizationM
     if (!device->changedMetadata_->addEntry(OHOS_CONTROL_VIDEO_STABILIZATION_MODE, &StabilizationMode, count)) {
         MEDIA_DEBUG_LOG("CameraInput::SetVideoStabilizingMode Failed to set video stabilization mode");
     }
+
+    device->UnlockForControl();
+}
+
+void SetRecordingFrameRateRange(sptr<CameraInput> device, int32_t minFpsVal, int32_t maxFpsVal)
+{
+    int32_t frameRateRange[2] = {minFpsVal, maxFpsVal};
+
+    device->LockForControl();
+
+    if (!device->changedMetadata_->addEntry(OHOS_CONTROL_FPS_RANGES,
+                                            &frameRateRange,
+                                            sizeof(frameRateRange) / sizeof(frameRateRange[0]))) {
+        MEDIA_ERR_LOG("SetRecordingFrameRateRange failed");
+    }
+
     device->UnlockForControl();
 }
 } // CameraStandard

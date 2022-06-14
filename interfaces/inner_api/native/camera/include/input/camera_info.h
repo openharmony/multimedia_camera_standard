@@ -87,7 +87,7 @@ public:
     /**
     * @brief Get the supported exposure compensation range.
     *
-    * @return Returns vector<float> of supported exposure compensation range.
+    * @return Returns vector<int32_t> of supported exposure compensation range.
     */
     std::vector<int32_t> GetExposureBiasRange();
 

@@ -31,15 +31,11 @@ public:
 
     int32_t AddInput(sptr<ICameraDeviceService> cameraDevice) override;
 
-    int32_t AddOutput(sptr<IStreamRepeat> streamRepeat) override;
-
-    int32_t AddOutput(sptr<IStreamCapture> streamCapture) override;
+    int32_t AddOutput(StreamType streamType, sptr<IStreamCommon> stream) override;
 
     int32_t RemoveInput(sptr<ICameraDeviceService> cameraDevice) override;
 
-    int32_t RemoveOutput(sptr<IStreamCapture> streamCapture) override;
-
-    int32_t RemoveOutput(sptr<IStreamRepeat> streamRepeat) override;
+    int32_t RemoveOutput(StreamType streamType, sptr<IStreamCommon> stream) override;
 
     int32_t CommitConfig() override;
 

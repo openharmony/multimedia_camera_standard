@@ -17,6 +17,7 @@
 #define OHOS_CAMERA_H_STREAM_COMMON_H
 
 #include "camera_metadata_info.h"
+#include "istream_common.h"
 #include "istream_operator.h"
 
 #include <refbase.h>
@@ -26,10 +27,6 @@ namespace OHOS {
 namespace CameraStandard {
 class HStreamCommon : virtual public RefBase {
 public:
-    enum StreamType {
-        CAPTURE = 1,
-        REPEAT,
-    };
     HStreamCommon(StreamType streamType, sptr<OHOS::IBufferProducer> producer, int32_t format);
     virtual ~HStreamCommon();
     virtual int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,

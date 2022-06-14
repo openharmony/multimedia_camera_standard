@@ -18,6 +18,7 @@
 #include "camera_util.h"
 #include "hstream_capture_callback_stub.h"
 #include "input/camera_info.h"
+#include "session/capture_session.h"
 #include "camera_log.h"
 
 using namespace std;
@@ -227,7 +228,7 @@ public:
 };
 
 PhotoOutput::PhotoOutput(sptr<IStreamCapture> &streamCapture)
-    : CaptureOutput(CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT), streamCapture_(streamCapture), captureSession_(nullptr)
+    : CaptureOutput(CAPTURE_OUTPUT_TYPE_PHOTO, StreamType::CAPTURE, streamCapture)
 {}
 
 void PhotoOutput::SetCallback(std::shared_ptr<PhotoCallback> callback)
@@ -244,7 +245,7 @@ void PhotoOutput::SetCallback(std::shared_ptr<PhotoCallback> callback)
                 return;
             }
         }
-        errorCode = streamCapture_->SetCallback(cameraSvcCallback_);
+        errorCode = static_cast<IStreamCapture *>(GetStream().GetRefPtr())->SetCallback(cameraSvcCallback_);
         if (errorCode != CAMERA_OK) {
             MEDIA_ERR_LOG("PhotoOutput::SetCallback: Failed to register callback, errorCode: %{public}d", errorCode);
             cameraSvcCallback_ = nullptr;
@@ -258,14 +259,10 @@ std::shared_ptr<PhotoCallback> PhotoOutput::GetApplicationCallback()
     return appCallback_;
 }
 
-sptr<IStreamCapture> PhotoOutput::GetStreamCapture()
-{
-    return streamCapture_;
-}
-
 int32_t PhotoOutput::Capture(std::shared_ptr<PhotoCaptureSetting> photoCaptureSettings)
 {
-    return streamCapture_->Capture(photoCaptureSettings->GetCaptureMetadataSetting());
+    return static_cast<IStreamCapture *>(GetStream().GetRefPtr())->Capture(
+        photoCaptureSettings->GetCaptureMetadataSetting());
 }
 
 int32_t PhotoOutput::Capture()
@@ -274,19 +271,19 @@ int32_t PhotoOutput::Capture()
     int32_t dataLength = 0;
     std::shared_ptr<Camera::CameraMetadata> captureMetadataSetting =
         std::make_shared<Camera::CameraMetadata>(items, dataLength);
-    return streamCapture_->Capture(captureMetadataSetting);
+    return static_cast<IStreamCapture *>(GetStream().GetRefPtr())->Capture(captureMetadataSetting);
 }
 
 int32_t PhotoOutput::CancelCapture()
 {
-    return streamCapture_->CancelCapture();
+    return static_cast<IStreamCapture *>(GetStream().GetRefPtr())->CancelCapture();
 }
 
 void PhotoOutput::Release()
 {
-    int32_t retCode = streamCapture_->Release();
+    int32_t retCode = static_cast<IStreamCapture *>(GetStream().GetRefPtr())->Release();
     if (retCode != CAMERA_OK) {
-        MEDIA_ERR_LOG("Failed to release Camera Input!, retCode: %{public}d", retCode);
+        MEDIA_ERR_LOG("Failed to release PhotoOutput!, retCode: %{public}d", retCode);
     }
     return;
 }
@@ -296,11 +293,11 @@ bool PhotoOutput::IsMirrorSupported()
     bool isMirrorEnabled = false;
     camera_metadata_item_t item;
     sptr<CameraInfo> cameraObj_;
-
-    if (captureSession_ == nullptr || captureSession_->inputDevice_ == nullptr) {
+    CaptureSession *captureSession = GetSession();
+    if ((captureSession == nullptr) || (captureSession->inputDevice_ == nullptr)) {
         return isMirrorEnabled;
     }
-    cameraObj_ = captureSession_->inputDevice_->GetCameraDeviceInfo();
+    cameraObj_ = captureSession->inputDevice_->GetCameraDeviceInfo();
     std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
 
     int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED, &item);
@@ -308,11 +305,6 @@ bool PhotoOutput::IsMirrorSupported()
         isMirrorEnabled = ((item.data.u8[0] == 1) || (item.data.u8[0] == 0));
     }
     return isMirrorEnabled;
-}
-
-void PhotoOutput::SetSession(CaptureSession *captureSession)
-{
-    captureSession_ = captureSession;
 }
 } // CameraStandard
 } // OHOS

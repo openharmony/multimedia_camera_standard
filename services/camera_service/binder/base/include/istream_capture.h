@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,10 +19,11 @@
 #include "camera_metadata_info.h"
 #include "iremote_broker.h"
 #include "istream_capture_callback.h"
+#include "istream_common.h"
 
 namespace OHOS {
 namespace CameraStandard {
-class IStreamCapture : public IRemoteBroker {
+class IStreamCapture : public IStreamCommon {
 public:
     virtual int32_t Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings) = 0;
 

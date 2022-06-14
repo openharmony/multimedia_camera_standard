@@ -20,7 +20,6 @@
 #include "camera_metadata_info.h"
 #include "capture_output.h"
 #include "istream_capture.h"
-#include "session/capture_session.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -156,12 +155,6 @@ private:
 class PhotoOutput : public CaptureOutput {
 public:
     explicit PhotoOutput(sptr<IStreamCapture> &streamCapture);
-    /**
-     * @brief Get capture stream information.
-     *
-     * @return Returns the pointer where IStreamCapture is present.
-     */
-    sptr<IStreamCapture> GetStreamCapture();
 
     /**
      * @brief Set the photo callback.
@@ -207,18 +200,9 @@ public:
      */
     bool IsMirrorSupported();
 
-    /**
-     * @brief set the capture session.
-     *
-     * @param session pointer.
-     */
-    void SetSession(CaptureSession *captureSession);
-
 private:
-    sptr<IStreamCapture> streamCapture_;
     std::shared_ptr<PhotoCallback> appCallback_;
     sptr<IStreamCaptureCallback> cameraSvcCallback_;
-    CaptureSession *captureSession_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

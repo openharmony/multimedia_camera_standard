@@ -51,7 +51,7 @@ int32_t HStreamCommon::GetStreamId()
     return streamId_;
 }
 
-HStreamCommon::StreamType HStreamCommon::GetStreamType()
+StreamType HStreamCommon::GetStreamType()
 {
     return streamType_;
 }

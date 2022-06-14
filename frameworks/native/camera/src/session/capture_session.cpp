@@ -91,17 +91,9 @@ int32_t CaptureSession::AddOutput(sptr<CaptureOutput> &output)
         MEDIA_ERR_LOG("CaptureSession::AddOutput output is null");
         return CAMERA_INVALID_ARG;
     }
-    if (output->GetType() == CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT) {
-        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddPhotoOutput"));
-        ((sptr<PhotoOutput> &)output)->SetSession(this);
-        return captureSession_->AddOutput(((sptr<PhotoOutput> &)output)->GetStreamCapture());
-    } else if (output->GetType() == CAPTURE_OUTPUT_TYPE::PREVIEW_OUTPUT) {
-        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddPreviewOutput"));
-        return captureSession_->AddOutput(((sptr<PreviewOutput> &)output)->GetStreamRepeat());
-    } else {
-        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddVideoOutput"));
-        return captureSession_->AddOutput(((sptr<VideoOutput> &)output)->GetStreamRepeat());
-    }
+    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddOutput with %s", output->GetOutputTypeString()));
+    output->SetSession(this);
+    return captureSession_->AddOutput(output->GetStreamType(), output->GetStream());
 }
 
 int32_t CaptureSession::RemoveInput(sptr<CaptureInput> &input)
@@ -122,16 +114,9 @@ int32_t CaptureSession::RemoveOutput(sptr<CaptureOutput> &output)
         MEDIA_ERR_LOG("CaptureSession::RemoveOutput output is null");
         return CAMERA_INVALID_ARG;
     }
-    if (output->GetType() == CAPTURE_OUTPUT_TYPE::PHOTO_OUTPUT) {
-        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemovePhotoOutput"));
-        return captureSession_->RemoveOutput(((sptr<PhotoOutput> &)output)->GetStreamCapture());
-    } else if (output->GetType() == CAPTURE_OUTPUT_TYPE::PREVIEW_OUTPUT) {
-        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemovePreviewOutput"));
-        return captureSession_->RemoveOutput(((sptr<PreviewOutput> &)output)->GetStreamRepeat());
-    } else {
-        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemoveVideoOutput"));
-        return captureSession_->RemoveOutput(((sptr<VideoOutput> &)output)->GetStreamRepeat());
-    }
+    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemoveOutput with %s", output->GetOutputTypeString()));
+    output->SetSession(nullptr);
+    return captureSession_->RemoveOutput(output->GetStreamType(), output->GetStream());
 }
 
 int32_t CaptureSession::Start()

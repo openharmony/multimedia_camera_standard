@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,12 +17,40 @@
 
 namespace OHOS {
 namespace CameraStandard {
-CaptureOutput::CaptureOutput(CAPTURE_OUTPUT_TYPE type) : type_(type) {
+CaptureOutput::CaptureOutput(CaptureOutputType outputType, StreamType streamType,
+    sptr<IStreamCommon> stream) : outputType_(outputType), streamType_(streamType), stream_(stream)
+{
+    session_ = nullptr;
 }
 
-CAPTURE_OUTPUT_TYPE CaptureOutput::GetType()
+CaptureOutputType CaptureOutput::GetOutputType()
 {
-    return type_;
+    return outputType_;
+}
+
+const char *CaptureOutput::GetOutputTypeString()
+{
+    return g_captureOutputTypeString[outputType_];
+}
+
+StreamType CaptureOutput::GetStreamType()
+{
+    return streamType_;
+}
+
+sptr<IStreamCommon> CaptureOutput::GetStream()
+{
+    return stream_;
+}
+
+CaptureSession *CaptureOutput::GetSession()
+{
+    return session_;
+}
+
+void CaptureOutput::SetSession(CaptureSession *captureSession)
+{
+    session_ = captureSession;
 }
 } // CameraStandard
 } // OHOS

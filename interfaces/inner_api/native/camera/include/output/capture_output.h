@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,27 +17,41 @@
 #define OHOS_CAMERA_CAPTURE_OUTPUT_H
 
 #include <refbase.h>
+#include "istream_common.h"
 
 namespace OHOS {
 namespace CameraStandard {
-enum CAPTURE_OUTPUT_TYPE {
-    PREVIEW_OUTPUT,
-    PHOTO_OUTPUT,
-    VIDEO_OUTPUT
+enum CaptureOutputType {
+    CAPTURE_OUTPUT_TYPE_PREVIEW,
+    CAPTURE_OUTPUT_TYPE_PHOTO,
+    CAPTURE_OUTPUT_TYPE_VIDEO,
+    CAPTURE_OUTPUT_TYPE_MAX
 };
+static const char *g_captureOutputTypeString[CAPTURE_OUTPUT_TYPE_MAX] = {"Preview", "Photo", "Video"};
+class CaptureSession;
 class CaptureOutput : public RefBase {
 public:
-    explicit CaptureOutput(CAPTURE_OUTPUT_TYPE type);
+    explicit CaptureOutput(CaptureOutputType OutputType, StreamType streamType,
+                           sptr<IStreamCommon> stream);
     virtual ~CaptureOutput() {}
 
     /**
      * @brief Releases the instance of CaptureOutput.
      */
     virtual void Release() = 0;
-    CAPTURE_OUTPUT_TYPE GetType();
+
+    CaptureOutputType GetOutputType();
+    const char *GetOutputTypeString();
+    StreamType GetStreamType();
+    sptr<IStreamCommon> GetStream();
+    CaptureSession *GetSession();
+    void SetSession(CaptureSession *captureSession);
 
 private:
-    CAPTURE_OUTPUT_TYPE type_;
+    CaptureOutputType outputType_;
+    StreamType streamType_;
+    sptr<IStreamCommon> stream_;
+    CaptureSession *session_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

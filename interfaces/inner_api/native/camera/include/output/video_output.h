@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,13 +59,6 @@ public:
     void Release() override;
 
     /**
-     * @brief Get repeated stream for the video output.
-     *
-     * @return Returns the pointer to IStreamRepeat.
-     */
-    sptr<IStreamRepeat> GetStreamRepeat();
-
-    /**
      * @brief Set the video callback for the video output.
      *
      * @param VideoCallback pointer to be triggered.
@@ -121,7 +114,6 @@ public:
     std::shared_ptr<VideoCallback> GetApplicationCallback();
 
 private:
-    sptr<IStreamRepeat> streamRepeat_;
     std::shared_ptr<VideoCallback> appCallback_;
     sptr<IStreamRepeatCallback> svcCallback_;
 };

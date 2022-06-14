@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,12 +21,12 @@
 namespace OHOS {
 namespace CameraStandard {
 PreviewOutput::PreviewOutput(sptr<IStreamRepeat> &streamRepeat)
-    : CaptureOutput(CAPTURE_OUTPUT_TYPE::PREVIEW_OUTPUT), streamRepeat_(streamRepeat) {
+    : CaptureOutput(CAPTURE_OUTPUT_TYPE_PREVIEW, StreamType::REPEAT, streamRepeat) {
 }
 
 void PreviewOutput::Release()
 {
-    int32_t errCode = streamRepeat_->Release();
+    int32_t errCode = static_cast<IStreamRepeat *>(GetStream().GetRefPtr())->Release();
     if (errCode != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to release PreviewOutput!, errCode: %{public}d", errCode);
     }
@@ -95,7 +95,7 @@ void PreviewOutput::SetCallback(std::shared_ptr<PreviewCallback> callback)
                 return;
             }
         }
-        errorCode = streamRepeat_->SetCallback(svcCallback_);
+        errorCode = static_cast<IStreamRepeat *>(GetStream().GetRefPtr())->SetCallback(svcCallback_);
         if (errorCode != CAMERA_OK) {
             MEDIA_ERR_LOG("PreviewOutput::SetCallback: Failed to register callback, errorCode: %{public}d", errorCode);
             svcCallback_ = nullptr;
@@ -103,11 +103,6 @@ void PreviewOutput::SetCallback(std::shared_ptr<PreviewCallback> callback)
         }
     }
     return;
-}
-
-sptr<IStreamRepeat> PreviewOutput::GetStreamRepeat()
-{
-    return streamRepeat_;
 }
 
 std::shared_ptr<PreviewCallback> PreviewOutput::GetApplicationCallback()

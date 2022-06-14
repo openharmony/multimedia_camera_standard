@@ -32,7 +32,7 @@ int32_t HStreamRepeat::videoCaptureId_ = VIDEO_CAPTURE_ID_START;
 int32_t HStreamRepeat::previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format)
-    : HStreamCommon(HStreamCommon::REPEAT, producer, format)
+    : HStreamCommon(StreamType::REPEAT, producer, format)
 {
     isVideo_ = false;
     customPreviewWidth_ = 0;

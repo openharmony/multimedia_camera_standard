@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -64,13 +64,6 @@ public:
     void Release() override;
 
     /**
-     * @brief Get repeat stream for the preview output.
-     *
-     * @return Returns the pointer to IStreamRepeat.
-     */
-    sptr<IStreamRepeat> GetStreamRepeat();
-
-    /**
      * @brief Get the application callback information.
      *
      * @return Returns the pointer application callback.
@@ -78,7 +71,6 @@ public:
     std::shared_ptr<PreviewCallback> GetApplicationCallback();
 
 private:
-    sptr<IStreamRepeat> streamRepeat_;
     std::shared_ptr<PreviewCallback> appCallback_;
     sptr<IStreamRepeatCallback> svcCallback_;
 };

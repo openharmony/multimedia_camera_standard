@@ -19,9 +19,6 @@ ohos_unittest("camera_framework_unittest") {
   module_out_path = module_output_path
   include_dirs = [
     "./include",
-    "//drivers/adapter/uhdf2/osal/include",
-    "//drivers/adapter/uhdf2/include/hdi",
-    "//drivers/framework/include/utils",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
@@ -40,7 +37,7 @@ ohos_unittest("camera_framework_unittest") {
   ]
 
   deps = [
-    "//drivers/adapter/uhdf2/hdi:libhdi",
+    "//drivers/hdf_core/adapter/uhdf2/hdi:libhdi",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",

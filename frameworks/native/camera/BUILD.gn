@@ -48,9 +48,6 @@ ohos_shared_library("camera_framework") {
     "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
     "//utils/system/safwk/native/include",
-    "//drivers/framework/include/utils",
-    "//drivers/adapter/uhdf2/osal/include",
-    "//drivers/adapter/uhdf2/include/hdi",
   ]
 
   deps = [

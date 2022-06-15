@@ -48,10 +48,6 @@ ohos_shared_library("camera_service") {
   ]
 
   include_dirs = [
-    "//drivers/framework/include/utils/",
-    "//drivers/framework/include/core/",
-    "//drivers/adapter/uhdf2/osal/include/",
-    "//drivers/adapter/uhdf2/include/hdi/",
     "//drivers/peripheral/camera/interfaces/metadata/include",
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
@@ -69,7 +65,7 @@ ohos_shared_library("camera_service") {
   }
 
   deps = [
-    "//drivers/adapter/uhdf2/hdi:libhdi",
+    "//drivers/hdf_core/adapter/uhdf2/hdi:libhdi",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",

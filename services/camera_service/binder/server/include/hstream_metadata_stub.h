@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,27 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_CAMERA_ISTREAM_CAPTURE_H
-#define OHOS_CAMERA_ISTREAM_CAPTURE_H
+#ifndef OHOS_CAMERA_HSTREAM_METADATA_STUB_H
+#define OHOS_CAMERA_HSTREAM_METADATA_STUB_H
 
-#include "camera_metadata_info.h"
-#include "istream_capture_callback.h"
-#include "istream_common.h"
+#include "iremote_stub.h"
+#include "istream_metadata.h"
 
 namespace OHOS {
 namespace CameraStandard {
-class IStreamCapture : public IStreamCommon {
+class HStreamMetadataStub : public IRemoteStub<IStreamMetadata> {
 public:
-    virtual int32_t Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings) = 0;
-
-    virtual int32_t CancelCapture() = 0;
-
-    virtual int32_t SetCallback(sptr<IStreamCaptureCallback> &callback) = 0;
-
-    virtual int32_t Release() = 0;
-
-    DECLARE_INTERFACE_DESCRIPTOR(u"IStreamCapture");
+    int OnRemoteRequest(uint32_t code, MessageParcel &data,
+                        MessageParcel &reply, MessageOption &option) override;
 };
 } // namespace CameraStandard
 } // namespace OHOS
-#endif // OHOS_CAMERA_ISTREAM_CAPTURE_H
+#endif // OHOS_CAMERA_HSTREAM_METADATA_STUB_H

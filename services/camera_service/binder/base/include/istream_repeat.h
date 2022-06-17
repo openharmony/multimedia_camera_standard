@@ -16,7 +16,6 @@
 #ifndef OHOS_CAMERA_ISTREAM_REPEAT_H
 #define OHOS_CAMERA_ISTREAM_REPEAT_H
 
-#include "iremote_broker.h"
 #include "istream_common.h"
 #include "istream_repeat_callback.h"
 

@@ -321,6 +321,54 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IB
     return result;
 }
 
+sptr<MetadataOutput> CameraManager::CreateMetadataOutput()
+{
+    CAMERA_SYNC_TRACE;
+    sptr<IStreamMetadata> streamMetadata = nullptr;
+    sptr<MetadataOutput> result = nullptr;
+    int32_t retCode = CAMERA_OK;
+
+    if (!serviceProxy_) {
+        MEDIA_ERR_LOG("CameraManager::CreateMetadataOutput serviceProxy_ is null");
+        return nullptr;
+    }
+    sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
+    if (!surface) {
+        MEDIA_ERR_LOG("CameraManager::CreateMetadataOutput Failed to create surface");
+        return nullptr;
+    }
+    int32_t format = OHOS_CAMERA_FORMAT_YCRCB_420_SP;
+    int32_t width = 1920;
+    int32_t height = 1080;
+#ifdef RK_CAMERA
+    format = OHOS_CAMERA_FORMAT_RGBA_8888;
+#endif
+    surface->SetDefaultWidthAndHeight(width, height);
+    retCode = serviceProxy_->CreateMetadataOutput(surface->GetProducer(), format, streamMetadata);
+    if (retCode) {
+        MEDIA_ERR_LOG("CameraManager::CreateMetadataOutput Failed to get stream metadata object from hcamera service!, "
+                      "%{public}d", retCode);
+        return nullptr;
+    }
+    result = new(std::nothrow) MetadataOutput(surface, streamMetadata);
+    if (!result) {
+        MEDIA_ERR_LOG("CameraManager::CreateMetadataOutput Failed to allocate MetadataOutput");
+        return nullptr;
+    }
+    sptr<IBufferConsumerListener> listener = new(std::nothrow) MetadataObjectListener(result);
+    if (!listener) {
+        MEDIA_ERR_LOG("CameraManager::CreateMetadataOutput Failed to allocate metadata object listener");
+        return nullptr;
+    }
+    SurfaceError ret = surface->RegisterConsumerListener(listener);
+    if (ret != SURFACE_ERROR_OK) {
+        MEDIA_ERR_LOG("CameraManager::CreateMetadataOutput Surface consumer listener registration failed");
+        return nullptr;
+    }
+    POWERMGR_SYSEVENT_CAMERA_CONFIG(METADATA, width, height);
+    return result;
+}
+
 sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
 {
     CAMERA_SYNC_TRACE;

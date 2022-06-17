@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <unordered_map>
+#include <set>
 #include <vector>
 #include "camera_info.h"
 #include "capture_input.h"
@@ -351,6 +352,8 @@ public:
 
     friend void SetVideoStabilizingMode(sptr<CameraInput> device, CameraVideoStabilizationMode VideoStabilizationMode);
     friend void SetRecordingFrameRateRange(sptr<CameraInput> device, int32_t minFpsVal, int32_t maxFpsVal);
+    friend void SetCaptureMetadataObjectTypes(sptr<CameraInput> device,
+                                              std::set<camera_face_detect_mode_t> metadataObjectTypes);
 
 private:
     std::mutex changeMetaMutex_;
@@ -372,6 +375,8 @@ private:
 };
     void SetVideoStabilizingMode(sptr<CameraInput> device, CameraVideoStabilizationMode VideoStabilizationMode);
     void SetRecordingFrameRateRange(sptr<CameraInput> device, int32_t minFpsVal, int32_t maxFpsVal);
+    void SetCaptureMetadataObjectTypes(sptr<CameraInput> device,
+                                       std::set<camera_face_detect_mode_t> metadataObjectTypes);
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_CAMERA_INPUT_H

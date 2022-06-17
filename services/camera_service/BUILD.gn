@@ -31,6 +31,7 @@ ohos_shared_library("camera_service") {
     "binder/server/src/hcapture_session_stub.cpp",
     "binder/server/src/hstream_capture_callback_stub.cpp",
     "binder/server/src/hstream_capture_stub.cpp",
+    "binder/server/src/hstream_metadata_stub.cpp",
     "binder/server/src/hstream_repeat_callback_stub.cpp",
     "binder/server/src/hstream_repeat_stub.cpp",
     "src/camera_util.cpp",
@@ -40,6 +41,7 @@ ohos_shared_library("camera_service") {
     "src/hcapture_session.cpp",
     "src/hstream_capture.cpp",
     "src/hstream_common.cpp",
+    "src/hstream_metadata.cpp",
     "src/hstream_repeat.cpp",
   ]
   cflags = [

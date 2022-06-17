@@ -132,11 +132,16 @@ public:
             };
             ability->addEntry(OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, streams,
                               sizeof(streams) / sizeof(streams[0]));
+
             int32_t compensationRange[2] = {-2, 3};
             ability->addEntry(OHOS_CONTROL_AE_COMPENSATION_RANGE, compensationRange,
                               sizeof(compensationRange) / sizeof(compensationRange[0]));
+
             float focalLength = 1.5;
             ability->addEntry(OHOS_ABILITY_FOCAL_LENGTH, &focalLength, sizeof(float));
+
+            uint8_t faceDetectModes[] = {OHOS_CAMERA_FACE_DETECT_MODE_OFF, OHOS_CAMERA_FACE_DETECT_MODE_SIMPLE};
+            ability->addEntry(OHOS_STATISTICS_FACE_DETECT_MODE, faceDetectModes, sizeof(faceDetectModes));
             return CAMERA_OK;
         });
         ON_CALL(*this, OpenCameraDevice).WillByDefault([this](std::string &cameraId,
@@ -168,6 +173,12 @@ class FakeCameraManager : public CameraManager {
 public:
     explicit FakeCameraManager(sptr<HCameraService> service) : CameraManager(service) {}
     ~FakeCameraManager() {}
+};
+
+class AppMetadataCallback : public MetadataObjectCallback, public MetadataStateCallback {
+public:
+    void OnMetadataObjectsAvailable(std::vector<sptr<MetadataObject>> metaObjects) const {}
+    void OnError(int32_t errorCode) const {}
 };
 
 sptr<CaptureOutput> CameraFrameworkUnitTest::CreatePhotoOutput(int32_t width, int32_t height)
@@ -1508,6 +1519,161 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_045, TestSize.Level0
         input->UnlockForControl();
     }
     ASSERT_EQ(input->GetExposureValue(), exposurebiasRange[1]);
+}
+
+/*
+ * Feature: Framework
+ * Function: Test create metadata output
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test create metadata output
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_046, TestSize.Level0)
+{
+    sptr<CaptureOutput> metadata = cameraManager->CreateMetadataOutput();
+    ASSERT_NE(metadata, nullptr);
+    metadata->Release();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test set metadata object callback and state callback
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test set metadata object callback and state callback
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_047, TestSize.Level0)
+{
+    sptr<MetadataOutput> metadata = cameraManager->CreateMetadataOutput();
+    ASSERT_NE(metadata, nullptr);
+
+    std::shared_ptr<MetadataObjectCallback> metadataObjectCallback = std::make_shared<AppMetadataCallback>();
+    metadata->SetCallback(metadataObjectCallback);
+
+    std::shared_ptr<MetadataStateCallback> metadataStateCallback = std::make_shared<AppMetadataCallback>();
+    metadata->SetCallback(metadataStateCallback);
+
+    metadata->Release();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test get supported metadata object types and set capturing metadata object type as face
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test get supported metadata object types and set capturing metadata object type as face
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_048, TestSize.Level0)
+{
+    InSequence s;
+    EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+    std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    sptr<CaptureOutput> metadata = cameraManager->CreateMetadataOutput();
+    ASSERT_NE(metadata, nullptr);
+
+    sptr<CaptureSession> session = cameraManager->CreateCaptureSession();
+    ASSERT_NE(session, nullptr);
+
+    int32_t ret = session->BeginConfig();
+    EXPECT_EQ(ret, 0);
+
+    ret = session->AddInput(input);
+    EXPECT_EQ(ret, 0);
+
+    ret = session->AddOutput(metadata);
+    EXPECT_EQ(ret, 0);
+
+    sptr<MetadataOutput> metaOutput = (sptr<MetadataOutput> &)metadata;
+    std::vector<MetadataObjectType> metadataObjectTypes = metaOutput->GetSupportedMetadataObjectTypes();
+    ASSERT_NE(metadataObjectTypes.size(), 0U);
+
+    metaOutput->SetCapturingMetadataObjectTypes(std::vector<MetadataObjectType> {MetadataObjectType::FACE});
+    metaOutput->Release();
+}
+
+/*
+ * Feature: Framework
+ * Function: Test session with preview + metadata
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test session with preview + metadata
+ */
+HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_049, TestSize.Level0)
+{
+    InSequence s;
+    EXPECT_CALL(*mockCameraHostManager, GetCameras(_));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+    std::vector<sptr<CameraInfo>> cameras = cameraManager->GetCameras();
+
+    sptr<CaptureInput> input = cameraManager->CreateCameraInput(cameras[0]);
+    ASSERT_NE(input, nullptr);
+
+    sptr<CaptureOutput> preview = CreatePreviewOutput();
+    ASSERT_NE(preview, nullptr);
+
+    sptr<CaptureOutput> metadata = cameraManager->CreateMetadataOutput();
+    ASSERT_NE(metadata, nullptr);
+
+    sptr<CaptureSession> session = cameraManager->CreateCaptureSession();
+    ASSERT_NE(session, nullptr);
+
+    int32_t ret = session->BeginConfig();
+    EXPECT_EQ(ret, 0);
+
+    ret = session->AddInput(input);
+    EXPECT_EQ(ret, 0);
+
+    ret = session->AddOutput(preview);
+    EXPECT_EQ(ret, 0);
+
+    ret = session->AddOutput(metadata);
+    EXPECT_EQ(ret, 0);
+
+    ((sptr<MetadataOutput> &)metadata)->SetCapturingMetadataObjectTypes(
+        std::vector<MetadataObjectType> {MetadataObjectType::FACE});
+
+    EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
+    EXPECT_CALL(*mockCameraDevice, UpdateSettings(_));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
+    EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
+#ifndef PRODUCT_M40
+    EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
+        A<const std::vector<std::shared_ptr<Camera::StreamInfo>> &>(), _));
+#endif
+    EXPECT_CALL(*mockStreamOperator, CreateStreams(_));
+    EXPECT_CALL(*mockStreamOperator, CommitStreams(_, _));
+    ret = session->CommitConfig();
+    EXPECT_EQ(ret, 0);
+
+    EXPECT_CALL(*mockStreamOperator, Capture(_, _, true));
+    ret = session->Start();
+    EXPECT_EQ(ret, 0);
+
+    EXPECT_CALL(*mockStreamOperator, Capture(_, _, true));
+    ret = ((sptr<MetadataOutput> &)metadata)->Start();
+    EXPECT_EQ(ret, 0);
+
+    EXPECT_CALL(*mockStreamOperator, CancelCapture(_));
+    ret = ((sptr<MetadataOutput> &)metadata)->Stop();
+    EXPECT_EQ(ret, 0);
+
+    EXPECT_CALL(*mockStreamOperator, CancelCapture(_));
+    ret = session->Stop();
+    EXPECT_EQ(ret, 0);
+
+    EXPECT_CALL(*mockStreamOperator, ReleaseStreams(_));
+    EXPECT_CALL(*mockCameraDevice, Close());
+    session->Release();
 }
 } // CameraStandard
 } // OHOS

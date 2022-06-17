@@ -24,6 +24,7 @@
 #include "hcamera_service_proxy.h"
 #include "icamera_device_service.h"
 #include "session/capture_session.h"
+#include "output/metadata_output.h"
 #include "output/photo_output.h"
 #include "output/video_output.h"
 #include "output/preview_output.h"
@@ -162,6 +163,13 @@ public:
     */
     sptr<PreviewOutput> CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                                   int32_t width, int32_t height);
+
+    /**
+    * @brief Create metadata output instance.
+    *
+    * @return Returns pointer to metadata output instance.
+    */
+    sptr<MetadataOutput> CreateMetadataOutput();
 
     /**
     * @brief Set camera manager callback.

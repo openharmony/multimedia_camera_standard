@@ -57,6 +57,7 @@
                   "camera_manager.h",
                   "capture_input.h",
                   "capture_output.h",
+                  "metadata_output.h",
                   "photo_output.h",
                   "preview_output.h",
                   "video_output.h",

@@ -13,22 +13,30 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_CAMERA_ISTREAM_COMMON_H
-#define OHOS_CAMERA_ISTREAM_COMMON_H
+#ifndef OHOS_CAMERA_HSTREAM_METADATA_PROXY_H
+#define OHOS_CAMERA_HSTREAM_METADATA_PROXY_H
 
-#include "iremote_broker.h"
+#include "iremote_proxy.h"
+#include "istream_metadata.h"
+#include "remote_request_code.h"
 
 namespace OHOS {
 namespace CameraStandard {
-enum class StreamType : uint32_t {
-    CAPTURE = 1,
-    REPEAT,
-    METADATA,
-};
-class IStreamCommon : public IRemoteBroker {
+class HStreamMetadataProxy : public IRemoteProxy<IStreamMetadata> {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"IStreamCommon");
+    explicit HStreamMetadataProxy(const sptr<IRemoteObject> &impl);
+    virtual ~HStreamMetadataProxy() = default;
+
+    int32_t Start() override;
+
+    int32_t Stop() override;
+
+    int32_t Release() override;
+
+private:
+    static inline BrokerDelegator<HStreamMetadataProxy> delegator_;
+    int32_t SendNoArgumentRequestWithOutReply(StreamMetadataRequestCode requestCode);
 };
 } // namespace CameraStandard
 } // namespace OHOS
-#endif // OHOS_CAMERA_ISTREAM_COMMON_H
+#endif // OHOS_CAMERA_HSTREAM_METADATA_PROXY_H

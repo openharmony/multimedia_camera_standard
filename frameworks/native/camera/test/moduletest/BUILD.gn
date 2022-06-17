@@ -19,9 +19,6 @@ ohos_moduletest("camera_framework_moduletest") {
   module_out_path = module_output_path
   include_dirs = [
     "./include",
-    "//drivers/framework/include/utils",
-    "//drivers/adapter/uhdf2/osal/include",
-    "//drivers/adapter/uhdf2/include/hdi",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
     "//foundation/multimedia/camera_standard/services/camera_service/include",
     "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",

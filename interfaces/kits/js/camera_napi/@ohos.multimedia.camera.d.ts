@@ -950,6 +950,44 @@ declare namespace camera {
   function createCaptureSession(context: Context): Promise<CaptureSession>;
 
   /**
+   * Enum for video stabilization mode.
+   * @since 9
+   * @syscap SystemCapability.Multiplemedia.Camera.Core
+   */
+   enum VideoStabilizationMode {
+    /**
+     * Turn off video stabilization.
+     * @since 9
+     * @syscap SystemCapability.Multiplemedia.Camera.Core
+     */
+    OFF = 0,
+    /**
+     * Use basic anti-shake algorithm
+     * @since 9
+     * @syscap SystemCapability.Multiplemedia.Camera.Core
+     */
+    LOW,
+    /**
+     * Useing the anti-shake algorithm with general anti-shake effect.
+     * @since 9
+     * @syscap SystemCapability.Multiplemedia.Camera.Core
+     */
+    MIDDLE,
+    /**
+     * Use anti-shake algorithm with the best anti-shakeeffects.
+     * @since 9
+     * @syscap SystemCapability.Multiplemedia.Camera.Core
+     */
+     HIGH,
+    /**
+     * Automatic selection
+     * @since 9
+     * @syscap SystemCapability.Multiplemedia.Camera.Core
+     */
+    AUTO
+  }
+
+  /**
    * Capture session object.
    * @since 9
    * @syscap SystemCapability.Multimedia.Camera.Core
@@ -1214,6 +1252,57 @@ declare namespace camera {
      * @syscap SystemCapability.Multimedia.Camera.Core
      */
     release(): Promise<void>;
+
+    /**
+     * Query whether the specified video stabilization mode is supported.
+     * @param vsMode Video Stabilization mode.
+     * @param callback Callback used to return if video stabilizaion mode is supported.
+     * @since 9
+     * @syscap SystemCapability.Multiplemedia.Camera.Core
+     */
+     isVideoStabilizationModeSupported(vsMode: VideoStabilizationMode, callback: AsyncCallback<boolean>): void;
+
+     /**
+      * Query whether the specified video stabilization mode is supported.
+      * @param callback Callback used to return if video stabilizaion mode is supported.
+      * @return Promise used to return video stabilization mode supported.
+      * @since 9
+      * @syscap SystemCapability.Multiplemedia.Camera.Core
+      */
+     isVideoStabilizationModeSupported(vsMode: VideoStabilizationMode): Promise<boolean>;
+
+     /**
+      * Query the video stabilizaton mode currently in use.
+      * @param callback Callback used to return the current video stabilization mode.
+      * @since 9
+      * @syscap SystemCapability.Multiplemedia.Camera.Core
+      */
+     getActiveVideoStabilizationMode(callback: AsyncCallback<VideoStabilizationMode>): void;
+
+     /**
+      * Query the video stabilizaton mode currently in use.
+      * @return Promise used to return the current video stabilization mode.
+      * @since 9
+      * @syscap SystemCapability.Multiplemedia.Camera.Core
+      */
+     getActiveVideoStabilizationMode(): Promise<VideoStabilizationMode>;
+
+     /**
+      * Set video stabilization mode.
+      * @param mode video stabilization mode to set.
+      * @param callback Callback used to return the result.
+      * @since 9
+      * @syscap SystemCapability.Multiplemedia.Camera.Core
+      */
+     setVideoStabilizationMode(mode: VideoStabilizationMode, callback: AsyncCallback<void>): void;
+
+     /**
+      * Set video stabilization mode.
+      * @param mode video stabilization mode to set.
+      * @since 9
+      * @syscap SystemCapability.Multiplemedia.Camera.Core
+      */
+     setVideoStabilizationMode(mode: VideoStabilizationMode): Promise<void>;
 
     /**
      * Subscribes error event callback.

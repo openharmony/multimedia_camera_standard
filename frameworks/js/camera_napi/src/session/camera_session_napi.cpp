@@ -122,6 +122,10 @@ napi_value CameraSessionNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("start", Start),
         DECLARE_NAPI_FUNCTION("stop", Stop),
         DECLARE_NAPI_FUNCTION("release", Release),
+        DECLARE_NAPI_FUNCTION("isVideoStabilizationModeSupported", IsVideoStabilizationModeSupported),
+        DECLARE_NAPI_FUNCTION("getActiveVideoStabilizationMode", GetActiveVideoStabilizationMode),
+        DECLARE_NAPI_FUNCTION("setVideoStabilizationMode", SetVideoStabilizationMode),
+
         DECLARE_NAPI_FUNCTION("on", On)
     };
 
@@ -175,6 +179,66 @@ napi_value CameraSessionNapi::CameraSessionNapiConstructor(napi_env env, napi_ca
     return result;
 }
 
+void FetchOptionsParam(napi_env env, napi_value arg, const CameraSessionAsyncContext &context, bool &err)
+{
+    CameraSessionAsyncContext *asyncContext = const_cast<CameraSessionAsyncContext *>(&context);
+    if (asyncContext == nullptr) {
+        MEDIA_INFO_LOG("FetchOptionsParam:asyncContext is null");
+        return;
+    }
+
+    int32_t value;
+    napi_get_value_int32(env, arg, &value);
+
+    if (asyncContext->enumType.compare("VideoStabilizationMode") == 0) {
+        if ((value < OFF) || (value > AUTO)) {
+            err = true;
+            return;
+        }
+        asyncContext->videoStabilizationMode = static_cast<VideoStabilizationMode>(value);
+    } else {
+        err = true;
+    }
+}
+
+static napi_value ConvertJSArgsToNative(napi_env env, size_t argc, const napi_value argv[],
+    CameraSessionAsyncContext &asyncContext)
+{
+    string str = "";
+    vector<string> strArr;
+    string order = "";
+    bool err = false;
+    const int32_t refCount = 1;
+    napi_value result;
+    auto context = &asyncContext;
+
+    NAPI_ASSERT(env, argv != nullptr, "Argument list is empty");
+
+    for (size_t i = PARAM0; i < argc; i++) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, argv[i], &valueType);
+
+        if (i == PARAM0 && (valueType == napi_number || valueType == napi_object)) {
+            FetchOptionsParam(env, argv[PARAM0], asyncContext, err);
+            if (err) {
+                MEDIA_ERR_LOG("fetch options retrieval failed");
+                NAPI_ASSERT(env, false, "type mismatch");
+            }
+        } else if (i == PARAM0 && valueType == napi_function) {
+            napi_create_reference(env, argv[i], refCount, &context->callbackRef);
+            break;
+        } else if (i == PARAM1 && valueType == napi_function) {
+            napi_create_reference(env, argv[i], refCount, &context->callbackRef);
+            break;
+        } else {
+            NAPI_ASSERT(env, false, "type mismatch");
+        }
+    }
+    // Return true napi_value if params are successfully obtained
+    napi_get_boolean(env, true, &result);
+    return result;
+}
+
 napi_value CameraSessionNapi::CreateCameraSession(napi_env env)
 {
     CAMERA_SYNC_TRACE;
@@ -221,7 +285,7 @@ static void CommonCompleteCallback(napi_env env, napi_status status, void* data)
         jsContext->status = true;
         napi_get_undefined(env, &jsContext->error);
         if (context->bRetBool) {
-            napi_get_boolean(env, context->status, &jsContext->data);
+            napi_get_boolean(env, context->isSupported, &jsContext->data);
         } else {
             napi_get_undefined(env, &jsContext->data);
         }
@@ -804,6 +868,176 @@ napi_value CameraSessionNapi::Release(napi_env env, napi_callback_info info)
             CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             MEDIA_ERR_LOG("Failed to create napi_create_async_work for CameraSessionNapi::Release");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
+}
+
+napi_value CameraSessionNapi::IsVideoStabilizationModeSupported(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_TWO;
+    napi_value argv[ARGS_TWO] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, (argc == ARGS_ONE || argc == ARGS_TWO), "requires 2 parameter maximum");
+
+    napi_get_undefined(env, &result);
+    std::unique_ptr<CameraSessionAsyncContext> asyncContext = std::make_unique<CameraSessionAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        asyncContext->enumType = "VideoStabilizationMode";
+        result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
+        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "IsVideoStabilizationModeSupported");
+
+        status = napi_create_async_work(
+            env, nullptr, resource, [](napi_env env, void* data) {
+                auto context = static_cast<CameraSessionAsyncContext*>(data);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->bRetBool = true;
+                    context->status = true;
+                    context->isSupported = context->objectInfo->cameraSession_->
+                        IsVideoStabilizationModeSupported(context->videoStabilizationMode);
+                }
+            },
+            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG(
+                "Failed to create napi_create_async_work for CameraSessionNapi::IsVideoStabilizationModeSupported");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
+}
+
+void GetActiveVideoStabilizationModeAsyncCallbackComplete(napi_env env, napi_status status, void *data)
+{
+    auto context = static_cast<CameraSessionAsyncContext*>(data);
+
+    CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
+
+    std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
+    jsContext->status = true;
+    napi_get_undefined(env, &jsContext->error);
+
+    status = napi_create_int32(env, context->videoStabilizationMode, &jsContext->data);
+    if (status != napi_ok) {
+        MEDIA_ERR_LOG("GetActiveVideoStabilizationMode:napi_create_int32() failed");
+            CameraNapiUtils::CreateNapiErrorObject(env,
+                "GetActiveVideoStabilizationMode:napi_create_int32() failed", jsContext);
+    }
+
+    if (context->work != nullptr) {
+        CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
+                                             context->work, *jsContext);
+    }
+    delete context;
+}
+
+napi_value CameraSessionNapi::GetActiveVideoStabilizationMode(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    const int32_t refCount = 1;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameter maximum");
+
+    napi_get_undefined(env, &result);
+    std::unique_ptr<CameraSessionAsyncContext> asyncContext = std::make_unique<CameraSessionAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        if (argc == ARGS_ONE) {
+            CAMERA_NAPI_GET_JS_ASYNC_CB_REF(env, argv[PARAM0], refCount, asyncContext->callbackRef);
+        }
+        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "GetActiveVideoStabilizationMode");
+        status = napi_create_async_work(
+            env, nullptr, resource, [](napi_env env, void* data) {
+                auto context = static_cast<CameraSessionAsyncContext*>(data);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    context->videoStabilizationMode = context->objectInfo->cameraSession_->
+                        GetActiveVideoStabilizationMode();
+                    context->status = true;
+                }
+            },
+            GetActiveVideoStabilizationModeAsyncCallbackComplete, static_cast<void*>(asyncContext.get()),
+            &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG(
+                "Failed to create napi_create_async_work for CameraSessionNapi::GetActiveVideoStabilizationMode");
+            napi_get_undefined(env, &result);
+        } else {
+            napi_queue_async_work(env, asyncContext->work);
+            asyncContext.release();
+        }
+    }
+
+    return result;
+}
+
+napi_value CameraSessionNapi::SetVideoStabilizationMode(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_TWO;
+    napi_value argv[ARGS_TWO] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, (argc == ARGS_ONE || argc == ARGS_TWO), "requires 2 parameter maximum");
+
+    napi_get_undefined(env, &result);
+    std::unique_ptr<CameraSessionAsyncContext> asyncContext = std::make_unique<CameraSessionAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
+        asyncContext->enumType = "VideoStabilizationMode";
+        result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
+        CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
+        CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+        CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "SetVideoStabilizationMode");
+
+        status = napi_create_async_work(
+            env, nullptr, resource, [](napi_env env, void* data) {
+                auto context = static_cast<CameraSessionAsyncContext*>(data);
+                context->status = false;
+                if (context->objectInfo != nullptr) {
+                    if (context->objectInfo->cameraSession_->
+                        IsVideoStabilizationModeSupported(context->videoStabilizationMode)) {
+                        context->bRetBool = false;
+                        context->status = true;
+                        ((sptr<CaptureSession> &)(context->objectInfo->cameraSession_))->
+                            SetVideoStabilizationMode(context->videoStabilizationMode);
+                    } else {
+                        MEDIA_ERR_LOG("Video Stabilization Mode is not supported");
+                        context->errorMsg = "Video Stabilization Mode is not supported";
+                    }
+                }
+            },
+            CommonCompleteCallback, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+        if (status != napi_ok) {
+            MEDIA_ERR_LOG("Failed to create napi_create_async_work for CameraSessionNapi::SetVideoStabilizationMode");
             napi_get_undefined(env, &result);
         } else {
             napi_queue_async_work(env, asyncContext->work);

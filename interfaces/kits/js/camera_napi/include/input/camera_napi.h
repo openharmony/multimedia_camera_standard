@@ -104,6 +104,10 @@ static const std::vector<std::string> vecCameraStatus {
     "CAMERA_STATUS_APPEAR", "CAMERA_STATUS_DISAPPEAR", "CAMERA_STATUS_AVAILABLE", "CAMERA_STATUS_UNAVAILABLE"
 };
 
+static const std::vector<std::string> vecVideoStabilizationMode {
+    "OFF", "LOW", "MIDDLE", "HIGH", "AUTO"
+};
+
 enum FlashMode {
     FLASHMODE_CLOSE = 1,
     FLASHMODE_OPEN = 2,
@@ -157,6 +161,7 @@ private:
     static napi_value CreateExposureStateEnum(napi_env env);
     static napi_value CreateFocusStateEnum(napi_env env);
     static napi_value CreateQualityLevelEnum(napi_env env);
+    static napi_value CreateVideoStabilizationModeObject(napi_env env);
 
     static thread_local napi_ref sConstructor_;
 
@@ -173,6 +178,7 @@ private:
     static thread_local napi_ref imageRotationRef_;
     static thread_local napi_ref qualityLevelRef_;
     static thread_local napi_ref errorUnknownRef_;
+    static thread_local napi_ref videoStabilizationModeRef_;
 
     napi_env env_;
     napi_ref wrapper_;

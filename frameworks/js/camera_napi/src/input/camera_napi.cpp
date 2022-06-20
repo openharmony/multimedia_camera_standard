@@ -36,6 +36,7 @@ thread_local napi_ref CameraNapi::errorUnknownRef_ = nullptr;
 thread_local napi_ref CameraNapi::exposureStateRef_ = nullptr;
 thread_local napi_ref CameraNapi::focusStateRef_ = nullptr;
 thread_local napi_ref CameraNapi::qualityLevelRef_ = nullptr;
+thread_local napi_ref CameraNapi::videoStabilizationModeRef_ = nullptr;
 
 std::unordered_map<std::string, int32_t> mapImageRotation = {
     {"ROTATION_0", 0},
@@ -144,7 +145,8 @@ napi_value CameraNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("CaptureSessionErrorCode", CreateErrorUnknownEnum(env)),
         DECLARE_NAPI_PROPERTY("PreviewOutputErrorCode", CreateErrorUnknownEnum(env)),
         DECLARE_NAPI_PROPERTY("PhotoOutputErrorCode", CreateErrorUnknownEnum(env)),
-        DECLARE_NAPI_PROPERTY("VideoOutputErrorCode", CreateErrorUnknownEnum(env))
+        DECLARE_NAPI_PROPERTY("VideoOutputErrorCode", CreateErrorUnknownEnum(env)),
+        DECLARE_NAPI_PROPERTY("VideoStabilizationMode", CreateVideoStabilizationModeObject(env))
     };
 
     status = napi_define_class(env, CAMERA_LIB_NAPI_CLASS_NAME, NAPI_AUTO_LENGTH, CameraNapiConstructor,
@@ -930,6 +932,36 @@ napi_value CameraNapi::CreateErrorUnknownEnum(napi_env env)
         }
     }
     MEDIA_ERR_LOG("CreateErrorUnknownEnum is Failed!");
+    napi_get_undefined(env, &result);
+
+    return result;
+}
+
+napi_value CameraNapi::CreateVideoStabilizationModeObject(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_status status;
+    std::string propName;
+
+    status = napi_create_object(env, &result);
+    if (status == napi_ok) {
+        for (unsigned int i = 0; i < vecVideoStabilizationMode.size(); i++) {
+            propName = vecVideoStabilizationMode[i];
+            status = AddNamedProperty(env, result, propName, i);
+            if (status != napi_ok) {
+                MEDIA_ERR_LOG("Failed to add named prop for VideoStabilizationMode!");
+                break;
+            }
+            propName.clear();
+        }
+    }
+    if (status == napi_ok) {
+        status = napi_create_reference(env, result, 1, &videoStabilizationModeRef_);
+        if (status == napi_ok) {
+            return result;
+        }
+    }
+    MEDIA_ERR_LOG("CreateVideoStabilizationModeObject is Failed!");
     napi_get_undefined(env, &result);
 
     return result;

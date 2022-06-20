@@ -490,6 +490,33 @@ public:
         }
     }
 
+    static void VideoStabilizationModeEnum(
+        CameraVideoStabilizationMode nativeVideoStabilizationMode, int32_t &jsVideoStabilizationMode)
+    {
+        MEDIA_INFO_LOG(
+            "native video stabilization mode = %{public}d", static_cast<int32_t>(nativeVideoStabilizationMode));
+        switch (nativeVideoStabilizationMode) {
+            case OHOS_CAMERA_VIDEO_STABILIZATION_OFF:
+                jsVideoStabilizationMode = OFF;
+                break;
+            case OHOS_CAMERA_VIDEO_STABILIZATION_LOW:
+                jsVideoStabilizationMode = LOW;
+                break;
+            case OHOS_CAMERA_VIDEO_STABILIZATION_MIDDLE:
+                jsVideoStabilizationMode = MIDDLE;
+                break;
+            case OHOS_CAMERA_VIDEO_STABILIZATION_HIGH:
+                jsVideoStabilizationMode = HIGH;
+                break;
+            case OHOS_CAMERA_VIDEO_STABILIZATION_AUTO:
+                jsVideoStabilizationMode = AUTO;
+                break;
+            default:
+                MEDIA_ERR_LOG("Received native video stabilization mode is not supported with JS");
+                jsVideoStabilizationMode = -1;
+        }
+    }
+
     static void CreateNapiErrorObject(napi_env env, const char *errString,
         std::unique_ptr<JSAsyncContextOutput> &jsContext)
     {

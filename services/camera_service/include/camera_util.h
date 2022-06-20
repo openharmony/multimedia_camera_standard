@@ -22,25 +22,7 @@
 
 namespace OHOS {
 namespace CameraStandard {
-static const std::int32_t CAMERA_PREVIEW_COLOR_SPACE = 8;
-static const std::int32_t CAMERA_PREVIEW_STREAM_ID = 1001;
-
-static const std::int32_t CAMERA_PHOTO_COLOR_SPACE = 8;
-static const std::int32_t CAMERA_PHOTO_STREAM_ID = 1002;
-
-static const std::int32_t CAMERA_VIDEO_COLOR_SPACE = 8;
-static const std::int32_t CAMERA_VIDEO_STREAM_ID = 1003;
-
-static const std::int32_t CAPTURE_TYPE_COUNT = 3;
-
-static const std::int32_t PREVIEW_CAPTURE_ID_START = 1;
-static const std::int32_t PREVIEW_CAPTURE_ID_END = (INT_MAX / CAPTURE_TYPE_COUNT);
-
-static const std::int32_t PHOTO_CAPTURE_ID_START = PREVIEW_CAPTURE_ID_END + 1;
-static const std::int32_t PHOTO_CAPTURE_ID_END = (2 * (INT_MAX / CAPTURE_TYPE_COUNT));
-
-static const std::int32_t VIDEO_CAPTURE_ID_START = PHOTO_CAPTURE_ID_END + 1;
-static const std::int32_t VIDEO_CAPTURE_ID_END = INT_MAX;
+static constexpr int32_t CAMERA_COLOR_SPACE = 8;
 
 enum CamServiceError {
     CAMERA_OK = 0,
@@ -69,6 +51,10 @@ extern std::map<int, std::string> g_cameraFlashMode;
 int32_t HdiToServiceError(Camera::CamRetCode ret);
 
 std::string CreateMsg(const char *format, ...);
+
+int32_t AllocateCaptureId(int32_t &captureId);
+
+void ReleaseCaptureId(int32_t captureId);
 
 bool IsValidSize(std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height);
 } // namespace CameraStandard

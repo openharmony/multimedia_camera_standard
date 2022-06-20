@@ -15,8 +15,6 @@
 
 #include "hstream_repeat.h"
 
-#include <iostream>
-
 #include "camera_util.h"
 #include "display.h"
 #include "display_manager.h"
@@ -28,22 +26,18 @@ static const int32_t STREAM_ROTATE_90 = 90;
 static const int32_t STREAM_ROTATE_180 = 180;
 static const int32_t STREAM_ROTATE_270 = 270;
 static const int32_t STREAM_ROTATE_360 = 360;
-int32_t HStreamRepeat::videoCaptureId_ = VIDEO_CAPTURE_ID_START;
-int32_t HStreamRepeat::previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format)
     : HStreamCommon(StreamType::REPEAT, producer, format)
 {
     isVideo_ = false;
-    customPreviewWidth_ = 0;
-    customPreviewHeight_ = 0;
 }
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, int32_t width, int32_t height)
     : HStreamRepeat(producer, format)
 {
-    customPreviewWidth_ = width;
-    customPreviewHeight_ = height;
+    width_ = width;
+    height_ = height;
 }
 
 HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, bool isVideo)
@@ -58,27 +52,10 @@ HStreamRepeat::~HStreamRepeat()
 int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
                                  std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId)
 {
-    int32_t previewWidth = 0;
-    int32_t previewHeight = 0;
-
-    if (streamOperator == nullptr || cameraAbility == nullptr) {
-        MEDIA_ERR_LOG("HStreamRepeat::LinkInput streamOperator is null");
-        return CAMERA_INVALID_ARG;
+    int32_t ret = HStreamCommon::LinkInput(streamOperator, cameraAbility, streamId);
+    if (ret != CAMERA_OK) {
+        return ret;
     }
-    if (isVideo_) {
-        if (!IsValidSize(cameraAbility, format_, producer_->GetDefaultWidth(), producer_->GetDefaultHeight())) {
-            return CAMERA_INVALID_SESSION_CFG;
-        }
-    } else {
-        previewWidth = (customPreviewWidth_ == 0) ? producer_->GetDefaultWidth() : customPreviewWidth_;
-        previewHeight =  (customPreviewHeight_ == 0) ? producer_->GetDefaultHeight() : customPreviewHeight_;
-        if (!IsValidSize(cameraAbility, format_, previewWidth, previewHeight)) {
-            return CAMERA_INVALID_SESSION_CFG;
-        }
-    }
-    streamId_ = streamId;
-    streamOperator_ = streamOperator;
-    cameraAbility_ = cameraAbility;
     if (!isVideo_) {
         SetStreamTransform();
     }
@@ -87,30 +64,11 @@ int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
 
 void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo)
 {
-    int32_t pixelFormat;
-    auto it = g_cameraToPixelFormat.find(format_);
-    if (it != g_cameraToPixelFormat.end()) {
-        pixelFormat = it->second;
-    } else {
-#ifdef RK_CAMERA
-        pixelFormat = PIXEL_FMT_RGBA_8888;
-#else
-        pixelFormat = PIXEL_FMT_YCRCB_420_SP;
-#endif
-    }
-    MEDIA_INFO_LOG("HStreamRepeat::SetStreamInfo pixelFormat is %{public}d", pixelFormat);
     if (streamInfo == nullptr) {
         MEDIA_ERR_LOG("HStreamRepeat::SetStreamInfo null");
         return;
     }
-
-    streamInfo->format_ = pixelFormat;
-    streamInfo->tunneledMode_ = true;
-    streamInfo->datasapce_ = CAMERA_PREVIEW_COLOR_SPACE;
-    streamInfo->bufferQueue_ = producer_;
-    streamInfo->width_ = (customPreviewWidth_ == 0) ? producer_->GetDefaultWidth() : customPreviewWidth_;
-    streamInfo->height_ = (customPreviewHeight_ == 0) ? producer_->GetDefaultHeight() : customPreviewHeight_;
-    streamInfo->streamId_ = streamId_;
+    HStreamCommon::SetStreamInfo(streamInfo);
     if (isVideo_) {
         streamInfo->intent_ = Camera::VIDEO;
         streamInfo->encodeType_ = Camera::ENCODE_TYPE_H264;
@@ -121,7 +79,7 @@ void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
 
 int32_t HStreamRepeat::Start()
 {
-    int32_t rc = CAMERA_OK;
+    CAMERA_SYNC_TRACE;
 
     if (streamOperator_ == nullptr) {
         return CAMERA_INVALID_STATE;
@@ -130,88 +88,29 @@ int32_t HStreamRepeat::Start()
         MEDIA_ERR_LOG("HStreamRepeat::Start, Already started with captureID: %{public}d", curCaptureID_);
         return CAMERA_INVALID_STATE;
     }
-    if (isVideo_) {
-        rc = StartVideo();
-    } else {
-        rc = StartPreview();
+    int32_t ret = AllocateCaptureId(curCaptureID_);
+    if (ret != CAMERA_OK) {
+        MEDIA_ERR_LOG("HStreamRepeat::Start Failed to allocate a captureId");
+        return ret;
     }
-    return rc;
-}
-
-bool HStreamRepeat::IsvalidCaptureID()
-{
-    int32_t startValue = 0;
-    int32_t endValue = 0;
-    int32_t captureID = 0;
-
-    if (isVideo_) {
-        captureID = videoCaptureId_;
-        startValue = VIDEO_CAPTURE_ID_START;
-        endValue = VIDEO_CAPTURE_ID_END;
-    } else {
-        captureID = previewCaptureId_;
-        startValue = PREVIEW_CAPTURE_ID_START;
-        endValue = PREVIEW_CAPTURE_ID_END;
-    }
-    return ((captureID >= startValue) && (captureID <= endValue));
-}
-
-int32_t HStreamRepeat::StartVideo()
-{
-    CAMERA_SYNC_TRACE;
-    Camera::CamRetCode rc = Camera::NO_ERROR;
-
-    if (!IsvalidCaptureID()) {
-        MEDIA_ERR_LOG("HStreamRepeat::StartVideo Failed to Start Video videoCaptureId_:%{public}d", videoCaptureId_);
-        return CAMERA_CAPTURE_LIMIT_EXCEED;
-    }
-    curCaptureID_ = videoCaptureId_;
-    videoCaptureId_++;
-    std::shared_ptr<Camera::CaptureInfo> captureInfoVideo = std::make_shared<Camera::CaptureInfo>();
-    captureInfoVideo->streamIds_ = {streamId_};
-    captureInfoVideo->captureSetting_ = cameraAbility_;
-    captureInfoVideo->enableShutterCallback_ = false;
-    MEDIA_INFO_LOG("HStreamRepeat::StartVideo() Starting video with capture ID: %{public}d", curCaptureID_);
-    rc = streamOperator_->Capture(curCaptureID_, captureInfoVideo, true);
+    std::shared_ptr<Camera::CaptureInfo> captureInfo = std::make_shared<Camera::CaptureInfo>();
+    captureInfo->streamIds_ = {streamId_};
+    captureInfo->captureSetting_ = cameraAbility_;
+    captureInfo->enableShutterCallback_ = false;
+    MEDIA_INFO_LOG("HStreamRepeat::Start Starting with capture ID: %{public}d", curCaptureID_);
+    Camera::CamRetCode rc = streamOperator_->Capture(curCaptureID_, captureInfo, true);
     if (rc != Camera::NO_ERROR) {
+        ReleaseCaptureId(curCaptureID_);
         curCaptureID_ = 0;
-        MEDIA_ERR_LOG("HStreamRepeat::Start CommitStreams Video failed with error Code:%{public}d", rc);
-        return HdiToServiceError(rc);
+        MEDIA_ERR_LOG("HStreamRepeat::Start Failed with error Code:%{public}d", rc);
+        ret = HdiToServiceError(rc);
     }
-    return HdiToServiceError(rc);
-}
-
-int32_t HStreamRepeat::StartPreview()
-{
-    CAMERA_SYNC_TRACE;
-    Camera::CamRetCode rc = Camera::NO_ERROR;
-
-    if (!IsvalidCaptureID()) {
-        MEDIA_ERR_LOG("HStreamRepeat::StartVideo Failed to Start Preview previewCaptureId_:%{public}d",
-                      previewCaptureId_);
-        return CAMERA_CAPTURE_LIMIT_EXCEED;
-    }
-    curCaptureID_ = previewCaptureId_;
-    previewCaptureId_++;
-    std::shared_ptr<Camera::CaptureInfo> captureInfoPreview = std::make_shared<Camera::CaptureInfo>();
-    captureInfoPreview->streamIds_ = {streamId_};
-    captureInfoPreview->captureSetting_ = cameraAbility_;
-    captureInfoPreview->enableShutterCallback_ = false;
-    MEDIA_INFO_LOG("HStreamRepeat::StartPreview() Starting preview with capture ID: %{public}d", curCaptureID_);
-    rc = streamOperator_->Capture(curCaptureID_, captureInfoPreview, true);
-    if (rc != Camera::NO_ERROR) {
-        MEDIA_ERR_LOG("HStreamRepeat::StartPreview failed with error Code:%{public}d", rc);
-        curCaptureID_ = 0;
-        return HdiToServiceError(rc);
-    }
-    return HdiToServiceError(rc);
+    return ret;
 }
 
 int32_t HStreamRepeat::Stop()
 {
     CAMERA_SYNC_TRACE;
-    int32_t rc = NO_ERROR;
-    Camera::CamRetCode hdiCode = Camera::NO_ERROR;
 
     if (streamOperator_ == nullptr) {
         return CAMERA_INVALID_STATE;
@@ -220,14 +119,16 @@ int32_t HStreamRepeat::Stop()
         MEDIA_ERR_LOG("HStreamRepeat::Stop, Stream not started yet");
         return CAMERA_INVALID_STATE;
     }
-    hdiCode = streamOperator_->CancelCapture(curCaptureID_);
-    if (rc != NO_ERROR) {
-        MEDIA_ERR_LOG("HStreamRepeat::Stop failed  with errorCode:%{public}d, curCaptureID_: %{public}d",
+    int32_t ret = CAMERA_OK;
+    Camera::CamRetCode rc = streamOperator_->CancelCapture(curCaptureID_);
+    if (rc != Camera::NO_ERROR) {
+        MEDIA_ERR_LOG("HStreamRepeat::Stop Failed with errorCode:%{public}d, curCaptureID_: %{public}d",
                       rc, curCaptureID_);
-        return HdiToServiceError(hdiCode);
+        ret = HdiToServiceError(rc);
     }
+    ReleaseCaptureId(curCaptureID_);
     curCaptureID_ = 0;
-    return rc;
+    return ret;
 }
 
 int32_t HStreamRepeat::SetFps(float Fps)
@@ -237,6 +138,9 @@ int32_t HStreamRepeat::SetFps(float Fps)
 
 int32_t HStreamRepeat::Release()
 {
+    if (curCaptureID_) {
+        ReleaseCaptureId(curCaptureID_);
+    }
     streamRepeatCallback_ = nullptr;
     return HStreamCommon::Release();
 }
@@ -286,36 +190,10 @@ int32_t HStreamRepeat::OnFrameError(int32_t errorType)
     return CAMERA_OK;
 }
 
-void HStreamRepeat::ResetCaptureIds()
-{
-    videoCaptureId_ = VIDEO_CAPTURE_ID_START;
-    previewCaptureId_ = PREVIEW_CAPTURE_ID_START;
-}
-
 void HStreamRepeat::DumpStreamInfo(std::string& dumpString)
 {
-    std::shared_ptr<Camera::StreamInfo> curStreamInfo;
-    curStreamInfo = std::make_shared<Camera::StreamInfo>();
-    SetStreamInfo(curStreamInfo);
-    dumpString += "repeat stream info: \n";
-    dumpString += "    Buffer Producer Id:[" + std::to_string(curStreamInfo->bufferQueue_->GetUniqueId());
-    dumpString += "]    stream Id:[" + std::to_string(curStreamInfo->streamId_);
-    std::map<int, std::string>::const_iterator iter =
-        g_cameraFormat.find(format_);
-    if (iter != g_cameraFormat.end()) {
-        dumpString += "]    format:[" + iter->second;
-    }
-    dumpString += "]    width:[" + std::to_string(curStreamInfo->width_);
-    dumpString += "]    height:[" + std::to_string(curStreamInfo->height_);
-    dumpString += "]    TunnelMode:[" + std::to_string(curStreamInfo->tunneledMode_);
-    dumpString += "]    dataspace:[" + std::to_string(curStreamInfo->datasapce_);
-    dumpString += "]    Is Video:[" + std::to_string(isVideo_);
-    if (isVideo_) {
-        dumpString += "]    StreamType:[" + std::to_string(curStreamInfo->intent_);
-        dumpString += "]    Encoding Type:[" + std::to_string(curStreamInfo->encodeType_) + "]:\n";
-    } else {
-        dumpString += "]    StreamType:[" + std::to_string(curStreamInfo->intent_) + "]:\n";
-    }
+    dumpString += "repeat stream:\n";
+    HStreamCommon::DumpStreamInfo(dumpString);
 }
 
 void HStreamRepeat::SetStreamTransform()

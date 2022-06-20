@@ -75,6 +75,9 @@ std::map<int, std::string> g_cameraFlashMode = {
     {3, "Always-Open"},
 };
 
+static std::mutex g_captureIdsMutex;
+static std::map<int32_t, bool> g_captureIds;
+
 int32_t HdiToServiceError(Camera::CamRetCode ret)
 {
     enum CamServiceError err = CAMERA_UNKNOWN_ERROR;
@@ -111,6 +114,32 @@ std::string CreateMsg(const char *format, ...)
     }
     va_end(args);
     return msg;
+}
+
+int32_t AllocateCaptureId(int32_t &captureId)
+{
+    std::lock_guard<std::mutex> lock(g_captureIdsMutex);
+    static int32_t currentCaptureId = 0;
+    for (int32_t i = 0; i < INT_MAX; i++) {
+        if (currentCaptureId == INT_MAX) {
+            currentCaptureId = 0;
+            MEDIA_INFO_LOG("Restarting CaptureId");
+        }
+        currentCaptureId++;
+        if (g_captureIds.find(currentCaptureId) == g_captureIds.end()) {
+            g_captureIds[currentCaptureId] = true;
+            captureId = currentCaptureId;
+            return CAMERA_OK;
+        }
+    }
+    return CAMERA_CAPTURE_LIMIT_EXCEED;
+}
+
+void ReleaseCaptureId(int32_t captureId)
+{
+    std::lock_guard<std::mutex> lock(g_captureIdsMutex);
+    g_captureIds.erase(captureId);
+    return;
 }
 
 bool IsValidSize(std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height)

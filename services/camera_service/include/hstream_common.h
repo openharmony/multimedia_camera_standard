@@ -42,6 +42,8 @@ public:
     int32_t curCaptureID_;
     int32_t streamId_;
     int32_t format_;
+    int32_t width_;
+    int32_t height_;
     sptr<OHOS::IBufferProducer> producer_;
     sptr<Camera::IStreamOperator> streamOperator_;
     std::shared_ptr<Camera::CameraMetadata> cameraAbility_;

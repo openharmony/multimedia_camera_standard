@@ -616,7 +616,6 @@ OHOS::Security::AccessToken::AccessTokenIDEx tokenIdEx = {0};
 void CameraFrameworkModuleTest::SetUp()
 {
     int32_t ret = -1;
-    unsigned int tokenIdOld = 0;
     SetUpInit();
 
     /* Grant the permission so that create camera test can be success */
@@ -624,6 +623,7 @@ void CameraFrameworkModuleTest::SetUp()
         g_infoManagerTestInfoParms,
         g_infoManagerTestPolicyPrams);
     if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
+        unsigned int tokenIdOld = 0;
         MEDIA_DEBUG_LOG("Alloc TokenID failure, cleaning the old token ID \n");
         tokenIdOld = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(
             1, permissionName, 0);

@@ -248,7 +248,24 @@ void CameraFrameworkUnitTest::SetUpTestCase(void)
         g_infoManagerTestInfoParms,
         g_infoManagerTestPolicyPrams);
     if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
-        return;
+        unsigned int tokenIdOld = 0;
+        tokenIdOld = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(
+            1, permissionName, 0);
+        if (tokenIdOld == 0) {
+            return;
+        }
+        ret = OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(tokenIdOld);
+        if (ret != 0) {
+            return;
+        }
+
+        /* Retry the token allocation again */
+        tokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::AllocHapToken(
+            g_infoManagerTestInfoParms,
+            g_infoManagerTestPolicyPrams);
+        if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
+            return;
+        }
     }
 
     (void)SetSelfTokenID(tokenIdEx.tokenIdExStruct.tokenID);

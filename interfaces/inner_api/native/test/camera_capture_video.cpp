@@ -345,8 +345,28 @@ int32_t CameraCaptureVideo::InitCameraManager()
             g_infoManagerTestInfoParms,
             g_infoManagerTestPolicyPrams);
         if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
-            MEDIA_DEBUG_LOG("Alloc TokenID failure \n");
-            return 0;
+            unsigned int tokenIdOld = 0;
+            MEDIA_DEBUG_LOG("Alloc TokenID failure, cleaning the old token ID \n");
+            tokenIdOld = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenID(
+                1, permissionName, 0);
+            if (tokenIdOld == 0) {
+                MEDIA_DEBUG_LOG("Unable to get the Old Token ID, need to reflash the board");
+                return -1;
+            }
+            result = OHOS::Security::AccessToken::AccessTokenKit::DeleteToken(tokenIdOld);
+            if (result != 0) {
+                MEDIA_DEBUG_LOG("Unable to delete the Old Token ID, need to reflash the board");
+                return -1;
+            }
+
+            /* Retry the token allocation again */
+            tokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::AllocHapToken(
+                g_infoManagerTestInfoParms,
+                g_infoManagerTestPolicyPrams);
+            if (tokenIdEx.tokenIdExStruct.tokenID == 0) {
+                MEDIA_DEBUG_LOG("Alloc TokenID failure, need to reflash the board \n");
+                return -1;
+            }
         }
 
         (void)SetSelfTokenID(tokenIdEx.tokenIdExStruct.tokenID);

@@ -86,8 +86,8 @@ private:
     CaptureSessionState curState_ = CaptureSessionState::SESSION_INIT;
     CaptureSessionState prevState_ = CaptureSessionState::SESSION_INIT;
     sptr<HCameraDevice> cameraDevice_;
-    std::vector<sptr<HStreamCommon>> streamRepeats_;
-    std::vector<sptr<HStreamCommon>> streamCaptures_;
+    std::vector<sptr<HStreamCommon>> repeatStreams_;
+    std::vector<sptr<HStreamCommon>> captureStreams_;
     std::vector<sptr<HStreamCommon>> streams_;
     std::vector<sptr<HCameraDevice>> cameraDevices_;
     std::vector<sptr<HStreamCommon>> tempStreams_;

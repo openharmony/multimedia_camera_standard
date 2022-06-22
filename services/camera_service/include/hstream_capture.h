@@ -32,7 +32,6 @@ public:
     HStreamCapture(sptr<OHOS::IBufferProducer> surface, int32_t format);
     ~HStreamCapture();
 
-    static void ResetCaptureId();
     int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
         std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
     void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo) override;
@@ -47,8 +46,6 @@ public:
     void DumpStreamInfo(std::string& dumpString) override;
 
 private:
-    static int32_t photoCaptureId_;
-    bool IsValidCaptureID();
     sptr<IStreamCaptureCallback> streamCaptureCallback_;
 };
 } // namespace CameraStandard

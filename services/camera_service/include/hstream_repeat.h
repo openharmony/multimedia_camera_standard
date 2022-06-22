@@ -34,7 +34,6 @@ public:
     HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, bool isVideo);
     ~HStreamRepeat();
 
-    static void ResetCaptureIds();
     int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
         std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
     void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo) override;
@@ -50,15 +49,8 @@ public:
     void DumpStreamInfo(std::string& dumpString) override;
 
 private:
-    static int32_t videoCaptureId_;
-    static int32_t previewCaptureId_;
-    int32_t StartPreview();
-    int32_t StartVideo();
-    bool IsvalidCaptureID();
     void SetStreamTransform();
     bool isVideo_;
-    int32_t customPreviewWidth_;
-    int32_t customPreviewHeight_;
     sptr<IStreamRepeatCallback> streamRepeatCallback_;
 };
 } // namespace CameraStandard

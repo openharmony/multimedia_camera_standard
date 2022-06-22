@@ -967,11 +967,11 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_030, TestSize.Level0
     ret = session->CommitConfig();
     EXPECT_EQ(ret, 0);
 
-    EXPECT_CALL(*mockStreamOperator, Capture(PREVIEW_CAPTURE_ID_START, _, true)).Times(0);
+    EXPECT_CALL(*mockStreamOperator, Capture(_, _, true)).Times(0);
     ret = session->Start();
     EXPECT_EQ(ret, 0);
 
-    EXPECT_CALL(*mockStreamOperator, CancelCapture(PREVIEW_CAPTURE_ID_START)).Times(0);
+    EXPECT_CALL(*mockStreamOperator, CancelCapture(_)).Times(0);
     ret = session->Stop();
     EXPECT_EQ(ret, 0);
 
@@ -1032,15 +1032,15 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_031, TestSize.Level0
     ret = session->CommitConfig();
     EXPECT_EQ(ret, 0);
 
-    EXPECT_CALL(*mockStreamOperator, Capture(PREVIEW_CAPTURE_ID_START, _, true));
+    EXPECT_CALL(*mockStreamOperator, Capture(1, _, true));
     ret = session->Start();
     EXPECT_EQ(ret, 0);
 
-    EXPECT_CALL(*mockStreamOperator, Capture(PHOTO_CAPTURE_ID_START, _, false));
+    EXPECT_CALL(*mockStreamOperator, Capture(2, _, false));
     ret = ((sptr<PhotoOutput> &)photo)->Capture();
     EXPECT_EQ(ret, 0);
 
-    EXPECT_CALL(*mockStreamOperator, CancelCapture(PREVIEW_CAPTURE_ID_START));
+    EXPECT_CALL(*mockStreamOperator, CancelCapture(1));
     ret = session->Stop();
     EXPECT_EQ(ret, 0);
 
@@ -1170,19 +1170,19 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_033, TestSize.Level0
     ret = session->CommitConfig();
     EXPECT_EQ(ret, 0);
 
-    EXPECT_CALL(*mockStreamOperator, Capture(PREVIEW_CAPTURE_ID_START, _, true));
+    EXPECT_CALL(*mockStreamOperator, Capture(3, _, true));
     ret = session->Start();
     EXPECT_EQ(ret, 0);
 
-    EXPECT_CALL(*mockStreamOperator, Capture(VIDEO_CAPTURE_ID_START, _, true));
+    EXPECT_CALL(*mockStreamOperator, Capture(4, _, true));
     ret = ((sptr<VideoOutput> &)video)->Start();
     EXPECT_EQ(ret, 0);
 
-    EXPECT_CALL(*mockStreamOperator, CancelCapture(VIDEO_CAPTURE_ID_START));
+    EXPECT_CALL(*mockStreamOperator, CancelCapture(4));
     ret = ((sptr<VideoOutput> &)video)->Stop();
     EXPECT_EQ(ret, 0);
 
-    EXPECT_CALL(*mockStreamOperator, CancelCapture(PREVIEW_CAPTURE_ID_START));
+    EXPECT_CALL(*mockStreamOperator, CancelCapture(3));
     ret = session->Stop();
     EXPECT_EQ(ret, 0);
 
@@ -1342,7 +1342,7 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_038, TestSize.Level0
     EXPECT_EQ(photoSetting->GetRotation(), PhotoCaptureSetting::Rotation_90);
     EXPECT_EQ(photoSetting->GetQuality(), PhotoCaptureSetting::NORMAL_QUALITY);
 
-    EXPECT_CALL(*mockStreamOperator, Capture(PHOTO_CAPTURE_ID_START,
+    EXPECT_CALL(*mockStreamOperator, Capture(_,
         matchCaptureSetting(photoSetting->GetCaptureMetadataSetting()), false));
     ret = ((sptr<PhotoOutput> &)photo)->Capture(photoSetting);
     EXPECT_EQ(ret, 0);

@@ -102,6 +102,47 @@
                                      "MSG", str);                                  \
     } while (0)
 
+#define POWERMGR_SYSEVENT_CAMERA_CONNECT(pid, uid, camid, name)                    \
+    do {                                                                           \
+        HiviewDFX::HiSysEvent::Write("CAMERA", "CAMERA_CONNECT",                   \
+                                     HiviewDFX::HiSysEvent::EventType::STATISTIC,  \
+                                     "PID", pid, "UID", uid, "ID", camid,          \
+                                     "NAME", name);                                \
+    } while (0)
+
+#define POWERMGR_SYSEVENT_CAMERA_DISCONNECT(camid)                                 \
+    do {                                                                           \
+        HiviewDFX::HiSysEvent::Write("CAMERA", "CAMERA_DISCONNECT",                \
+                                     HiviewDFX::HiSysEvent::EventType::STATISTIC,  \
+                                     "ID", camid);                                 \
+    } while (0)
+
+#define POWERMGR_SYSEVENT_TORCH_STATE(pid, uid, status)                            \
+    do {                                                                           \
+        HiviewDFX::HiSysEvent::Write("CAMERA", "TORCH_STATE",                      \
+                                     HiviewDFX::HiSysEvent::EventType::STATISTIC,  \
+                                     "PID", pid, "UID", uid, "STATE", status);     \
+    } while (0)
+
+#define POWERMGR_SYSEVENT_CAMERA_CONFIG(type, width, height)                           \
+    do {                                                                               \
+        HiviewDFX::HiSysEvent::Write("CAMERA", "CAMERA_CONFIG",                        \
+                                     HiviewDFX::HiSysEvent::EventType::STATISTIC,      \
+                                     "TYPE", #type, "WIDTH", width, "HEIGHT", height); \
+    } while (0)
+
+#define POWERMGR_SYSEVENT_FLASH_ON()                                               \
+    do {                                                                           \
+        HiviewDFX::HiSysEvent::Write("CAMERA", "FLASHLIGHT_ON",                    \
+                                     HiviewDFX::HiSysEvent::EventType::STATISTIC); \
+    } while (0)
+
+#define POWERMGR_SYSEVENT_FLASH_OFF()                                              \
+    do {                                                                           \
+        HiviewDFX::HiSysEvent::Write("CAMERA", "FLASHLIGHT_OFF",                   \
+                                     HiviewDFX::HiSysEvent::EventType::STATISTIC); \
+    } while (0)
+
 #define CAMERA_START_ASYNC_TRACE(str, taskId)                                      \
     do {                                                                           \
         StartAsyncTrace(HITRACE_TAG_ZCAMERA, str, taskId, -1);                     \

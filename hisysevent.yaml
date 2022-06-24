@@ -24,3 +24,32 @@ CAMERA_STATE:
 CAMERA_STATISTIC:
   __BASE: {type: STATISTIC, level: MINOR, desc: camera stats}
   MSG: {type: STRING, desc: message}
+
+CAMERA_CONNECT:
+  __BASE: {type: STATISTIC, level: MINOR, tag: PowerStats, desc: camera connect}
+  PID: {type: INT32, desc: pid}
+  UID: {type: INT32, desc: uid}
+  ID: {type: STRING, desc: camera id}
+  NAME: {type: STRING, desc: package name}
+
+CAMERA_DISCONNECT:
+  __BASE: {type: STATISTIC, level: MINOR, tag: PowerStats, desc: camera disconnect}
+  ID: {type: STRING, desc: camera id}
+
+TORCH_STATE:
+  __BASE: {type: STATISTIC, level: MINOR, tag: PowerStats, desc: torch state}
+  PID: {type: INT32, desc: pid}
+  UID: {type: INT32, desc: uid}
+  STATE: {type: INT32, desc: status}
+
+CAMERA_CONFIG:
+  __BASE: {type: STATISTIC, level: MINOR, tag: PowerStats, desc: camera config}
+  TYPE: {type: STRING, desc: stream type}
+  WIDTH: {type: INT32, desc: image width}
+  HEIGHT: {type: INT32, desc: image height}
+
+FLASHLIGHT_ON:
+  __BASE: {type: STATISTIC, level: MINOR, tag: PowerStats, desc: flashlight on}
+
+FLASHLIGHT_OFF:
+  __BASE: {type: STATISTIC, level: MINOR, tag: PowerStats, desc: flashlight off}

@@ -21,6 +21,7 @@
 #include "camera_device_ability_items.h"
 #include "camera_util.h"
 #include "hcamera_device_callback_stub.h"
+#include "ipc_skeleton.h"
 #include "camera_log.h"
 #include "metadata_utils.h"
 
@@ -70,6 +71,8 @@ public:
                            item.data.u8[0]);
             CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashStateChanged! current OHOS_CONTROL_FLASH_STATE is %d",
                                                item.data.u8[0]));
+            POWERMGR_SYSEVENT_TORCH_STATE(IPCSkeleton::GetCallingPid(),
+                                          IPCSkeleton::GetCallingUid(), item.data.u8[0]);
         }
         ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASH_MODE, &item);
         if (ret == 0) {
@@ -829,8 +832,14 @@ void CameraInput::SetFlashMode(camera_flash_mode_enum_t flashMode)
 
     if (!status) {
         MEDIA_ERR_LOG("CameraInput::SetFlashMode Failed to set flash mode");
+        return;
     }
-    return;
+
+    if (flashMode == OHOS_CAMERA_FLASH_MODE_CLOSE) {
+        POWERMGR_SYSEVENT_FLASH_OFF();
+    } else {
+        POWERMGR_SYSEVENT_FLASH_ON();
+    }
 }
 
 void CameraInput::SetErrorCallback(std::shared_ptr<ErrorCallback> errorCallback)

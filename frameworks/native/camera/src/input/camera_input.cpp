@@ -928,5 +928,22 @@ sptr<CameraInfo> CameraInput::GetCameraDeviceInfo()
 {
     return cameraObj_;
 }
+
+void SetVideoStabilizingMode(sptr<CameraInput> device, CameraVideoStabilizationMode VideoStabilizationMode)
+{
+    if (!device) {
+    MEDIA_ERR_LOG("CameraInput::SetVideoStabilizingMode Need call LockForControl() before setting camera properties");
+    return;
+    }
+    uint32_t count = 1;
+    uint8_t StabilizationMode = VideoStabilizationMode;
+
+    device->LockForControl();
+    MEDIA_DEBUG_LOG("CameraInput::SetVideoStabilizingMode StabilizationMode : %{public}d", StabilizationMode);
+    if (!device->changedMetadata_->addEntry(OHOS_CONTROL_VIDEO_STABILIZATION_MODE, &StabilizationMode, count)) {
+        MEDIA_DEBUG_LOG("CameraInput::SetVideoStabilizingMode Failed to set video stabilization mode");
+    }
+    device->UnlockForControl();
+}
 } // CameraStandard
 } // OHOS

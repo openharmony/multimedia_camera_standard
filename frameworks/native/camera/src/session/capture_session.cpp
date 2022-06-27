@@ -26,7 +26,6 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 
-using namespace std;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AAFwk;
 
@@ -206,6 +205,91 @@ void CaptureSession::SetCallback(std::shared_ptr<SessionCallback> callback)
         }
     }
     return;
+}
+
+const std::unordered_map<CameraVideoStabilizationMode,
+VideoStabilizationMode> CaptureSession::metaToFwVideoStabModes_ = {
+    {OHOS_CAMERA_VIDEO_STABILIZATION_OFF, OFF},
+    {OHOS_CAMERA_VIDEO_STABILIZATION_LOW, LOW},
+    {OHOS_CAMERA_VIDEO_STABILIZATION_MIDDLE, MIDDLE},
+    {OHOS_CAMERA_VIDEO_STABILIZATION_HIGH, HIGH},
+    {OHOS_CAMERA_VIDEO_STABILIZATION_AUTO, AUTO}
+};
+
+const std::unordered_map<VideoStabilizationMode,
+CameraVideoStabilizationMode> CaptureSession::fwToMetaVideoStabModes_ = {
+    {OFF, OHOS_CAMERA_VIDEO_STABILIZATION_OFF},
+    {LOW, OHOS_CAMERA_VIDEO_STABILIZATION_LOW},
+    {MIDDLE, OHOS_CAMERA_VIDEO_STABILIZATION_MIDDLE},
+    {HIGH, OHOS_CAMERA_VIDEO_STABILIZATION_HIGH},
+    {AUTO, OHOS_CAMERA_VIDEO_STABILIZATION_AUTO}
+};
+
+VideoStabilizationMode CaptureSession::GetActiveVideoStabilizationMode()
+{
+    sptr<CameraInfo> cameraObj_;
+    if (inputDevice_ == nullptr) {
+        MEDIA_ERR_LOG("CaptureSession::GetActiveVideoStabilizationMode camera device is null");
+        return OFF;
+    }
+    cameraObj_ = inputDevice_->GetCameraDeviceInfo();
+    std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
+    camera_metadata_item_t item;
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_CONTROL_VIDEO_STABILIZATION_MODE, &item);
+    if (ret == CAM_META_SUCCESS) {
+        auto itr = metaToFwVideoStabModes_.find(static_cast<CameraVideoStabilizationMode>(item.data.u8[0]));
+        if (itr != metaToFwVideoStabModes_.end()) {
+            return itr->second;
+        }
+    }
+    return OFF;
+}
+
+void CaptureSession::SetVideoStabilizationMode(VideoStabilizationMode stabilizationMode)
+{
+    auto itr = fwToMetaVideoStabModes_.find(stabilizationMode);
+    if ((itr == fwToMetaVideoStabModes_.end()) || !IsVideoStabilizationModeSupported(stabilizationMode)) {
+        MEDIA_ERR_LOG("CaptureSession::SetVideoStabilizationMode Mode: %{public}d not supported", stabilizationMode);
+        return;
+    }
+    SetVideoStabilizingMode((sptr<CameraInput> &) inputDevice_, itr->second);
+}
+
+bool CaptureSession::IsVideoStabilizationModeSupported(VideoStabilizationMode stabilizationMode)
+{
+    std::vector<VideoStabilizationMode> stabilizationModes = GetSupportedStabilizationMode();
+    if (std::find(stabilizationModes.begin(), stabilizationModes.end(), stabilizationMode)
+       != stabilizationModes.end()) {
+        return true;
+    }
+    return false;
+}
+
+std::vector<VideoStabilizationMode> CaptureSession::GetSupportedStabilizationMode()
+{
+    std::vector<VideoStabilizationMode> stabilizationModes;
+    
+    sptr<CameraInfo> cameraObj_;
+    if (inputDevice_ == nullptr) {
+        MEDIA_ERR_LOG("CaptureSession::GetSupportedStabilizationMode camera device is null");
+        return stabilizationModes;
+    }
+    cameraObj_ = inputDevice_->GetCameraDeviceInfo();
+    std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
+    camera_metadata_item_t item;
+    int ret = Camera::FindCameraMetadataItem(metadata->get(), OHOS_ABILITY_VIDEO_STABILIZATION_MODES, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("CaptureSession::GetSupporteStabilizationModes Failed with return code %{public}d", ret);
+        return stabilizationModes;
+    }
+
+    for (int i = 0; i < item.count; i++) {
+        auto itr = metaToFwVideoStabModes_.find(static_cast<CameraVideoStabilizationMode>(item.data.u8[i]));
+        if (itr != metaToFwVideoStabModes_.end()) {
+            stabilizationModes.emplace_back(itr->second);
+        }
+    }
+    return stabilizationModes;
 }
 
 std::shared_ptr<SessionCallback> CaptureSession::GetApplicationCallback()

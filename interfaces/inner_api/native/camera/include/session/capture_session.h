@@ -37,6 +37,14 @@ public:
     virtual void OnError(int32_t errorCode) = 0;
 };
 
+enum VideoStabilizationMode {
+    OFF = 0,
+    LOW,
+    MIDDLE,
+    HIGH,
+    AUTO
+};
+
 class CaptureSession : public RefBase {
 public:
     sptr<CaptureInput> inputDevice_;
@@ -110,10 +118,41 @@ public:
      */
     void Release();
 
+    /**
+    * @brief Get the supported video sabilization modes.
+    *
+    * @return Returns vector of CameraVideoStabilizationMode supported stabilization modes.
+    */
+    std::vector<VideoStabilizationMode> GetSupportedStabilizationMode();
+
+    /**
+    * @brief Query whether given stabilization mode supported.
+    *
+    * @param VideoStabilizationMode stabilization mode to query.
+    * @return True is supported false otherwise.
+    */
+    bool IsVideoStabilizationModeSupported(VideoStabilizationMode stabilizationMode);
+
+    /**
+    * @brief Get the current Video Stabilizaion mode.
+    *
+    * @return Returns current Video Stabilizaion mode.
+    */
+    VideoStabilizationMode GetActiveVideoStabilizationMode();
+
+    /**
+    * @brief Set the Video Stabilizaion mode.
+    *
+    * @param VideoStabilizationMode stabilization mode to set.
+    */
+    void SetVideoStabilizationMode(VideoStabilizationMode stabilizationMode);
+
 private:
     sptr<ICaptureSession> captureSession_;
     std::shared_ptr<SessionCallback> appCallback_;
     sptr<ICaptureSessionCallback> captureSessionCallback_;
+    static const std::unordered_map<CameraVideoStabilizationMode, VideoStabilizationMode> metaToFwVideoStabModes_;
+    static const std::unordered_map<VideoStabilizationMode, CameraVideoStabilizationMode> fwToMetaVideoStabModes_;
 };
 } // namespace CameraStandard
 } // namespace OHOS

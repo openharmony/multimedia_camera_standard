@@ -90,6 +90,9 @@ private:
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
+    static napi_value IsVideoStabilizationModeSupported(napi_env env, napi_callback_info info);
+    static napi_value GetActiveVideoStabilizationMode(napi_env env, napi_callback_info info);
+    static napi_value SetVideoStabilizationMode(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
 
     napi_env env_;
@@ -115,6 +118,9 @@ struct CameraSessionAsyncContext {
     bool bRetBool;
     std::string funcName;
     int32_t taskId;
+    std::string enumType;
+    VideoStabilizationMode videoStabilizationMode;
+    bool isSupported;
 };
 } // namespace CameraStandard
 } // namespace OHOS

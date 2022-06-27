@@ -70,7 +70,16 @@ class CameraInput : public CaptureInput {
 public:
     CameraInput(sptr<ICameraDeviceService> &deviceObj, sptr<CameraInfo> &camera);
     ~CameraInput() {}
+    /**
+    * @brief create new device control setting.
+    */
     void LockForControl();
+
+    /**
+    * @brief submit device control setting.
+    *
+    * @return Returns CAMERA_OK is success.
+    */
     int32_t UnlockForControl();
 
     /**
@@ -339,6 +348,13 @@ public:
     */
     sptr<CameraInfo> GetCameraDeviceInfo() override;
 
+    /**
+    * @brief Get the change metadata for updating device setting.
+    *
+    * @return Returns CameraMetadata.
+    */
+    std::shared_ptr<Camera::CameraMetadata> GetChangeMetadata();
+    friend void SetVideoStabilizingMode(sptr<CameraInput> device, CameraVideoStabilizationMode VideoStabilizationMode);
 private:
     std::mutex changeMetaMutex_;
     std::shared_ptr<Camera::CameraMetadata> changedMetadata_;
@@ -357,6 +373,7 @@ private:
     int32_t StartFocus(camera_focus_mode_enum_t focusMode);
     int32_t UpdateSetting(std::shared_ptr<Camera::CameraMetadata> changedMetadata);
 };
+    void SetVideoStabilizingMode(sptr<CameraInput> device, CameraVideoStabilizationMode VideoStabilizationMode);
 } // namespace CameraStandard
 } // namespace OHOS
 #endif // OHOS_CAMERA_CAMERA_INPUT_H

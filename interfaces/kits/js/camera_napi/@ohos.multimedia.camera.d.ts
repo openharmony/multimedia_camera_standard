@@ -1709,11 +1709,11 @@ declare namespace camera {
      * Set the minimum and maximum frame rate values.
      * @param minFrameRate Minimum frame rate that needs to be supported.
      * @param maxFrameRate Maximum frame rate that needs to be supported.
-     * @param callback Callback used to return the result, 0 means success, otherwise the result contains invalid frame rate parameter.
+     * @param callback Callback used to return the result.
      * @since 9
      * @syscap SystemCapability.Multimedia.Camera.Core
      */
-    setFrameRateRange(minFrameRate: number, maxFrameRate: number, callback: AsyncCallback<number>): void;
+    setFrameRateRange(minFrameRate: number, maxFrameRate: number, callback: AsyncCallback<void>): void;
 
     /**
      * Set the minimum and maximum frame rate values.

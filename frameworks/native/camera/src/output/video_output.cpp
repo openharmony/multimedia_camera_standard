@@ -16,6 +16,8 @@
 #include "output/video_output.h"
 #include "camera_util.h"
 #include "hstream_repeat_callback_stub.h"
+#include "input/camera_info.h"
+#include "input/camera_input.h"
 #include "camera_log.h"
 
 namespace OHOS {
@@ -95,22 +97,6 @@ void VideoOutput::SetCallback(std::shared_ptr<VideoCallback> callback)
     }
 }
 
-std::vector<float> VideoOutput::GetSupportedFps()
-{
-    return {};
-}
-
-float VideoOutput::GetFps()
-{
-    return 0;
-}
-
-int32_t VideoOutput::SetFps(float fps)
-{
-    (void)fps;
-    return CAMERA_OK;
-}
-
 int32_t VideoOutput::Start()
 {
     return static_cast<IStreamRepeat *>(GetStream().GetRefPtr())->Start();
@@ -143,6 +129,56 @@ void VideoOutput::Release()
 std::shared_ptr<VideoCallback> VideoOutput::GetApplicationCallback()
 {
     return appCallback_;
+}
+
+std::vector<int32_t> VideoOutput::GetFrameRateRange()
+{
+    std::vector<int32_t> range;
+    camera_metadata_item_t item;
+    sptr<CameraInfo> cameraObj_;
+
+    if (!videoFramerateRange_.empty()) {
+        return videoFramerateRange_;
+    }
+
+    CaptureSession *captureSession = GetSession();
+    if ((captureSession == nullptr) || (captureSession->inputDevice_ == nullptr)) {
+        return {};
+    }
+    cameraObj_ = captureSession->inputDevice_->GetCameraDeviceInfo();
+    std::shared_ptr<Camera::CameraMetadata> metadata_ = cameraObj_->GetMetadata();
+
+    int ret = Camera::FindCameraMetadataItem(metadata_->get(), OHOS_ABILITY_FPS_RANGES, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("Failed to get Video framerate range with return code %{public}d", ret);
+        return {};
+    }
+
+    for (int i = 0; i < item.count; i++) {
+        range.push_back(item.data.i32[i]);
+    }
+
+    videoFramerateRange_ = range;
+    return videoFramerateRange_;
+}
+
+void VideoOutput::SetFrameRateRange(int32_t minFrameRate, int32_t maxFrameRate)
+{
+    if (videoFramerateRange_.empty() && (this->GetFrameRateRange().empty())) {
+        return;
+    }
+
+    MEDIA_DEBUG_LOG("VideoCaptureSetting::SetFrameRateRange min=%{public}d and max=%{public}d",
+                    minFrameRate, maxFrameRate);
+
+    CaptureSession *captureSession = GetSession();
+    if ((captureSession == nullptr) || (captureSession->inputDevice_ == nullptr)) {
+        MEDIA_ERR_LOG("VideoCaptureSetting::SetFrameRateRange Failed to set FrameRateRange");
+        return;
+    }
+
+    SetRecordingFrameRateRange((sptr<CameraInput> &)captureSession->inputDevice_,
+                               minFrameRate, maxFrameRate);
 }
 } // CameraStandard
 } // OHOS

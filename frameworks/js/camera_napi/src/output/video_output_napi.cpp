@@ -650,7 +650,7 @@ napi_value VideoOutputNapi::SetFrameRateRange(napi_env env, napi_callback_info i
                     context->vecFrameRateRangeList = ((sptr<VideoOutput> &)
                             (context->objectInfo->videoOutput_))->GetFrameRateRange();
                     bool isValidRange = isFrameRateRangeAvailable(env, data);
-                    if (isValidRange) {
+                    if (!isValidRange) {
                         ((sptr<VideoOutput> &)(context->objectInfo->videoOutput_))->
                                 SetFrameRateRange(context->minFrameRate, context->maxFrameRate);
                         context->status = true;

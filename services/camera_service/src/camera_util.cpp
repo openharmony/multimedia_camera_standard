@@ -75,6 +75,14 @@ std::map<int, std::string> g_cameraFlashMode = {
     {3, "Always-Open"},
 };
 
+std::map<int, std::string> g_cameraVideoStabilizationMode = {
+    {0, "Off"},
+    {1, "Low"},
+    {2, "Middle"},
+    {3, "High"},
+    {4, "Auto"},
+};
+
 static std::mutex g_captureIdsMutex;
 static std::map<int32_t, bool> g_captureIds;
 

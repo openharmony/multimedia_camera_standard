@@ -500,6 +500,57 @@ void HCameraService::CameraDumpSensorInfo(common_metadata_header_t *metadataEntr
     }
 }
 
+void HCameraService::CameraDumpVideoStabilization(common_metadata_header_t *metadataEntry,
+    std::string& dumpString)
+{
+    camera_metadata_item_t item;
+    int ret;
+    dumpString += "    ## Video Stabilization Related Info: \n";
+    dumpString += "        Available Video Stabilization Modes:[";
+
+    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_ABILITY_VIDEO_STABILIZATION_MODES, &item);
+    if (ret == CAM_META_SUCCESS) {
+        for (uint32_t i = 0; i < item.count; i++) {
+            std::map<int, std::string>::const_iterator iter =
+                g_cameraVideoStabilizationMode.find(item.data.u8[i]);
+            if (iter != g_cameraVideoStabilizationMode.end()) {
+                dumpString += " " + iter->second;
+            }
+        }
+        dumpString += "]:\n";
+    }
+
+    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_CONTROL_VIDEO_STABILIZATION_MODE, &item);
+    if (ret == CAM_META_SUCCESS) {
+        std::map<int, std::string>::const_iterator iter =
+            g_cameraVideoStabilizationMode.find(item.data.u8[0]);
+        if (iter != g_cameraVideoStabilizationMode.end()) {
+            dumpString += "        Set Stabilization Mode:["
+                + iter->second
+                + "]:\n";
+        }
+    }
+}
+
+void HCameraService::CameraDumpVideoFrameRateRange(common_metadata_header_t *metadataEntry,
+    std::string& dumpString)
+{
+    camera_metadata_item_t item;
+    const int32_t FRAME_RATE_RANGE_STEP = 2;
+    int ret;
+    dumpString += "    ## Video FrameRateRange Related Info: \n";
+    dumpString += "        Available FrameRateRange :\n";
+
+    ret = Camera::FindCameraMetadataItem(metadataEntry, OHOS_ABILITY_FPS_RANGES, &item);
+    if (ret == CAM_META_SUCCESS) {
+        for (uint32_t i = 0; i < (item.count - 1); i += FRAME_RATE_RANGE_STEP) {
+            dumpString += "            [ " + std::to_string(item.data.i32[i]) + ", " +
+                          std::to_string(item.data.i32[i+1]) + " ]\n";
+        }
+        dumpString += "\n";
+    }
+}
+
 int32_t HCameraService::Dump(int fd, const std::vector<std::u16string>& args)
 {
     std::unordered_set<std::u16string> argSets;
@@ -538,6 +589,8 @@ int32_t HCameraService::Dump(int fd, const std::vector<std::u16string>& args)
             CameraDumpAF(metadataEntry, dumpString);
             CameraDumpAE(metadataEntry, dumpString);
             CameraDumpSensorInfo(metadataEntry, dumpString);
+            CameraDumpVideoStabilization(metadataEntry, dumpString);
+            CameraDumpVideoFrameRateRange(metadataEntry, dumpString);
         }
     }
     if (args.size() == 0 || argSets.count(arg3) != 0) {

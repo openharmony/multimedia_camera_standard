@@ -79,6 +79,10 @@ private:
     std::string& dumpString);
     void CameraDumpSensorInfo(common_metadata_header_t *metadataEntry,
     std::string& dumpString);
+    void CameraDumpVideoStabilization(common_metadata_header_t *metadataEntry,
+        std::string& dumpString);
+    void CameraDumpVideoFrameRateRange(common_metadata_header_t *metadataEntry,
+        std::string& dumpString);
 
     sptr<HCameraHostManager> cameraHostManager_;
     sptr<CameraDeviceCallback> cameraDeviceCallback_;

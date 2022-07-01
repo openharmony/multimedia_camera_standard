@@ -73,7 +73,6 @@ public:
         CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("OnCameraStatusChanged! for cameraId:%s, current Camera Status:%d",
                                            cameraId.c_str(), status));
 
-        MEDIA_INFO_LOG("OnCameraStatusChanged: cameraId: %{public}s, status: %{public}d", cameraId.c_str(), status);
         if (camMngr_ != nullptr && camMngr_->GetApplicationCallback() != nullptr) {
             switch (status) {
                 case CAMERA_STATUS_UNAVAILABLE:
@@ -91,6 +90,8 @@ public:
             cameraStatusInfo.cameraInfo = camMngr_->GetCameraInfo(cameraId);
             cameraStatusInfo.cameraStatus = deviceStatus;
             if (cameraStatusInfo.cameraInfo) {
+                MEDIA_INFO_LOG("OnCameraStatusChanged: cameraId: %{public}s, status: %{public}d",
+                               cameraId.c_str(), status);
                 camMngr_->GetApplicationCallback()->OnCameraStatusChanged(cameraStatusInfo);
             }
         } else {

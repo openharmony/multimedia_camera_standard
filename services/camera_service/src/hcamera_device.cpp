@@ -234,7 +234,7 @@ int32_t HCameraDevice::OnError(const Camera::ErrorType type, const int32_t error
     if (deviceSvcCallback_ != nullptr) {
         if (type == Camera::REQUEST_TIMEOUT) {
             deviceSvcCallback_->OnError(CAMERA_DEVICE_REQUEST_TIMEOUT, errorMsg);
-        }else if (type == camera::CAMERA_DEVICE_PREEMPTED){
+        } else if (type == camera::DEVICE_PREEMPTED){
              deviceSvcCallback_->OnError(CAMERA_DEVICE_PREEMPTED, errorMsg);
         }else {
             deviceSvcCallback_->OnError(CAMERA_UNKNOWN_ERROR, errorMsg);

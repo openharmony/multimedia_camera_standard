@@ -45,8 +45,10 @@ HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     for (auto it = oldSessions.begin(); it != oldSessions.end(); it++) {
         sptr<HCaptureSession> session = it->second;
         sptr<HCameraDevice> disconnectDevice;
-        session->GetCameraDevice(disconnectDevice);
-        disconnectDevice->OnError(Camera::ErrorType::DEVICE_PREEMPT, 0);
+        rc = session->GetCameraDevice(disconnectDevice);
+        if (rc == CAMERA_OK) {
+            disconnectDevice->OnError(Camera::ErrorType::DEVICE_PREEMPT, 0);
+        }
         session->Release(it->first);
         MEDIA_ERR_LOG("currently multi-session not supported, release session for pid(%{public}d)", it->first);
     }

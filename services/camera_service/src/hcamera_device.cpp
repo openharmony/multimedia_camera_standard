@@ -84,6 +84,8 @@ int32_t HCameraDevice::Open()
                 MEDIA_ERR_LOG("HCameraDevice::Open Update setting failed with error Code: %{public}d", rc);
                 return HdiToServiceError(rc);
             }
+            updateSettings_ = nullptr;
+            MEDIA_DEBUG_LOG("HCameraDevice::Open Updated device settings");
         }
         errorCode = HdiToServiceError(hdiCameraDevice_->SetResultMode(Camera::ON_CHANGED));
     } else {
@@ -136,17 +138,45 @@ int32_t HCameraDevice::UpdateSetting(const std::shared_ptr<Camera::CameraMetadat
         return CAMERA_INVALID_ARG;
     }
 
-    if (!Camera::GetCameraMetadataItemCount(settings->get())) {
+    uint32_t count = Camera::GetCameraMetadataItemCount(settings->get());
+    if (!count) {
+        MEDIA_DEBUG_LOG("HCameraDevice::UpdateSetting Nothing to update");
         return CAMERA_OK;
     }
-    updateSettings_ = settings;
+    if (updateSettings_) {
+        camera_metadata_item_t metadataItem;
+        for (uint32_t index = 0; index < count; index++) {
+            int ret = Camera::GetCameraMetadataItem(settings->get(), index, &metadataItem);
+            if (ret != CAM_META_SUCCESS) {
+                MEDIA_ERR_LOG("HCameraDevice::UpdateSetting Failed to get metadata item at index: %{public}d", index);
+                return CAMERA_INVALID_ARG;
+            }
+            bool status = false;
+            uint32_t currentIndex;
+            ret = Camera::FindCameraMetadataItemIndex(updateSettings_->get(), metadataItem.item, &currentIndex);
+            if (ret == CAM_META_ITEM_NOT_FOUND) {
+                status = updateSettings_->addEntry(metadataItem.item, metadataItem.data.u8, metadataItem.count);
+            } else if (ret == CAM_META_SUCCESS) {
+                status = updateSettings_->updateEntry(metadataItem.item, metadataItem.data.u8, metadataItem.count);
+            }
+            if (!status) {
+                MEDIA_ERR_LOG("HCameraDevice::UpdateSetting Failed to update metadata item: %{public}d",
+                              metadataItem.item);
+                return CAMERA_UNKNOWN_ERROR;
+            }
+        }
+    } else {
+        updateSettings_ = settings;
+    }
     if (hdiCameraDevice_ != nullptr) {
-        Camera::CamRetCode rc = hdiCameraDevice_->UpdateSettings(settings);
+        Camera::CamRetCode rc = hdiCameraDevice_->UpdateSettings(updateSettings_);
         if (rc != Camera::NO_ERROR) {
             MEDIA_ERR_LOG("HCameraDevice::UpdateSetting failed with error Code: %{public}d", rc);
             return HdiToServiceError(rc);
         }
+        updateSettings_ = nullptr;
     }
+    MEDIA_DEBUG_LOG("HCameraDevice::UpdateSetting Updated device settings");
     return CAMERA_OK;
 }
 
@@ -177,7 +207,7 @@ int32_t HCameraDevice::DisableResult(std::vector<int32_t> &results)
         MEDIA_ERR_LOG("HCameraDevice::DisableResult results vector empty");
         return CAMERA_INVALID_ARG;
     }
-    
+
     if (hdiCameraDevice_ == nullptr) {
         MEDIA_ERR_LOG("HCameraDevice::hdiCameraDevice_ is null");
         return CAMERA_UNKNOWN_ERROR;

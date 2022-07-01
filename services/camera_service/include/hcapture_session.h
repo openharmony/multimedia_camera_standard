@@ -68,6 +68,7 @@ private:
     int32_t AddOutputStream(sptr<HStreamCommon> stream);
     int32_t RemoveOutputStream(sptr<HStreamCommon> stream);
     int32_t GetCameraDevice(sptr<HCameraDevice> &device);
+    int32_t GetCurrentCameraDevice(sptr<HCameraDevice> &device);
     int32_t HandleCaptureOuputsConfig(sptr<HCameraDevice> &device);
     int32_t CreateAndCommitStreams(sptr<HCameraDevice> &device, std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
                                    std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);

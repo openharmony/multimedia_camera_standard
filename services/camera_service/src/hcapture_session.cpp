@@ -258,7 +258,6 @@ int32_t HCaptureSession::GetCameraDevice(sptr<HCameraDevice> &device)
 
 int32_t HCaptureSession::GetCurrentCameraDevice(sptr<HCameraDevice> &device)
 {
-    int32_t rc;
     if (cameraDevice_ != nullptr && !cameraDevice_->IsReleaseCameraDevice()) {
         MEDIA_DEBUG_LOG("HCaptureSession::GetCameraDevice Camera device has not changed");
         device = cameraDevice_;

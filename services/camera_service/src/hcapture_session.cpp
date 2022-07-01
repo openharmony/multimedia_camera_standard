@@ -45,7 +45,7 @@ HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     for (auto it = oldSessions.begin(); it != oldSessions.end(); it++) {
         sptr<HCaptureSession> session = it->second;
         sptr<HCameraDevice> disconnectDevice;
-        rc = session->GetCameraDevice(disconnectDevice);
+        int32_t rc = session->GetCameraDevice(disconnectDevice);
         if (rc == CAMERA_OK) {
             disconnectDevice->OnError(Camera::ErrorType::DEVICE_PREEMPT, 0);
         }

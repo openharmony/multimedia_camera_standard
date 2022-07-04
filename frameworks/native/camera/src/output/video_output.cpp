@@ -154,7 +154,7 @@ std::vector<int32_t> VideoOutput::GetFrameRateRange()
         return {};
     }
 
-    for (int i = 0; i < item.count; i++) {
+    for (uint32_t i = 0; i < item.count; i++) {
         range.push_back(item.data.i32[i]);
     }
 

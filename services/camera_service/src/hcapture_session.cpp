@@ -44,6 +44,11 @@ HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     }
     for (auto it = oldSessions.begin(); it != oldSessions.end(); it++) {
         sptr<HCaptureSession> session = it->second;
+        sptr<HCameraDevice> disconnectDevice;
+        int32_t rc = session->GetCurrentCameraDevice(disconnectDevice);
+        if (rc == CAMERA_OK) {
+            disconnectDevice->OnError(Camera::ErrorType::DEVICE_PREEMPT, 0);
+        }
         session->Release(it->first);
         MEDIA_ERR_LOG("currently multi-session not supported, release session for pid(%{public}d)", it->first);
     }
@@ -249,6 +254,21 @@ int32_t HCaptureSession::GetCameraDevice(sptr<HCameraDevice> &device)
     }
     device = camDevice;
     return rc;
+}
+
+int32_t HCaptureSession::GetCurrentCameraDevice(sptr<HCameraDevice> &device)
+{
+    if (cameraDevice_ != nullptr && !cameraDevice_->IsReleaseCameraDevice()) {
+        MEDIA_DEBUG_LOG("HCaptureSession::GetCameraDevice Camera device has not changed");
+        device = cameraDevice_;
+        return CAMERA_OK;
+    } else if (!tempCameraDevices_.empty()) {
+        device = tempCameraDevices_[0];
+        return CAMERA_OK;
+    }
+
+    MEDIA_ERR_LOG("HCaptureSession::GetCurrentCameraDevice Failed because don't have camera device");
+    return CAMERA_INVALID_STATE;
 }
 
 int32_t HCaptureSession::GetCurrentStreamInfos(sptr<HCameraDevice> &device,

@@ -36,7 +36,8 @@ enum CamServiceError {
     CAMERA_INVALID_SESSION_CFG,
     CAMERA_CAPTURE_LIMIT_EXCEED,
     CAMERA_INVALID_STATE,
-    CAMERA_UNKNOWN_ERROR
+    CAMERA_UNKNOWN_ERROR,
+    CAMERA_DEVICE_PREEMPTED
 };
 
 extern std::unordered_map<int32_t, int32_t> g_cameraToPixelFormat;

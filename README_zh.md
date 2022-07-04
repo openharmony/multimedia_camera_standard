@@ -331,7 +331,7 @@
 
 ### 切换多个照相机设备<a name="sectionswitchcamera"></a>
 
-以下演示如何切换多个照相机设备。最初在采集会话中有一个视频输出（vedio output）。如果用户想要切换其他 照相机，现存的相机输入和输出需要县移除并加入新的相机输入和输出（示例中使用的是photo output）。
+以下演示如何切换多个照相机设备。最初在采集会话中有一个视频输出（video output）。如果用户想要切换其他 照相机，现存的相机输入和输出需要先移除并加入新的相机输入和输出（示例中使用的是photo output）。
 
 1.  获取相机管理器实例并获取相机对象列表。
 
@@ -355,7 +355,7 @@
 4.  开始配置采集会话。
 
     ```
-    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
+    int32_t result = captureSession->BeginConfig()
     ```
 
 5.  将相机输入添加到采集会话。

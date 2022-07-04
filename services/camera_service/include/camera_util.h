@@ -48,6 +48,7 @@ extern std::map<int, std::string> g_cameraFormat;
 extern std::map<int, std::string> g_cameraFocusMode;
 extern std::map<int, std::string> g_cameraExposureMode;
 extern std::map<int, std::string> g_cameraFlashMode;
+extern std::map<int, std::string> g_cameraVideoStabilizationMode;
 
 int32_t HdiToServiceError(Camera::CamRetCode ret);
 

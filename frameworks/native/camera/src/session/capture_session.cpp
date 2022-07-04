@@ -283,7 +283,7 @@ std::vector<VideoStabilizationMode> CaptureSession::GetSupportedStabilizationMod
         return stabilizationModes;
     }
 
-    for (int i = 0; i < item.count; i++) {
+    for (uint32_t i = 0; i < item.count; i++) {
         auto itr = metaToFwVideoStabModes_.find(static_cast<CameraVideoStabilizationMode>(item.data.u8[i]));
         if (itr != metaToFwVideoStabModes_.end()) {
             stabilizationModes.emplace_back(itr->second);

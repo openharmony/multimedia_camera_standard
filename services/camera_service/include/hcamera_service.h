@@ -85,7 +85,6 @@ private:
         std::string& dumpString);
 
     sptr<HCameraHostManager> cameraHostManager_;
-    sptr<CameraDeviceCallback> cameraDeviceCallback_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;
     sptr<ICameraServiceCallback> cameraServiceCallback_;
     std::map<std::string, sptr<HCameraDevice>> devices_;

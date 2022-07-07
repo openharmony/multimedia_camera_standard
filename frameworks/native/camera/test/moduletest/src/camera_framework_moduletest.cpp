@@ -2295,11 +2295,11 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_042, TestSize.Le
 
 /*
  * Feature: Framework
- * Function: Test capture session with Video Stabilization Mode
+ * Function: Test camera preempted.
  * SubFunction: NA
  * FunctionPoints: NA
  * EnvConditions: NA
- * CaseDescription: Test capture session with Video Stabilization Mode
+ * CaseDescription: Test camera preempted.
  */
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Level0)
 {

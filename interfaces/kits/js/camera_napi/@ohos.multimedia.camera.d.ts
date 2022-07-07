@@ -930,12 +930,12 @@ declare namespace camera {
   enum ExposureState {
     /**
      * Scan state.
-     * @since 8
+     * @since 9
      */
     EXPOSURE_STATE_SCAN = 0,
     /**
      * Converged state.
-     * @since 8
+     * @since 9
      */
     EXPOSURE_STATE_CONVERGED
   }

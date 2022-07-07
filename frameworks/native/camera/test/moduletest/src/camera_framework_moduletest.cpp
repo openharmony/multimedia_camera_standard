@@ -2292,5 +2292,59 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_042, TestSize.Le
     sleep(WAIT_TIME_BEFORE_STOP);
     session_->Stop();
 }
+
+/*
+ * Feature: Framework
+ * Function: Test capture session with Video Stabilization Mode
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test capture session with Video Stabilization Mode
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Level0)
+{
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureInput> input = manager_->CreateCameraInput(cameras_[0]);
+    ASSERT_NE(input, nullptr);
+
+    intResult = session_->AddInput(input);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> preveiwOutput = CreatePhotoOutput();
+    ASSERT_NE(preveiwOutput, nullptr);
+
+    intResult = session_->AddOutput(preveiwOutput);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureSession> session_2 = manager_->CreateCaptureSession();
+    ASSERT_NE(session_2, nullptr);
+
+    intResult = session_2->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_2->AddInput(input);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> preveiwOutput2 = CreatePhotoOutput();
+    ASSERT_NE(preveiwOutput2, nullptr);
+
+    intResult = session_->AddOutput(preveiwOutput2);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_2->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_2->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    session_->Stop();
+}
 } // CameraStandard
 } // OHOS

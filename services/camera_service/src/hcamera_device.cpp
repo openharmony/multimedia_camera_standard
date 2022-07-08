@@ -21,18 +21,12 @@
 namespace OHOS {
 namespace CameraStandard {
 static bool isCameraOpened = false;
-HCameraDevice::HCameraDevice(sptr<HCameraHostManager> &cameraHostManager,
-                             sptr<CameraDeviceCallback> deviceCallback, std::string cameraID)
+HCameraDevice::HCameraDevice(sptr<HCameraHostManager> &cameraHostManager, std::string cameraID)
 {
     cameraHostManager_ = cameraHostManager;
-    deviceHDICallback_ = deviceCallback;
     cameraID_ = cameraID;
     streamOperator_ = nullptr;
     isReleaseCameraDevice_ = false;
-    if (cameraHostManager == nullptr) {
-        MEDIA_ERR_LOG("HCameraDevice::HCameraDevice cameraHostManager is null");
-        return;
-    }
 }
 
 HCameraDevice::~HCameraDevice()
@@ -74,6 +68,13 @@ int32_t HCameraDevice::Open()
     if (isCameraOpened) {
         MEDIA_ERR_LOG("HCameraDevice::Open failed, camera is busy");
     }
+    if (deviceHDICallback_ == nullptr) {
+        deviceHDICallback_ = new(std::nothrow) CameraDeviceCallback(this);
+        if (deviceHDICallback_ == nullptr) {
+            MEDIA_ERR_LOG("HCameraDevice::Open CameraDeviceCallback allocation failed");
+            return CAMERA_ALLOC_ERROR;
+        }
+    }
     MEDIA_INFO_LOG("HCameraDevice::Open Opening camera device: %{public}s", cameraID_.c_str());
     errorCode = cameraHostManager_->OpenCameraDevice(cameraID_, deviceHDICallback_, hdiCameraDevice_);
     if (errorCode == CAMERA_OK) {
@@ -112,10 +113,7 @@ int32_t HCameraDevice::Release()
     if (hdiCameraDevice_ != nullptr) {
         Close();
     }
-    if (deviceHDICallback_ != nullptr) {
-        deviceHDICallback_->SetHCameraDevice(nullptr);
-        deviceHDICallback_ = nullptr;
-    }
+    deviceHDICallback_ = nullptr;
     deviceSvcCallback_ = nullptr;
     return CAMERA_OK;
 }
@@ -227,7 +225,6 @@ int32_t HCameraDevice::SetCallback(sptr<ICameraDeviceServiceCallback> &callback)
         MEDIA_ERR_LOG("HCameraDevice::SetCallback callback is null");
         return CAMERA_INVALID_ARG;
     }
-    deviceHDICallback_->SetHCameraDevice(this);
     deviceSvcCallback_ = callback;
     return CAMERA_OK;
 }
@@ -289,22 +286,13 @@ CameraDeviceCallback::CameraDeviceCallback(sptr<HCameraDevice> hCameraDevice)
 
 void CameraDeviceCallback::OnError(const Camera::ErrorType type, const int32_t errorMsg)
 {
-    if (hCameraDevice_ != nullptr) {
-        hCameraDevice_->OnError(type, errorMsg);
-    }
+    hCameraDevice_->OnError(type, errorMsg);
 }
 
 void CameraDeviceCallback::OnResult(const uint64_t timestamp,
                                     const std::shared_ptr<Camera::CameraMetadata> &result)
 {
-    if (hCameraDevice_ != nullptr) {
-        hCameraDevice_->OnResult(timestamp, result);
-    }
-}
-
-void CameraDeviceCallback::SetHCameraDevice(sptr<HCameraDevice> hCameraDevice)
-{
-    hCameraDevice_ = hCameraDevice;
+    hCameraDevice_->OnResult(timestamp, result);
 }
 } // namespace CameraStandard
 } // namespace OHOS

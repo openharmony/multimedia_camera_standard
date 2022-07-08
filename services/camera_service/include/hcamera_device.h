@@ -31,8 +31,7 @@ class CameraDeviceCallback;
 
 class HCameraDevice : public HCameraDeviceStub {
 public:
-    HCameraDevice(sptr<HCameraHostManager> &cameraHostManager, sptr<CameraDeviceCallback> deviceCallback,
-                  std::string cameraID);
+    HCameraDevice(sptr<HCameraHostManager> &cameraHostManager, std::string cameraID);
     ~HCameraDevice();
 
     int32_t Open() override;
@@ -67,13 +66,11 @@ private:
 
 class CameraDeviceCallback : public Camera::CameraDeviceCallbackStub {
 public:
-    CameraDeviceCallback() = default;
     explicit CameraDeviceCallback(sptr<HCameraDevice> hCameraDevice);
     virtual ~CameraDeviceCallback() = default;
     void OnError(Camera::ErrorType type, int32_t errorMsg) override;
     void OnResult(const uint64_t timestamp,
                   const std::shared_ptr<Camera::CameraMetadata> &result) override;
-    void SetHCameraDevice(sptr<HCameraDevice> hcameraDevice);
 
 private:
     sptr<HCameraDevice> hCameraDevice_;

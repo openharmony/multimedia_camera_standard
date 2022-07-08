@@ -63,7 +63,8 @@ public:
 
     int32_t OnResult(const uint64_t timestamp, const std::shared_ptr<Camera::CameraMetadata> &result) override
     {
-        MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, timestamp: %{public}" PRIu64, timestamp);
+        MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, cameraId: %{public}s, timestamp: %{public}"
+                       PRIu64, camInput_->GetCameraDeviceInfo()->GetID().c_str(), timestamp);
         camera_metadata_item_t item;
         int ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASH_STATE, &item);
         if (ret == 0) {

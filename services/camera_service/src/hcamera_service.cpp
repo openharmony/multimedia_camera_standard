@@ -32,7 +32,6 @@ REGISTER_SYSTEM_ABILITY_BY_ID(HCameraService, CAMERA_SERVICE_ID, true)
 HCameraService::HCameraService(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate),
       cameraHostManager_(nullptr),
-      cameraDeviceCallback_(nullptr),
       streamOperatorCallback_(nullptr),
       cameraServiceCallback_(nullptr)
 {
@@ -128,14 +127,7 @@ int32_t HCameraService::CreateCameraDevice(std::string cameraId, sptr<ICameraDev
         MEDIA_DEBUG_LOG("HCameraService::CreateCameraDevice: Permission to Access Camera Granted!!!!");
     }
 
-    if (cameraDeviceCallback_ == nullptr) {
-        cameraDeviceCallback_ = new(std::nothrow) CameraDeviceCallback();
-        if (cameraDeviceCallback_ == nullptr) {
-            MEDIA_ERR_LOG("HCameraService::CreateCameraDevice CameraDeviceCallback allocation failed");
-            return CAMERA_ALLOC_ERROR;
-        }
-    }
-    cameraDevice = new(std::nothrow) HCameraDevice(cameraHostManager_, cameraDeviceCallback_, cameraId);
+    cameraDevice = new(std::nothrow) HCameraDevice(cameraHostManager_, cameraId);
     if (cameraDevice == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreateCameraDevice HCameraDevice allocation failed");
         return CAMERA_ALLOC_ERROR;

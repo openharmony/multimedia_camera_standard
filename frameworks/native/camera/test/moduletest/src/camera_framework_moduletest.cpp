@@ -59,6 +59,7 @@ namespace {
     const int32_t WAIT_TIME_BEFORE_STOP = 1;
 
     bool g_camInputOnError = false;
+    bool g_sessionclosed = false;
     int32_t g_videoFd = -1;
     std::bitset<static_cast<int>(CAM_PHOTO_EVENTS::CAM_PHOTO_MAX_EVENT)> g_photoEvents;
     std::bitset<static_cast<unsigned int>(CAM_PREVIEW_EVENTS::CAM_PREVIEW_MAX_EVENT)> g_previewEvents;
@@ -128,6 +129,9 @@ namespace {
         {
             MEDIA_DEBUG_LOG("AppCallback::OnError errorType: %{public}d, errorMsg: %{public}d", errorType, errorMsg);
             g_camInputOnError = true;
+            if (errorType == 13) {
+                g_sessionclosed = true;
+            }
             return;
         }
 
@@ -2323,6 +2327,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Le
 
     sptr<CaptureSession> session_2 = manager_->CreateCaptureSession();
     ASSERT_NE(session_2, nullptr);
+    EXPECT_EQ(g_sessionclosed, false);
 
     intResult = session_2->BeginConfig();
     EXPECT_EQ(intResult, 0);

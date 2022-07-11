@@ -149,6 +149,7 @@ int32_t HCameraService::CreateCaptureSession(sptr<ICaptureSession> &session)
         }
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     captureSession = new(std::nothrow) HCaptureSession(cameraHostManager_, streamOperatorCallback_);
     if (captureSession == nullptr) {
         MEDIA_ERR_LOG("HCameraService::CreateCaptureSession HCaptureSession allocation failed");

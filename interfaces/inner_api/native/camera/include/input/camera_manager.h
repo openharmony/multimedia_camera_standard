@@ -197,6 +197,7 @@ private:
     int32_t CreateListenerObject();
     void CameraServerDied(pid_t pid);
 
+    std::mutex mutex_;
     sptr<ICameraDeviceService> CreateCameraDevice(std::string cameraId);
     sptr<ICameraService> serviceProxy_;
     sptr<CameraListenerStub> listenerStub_ = nullptr;

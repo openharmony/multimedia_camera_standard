@@ -25,9 +25,10 @@ enum CaptureOutputType {
     CAPTURE_OUTPUT_TYPE_PREVIEW,
     CAPTURE_OUTPUT_TYPE_PHOTO,
     CAPTURE_OUTPUT_TYPE_VIDEO,
+    CAPTURE_OUTPUT_TYPE_METADATA,
     CAPTURE_OUTPUT_TYPE_MAX
 };
-static const char *g_captureOutputTypeString[CAPTURE_OUTPUT_TYPE_MAX] = {"Preview", "Photo", "Video"};
+static const char *g_captureOutputTypeString[CAPTURE_OUTPUT_TYPE_MAX] = {"Preview", "Photo", "Video", "Metadata"};
 class CaptureSession;
 class CaptureOutput : public RefBase {
 public:

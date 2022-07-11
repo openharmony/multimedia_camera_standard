@@ -38,6 +38,7 @@ private:
     int HandleCreatePhotoOutput(MessageParcel &data, MessageParcel &reply);
     int HandleCreatePreviewOutput(MessageParcel &data, MessageParcel &reply);
     int HandleCreatePreviewOutputCustomSize(MessageParcel &data, MessageParcel &reply);
+    int HandleCreateMetadataOutput(MessageParcel &data, MessageParcel &reply);
     int HandleCreateVideoOutput(MessageParcel &data, MessageParcel &reply);
     int DestroyStubForPid(pid_t pid);
     void ClientDied(pid_t pid);

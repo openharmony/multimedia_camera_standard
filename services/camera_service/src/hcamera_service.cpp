@@ -213,6 +213,25 @@ int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProduc
     return CAMERA_OK;
 }
 
+int32_t HCameraService::CreateMetadataOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                                             sptr<IStreamMetadata> &metadataOutput)
+{
+    CAMERA_SYNC_TRACE;
+    sptr<HStreamMetadata> streamMetadata;
+
+    if (producer == nullptr) {
+        MEDIA_ERR_LOG("HCameraService::CreateMetadataOutput producer is null");
+        return CAMERA_INVALID_ARG;
+    }
+    streamMetadata = new(std::nothrow) HStreamMetadata(producer, format);
+    if (streamMetadata == nullptr) {
+        MEDIA_ERR_LOG("HCameraService::CreateMetadataOutput HStreamMetadata allocation failed");
+        return CAMERA_ALLOC_ERROR;
+    }
+    metadataOutput = streamMetadata;
+    return CAMERA_OK;
+}
+
 int32_t HCameraService::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                           sptr<IStreamRepeat> &videoOutput)
 {

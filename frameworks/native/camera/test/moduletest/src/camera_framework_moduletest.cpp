@@ -129,7 +129,7 @@ namespace {
         {
             MEDIA_DEBUG_LOG("AppCallback::OnError errorType: %{public}d, errorMsg: %{public}d", errorType, errorMsg);
             g_camInputOnError = true;
-            if (errorType == 13) {
+            if (errorType == 12) {
                 g_sessionclosed = true;
             }
             return;
@@ -2307,38 +2307,25 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_042, TestSize.Le
  */
 HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Level0)
 {
-    int32_t intResult = session_->BeginConfig();
-    EXPECT_EQ(intResult, 0);
-
-    sptr<CaptureInput> input = manager_->CreateCameraInput(cameras_[0]);
-    ASSERT_NE(input, nullptr);
-
-    intResult = session_->AddInput(input);
-    EXPECT_EQ(intResult, 0);
-
-    sptr<CaptureOutput> preveiwOutput = CreatePhotoOutput();
-    ASSERT_NE(preveiwOutput, nullptr);
-
-    intResult = session_->AddOutput(preveiwOutput);
-    EXPECT_EQ(intResult, 0);
-
-    intResult = session_->CommitConfig();
-    EXPECT_EQ(intResult, 0);
-
     sptr<CaptureSession> session_2 = manager_->CreateCaptureSession();
     ASSERT_NE(session_2, nullptr);
-    EXPECT_EQ(g_sessionclosed, false);
 
-    intResult = session_2->BeginConfig();
+    int32_t intResult = session_2->BeginConfig();
     EXPECT_EQ(intResult, 0);
 
-    intResult = session_2->AddInput(input);
+    std::shared_ptr<AppCallback> callback = std::make_shared<AppCallback>();
+    sptr<CaptureInput> input_2 = manager_->CreateCameraInput(cameras_[0]);
+    ASSERT_NE(input_2, nullptr);
+    sptr<CameraInput> camInput_2 = (sptr<CameraInput> &)input_2;
+    camInput_2->SetErrorCallback(callback);
+
+    intResult = session_2->AddInput(input_2);
     EXPECT_EQ(intResult, 0);
 
-    sptr<CaptureOutput> preveiwOutput2 = CreatePhotoOutput();
-    ASSERT_NE(preveiwOutput2, nullptr);
+    sptr<CaptureOutput> previewOutput_2 = CreatePreviewOutput();
+    ASSERT_NE(previewOutput_2, 0);
 
-    intResult = session_->AddOutput(preveiwOutput2);
+    intResult = session_2->AddOutput(previewOutput_2);
     EXPECT_EQ(intResult, 0);
 
     intResult = session_2->CommitConfig();
@@ -2347,9 +2334,23 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Le
     intResult = session_2->Start();
     EXPECT_EQ(intResult, 0);
 
-    sleep(WAIT_TIME_AFTER_START);
+    sptr<CaptureSession> session_3 = manager_->CreateCaptureSession();
+    ASSERT_NE(session_3, nullptr);
+    EXPECT_EQ(g_sessionclosed, true);
 
-    session_->Stop();
+    int32_t intResult = session_3->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_3->AddInput(input_2);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_3->AddOutput(previewOutput_2);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_3->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    session_3->Stop();
 }
 } // CameraStandard
 } // OHOS

@@ -80,6 +80,7 @@ private:
     void CameraDumpSensorInfo(common_metadata_header_t *metadataEntry,
     std::string& dumpString);
 
+    std::mutex mutex_;
     sptr<HCameraHostManager> cameraHostManager_;
     sptr<CameraDeviceCallback> cameraDeviceCallback_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;

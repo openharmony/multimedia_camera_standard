@@ -273,6 +273,7 @@ int HCameraServiceStub::DestroyStubForPid(pid_t pid)
     sptr<CameraDeathRecipient> deathRecipient = nullptr;
     sptr<IStandardCameraListener> cameraListener = nullptr;
 
+    std::lock_guard<std::mutex> lock(mutex_);
     auto itDeath = deathRecipientMap_.find(pid);
     if (itDeath != deathRecipientMap_.end()) {
         deathRecipient = itDeath->second;

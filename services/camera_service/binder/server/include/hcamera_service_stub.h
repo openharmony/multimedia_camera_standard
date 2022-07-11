@@ -16,6 +16,7 @@
 #ifndef OHOS_CAMERA_HCAMERA_SERVICE_STUB_H
 #define OHOS_CAMERA_HCAMERA_SERVICE_STUB_H
 
+#include <mutex>
 #include "icamera_service.h"
 #include "iremote_stub.h"
 #include "input/camera_death_recipient.h"
@@ -44,6 +45,7 @@ private:
     int SetListenerObject(const sptr<IRemoteObject> &object) override;
     int SetListenerObject(MessageParcel &data, MessageParcel &reply);
 
+    std::mutex mutex_;
     std::map<pid_t, sptr<CameraDeathRecipient>> deathRecipientMap_;
     std::map<pid_t, sptr<IStandardCameraListener>> cameraListenerMap_;
 };

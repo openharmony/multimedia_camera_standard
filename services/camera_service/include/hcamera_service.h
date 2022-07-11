@@ -84,6 +84,7 @@ private:
     void CameraDumpVideoFrameRateRange(common_metadata_header_t *metadataEntry,
         std::string& dumpString);
 
+    std::mutex mutex_;
     sptr<HCameraHostManager> cameraHostManager_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;
     sptr<ICameraServiceCallback> cameraServiceCallback_;

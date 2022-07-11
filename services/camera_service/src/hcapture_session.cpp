@@ -510,6 +510,7 @@ int32_t HCaptureSession::CommitConfig()
         return rc;
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     rc = GetCameraDevice(device);
     if ((rc == CAMERA_OK) && (device == cameraDevice_) && !deletedStreamIds_.empty()) {
         rc = HdiToServiceError(device->GetStreamOperator()->ReleaseStreams(deletedStreamIds_));

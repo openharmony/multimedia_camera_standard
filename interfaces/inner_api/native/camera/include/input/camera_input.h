@@ -353,7 +353,7 @@ public:
     friend void SetRecordingFrameRateRange(sptr<CameraInput> device, int32_t minFpsVal, int32_t maxFpsVal);
 
 private:
-    std::mutex changeMetaMutex_;
+    std::mutex mutex_;
     std::shared_ptr<Camera::CameraMetadata> changedMetadata_;
     sptr<CameraInfo> cameraObj_;
     sptr<ICameraDeviceService> deviceObj_;

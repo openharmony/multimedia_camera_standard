@@ -120,7 +120,7 @@ void CameraInput::Release()
 
 void CameraInput::LockForControl()
 {
-    changeMetaMutex_.lock();
+    mutex_.lock();
     changedMetadata_ = std::make_shared<Camera::CameraMetadata>(DEFAULT_ITEMS, DEFAULT_DATA_LENGTH);
 }
 
@@ -143,7 +143,7 @@ int32_t CameraInput::UpdateSetting(std::shared_ptr<Camera::CameraMetadata> chang
     uint8_t *data = Camera::GetMetadataData(changedMetadata->get());
     camera_metadata_item_entry_t *itemEntry = Camera::GetMetadataItems(changedMetadata->get());
     std::shared_ptr<Camera::CameraMetadata> baseMetadata = cameraObj_->GetMetadata();
-    for (int32_t i = 0; i < count; i++, itemEntry++) {
+    for (uint32_t i = 0; i < count; i++, itemEntry++) {
         bool status = false;
         camera_metadata_item_t item;
         length = Camera::CalculateCameraMetadataItemDataSize(itemEntry->data_type, itemEntry->count);
@@ -174,7 +174,7 @@ int32_t CameraInput::UnlockForControl()
 
     UpdateSetting(changedMetadata_);
     changedMetadata_ = nullptr;
-    changeMetaMutex_.unlock();
+    mutex_.unlock();
     return CAMERA_OK;
 }
 
@@ -266,6 +266,8 @@ std::vector<CameraPicSize> CameraInput::getSupportedSizes(camera_format_t format
     uint32_t widthOffset = 1;
     uint32_t heightOffset = 2;
     camera_metadata_item_t item;
+
+    std::lock_guard<std::mutex> lock(mutex_);
     std::shared_ptr<Camera::CameraMetadata> metadata = cameraObj_->GetMetadata();
     int ret = Camera::FindCameraMetadataItem(metadata->get(),
                                              OHOS_ABILITY_STREAM_AVAILABLE_BASIC_CONFIGURATIONS, &item);

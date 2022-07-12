@@ -2323,7 +2323,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Le
     EXPECT_EQ(intResult, 0);
 
     sptr<CaptureOutput> previewOutput_2 = CreatePreviewOutput();
-    ASSERT_NE(previewOutput_2, 0);
+    ASSERT_NE(previewOutput_2, nullptr);
 
     intResult = session_2->AddOutput(previewOutput_2);
     EXPECT_EQ(intResult, 0);
@@ -2338,7 +2338,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Le
     ASSERT_NE(session_3, nullptr);
     EXPECT_EQ(g_sessionclosed, true);
 
-    int32_t intResult = session_3->BeginConfig();
+    intResult = session_3->BeginConfig();
     EXPECT_EQ(intResult, 0);
 
     intResult = session_3->AddInput(input_2);

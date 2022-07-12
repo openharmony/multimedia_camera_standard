@@ -19,6 +19,7 @@
 #include "hcamera_device.h"
 #include "hcapture_session_stub.h"
 #include "hstream_capture.h"
+#include "hstream_metadata.h"
 #include "hstream_repeat.h"
 #include "stream_operator_callback_stub.h"
 
@@ -89,6 +90,7 @@ private:
     sptr<HCameraDevice> cameraDevice_;
     std::vector<sptr<HStreamCommon>> repeatStreams_;
     std::vector<sptr<HStreamCommon>> captureStreams_;
+    std::vector<sptr<HStreamCommon>> metadataStreams_;
     std::vector<sptr<HStreamCommon>> streams_;
     std::vector<sptr<HCameraDevice>> cameraDevices_;
     std::vector<sptr<HStreamCommon>> tempStreams_;

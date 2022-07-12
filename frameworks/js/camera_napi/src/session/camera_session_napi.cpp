@@ -568,6 +568,7 @@ napi_value GetJSArgsForCameraOutput(napi_env env, size_t argc, const napi_value 
     PreviewOutputNapi *previewOutputNapiObj = nullptr;
     PhotoOutputNapi *photoOutputNapiObj = nullptr;
     VideoOutputNapi *videoOutputNapiObj = nullptr;
+    MetadataOutputNapi *metadataOutputNapiObj = nullptr;
 
     NAPI_ASSERT(env, argv != nullptr, "Argument list is empty");
 
@@ -588,6 +589,10 @@ napi_value GetJSArgsForCameraOutput(napi_env env, size_t argc, const napi_value 
                 MEDIA_INFO_LOG("video output adding..");
                 napi_unwrap(env, argv[i], reinterpret_cast<void**>(&videoOutputNapiObj));
                 context->cameraOutput = videoOutputNapiObj->GetVideoOutput();
+            } else if (MetadataOutputNapi::IsMetadataOutput(env, argv[i])) {
+                MEDIA_INFO_LOG("metadata output adding..");
+                napi_unwrap(env, argv[i], reinterpret_cast<void**>(&metadataOutputNapiObj));
+                context->cameraOutput = metadataOutputNapiObj->GetMetadataOutput();
             } else {
                 MEDIA_INFO_LOG("invalid output ..");
                 NAPI_ASSERT(env, false, "type mismatch");

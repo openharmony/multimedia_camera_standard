@@ -26,6 +26,7 @@
 #include "hap_token_info.h"
 #include "accesstoken_kit.h"
 #include "token_setproc.h"
+#include "camera_util.h"
 
 using namespace testing::ext;
 
@@ -129,7 +130,7 @@ namespace {
         {
             MEDIA_DEBUG_LOG("AppCallback::OnError errorType: %{public}d, errorMsg: %{public}d", errorType, errorMsg);
             g_camInputOnError = true;
-            if (errorType == 12) {
+            if (errorType == CAMERA_DEVICE_PREEMPTED) {
                 g_sessionclosed = true;
             }
             return;

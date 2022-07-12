@@ -46,6 +46,8 @@ ohos_shared_library("camera_napi") {
     "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/input/camera_napi.cpp",
     "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/input/camera_size_napi.cpp",
     "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/native_module_ohos_camera.cpp",
+    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/metadata_object_napi.cpp",
+    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/metadata_output_napi.cpp",
     "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/photo_output_napi.cpp",
     "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/preview_output_napi.cpp",
     "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/video_output_napi.cpp",

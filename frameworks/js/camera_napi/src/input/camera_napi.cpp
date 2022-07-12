@@ -129,6 +129,7 @@ napi_value CameraNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_STATIC_FUNCTION("createPreviewOutput", CreatePreviewOutputInstance),
         DECLARE_NAPI_STATIC_FUNCTION("createPhotoOutput", CreatePhotoOutputInstance),
         DECLARE_NAPI_STATIC_FUNCTION("createVideoOutput", CreateVideoOutputInstance),
+        DECLARE_NAPI_STATIC_FUNCTION("createMetadataOutput", CreateMetadataOutputInstance),
         DECLARE_NAPI_PROPERTY("FlashMode", CreateFlashModeObject(env)),
         DECLARE_NAPI_PROPERTY("ExposureMode", CreateExposureModeObject(env)),
         DECLARE_NAPI_PROPERTY("ExposureState", CreateExposureStateEnum(env)),
@@ -518,6 +519,28 @@ void CreateVideoOutputAsyncCallbackComplete(napi_env env, napi_status status, vo
     delete context;
 }
 
+void CreateMetadataOutputAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+{
+    auto context = static_cast<CameraNapiAsyncContext*>(data);
+    CAMERA_NAPI_CHECK_NULL_PTR_RETURN_VOID(context, "Async context is null");
+    std::unique_ptr<JSAsyncContextOutput> jsContext = std::make_unique<JSAsyncContextOutput>();
+    jsContext->status = true;
+    napi_get_undefined(env, &jsContext->error);
+
+    jsContext->data = MetadataOutputNapi::CreateMetadataOutput(env);
+    if (jsContext->data == nullptr) {
+        MEDIA_ERR_LOG("Failed to create metadata output instance");
+        CameraNapiUtils::CreateNapiErrorObject(env,
+            "Failed to create metadata output instance", jsContext);
+    }
+
+    if (context->work != nullptr) {
+        CameraNapiUtils::InvokeJSAsyncMethod(env, context->deferred, context->callbackRef,
+                                             context->work, *jsContext);
+    }
+    delete context;
+}
+
 napi_value CameraNapi::CreateVideoOutputInstance(napi_env env, napi_callback_info info)
 {
     napi_status status;
@@ -542,6 +565,39 @@ napi_value CameraNapi::CreateVideoOutputInstance(napi_env env, napi_callback_inf
         CreateVideoOutputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
     if (status != napi_ok) {
         MEDIA_ERR_LOG("Failed to create napi_create_async_work for CreateVideoOutputInstance");
+        napi_get_undefined(env, &result);
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+
+    return result;
+}
+
+napi_value CameraNapi::CreateMetadataOutputInstance(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    size_t argc = ARGS_ONE;
+    napi_value argv[ARGS_ONE] = {0};
+    napi_value thisVar = nullptr;
+
+    CAMERA_NAPI_GET_JS_ARGS(env, info, argc, argv, thisVar);
+    NAPI_ASSERT(env, argc <= ARGS_ONE, "requires 1 parameters maximum");
+
+    napi_get_undefined(env, &result);
+    auto asyncContext = std::make_unique<CameraNapiAsyncContext>();
+    result = ConvertJSArgsToNative(env, argc, argv, *asyncContext);
+    CAMERA_NAPI_CHECK_NULL_PTR_RETURN_UNDEFINED(env, result, result, "Failed to obtain arguments");
+    CAMERA_NAPI_CREATE_PROMISE(env, asyncContext->callbackRef, asyncContext->deferred, result);
+    CAMERA_NAPI_CREATE_RESOURCE_NAME(env, resource, "CreateMetadataOutput");
+    status = napi_create_async_work(
+        env, nullptr, resource,
+        [](napi_env env, void* data) {},
+        CreateMetadataOutputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        MEDIA_ERR_LOG("Failed to create napi_create_async_work for CreateMetadataOutputInstance");
         napi_get_undefined(env, &result);
     } else {
         napi_queue_async_work(env, asyncContext->work);

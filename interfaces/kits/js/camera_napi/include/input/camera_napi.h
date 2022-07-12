@@ -21,6 +21,7 @@
 #include "napi/native_node_api.h"
 #include "hilog/log.h"
 #include "camera_napi_utils.h"
+#include "output/metadata_output_napi.h"
 
 #include "input/camera_manager.h"
 #include "output/capture_output.h"
@@ -33,6 +34,7 @@
 #include "output/photo_output_napi.h"
 #include "output/video_output_napi.h"
 #include "session/camera_session_napi.h"
+#include "output/metadata_output_napi.h"
 
 #include <cinttypes>
 #include <fstream>
@@ -148,6 +150,7 @@ private:
     static napi_value CreatePreviewOutputInstance(napi_env env, napi_callback_info info);
     static napi_value CreatePhotoOutputInstance(napi_env env, napi_callback_info info);
     static napi_value CreateVideoOutputInstance(napi_env env, napi_callback_info info);
+    static napi_value CreateMetadataOutputInstance(napi_env env, napi_callback_info info);
     static napi_value CreateFlashModeObject(napi_env env);
     static napi_value CreateExposureModeObject(napi_env env);
     static napi_value CreateFocusModeObject(napi_env env);

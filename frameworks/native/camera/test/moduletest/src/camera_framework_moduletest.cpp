@@ -207,6 +207,18 @@ namespace {
             return;
         }
     };
+
+    class AppMetadataCallback : public MetadataObjectCallback, public MetadataStateCallback {
+    public:
+        void OnMetadataObjectsAvailable(std::vector<sptr<MetadataObject>> metaObjects) const
+        {
+            MEDIA_DEBUG_LOG("AppMetadataCallback::OnMetadataObjectsAvailable received");
+        }
+        void OnError(int32_t errorCode) const
+        {
+            MEDIA_DEBUG_LOG("AppMetadataCallback::OnError %{public}d", errorCode);
+        }
+    };
 } // namespace
 
 static std::string permissionName = "ohos.permission.CAMERA";
@@ -2306,7 +2318,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_042, TestSize.Le
  * EnvConditions: NA
  * CaseDescription: Test camera preempted.
  */
-HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_044, TestSize.Level0)
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Level0)
 {
     sptr<CaptureSession> session_2 = manager_->CreateCaptureSession();
     ASSERT_NE(session_2, nullptr);
@@ -2353,5 +2365,66 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_044, TestSize.Le
 
     session_3->Stop();
 }
+
+#ifdef PRODUCT_M40
+/*
+ * Feature: Framework
+ * Function: Test Preview + Metadata
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test Preview + Metadata
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_044, TestSize.Level0)
+{
+    int32_t intResult = session_->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->AddInput(input_);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput = CreatePreviewOutput();
+    ASSERT_NE(previewOutput, nullptr);
+
+    intResult = session_->AddOutput(previewOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> metadatOutput = manager_->CreateMetadataOutput();
+    ASSERT_NE(metadatOutput, nullptr);
+
+    intResult = session_->AddOutput(metadatOutput);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<MetadataOutput> metaOutput = (sptr<MetadataOutput> &)metadatOutput;
+    std::vector<MetadataObjectType> metadataObjectTypes = metaOutput->GetSupportedMetadataObjectTypes();
+    ASSERT_NE(metadataObjectTypes.size(), 0U);
+
+    metaOutput->SetCapturingMetadataObjectTypes(std::vector<MetadataObjectType> {MetadataObjectType::FACE});
+
+    std::shared_ptr<MetadataObjectCallback> metadataObjectCallback = std::make_shared<AppMetadataCallback>();
+    metaOutput->SetCallback(metadataObjectCallback);
+    std::shared_ptr<MetadataStateCallback> metadataStateCallback = std::make_shared<AppMetadataCallback>();
+    metaOutput->SetCallback(metadataStateCallback);
+
+    intResult = session_->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = metaOutput->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sleep(WAIT_TIME_AFTER_START);
+
+    intResult = metaOutput->Stop();
+    EXPECT_EQ(intResult, 0);
+
+    session_->Stop();
+    metaOutput->Release();
+}
+#endif
 } // CameraStandard
 } // OHOS

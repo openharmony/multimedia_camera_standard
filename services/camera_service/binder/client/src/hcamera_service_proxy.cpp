@@ -282,6 +282,49 @@ int32_t HCameraServiceProxy::CreateCustomPreviewOutput(const sptr<OHOS::IBufferP
     return error;
 }
 
+int32_t HCameraServiceProxy::CreateMetadataOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                                                  sptr<IStreamMetadata>& metadataOutput)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (producer == nullptr) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateMetadataOutput producer is null");
+        return IPC_PROXY_ERR;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateMetadataOutput Write interface token failed");
+        return IPC_PROXY_ERR;
+    }
+    if (!data.WriteRemoteObject(producer->AsObject())) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateMetadataOutput write producer obj failed");
+        return IPC_PROXY_ERR;
+    }
+
+    if (!data.WriteInt32(format)) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateMetadataOutput Write format failed");
+        return IPC_PROXY_ERR;
+    }
+
+    int error = Remote()->SendRequest(CAMERA_SERVICE_CREATE_METADATA_OUTPUT, data, reply, option);
+    if (error != ERR_NONE) {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateMetadataOutput failed, error: %{public}d", error);
+        return error;
+    }
+
+    auto remoteObject = reply.ReadRemoteObject();
+    if (remoteObject != nullptr) {
+        metadataOutput = iface_cast<IStreamMetadata>(remoteObject);
+    } else {
+        MEDIA_ERR_LOG("HCameraServiceProxy CreateMetadataOutput metadataOutput is null");
+        error = IPC_PROXY_ERR;
+    }
+
+    return error;
+}
+
 int32_t HCameraServiceProxy::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                                                sptr<IStreamRepeat>& videoOutput)
 {

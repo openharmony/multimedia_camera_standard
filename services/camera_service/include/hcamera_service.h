@@ -21,6 +21,7 @@
 #include "hcamera_service_stub.h"
 #include "hcapture_session.h"
 #include "hstream_capture.h"
+#include "hstream_metadata.h"
 #include "hstream_repeat.h"
 #include "iremote_stub.h"
 #include "system_ability.h"
@@ -47,6 +48,8 @@ public:
                                 sptr<IStreamRepeat> &previewOutput) override;
     int32_t CreateCustomPreviewOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format, int32_t width,
                                       int32_t height, sptr<IStreamRepeat> &previewOutput) override;
+    int32_t CreateMetadataOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
+                                 sptr<IStreamMetadata> &metadataOutput) override;
     int32_t CreateVideoOutput(const sptr<OHOS::IBufferProducer> &producer, int32_t format,
                               sptr<IStreamRepeat> &videoOutput) override;
     int32_t SetCallback(sptr<ICameraServiceCallback> &callback) override;
@@ -85,7 +88,6 @@ private:
         std::string& dumpString);
 
     sptr<HCameraHostManager> cameraHostManager_;
-    sptr<CameraDeviceCallback> cameraDeviceCallback_;
     sptr<StreamOperatorCallback> streamOperatorCallback_;
     sptr<ICameraServiceCallback> cameraServiceCallback_;
     std::map<std::string, sptr<HCameraDevice>> devices_;

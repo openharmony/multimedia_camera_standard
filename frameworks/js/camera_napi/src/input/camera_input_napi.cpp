@@ -1905,11 +1905,6 @@ napi_value CameraInputNapi::SetFocusMode(napi_env env, napi_callback_info info)
                     context->bRetBool = false;
                     sptr<CameraInput> cameraInput = context->objectInfo->cameraInput_;
                     context->status = true;
-                    if (context->focusModeLocked) {
-                        MEDIA_INFO_LOG("Focus mode set is FOCUS_MODE_LOCKED");
-                        return;
-                    }
-
                     vector<camera_focus_mode_enum_t> vecSupportedFocusModeList;
                     vecSupportedFocusModeList = context->objectInfo->cameraInput_->GetSupportedFocusModes();
                     if (find(vecSupportedFocusModeList.begin(), vecSupportedFocusModeList.end(),

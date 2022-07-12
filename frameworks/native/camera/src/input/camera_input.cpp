@@ -17,7 +17,6 @@
 
 #include <cinttypes>
 #include <securec.h>
-#include <set>
 #include "camera_device_ability_items.h"
 #include "camera_util.h"
 #include "hcamera_device_callback_stub.h"
@@ -63,7 +62,8 @@ public:
 
     int32_t OnResult(const uint64_t timestamp, const std::shared_ptr<Camera::CameraMetadata> &result) override
     {
-        MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, timestamp: %{public}" PRIu64, timestamp);
+        MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, cameraId: %{public}s, timestamp: %{public}"
+                       PRIu64, camInput_->GetCameraDeviceInfo()->GetID().c_str(), timestamp);
         camera_metadata_item_t item;
         int ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASH_STATE, &item);
         if (ret == 0) {
@@ -959,6 +959,24 @@ void SetRecordingFrameRateRange(sptr<CameraInput> device, int32_t minFpsVal, int
         MEDIA_ERR_LOG("SetRecordingFrameRateRange failed");
     }
 
+    device->UnlockForControl();
+}
+
+void SetCaptureMetadataObjectTypes(sptr<CameraInput> device, std::set<camera_face_detect_mode_t> metadataObjectTypes)
+{
+    if (!device) {
+        MEDIA_ERR_LOG("SetCaptureMetadataObjectTypes: device is null");
+        return;
+    }
+    uint32_t count = 0;
+    uint8_t objectTypes[metadataObjectTypes.size()];
+    for (auto &type : metadataObjectTypes) {
+        objectTypes[count++] = type;
+    }
+    device->LockForControl();
+    if (!device->changedMetadata_->addEntry(OHOS_STATISTICS_FACE_DETECT_SWITCH, objectTypes, count)) {
+        MEDIA_ERR_LOG("SetCaptureMetadataObjectTypes: Failed to add detect object types to changed metadata");
+    }
     device->UnlockForControl();
 }
 } // CameraStandard

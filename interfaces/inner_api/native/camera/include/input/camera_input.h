@@ -356,7 +356,7 @@ public:
                                               std::set<camera_face_detect_mode_t> metadataObjectTypes);
 
 private:
-    std::mutex changeMetaMutex_;
+    std::mutex mutex_;
     std::shared_ptr<Camera::CameraMetadata> changedMetadata_;
     sptr<CameraInfo> cameraObj_;
     sptr<ICameraDeviceService> deviceObj_;

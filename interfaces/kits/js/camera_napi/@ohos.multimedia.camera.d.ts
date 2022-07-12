@@ -2011,7 +2011,7 @@ declare namespace camera {
      * @since 9
      * @syscap SystemCapability.Multimedia.Camera.Core
      */
-    getAvailableMetadataObjectTypes(callback: AsyncCallback<Array<MetadataObjectType>>): void;
+    getSupportedMetadataObjectTypes(callback: AsyncCallback<Array<MetadataObjectType>>): void;
 
     /**
      * get all the available metadata Object Types
@@ -2019,7 +2019,7 @@ declare namespace camera {
      * @since 9
      * @syscap SystemCapability.Multimedia.Camera.Core
      */
-    getAvailableMetadataObjectTypes(): Promise<Array<MetadataObjectType>>;
+     getSupportedMetadataObjectTypes(): Promise<Array<MetadataObjectType>>;
 
     /**
      * Set target metadata object types to be captured.

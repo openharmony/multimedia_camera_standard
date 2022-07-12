@@ -215,6 +215,10 @@ enum CameraTaskId {
     CAMERA_SESSION_TASKID = 0x06000000
 };
 
+enum JSMetadataObjectType {
+    FACE = 0
+};
+
 /* Util class used by napi asynchronous methods for making call to js callback function */
 class CameraNapiUtils {
 public:
@@ -339,6 +343,33 @@ public:
             default:
                 jsCameraFormat = -1;
                 MEDIA_ERR_LOG("The native camera format is not supported with JS");
+        }
+    }
+
+    static void MapMetadataObjSupportedTypesEnum(MetadataObjectType nativeMetadataObjType, int32_t &jsMetadataObjType)
+    {
+        MEDIA_INFO_LOG("native metadata Object Type = %{public}d", static_cast<int32_t>(nativeMetadataObjType));
+        switch (nativeMetadataObjType) {
+            case MetadataObjectType::FACE:
+                jsMetadataObjType = JSMetadataObjectType::FACE;
+                break;
+            default:
+                jsMetadataObjType = -1;
+                MEDIA_ERR_LOG("Native Metadata object type not supported with JS");
+        }
+    }
+
+    static void MapMetadataObjSupportedTypesEnumFromJS(int32_t jsMetadataObjType,
+        MetadataObjectType &nativeMetadataObjType, bool &isValid)
+    {
+        MEDIA_INFO_LOG("JS metadata Object Type = %{public}d", jsMetadataObjType);
+        switch (jsMetadataObjType) {
+            case JSMetadataObjectType::FACE:
+                nativeMetadataObjType = MetadataObjectType::FACE;
+                break;
+            default:
+                isValid = false;
+                MEDIA_ERR_LOG("JS Metadata object type not supported with native");
         }
     }
 

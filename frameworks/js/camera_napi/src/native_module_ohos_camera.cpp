@@ -32,6 +32,8 @@ static napi_value Export(napi_env env, napi_value exports)
     CameraManagerNapi::Init(env, exports);
     CameraNapi::Init(env, exports);
     CameraSizeNapi::Init(env, exports);
+    MetadataOutputNapi::Init(env, exports);
+    MetadataObjectNapi::Init(env, exports);
 
     return exports;
 }

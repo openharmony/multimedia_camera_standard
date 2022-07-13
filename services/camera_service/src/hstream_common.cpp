@@ -94,7 +94,7 @@ void HStreamCommon::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
     streamInfo->format_ = pixelFormat;
     streamInfo->tunneledMode_ = true;
     streamInfo->bufferQueue_ = producer_;
-    streamInfo->datasapce_ = CAMERA_COLOR_SPACE;
+    streamInfo->dataspace_ = CAMERA_COLOR_SPACE;
 }
 
 int32_t HStreamCommon::Release()
@@ -122,7 +122,7 @@ void HStreamCommon::DumpStreamInfo(std::string& dumpString)
     }
     dumpString += "]    width:[" + std::to_string(curStreamInfo->width_);
     dumpString += "]    height:[" + std::to_string(curStreamInfo->height_);
-    dumpString += "]    dataspace:[" + std::to_string(curStreamInfo->datasapce_);
+    dumpString += "]    dataspace:[" + std::to_string(curStreamInfo->dataspace_);
     dumpString += "]    StreamType:[" + std::to_string(curStreamInfo->intent_);
     dumpString += "]    TunnelMode:[" + std::to_string(curStreamInfo->tunneledMode_);
     dumpString += "]    Encoding Type:[" + std::to_string(curStreamInfo->encodeType_) + "]:\n";

@@ -460,6 +460,7 @@ std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
 {
     CAMERA_SYNC_TRACE;
 
+    std::lock_guard<std::mutex> lock(mutex_);
     std::vector<std::string> cameraIds;
     std::vector<std::shared_ptr<Camera::CameraMetadata>> cameraAbilityList;
     int32_t retCode = -1;

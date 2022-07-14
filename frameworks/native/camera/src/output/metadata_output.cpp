@@ -140,7 +140,7 @@ int32_t MetadataObjectListener::ProcessFaceRectangles(int64_t timestamp, const c
         return ERROR_UNKNOWN;
     }
     metaObjects.reserve(metadataItem.count / rectangleUnitLen);
-    for (float *start = metadataItem.data.f, *end = metadataItem.data.f + metadataItem.count; start < end;
+    for (int32_t *start = metadataItem.data.i32, *end = metadataItem.data.i32 + metadataItem.count; start < end;
         start += rectangleUnitLen) {
         sptr<MetadataObject> metadataObject = new(std::nothrow) MetadataFaceObject(timestamp,
             (Rect) {start[0], start[1], start[2], start[3]});

@@ -261,32 +261,22 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
     if (status == napi_ok) {
         sSurfaceId_ = surfaceId;
         sptr<Surface> surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
+        if (!surface) {
+            surface = Media::ImageReceiver::getSurfaceById(std::to_string(surfaceId));
+        }
         if (surface == nullptr) {
-            MEDIA_ERR_LOG("failed to get surface from SurfaceUtils");
+            MEDIA_ERR_LOG("failed to get surface");
             return result;
         }
-
-        int retrytimes = 20;
-        int usleeptimes = 50000;
-        std::string surfaceWidth = "";
-        std::string surfaceHeight = "";
-        for (int tryIndx = 0; tryIndx < retrytimes; ++tryIndx) {
-            surfaceWidth = surface->GetUserData("SURFACE_WIDTH");
-            surfaceHeight = surface->GetUserData("SURFACE_HEIGHT");
-            MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
-                surfaceWidth.c_str(), surfaceHeight.c_str());
-            if (surfaceWidth.length() > 0 && surfaceHeight.length() > 0) {
-                break;
-            }
-            usleep(usleeptimes);
-        }
+        int32_t surfaceWidth = surface->GetDefaultWidth();
+        int32_t surfaceHeight = surface->GetDefaultHeight();
 #ifdef RK_CAMERA
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_RGBA_8888));
 #else
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_YCRCB_420_SP));
 #endif
-        sPreviewOutput_ = CameraManager::GetInstance()->CreateCustomPreviewOutput(surface,
-            std::stoi(surfaceWidth), std::stoi(surfaceHeight));
+        sPreviewOutput_ = CameraManager::GetInstance()->CreateCustomPreviewOutput(surface, surfaceWidth,
+                                                                                  surfaceHeight);
         if (sPreviewOutput_ == nullptr) {
             MEDIA_ERR_LOG("failed to create previewOutput");
             return result;

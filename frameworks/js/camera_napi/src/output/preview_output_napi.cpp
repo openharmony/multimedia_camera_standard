@@ -260,16 +260,40 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
     status = napi_get_reference_value(env, sConstructor_, &constructor);
     if (status == napi_ok) {
         sSurfaceId_ = surfaceId;
+        bool xCompPreviewSurface = true;
         sptr<Surface> surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
         if (!surface) {
+            xCompPreviewSurface = false;
             surface = Media::ImageReceiver::getSurfaceById(std::to_string(surfaceId));
         }
         if (surface == nullptr) {
             MEDIA_ERR_LOG("failed to get surface");
             return result;
         }
-        int32_t surfaceWidth = surface->GetDefaultWidth();
-        int32_t surfaceHeight = surface->GetDefaultHeight();
+
+        int32_t surfaceWidth;
+        int32_t surfaceHeight;
+        if (xCompPreviewSurface) {
+            int retrytimes = 20;
+            int usleeptimes = 50000;
+            std::string width = "";
+            std::string height = "";
+            for (int tryIndx = 0; tryIndx < retrytimes; ++tryIndx) {
+                width = surface->GetUserData("SURFACE_WIDTH");
+                height = surface->GetUserData("SURFACE_HEIGHT");
+                MEDIA_INFO_LOG("create previewOutput, width = %{public}s, height = %{public}s",
+                               width.c_str(), height.c_str());
+                if (width.length() > 0 && height.length() > 0) {
+                    break;
+                }
+                usleep(usleeptimes);
+            }
+            surfaceWidth = std::stoi(width);
+            surfaceHeight = std::stoi(height);
+        } else {
+            surfaceWidth = surface->GetDefaultWidth();
+            surfaceHeight = surface->GetDefaultHeight();
+        }
 #ifdef RK_CAMERA
         surface->SetUserData(CameraManager::surfaceFormat, std::to_string(OHOS_CAMERA_FORMAT_RGBA_8888));
 #else

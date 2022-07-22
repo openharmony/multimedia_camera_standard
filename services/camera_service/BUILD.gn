@@ -82,7 +82,7 @@ ohos_shared_library("camera_service") {
     "ipc:ipc_core",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   include_dirs += [

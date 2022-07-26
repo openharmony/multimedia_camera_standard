@@ -558,6 +558,7 @@ int32_t HCaptureSession::Start()
         MEDIA_ERR_LOG("HCaptureSession::Start(), Invalid session state: %{public}d", rc);
         return CAMERA_INVALID_STATE;
     }
+    std::lock_guard<std::mutex> lock(mutex_);
     for (auto item = repeatStreams_.begin(); item != repeatStreams_.end(); ++item) {
         curStreamRepeat = static_cast<HStreamRepeat *>((*item).GetRefPtr());
         if (!curStreamRepeat->IsVideo()) {
@@ -579,7 +580,7 @@ int32_t HCaptureSession::Stop()
     if (curState_ != CaptureSessionState::SESSION_CONFIG_COMMITTED) {
         return CAMERA_INVALID_STATE;
     }
-
+    std::lock_guard<std::mutex> lock(mutex_);
     for (auto item = repeatStreams_.begin(); item != repeatStreams_.end(); ++item) {
         curStreamRepeat = static_cast<HStreamRepeat *>((*item).GetRefPtr());
         if (!curStreamRepeat->IsVideo()) {

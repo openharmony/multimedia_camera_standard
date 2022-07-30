@@ -55,12 +55,12 @@ ohos_executable("camera_video") {
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-    "//utils/native/base:utils",
   ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libtoken_setproc",
+    "c_utils:utils",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
@@ -88,12 +88,12 @@ ohos_executable("camera_capture") {
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-    "//utils/native/base:utils",
   ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libtoken_setproc",
+    "c_utils:utils",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
@@ -119,12 +119,12 @@ ohos_executable("camera_capture_video") {
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-    "//utils/native/base:utils",
   ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libtoken_setproc",
+    "c_utils:utils",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",

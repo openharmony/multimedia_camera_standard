@@ -17,6 +17,7 @@
 
 #include "camera_util.h"
 #include "camera_log.h"
+#include "metadata_utils.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -27,8 +28,8 @@ HStreamMetadata::HStreamMetadata(sptr<OHOS::IBufferProducer> producer, int32_t f
 HStreamMetadata::~HStreamMetadata()
 {}
 
-int32_t HStreamMetadata::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-                                   std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId)
+int32_t HStreamMetadata::LinkInput(sptr<IStreamOperator> streamOperator,
+                                   std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility, int32_t streamId)
 {
     if (streamOperator == nullptr || cameraAbility == nullptr) {
         MEDIA_ERR_LOG("HStreamMetadata::LinkInput streamOperator is null");
@@ -40,14 +41,10 @@ int32_t HStreamMetadata::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
     return CAMERA_OK;
 }
 
-void HStreamMetadata::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo)
+void HStreamMetadata::SetStreamInfo(StreamInfo &streamInfo)
 {
-    if (streamInfo == nullptr) {
-        MEDIA_ERR_LOG("HStreamMetadata::SetStreamInfo null");
-        return;
-    }
     HStreamCommon::SetStreamInfo(streamInfo);
-    streamInfo->intent_ = Camera::ANALYZE;
+    streamInfo.intent_ = ANALYZE;
 }
 
 int32_t HStreamMetadata::Start()
@@ -66,13 +63,15 @@ int32_t HStreamMetadata::Start()
         MEDIA_ERR_LOG("HStreamMetadata::Start Failed to allocate a captureId");
         return ret;
     }
-    std::shared_ptr<Camera::CaptureInfo> captureInfo = std::make_shared<Camera::CaptureInfo>();
-    captureInfo->streamIds_ = {streamId_};
-    captureInfo->captureSetting_ = cameraAbility_;
-    captureInfo->enableShutterCallback_ = false;
+    std::vector<uint8_t> ability;
+    OHOS::Camera::MetadataUtils::ConvertMetadataToVec(cameraAbility_, ability);
+    CaptureInfo captureInfo;
+    captureInfo.streamIds_ = {streamId_};
+    captureInfo.captureSetting_ = ability;
+    captureInfo.enableShutterCallback_ = false;
     MEDIA_INFO_LOG("HStreamMetadata::Start Starting with capture ID: %{public}d", curCaptureID_);
-    Camera::CamRetCode rc = streamOperator_->Capture(curCaptureID_, captureInfo, true);
-    if (rc != Camera::NO_ERROR) {
+    CamRetCode rc = (CamRetCode)(streamOperator_->Capture(curCaptureID_, captureInfo, true));
+    if (rc != HDI::Camera::V1_0::NO_ERROR) {
         ReleaseCaptureId(curCaptureID_);
         curCaptureID_ = 0;
         MEDIA_ERR_LOG("HStreamMetadata::Start Failed with error Code:%{public}d", rc);
@@ -93,8 +92,8 @@ int32_t HStreamMetadata::Stop()
         return CAMERA_INVALID_STATE;
     }
     int32_t ret = CAMERA_OK;
-    Camera::CamRetCode rc = streamOperator_->CancelCapture(curCaptureID_);
-    if (rc != Camera::NO_ERROR) {
+    CamRetCode rc = (CamRetCode)(streamOperator_->CancelCapture(curCaptureID_));
+    if (rc != HDI::Camera::V1_0::NO_ERROR) {
         MEDIA_ERR_LOG("HStreamMetadata::Stop Failed with errorCode:%{public}d, curCaptureID_: %{public}d",
                       rc, curCaptureID_);
         ret = HdiToServiceError(rc);

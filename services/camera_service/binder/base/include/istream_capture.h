@@ -24,7 +24,7 @@ namespace OHOS {
 namespace CameraStandard {
 class IStreamCapture : public IStreamCommon {
 public:
-    virtual int32_t Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings) = 0;
+    virtual int32_t Capture(const std::shared_ptr<OHOS::Camera::CameraMetadata> &captureSettings) = 0;
 
     virtual int32_t CancelCapture() = 0;
 

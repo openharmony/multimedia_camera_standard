@@ -23,19 +23,20 @@
 #include "display_type.h"
 #include "hstream_capture_stub.h"
 #include "hstream_common.h"
-#include "istream_operator.h"
+#include "v1_0/istream_operator.h"
 
 namespace OHOS {
 namespace CameraStandard {
+using namespace OHOS::HDI::Camera::V1_0;
 class HStreamCapture : public HStreamCaptureStub, public HStreamCommon {
 public:
     HStreamCapture(sptr<OHOS::IBufferProducer> surface, int32_t format);
     ~HStreamCapture();
 
-    int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-        std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
-    void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo) override;
-    int32_t Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings) override;
+    int32_t LinkInput(sptr<IStreamOperator> streamOperator,
+        std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
+    void SetStreamInfo(StreamInfo &streamInfo) override;
+    int32_t Capture(const std::shared_ptr<OHOS::Camera::CameraMetadata> &captureSettings) override;
     int32_t CancelCapture() override;
     int32_t Release() override;
     int32_t SetCallback(sptr<IStreamCaptureCallback> &callback) override;

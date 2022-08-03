@@ -37,6 +37,7 @@ ohos_moduletest("camera_framework_moduletest") {
   ]
 
   deps = [
+    "//drivers/interface/camera/v1_0:libcamera_proxy_1.0",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",

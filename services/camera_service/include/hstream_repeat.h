@@ -20,13 +20,14 @@
 #include "display_type.h"
 #include "hstream_repeat_stub.h"
 #include "hstream_common.h"
-#include "istream_operator.h"
+#include "v1_0/istream_operator.h"
 
 #include <refbase.h>
 #include <iostream>
 
 namespace OHOS {
 namespace CameraStandard {
+using namespace OHOS::HDI::Camera::V1_0;
 class HStreamRepeat : public HStreamRepeatStub, public HStreamCommon {
 public:
     HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format);
@@ -34,9 +35,9 @@ public:
     HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t format, bool isVideo);
     ~HStreamRepeat();
 
-    int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-        std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
-    void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo) override;
+    int32_t LinkInput(sptr<IStreamOperator> streamOperator,
+        std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
+    void SetStreamInfo(StreamInfo &streamInfo) override;
     int32_t Release() override;
     int32_t Start() override;
     int32_t Stop() override;

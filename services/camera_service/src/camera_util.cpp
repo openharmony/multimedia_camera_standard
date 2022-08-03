@@ -86,21 +86,21 @@ std::map<int, std::string> g_cameraVideoStabilizationMode = {
 static std::mutex g_captureIdsMutex;
 static std::map<int32_t, bool> g_captureIds;
 
-int32_t HdiToServiceError(Camera::CamRetCode ret)
+int32_t HdiToServiceError(CamRetCode ret)
 {
     enum CamServiceError err = CAMERA_UNKNOWN_ERROR;
 
     switch (ret) {
-        case Camera::NO_ERROR:
+        case HDI::Camera::V1_0::NO_ERROR:
             err = CAMERA_OK;
             break;
-        case Camera::CAMERA_BUSY:
+        case CAMERA_BUSY:
             err = CAMERA_DEVICE_BUSY;
             break;
-        case Camera::INVALID_ARGUMENT:
+        case INVALID_ARGUMENT:
             err = CAMERA_INVALID_ARG;
             break;
-        case Camera::CAMERA_CLOSED:
+        case CAMERA_CLOSED:
             err = CAMERA_DEVICE_CLOSED;
             break;
         default:
@@ -150,7 +150,8 @@ void ReleaseCaptureId(int32_t captureId)
     return;
 }
 
-bool IsValidSize(std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t format, int32_t width, int32_t height)
+bool IsValidSize(std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility,
+    int32_t format, int32_t width, int32_t height)
 {
 #ifndef PRODUCT_M40
     return true;

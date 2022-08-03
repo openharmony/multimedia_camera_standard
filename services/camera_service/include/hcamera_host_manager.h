@@ -23,13 +23,14 @@
 #include <string>
 #include <vector>
 #include "camera_metadata_info.h"
-#include "icamera_device.h"
-#include "icamera_host.h"
+#include "v1_0/icamera_device.h"
+#include "v1_0/icamera_host.h"
 #include "icamera_service_callback.h"
 #include "iservstat_listener_hdi.h"
 
 namespace OHOS {
 namespace CameraStandard {
+using namespace OHOS::HDI::Camera::V1_0;
 class HCameraHostManager : public virtual RefBase, public HDI::ServiceManager::V1_0::ServStatListenerStub {
 public:
     class StatusCallback {
@@ -45,10 +46,10 @@ public:
     int32_t Init(void);
     void DeInit(void);
     virtual int32_t GetCameras(std::vector<std::string> &cameraIds);
-    virtual int32_t GetCameraAbility(std::string &cameraId, std::shared_ptr<Camera::CameraMetadata> &ability);
+    virtual int32_t GetCameraAbility(std::string &cameraId, std::shared_ptr<OHOS::Camera::CameraMetadata> &ability);
     virtual int32_t OpenCameraDevice(std::string &cameraId,
-                                     const sptr<Camera::ICameraDeviceCallback> &callback,
-                                     sptr<Camera::ICameraDevice> &pDevice);
+                                     const sptr<ICameraDeviceCallback> &callback,
+                                     sptr<ICameraDevice> &pDevice);
     virtual int32_t SetFlashlight(const std::string& cameraId, bool isEnable);
 
     // HDI::ServiceManager::V1_0::IServStatListener

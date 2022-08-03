@@ -15,7 +15,8 @@
 
 #include "hcamera_host_manager.h"
 
-#include "camera_host_callback_stub.h"
+#include "v1_0/icamera_host_callback.h"
+#include "metadata_utils.h"
 #include "camera_util.h"
 #include "hdf_io_service_if.h"
 #include "iservmgr_hdi.h"
@@ -25,10 +26,10 @@ namespace OHOS {
 namespace CameraStandard {
 struct HCameraHostManager::CameraDeviceInfo {
     std::string cameraId;
-    std::shared_ptr<Camera::CameraMetadata> ability;
+    std::shared_ptr<OHOS::Camera::CameraMetadata> ability;
     std::mutex mutex;
 
-    explicit CameraDeviceInfo(const std::string& cameraId, sptr<Camera::ICameraDevice> device = nullptr)
+    explicit CameraDeviceInfo(const std::string& cameraId, sptr<ICameraDevice> device = nullptr)
         : cameraId(cameraId), ability(nullptr)
     {
     }
@@ -36,7 +37,7 @@ struct HCameraHostManager::CameraDeviceInfo {
     ~CameraDeviceInfo() = default;
 };
 
-class HCameraHostManager::CameraHostInfo : public Camera::CameraHostCallbackStub {
+class HCameraHostManager::CameraHostInfo : public ICameraHostCallback {
 public:
     explicit CameraHostInfo(HCameraHostManager* cameraHostManager, std::string name);
     ~CameraHostInfo();
@@ -44,15 +45,15 @@ public:
     bool IsCameraSupported(const std::string& cameraId);
     const std::string& GetName();
     int32_t GetCameras(std::vector<std::string>& cameraIds);
-    int32_t GetCameraAbility(std::string& cameraId, std::shared_ptr<Camera::CameraMetadata>& ability);
-    int32_t OpenCamera(std::string& cameraId, const sptr<Camera::ICameraDeviceCallback>& callback,
-                       sptr<Camera::ICameraDevice>& pDevice);
+    int32_t GetCameraAbility(std::string& cameraId, std::shared_ptr<OHOS::Camera::CameraMetadata>& ability);
+    int32_t OpenCamera(std::string& cameraId, const sptr<ICameraDeviceCallback>& callback,
+                       sptr<ICameraDevice>& pDevice);
     int32_t SetFlashlight(const std::string& cameraId, bool isEnable);
 
     // CameraHostCallbackStub
-    void OnCameraStatus(const std::string& cameraId, Camera::CameraStatus status) override;
-    void OnFlashlightStatus(const std::string& cameraId, Camera::FlashlightStatus status) override;
-    void OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event) override;
+    int32_t OnCameraStatus(const std::string& cameraId, HDI::Camera::V1_0::CameraStatus status) override;
+    int32_t OnFlashlightStatus(const std::string& cameraId, FlashlightStatus status) override;
+    int32_t OnCameraEvent(const std::string &cameraId, CameraEvent event) override;
 
 private:
     std::shared_ptr<CameraDeviceInfo> FindCameraDeviceInfo(const std::string& cameraId);
@@ -61,7 +62,7 @@ private:
 
     HCameraHostManager* cameraHostManager_;
     std::string name_;
-    sptr<Camera::ICameraHost> cameraHostProxy_;
+    sptr<ICameraHost> cameraHostProxy_;
 
     std::mutex mutex_;
     std::vector<std::string> cameraIds_;
@@ -84,15 +85,15 @@ bool HCameraHostManager::CameraHostInfo::Init()
         MEDIA_ERR_LOG("CameraHostInfo::Init, no camera host proxy");
         return true;
     }
-    cameraHostProxy_ = Camera::ICameraHost::Get(name_.c_str());
+    cameraHostProxy_ = ICameraHost::Get(name_.c_str(), false);
     if (cameraHostProxy_ == nullptr) {
         MEDIA_ERR_LOG("Failed to get ICameraHost");
         return false;
     }
     cameraHostProxy_->SetCallback(this);
     std::lock_guard<std::mutex> lock(mutex_);
-    Camera::CamRetCode ret = cameraHostProxy_->GetCameraIds(cameraIds_);
-    if (ret != Camera::NO_ERROR) {
+    CamRetCode ret = (CamRetCode)(cameraHostProxy_->GetCameraIds(cameraIds_));
+    if (ret != HDI::Camera::V1_0::NO_ERROR) {
         MEDIA_ERR_LOG("Init, GetCameraIds failed, ret = %{public}d", ret);
         return false;
     }
@@ -122,7 +123,7 @@ int32_t HCameraHostManager::CameraHostInfo::GetCameras(std::vector<std::string>&
 }
 
 int32_t HCameraHostManager::CameraHostInfo::GetCameraAbility(std::string& cameraId,
-    std::shared_ptr<Camera::CameraMetadata>& ability)
+    std::shared_ptr<OHOS::Camera::CameraMetadata>& ability)
 {
     auto deviceInfo = FindCameraDeviceInfo(cameraId);
     if (deviceInfo == nullptr) {
@@ -138,12 +139,14 @@ int32_t HCameraHostManager::CameraHostInfo::GetCameraAbility(std::string& camera
             MEDIA_ERR_LOG("CameraHostInfo::GetCameraAbility cameraHostProxy_ is null");
             return CAMERA_UNKNOWN_ERROR;
         }
+        std::vector<uint8_t> cameraAbility;
         if (!deviceInfo->ability) {
-            Camera::CamRetCode rc = cameraHostProxy_->GetCameraAbility(cameraId, ability);
-            if (rc != Camera::NO_ERROR) {
+            CamRetCode rc = (CamRetCode)(cameraHostProxy_->GetCameraAbility(cameraId, cameraAbility));
+            if (rc != HDI::Camera::V1_0::NO_ERROR) {
                 MEDIA_ERR_LOG("CameraHostInfo::GetCameraAbility failed with error Code:%{public}d", rc);
                 return HdiToServiceError(rc);
             }
+            OHOS::Camera::MetadataUtils::ConvertVecToMetadata(cameraAbility, ability);
             deviceInfo->ability = ability;
         }
     }
@@ -151,8 +154,8 @@ int32_t HCameraHostManager::CameraHostInfo::GetCameraAbility(std::string& camera
 }
 
 int32_t HCameraHostManager::CameraHostInfo::OpenCamera(std::string& cameraId,
-    const sptr<Camera::ICameraDeviceCallback>& callback,
-    sptr<Camera::ICameraDevice>& pDevice)
+    const sptr<ICameraDeviceCallback>& callback,
+    sptr<ICameraDevice>& pDevice)
 {
     MEDIA_INFO_LOG("CameraHostInfo::OpenCamera %{public}s", cameraId.c_str());
     auto deviceInfo = FindCameraDeviceInfo(cameraId);
@@ -166,8 +169,8 @@ int32_t HCameraHostManager::CameraHostInfo::OpenCamera(std::string& cameraId,
         MEDIA_ERR_LOG("CameraHostInfo::OpenCamera cameraHostProxy_ is null");
         return CAMERA_UNKNOWN_ERROR;
     }
-    Camera::CamRetCode rc = cameraHostProxy_->OpenCamera(cameraId, callback, pDevice);
-    if (rc != Camera::NO_ERROR) {
+    CamRetCode rc = (CamRetCode)(cameraHostProxy_->OpenCamera(cameraId, callback, pDevice));
+    if (rc != HDI::Camera::V1_0::NO_ERROR) {
         MEDIA_ERR_LOG("CameraHostInfo::OpenCamera failed with error Code:%{public}d", rc);
         return HdiToServiceError(rc);
     }
@@ -181,30 +184,31 @@ int32_t HCameraHostManager::CameraHostInfo::SetFlashlight(const std::string& cam
         MEDIA_ERR_LOG("CameraHostInfo::SetFlashlight cameraHostProxy_ is null");
         return CAMERA_UNKNOWN_ERROR;
     }
-    Camera::CamRetCode rc = cameraHostProxy_->SetFlashlight(cameraId, isEnable);
-    if (rc != Camera::NO_ERROR) {
+    CamRetCode rc = (CamRetCode)(cameraHostProxy_->SetFlashlight(cameraId, isEnable));
+    if (rc != HDI::Camera::V1_0::NO_ERROR) {
         MEDIA_ERR_LOG("CameraHostInfo::SetFlashlight failed with error Code:%{public}d", rc);
         return HdiToServiceError(rc);
     }
     return CAMERA_OK;
 }
 
-void HCameraHostManager::CameraHostInfo::OnCameraStatus(const std::string& cameraId, Camera::CameraStatus status)
+int32_t HCameraHostManager::CameraHostInfo::OnCameraStatus(const std::string& cameraId,
+                                                           HDI::Camera::V1_0::CameraStatus status)
 {
     if ((cameraHostManager_ == nullptr) || (cameraHostManager_->statusCallback_ == nullptr)) {
         MEDIA_WARNING_LOG("CameraHostInfo::OnCameraStatus for %{public}s with status %{public}d "
                           "failed due to no callback",
                           cameraId.c_str(), status);
-        return;
+        return CAMERA_UNKNOWN_ERROR;
     }
     CameraStatus svcStatus = CAMERA_STATUS_UNAVAILABLE;
     switch (status) {
-        case Camera::UN_AVAILABLE: {
+        case UN_AVAILABLE: {
             MEDIA_INFO_LOG("CameraHostInfo::OnCameraStatus, camera %{public}s unavailable", cameraId.c_str());
             svcStatus = CAMERA_STATUS_UNAVAILABLE;
             break;
         }
-        case Camera::AVAILABLE: {
+        case AVAILABLE: {
             MEDIA_INFO_LOG("CameraHostInfo::OnCameraStatus, camera %{public}s available", cameraId.c_str());
             svcStatus = CAMERA_STATUS_AVAILABLE;
             AddDevice(cameraId);
@@ -212,35 +216,36 @@ void HCameraHostManager::CameraHostInfo::OnCameraStatus(const std::string& camer
         }
         default:
             MEDIA_ERR_LOG("Unknown camera status: %{public}d", status);
-            return;
+            return CAMERA_UNKNOWN_ERROR;
     }
     cameraHostManager_->statusCallback_->OnCameraStatus(cameraId, svcStatus);
+    return CAMERA_OK;
 }
 
-void HCameraHostManager::CameraHostInfo::OnFlashlightStatus(const std::string& cameraId,
-    Camera::FlashlightStatus status)
+int32_t HCameraHostManager::CameraHostInfo::OnFlashlightStatus(const std::string& cameraId,
+    FlashlightStatus status)
 {
     if ((cameraHostManager_ == nullptr) || (cameraHostManager_->statusCallback_ == nullptr)) {
         MEDIA_WARNING_LOG("CameraHostInfo::OnFlashlightStatus for %{public}s with status %{public}d "
                           "failed due to no callback or cameraHostManager_ is null",
                           cameraId.c_str(), status);
-        return;
+        return CAMERA_UNKNOWN_ERROR;
     }
     FlashStatus flashStatus = FLASH_STATUS_OFF;
     switch (status) {
-        case Camera::FLASHLIGHT_OFF:
+        case FLASHLIGHT_OFF:
             flashStatus = FLASH_STATUS_OFF;
             MEDIA_INFO_LOG("CameraHostInfo::OnFlashlightStatus, camera %{public}s flash light is off",
                            cameraId.c_str());
             break;
 
-        case Camera::FLASHLIGHT_ON:
+        case FLASHLIGHT_ON:
             flashStatus = FLASH_STATUS_ON;
             MEDIA_INFO_LOG("CameraHostInfo::OnFlashlightStatus, camera %{public}s flash light is on",
                            cameraId.c_str());
             break;
 
-        case Camera::FLASHLIGHT_UNAVAILABLE:
+        case FLASHLIGHT_UNAVAILABLE:
             flashStatus = FLASH_STATUS_UNAVAILABLE;
             MEDIA_INFO_LOG("CameraHostInfo::OnFlashlightStatus, camera %{public}s flash light is unavailable",
                            cameraId.c_str());
@@ -248,28 +253,29 @@ void HCameraHostManager::CameraHostInfo::OnFlashlightStatus(const std::string& c
 
         default:
             MEDIA_ERR_LOG("Unknown flashlight status: %{public}d for camera %{public}s", status, cameraId.c_str());
-            return;
+            return CAMERA_UNKNOWN_ERROR;
     }
     cameraHostManager_->statusCallback_->OnFlashlightStatus(cameraId, flashStatus);
+    return CAMERA_OK;
 }
 
-void HCameraHostManager::CameraHostInfo::OnCameraEvent(const std::string &cameraId, Camera::CameraEvent event)
+int32_t HCameraHostManager::CameraHostInfo::OnCameraEvent(const std::string &cameraId, CameraEvent event)
 {
     if ((cameraHostManager_ == nullptr) || (cameraHostManager_->statusCallback_ == nullptr)) {
         MEDIA_WARNING_LOG("CameraHostInfo::OnCameraEvent for %{public}s with status %{public}d "
                           "failed due to no callback or cameraHostManager_ is null",
                           cameraId.c_str(), event);
-        return;
+        return CAMERA_UNKNOWN_ERROR;
     }
     CameraStatus svcStatus = CAMERA_STATUS_UNAVAILABLE;
     switch (event) {
-        case Camera::CAMERA_EVENT_DEVICE_RMV: {
+        case CAMERA_EVENT_DEVICE_RMV: {
             MEDIA_INFO_LOG("CameraHostInfo::OnCameraEvent, camera %{public}s unavailable", cameraId.c_str());
             svcStatus = CAMERA_STATUS_UNAVAILABLE;
             RemoveDevice(cameraId);
             break;
         }
-        case Camera::CAMERA_EVENT_DEVICE_ADD: {
+        case CAMERA_EVENT_DEVICE_ADD: {
             MEDIA_INFO_LOG("CameraHostInfo::OnCameraEvent camera %{public}s available", cameraId.c_str());
             svcStatus = CAMERA_STATUS_AVAILABLE;
             AddDevice(cameraId);
@@ -277,9 +283,10 @@ void HCameraHostManager::CameraHostInfo::OnCameraEvent(const std::string &camera
         }
         default:
             MEDIA_ERR_LOG("Unknown camera event: %{public}d", event);
-            return;
+            return CAMERA_UNKNOWN_ERROR;
     }
     cameraHostManager_->statusCallback_->OnCameraStatus(cameraId, svcStatus);
+    return CAMERA_OK;
 }
 
 std::shared_ptr<HCameraHostManager::CameraDeviceInfo> HCameraHostManager::CameraHostInfo::FindCameraDeviceInfo
@@ -374,7 +381,7 @@ int32_t HCameraHostManager::GetCameras(std::vector<std::string>& cameraIds)
 }
 
 int32_t HCameraHostManager::GetCameraAbility(std::string &cameraId,
-                                             std::shared_ptr<Camera::CameraMetadata> &ability)
+                                             std::shared_ptr<OHOS::Camera::CameraMetadata> &ability)
 {
     auto cameraHostInfo = FindCameraHostInfo(cameraId);
     if (cameraHostInfo == nullptr) {
@@ -385,8 +392,8 @@ int32_t HCameraHostManager::GetCameraAbility(std::string &cameraId,
 }
 
 int32_t HCameraHostManager::OpenCameraDevice(std::string &cameraId,
-                                             const sptr<Camera::ICameraDeviceCallback> &callback,
-                                             sptr<Camera::ICameraDevice> &pDevice)
+                                             const sptr<ICameraDeviceCallback> &callback,
+                                             sptr<ICameraDevice> &pDevice)
 {
     auto cameraHostInfo = FindCameraHostInfo(cameraId);
     if (cameraHostInfo == nullptr) {
@@ -464,7 +471,7 @@ void HCameraHostManager::RemoveCameraHost(const std::string& svcName)
     std::vector<std::string> cameraIds;
     if ((*it)->GetCameras(cameraIds) == CAMERA_OK) {
         for (const auto& cameraId : cameraIds) {
-            (*it)->OnCameraStatus(cameraId, Camera::UN_AVAILABLE);
+            (*it)->OnCameraStatus(cameraId, UN_AVAILABLE);
         }
     }
     cameraHostInfos_.erase(it);

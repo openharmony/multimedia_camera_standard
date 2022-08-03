@@ -38,6 +38,7 @@ ohos_unittest("camera_framework_unittest") {
 
   deps = [
     "//drivers/hdf_core/adapter/uhdf2/hdi:libhdi",
+    "//drivers/interface/camera/v1_0:libcamera_proxy_1.0",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",

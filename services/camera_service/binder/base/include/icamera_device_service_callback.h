@@ -25,7 +25,7 @@ class ICameraDeviceServiceCallback : public IRemoteBroker {
 public:
     virtual int32_t OnError(const int32_t errorType, const int32_t errorMsg) = 0;
     virtual int32_t OnResult(const uint64_t timestamp,
-                             const std::shared_ptr<Camera::CameraMetadata> &result) = 0;
+                             const std::shared_ptr<OHOS::Camera::CameraMetadata> &result) = 0;
     DECLARE_INTERFACE_DESCRIPTOR(u"ICameraDeviceServiceCallback");
 };
 } // namespace CameraStandard

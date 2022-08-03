@@ -58,8 +58,8 @@ StreamType HStreamCommon::GetStreamType()
     return streamType_;
 }
 
-int32_t HStreamCommon::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-                                 std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId)
+int32_t HStreamCommon::LinkInput(sptr<IStreamOperator> streamOperator,
+                                 std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility, int32_t streamId)
 {
     if (streamOperator == nullptr || cameraAbility == nullptr) {
         MEDIA_ERR_LOG("HStreamCommon::LinkInput streamOperator is null");
@@ -74,7 +74,7 @@ int32_t HStreamCommon::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
     return CAMERA_OK;
 }
 
-void HStreamCommon::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo)
+void HStreamCommon::SetStreamInfo(StreamInfo &streamInfo)
 {
     int32_t pixelFormat;
     auto it = g_cameraToPixelFormat.find(format_);
@@ -88,13 +88,14 @@ void HStreamCommon::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo
 #endif
     }
     MEDIA_INFO_LOG("HStreamCommon::SetStreamInfo pixelFormat is %{public}d", pixelFormat);
-    streamInfo->streamId_ = streamId_;
-    streamInfo->width_ = width_;
-    streamInfo->height_ = height_;
-    streamInfo->format_ = pixelFormat;
-    streamInfo->tunneledMode_ = true;
-    streamInfo->bufferQueue_ = producer_;
-    streamInfo->dataspace_ = CAMERA_COLOR_SPACE;
+    streamInfo.streamId_ = streamId_;
+    streamInfo.width_ = width_;
+    streamInfo.height_ = height_;
+    streamInfo.format_ = pixelFormat;
+    streamInfo.minFrameDuration_ = 0;
+    streamInfo.tunneledMode_ = true;
+    streamInfo.bufferQueue_ = new BufferProducerSequenceable(producer_);
+    streamInfo.dataspace_ = CAMERA_COLOR_SPACE;
 }
 
 int32_t HStreamCommon::Release()
@@ -109,23 +110,23 @@ int32_t HStreamCommon::Release()
 
 void HStreamCommon::DumpStreamInfo(std::string& dumpString)
 {
-    std::shared_ptr<Camera::StreamInfo> curStreamInfo = std::make_shared<Camera::StreamInfo>();
+    StreamInfo curStreamInfo;
     SetStreamInfo(curStreamInfo);
     dumpString += "release status:[" + std::to_string(isReleaseStream_) + "]:\n";
     dumpString += "stream info: \n";
-    dumpString += "    Buffer producer Id:[" + std::to_string(curStreamInfo->bufferQueue_->GetUniqueId());
-    dumpString += "]    stream Id:[" + std::to_string(curStreamInfo->streamId_);
+    dumpString += "    Buffer producer Id:[" + std::to_string(curStreamInfo.bufferQueue_->producer_->GetUniqueId());
+    dumpString += "]    stream Id:[" + std::to_string(curStreamInfo.streamId_);
     std::map<int, std::string>::const_iterator iter =
         g_cameraFormat.find(format_);
     if (iter != g_cameraFormat.end()) {
         dumpString += "]    format:[" + iter->second;
     }
-    dumpString += "]    width:[" + std::to_string(curStreamInfo->width_);
-    dumpString += "]    height:[" + std::to_string(curStreamInfo->height_);
-    dumpString += "]    dataspace:[" + std::to_string(curStreamInfo->dataspace_);
-    dumpString += "]    StreamType:[" + std::to_string(curStreamInfo->intent_);
-    dumpString += "]    TunnelMode:[" + std::to_string(curStreamInfo->tunneledMode_);
-    dumpString += "]    Encoding Type:[" + std::to_string(curStreamInfo->encodeType_) + "]:\n";
+    dumpString += "]    width:[" + std::to_string(curStreamInfo.width_);
+    dumpString += "]    height:[" + std::to_string(curStreamInfo.height_);
+    dumpString += "]    dataspace:[" + std::to_string(curStreamInfo.dataspace_);
+    dumpString += "]    StreamType:[" + std::to_string(curStreamInfo.intent_);
+    dumpString += "]    TunnelMode:[" + std::to_string(curStreamInfo.tunneledMode_);
+    dumpString += "]    Encoding Type:[" + std::to_string(curStreamInfo.encodeType_) + "]:\n";
 }
 } // namespace CameraStandard
 } // namespace OHOS

@@ -32,7 +32,7 @@ public:
 
     virtual int32_t SetCallback(sptr<ICameraDeviceServiceCallback> &callback) = 0;
 
-    virtual int32_t UpdateSetting(const std::shared_ptr<Camera::CameraMetadata> &settings) = 0;
+    virtual int32_t UpdateSetting(const std::shared_ptr<OHOS::Camera::CameraMetadata> &settings) = 0;
 
     virtual int32_t GetEnabledResults(std::vector<int32_t> &results) = 0;
 

@@ -17,6 +17,7 @@
 
 #include "camera_util.h"
 #include "camera_log.h"
+#include "metadata_utils.h"
 
 namespace OHOS {
 namespace CameraStandard {
@@ -27,24 +28,20 @@ HStreamCapture::HStreamCapture(sptr<OHOS::IBufferProducer> producer, int32_t for
 HStreamCapture::~HStreamCapture()
 {}
 
-int32_t HStreamCapture::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-                                  std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId)
+int32_t HStreamCapture::LinkInput(sptr<IStreamOperator> streamOperator,
+                                  std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility, int32_t streamId)
 {
     return HStreamCommon::LinkInput(streamOperator, cameraAbility, streamId);
 }
 
-void HStreamCapture::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo)
+void HStreamCapture::SetStreamInfo(StreamInfo &streamInfo)
 {
-    if (streamInfo == nullptr) {
-        MEDIA_ERR_LOG("HStreamCapture::SetStreamInfo null");
-        return;
-    }
     HStreamCommon::SetStreamInfo(streamInfo);
-    streamInfo->intent_ = Camera::STILL_CAPTURE;
-    streamInfo->encodeType_ = Camera::ENCODE_TYPE_JPEG;
+    streamInfo.intent_ = STILL_CAPTURE;
+    streamInfo.encodeType_ = ENCODE_TYPE_JPEG;
 }
 
-int32_t HStreamCapture::Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings)
+int32_t HStreamCapture::Capture(const std::shared_ptr<OHOS::Camera::CameraMetadata> &captureSettings)
 {
     CAMERA_SYNC_TRACE;
 
@@ -56,18 +53,22 @@ int32_t HStreamCapture::Capture(const std::shared_ptr<Camera::CameraMetadata> &c
         MEDIA_ERR_LOG("HStreamCapture::Capture Failed to allocate a captureId");
         return ret;
     }
-    std::shared_ptr<Camera::CaptureInfo> captureInfoPhoto = std::make_shared<Camera::CaptureInfo>();
-    captureInfoPhoto->streamIds_ = {streamId_};
-    if (!Camera::GetCameraMetadataItemCount(captureSettings->get())) {
-        captureInfoPhoto->captureSetting_ = cameraAbility_;
+
+    CaptureInfo captureInfoPhoto;
+    captureInfoPhoto.streamIds_ = {streamId_};
+    std::vector<uint8_t> setting;
+    if (!OHOS::Camera::GetCameraMetadataItemCount(captureSettings->get())) {
+        OHOS::Camera::MetadataUtils::ConvertMetadataToVec(cameraAbility_, setting);
+        captureInfoPhoto.captureSetting_ = setting;
     } else {
-        captureInfoPhoto->captureSetting_ = captureSettings;
+        OHOS::Camera::MetadataUtils::ConvertMetadataToVec(captureSettings, setting);
+        captureInfoPhoto.captureSetting_ = setting;
     }
-    captureInfoPhoto->enableShutterCallback_ = true;
+    captureInfoPhoto.enableShutterCallback_ = true;
 
     MEDIA_INFO_LOG("HStreamCapture::Capture Starting photo capture with capture ID: %{public}d", curCaptureID_);
-    Camera::CamRetCode rc = streamOperator_->Capture(curCaptureID_, captureInfoPhoto, false);
-    if (rc != Camera::NO_ERROR) {
+    CamRetCode rc = (CamRetCode)(streamOperator_->Capture(curCaptureID_, captureInfoPhoto, false));
+    if (rc != HDI::Camera::V1_0::NO_ERROR) {
         MEDIA_ERR_LOG("HStreamCapture::Capture failed with error Code: %{public}d", rc);
         ret = HdiToServiceError(rc);
     }
@@ -122,7 +123,7 @@ int32_t HStreamCapture::OnCaptureEnded(int32_t captureId, int32_t frameCount)
 int32_t HStreamCapture::OnCaptureError(int32_t captureId, int32_t errorCode)
 {
     if (streamCaptureCallback_ != nullptr) {
-        if (errorCode == Camera::BUFFER_LOST) {
+        if (errorCode == BUFFER_LOST) {
             streamCaptureCallback_->OnCaptureError(captureId, CAMERA_STREAM_BUFFER_LOST);
         } else {
             streamCaptureCallback_->OnCaptureError(captureId, CAMERA_UNKNOWN_ERROR);

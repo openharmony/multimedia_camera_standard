@@ -35,77 +35,78 @@ using ::testing::_;
 
 namespace OHOS {
 namespace CameraStandard {
-class MockStreamOperator : public IRemoteStub<Camera::IStreamOperator> {
+using namespace OHOS::HDI::Camera::V1_0;
+class MockStreamOperator : public IRemoteStub<IStreamOperator> {
 public:
     MockStreamOperator()
     {
-        ON_CALL(*this, CreateStreams(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, ReleaseStreams(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, CommitStreams(_, _)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, Capture(_, _, _)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, CancelCapture(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, IsStreamsSupported(_, _, A<const std::shared_ptr<Camera::StreamInfo> &>(), _))
-            .WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, IsStreamsSupported(_, _, A<const std::vector<std::shared_ptr<Camera::StreamInfo>> &>(), _))
-            .WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, GetStreamAttributes(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, AttachBufferQueue(_, _)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, DetachBufferQueue(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, ChangeToOfflineStream(_, _, _)).WillByDefault(Return(Camera::NO_ERROR));
+        ON_CALL(*this, CreateStreams(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, ReleaseStreams(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, CommitStreams(_, _)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, Capture(_, _, _)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, CancelCapture(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, IsStreamsSupported(_, _, A<const std::shared_ptr<StreamInfo> &>(), _))
+            .WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, IsStreamsSupported(_, _, A<const std::vector<std::shared_ptr<StreamInfo>> &>(), _))
+            .WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, GetStreamAttributes(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, AttachBufferQueue(_, _)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, DetachBufferQueue(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, ChangeToOfflineStream(_, _, _)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
     }
     ~MockStreamOperator() {}
-    MOCK_METHOD1(CreateStreams, Camera::CamRetCode(
-        const std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos));
-    MOCK_METHOD1(ReleaseStreams, Camera::CamRetCode(const std::vector<int> &streamIds));
-    MOCK_METHOD1(CancelCapture, Camera::CamRetCode(int captureId));
-    MOCK_METHOD1(GetStreamAttributes, Camera::CamRetCode(
-        std::vector<std::shared_ptr<Camera::StreamAttribute>> &attributes));
-    MOCK_METHOD1(DetachBufferQueue, Camera::CamRetCode(int streamId));
-    MOCK_METHOD2(CommitStreams, Camera::CamRetCode(Camera::OperationMode mode,
-        const std::shared_ptr<Camera::CameraMetadata> &modeSetting));
-    MOCK_METHOD2(AttachBufferQueue, Camera::CamRetCode(int streamId,
+    MOCK_METHOD1(CreateStreams, CamRetCode(
+        const std::vector<std::shared_ptr<StreamInfo>> &streamInfos));
+    MOCK_METHOD1(ReleaseStreams, CamRetCode(const std::vector<int> &streamIds));
+    MOCK_METHOD1(CancelCapture, CamRetCode(int captureId));
+    MOCK_METHOD1(GetStreamAttributes, CamRetCode(
+        std::vector<std::shared_ptr<StreamAttribute>> &attributes));
+    MOCK_METHOD1(DetachBufferQueue, CamRetCode(int streamId));
+    MOCK_METHOD2(CommitStreams, CamRetCode(OperationMode mode,
+        const std::shared_ptr<OHOS::Camera::CameraMetadata> &modeSetting));
+    MOCK_METHOD2(AttachBufferQueue, CamRetCode(int streamId,
         const OHOS::sptr<OHOS::IBufferProducer> &producer));
-    MOCK_METHOD3(Capture, Camera::CamRetCode(int captureId, const std::shared_ptr<Camera::CaptureInfo> &info,
+    MOCK_METHOD3(Capture, CamRetCode(int captureId, const std::shared_ptr<CaptureInfo> &info,
         bool isStreaming));
-    MOCK_METHOD3(ChangeToOfflineStream, Camera::CamRetCode(const std::vector<int> &streamIds,
-        OHOS::sptr<Camera::IStreamOperatorCallback> &callback,
-        OHOS::sptr<Camera::IOfflineStreamOperator> &offlineOperator));
-    MOCK_METHOD4(IsStreamsSupported, Camera::CamRetCode(Camera::OperationMode mode,
-        const std::shared_ptr<Camera::CameraMetadata> &modeSetting,
-        const std::shared_ptr<Camera::StreamInfo> &info, Camera::StreamSupportType &type));
-    MOCK_METHOD4(IsStreamsSupported, Camera::CamRetCode(Camera::OperationMode mode,
-        const std::shared_ptr<Camera::CameraMetadata> &modeSetting,
-        const std::vector<std::shared_ptr<Camera::StreamInfo>> &info, Camera::StreamSupportType &type));
+    MOCK_METHOD3(ChangeToOfflineStream, CamRetCode(const std::vector<int> &streamIds,
+        OHOS::sptr<IStreamOperatorCallback> &callback,
+        OHOS::sptr<IOfflineStreamOperator> &offlineOperator));
+    MOCK_METHOD4(IsStreamsSupported, CamRetCode(OperationMode mode,
+        const std::shared_ptr<OHOS::Camera::CameraMetadata> &modeSetting,
+        const std::shared_ptr<StreamInfo> &info, StreamSupportType &type));
+    MOCK_METHOD4(IsStreamsSupported, CamRetCode(OperationMode mode,
+        const std::shared_ptr<OHOS::Camera::CameraMetadata> &modeSetting,
+        const std::vector<std::shared_ptr<StreamInfo>> &info, StreamSupportType &type));
 };
 
-class MockCameraDevice : public IRemoteStub<Camera::ICameraDevice> {
+class MockCameraDevice : public IRemoteStub<ICameraDevice> {
 public:
     MockCameraDevice()
     {
         streamOperator = new MockStreamOperator();
         ON_CALL(*this, GetStreamOperator).WillByDefault([this](
-            const OHOS::sptr<Camera::IStreamOperatorCallback> &callback,
-            OHOS::sptr<Camera::IStreamOperator> &pStreamOperator) {
+            const OHOS::sptr<IStreamOperatorCallback> &callback,
+            OHOS::sptr<IStreamOperator> &pStreamOperator) {
             pStreamOperator = streamOperator;
-            return Camera::NO_ERROR;
+            return HDI::Camera::V1_0::NO_ERROR;
         });
-        ON_CALL(*this, UpdateSettings(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, SetResultMode(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, GetEnabledResults(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, EnableResult(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, DisableResult(_)).WillByDefault(Return(Camera::NO_ERROR));
-        ON_CALL(*this, DisableResult(_)).WillByDefault(Return(Camera::NO_ERROR));
+        ON_CALL(*this, UpdateSettings(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, SetResultMode(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, GetEnabledResults(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, EnableResult(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, DisableResult(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
+        ON_CALL(*this, DisableResult(_)).WillByDefault(Return(HDI::Camera::V1_0::NO_ERROR));
         ON_CALL(*this, Close()).WillByDefault(Return());
     }
     ~MockCameraDevice() {}
     MOCK_METHOD0(Close, void());
-    MOCK_METHOD1(UpdateSettings, Camera::CamRetCode(const std::shared_ptr<Camera::CameraSetting> &settings));
-    MOCK_METHOD1(SetResultMode, Camera::CamRetCode(const Camera::ResultCallbackMode &mode));
-    MOCK_METHOD1(GetEnabledResults, Camera::CamRetCode(std::vector<Camera::MetaType> &results));
-    MOCK_METHOD1(EnableResult, Camera::CamRetCode(const std::vector<Camera::MetaType> &results));
-    MOCK_METHOD1(DisableResult, Camera::CamRetCode(const std::vector<Camera::MetaType> &results));
-    MOCK_METHOD2(GetStreamOperator, Camera::CamRetCode(const OHOS::sptr<Camera::IStreamOperatorCallback> &callback,
-        OHOS::sptr<Camera::IStreamOperator> &pStreamOperator));
+    MOCK_METHOD1(UpdateSettings, CamRetCode(const std::shared_ptr<OHOS::Camera::CameraSetting> &settings));
+    MOCK_METHOD1(SetResultMode, CamRetCode(const ResultCallbackMode &mode));
+    MOCK_METHOD1(GetEnabledResults, CamRetCode(std::vector<MetaType> &results));
+    MOCK_METHOD1(EnableResult, CamRetCode(const std::vector<MetaType> &results));
+    MOCK_METHOD1(DisableResult, CamRetCode(const std::vector<MetaType> &results));
+    MOCK_METHOD2(GetStreamOperator, CamRetCode(const OHOS::sptr<IStreamOperatorCallback> &callback,
+        OHOS::sptr<IStreamOperator> &pStreamOperator));
     sptr<MockStreamOperator> streamOperator;
 };
 
@@ -119,10 +120,10 @@ public:
             return CAMERA_OK;
         });
         ON_CALL(*this, GetCameraAbility).WillByDefault([this](std::string &cameraId,
-                                                            std::shared_ptr<Camera::CameraMetadata> &ability) {
+                                                            std::shared_ptr<OHOS::Camera::CameraMetadata> &ability) {
             int32_t itemCount = 10;
             int32_t dataSize = 100;
-            ability = std::make_shared<Camera::CameraMetadata>(itemCount, dataSize);
+            ability = std::make_shared<OHOS::Camera::CameraMetadata>(itemCount, dataSize);
             int32_t streams[9] = {
                 OHOS_CAMERA_FORMAT_YCRCB_420_SP, CameraFrameworkUnitTest::PREVIEW_DEFAULT_WIDTH,
                 CameraFrameworkUnitTest::PREVIEW_DEFAULT_HEIGHT, OHOS_CAMERA_FORMAT_YCRCB_420_SP,
@@ -145,8 +146,8 @@ public:
             return CAMERA_OK;
         });
         ON_CALL(*this, OpenCameraDevice).WillByDefault([this](std::string &cameraId,
-                                                            const sptr<Camera::ICameraDeviceCallback> &callback,
-                                                            sptr<Camera::ICameraDevice> &pDevice) {
+                                                            const sptr<ICameraDeviceCallback> &callback,
+                                                            sptr<ICameraDevice> &pDevice) {
             pDevice = cameraDevice;
             return CAMERA_OK;
         });
@@ -155,11 +156,12 @@ public:
     }
     ~MockHCameraHostManager() {}
     MOCK_METHOD1(GetCameras, int32_t(std::vector<std::string> &cameraIds));
-    MOCK_METHOD1(SetCallback, int32_t(sptr<Camera::ICameraHostCallback> &callback));
-    MOCK_METHOD2(GetCameraAbility, int32_t(std::string &cameraId, std::shared_ptr<Camera::CameraMetadata> &ability));
+    MOCK_METHOD1(SetCallback, int32_t(sptr<ICameraHostCallback> &callback));
+    MOCK_METHOD2(GetCameraAbility,
+        int32_t(std::string &cameraId, std::shared_ptr<OHOS::Camera::CameraMetadata> &ability));
     MOCK_METHOD2(SetFlashlight, int32_t(const std::string &cameraId, bool isEnable));
     MOCK_METHOD3(OpenCameraDevice, int32_t(std::string &cameraId,
-        const sptr<Camera::ICameraDeviceCallback> &callback, sptr<Camera::ICameraDevice> &pDevice));
+        const sptr<ICameraDeviceCallback> &callback, sptr<ICameraDevice> &pDevice));
     sptr<MockCameraDevice> cameraDevice;
 };
 
@@ -966,12 +968,12 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_030, TestSize.Level0
     EXPECT_EQ(ret, 0);
 
     EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(ON_CHANGED));
     EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef PRODUCT_M40
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
-        A<const std::vector<std::shared_ptr<Camera::StreamInfo>> &>(), _));
+        A<const std::vector<std::shared_ptr<StreamInfo>> &>(), _));
 #endif
     EXPECT_CALL(*mockStreamOperator, CreateStreams(_));
     EXPECT_CALL(*mockStreamOperator, CommitStreams(_, _));
@@ -1031,12 +1033,12 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_031, TestSize.Level0
     EXPECT_EQ(ret, 0);
 
     EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(ON_CHANGED));
     EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef PRODUCT_M40
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
-        A<const std::vector<std::shared_ptr<Camera::StreamInfo>> &>(), _));
+        A<const std::vector<std::shared_ptr<StreamInfo>> &>(), _));
 #endif
     EXPECT_CALL(*mockStreamOperator, CreateStreams(_));
     EXPECT_CALL(*mockStreamOperator, CommitStreams(_, _));
@@ -1112,12 +1114,12 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_032, TestSize.Level0
     if (!zoomRatioRange.empty()) {
         EXPECT_CALL(*mockCameraDevice, UpdateSettings(_));
     }
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(ON_CHANGED));
     EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef PRODUCT_M40
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
-        A<const std::vector<std::shared_ptr<Camera::StreamInfo>> &>(), _));
+        A<const std::vector<std::shared_ptr<StreamInfo>> &>(), _));
 #endif
     EXPECT_CALL(*mockStreamOperator, CreateStreams(_));
     EXPECT_CALL(*mockStreamOperator, CommitStreams(_, _));
@@ -1169,12 +1171,12 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_033, TestSize.Level0
     EXPECT_EQ(ret, 0);
 
     EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(ON_CHANGED));
     EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef PRODUCT_M40
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
-        A<const std::vector<std::shared_ptr<Camera::StreamInfo>> &>(), _));
+        A<const std::vector<std::shared_ptr<StreamInfo>> &>(), _));
 #endif
     EXPECT_CALL(*mockStreamOperator, CreateStreams(_));
     EXPECT_CALL(*mockStreamOperator, CommitStreams(_, _));
@@ -1335,12 +1337,12 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_038, TestSize.Level0
     EXPECT_EQ(ret, 0);
 
     EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(ON_CHANGED));
     EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef PRODUCT_M40
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
-        A<const std::vector<std::shared_ptr<Camera::StreamInfo>> &>(), _));
+        A<const std::vector<std::shared_ptr<StreamInfo>> &>(), _));
 #endif
     EXPECT_CALL(*mockStreamOperator, CreateStreams(_));
     EXPECT_CALL(*mockStreamOperator, CommitStreams(_, _));
@@ -1643,12 +1645,12 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_049, TestSize.Level0
 
     EXPECT_CALL(*mockCameraHostManager, OpenCameraDevice(_, _, _));
     EXPECT_CALL(*mockCameraDevice, UpdateSettings(_));
-    EXPECT_CALL(*mockCameraDevice, SetResultMode(Camera::ON_CHANGED));
+    EXPECT_CALL(*mockCameraDevice, SetResultMode(ON_CHANGED));
     EXPECT_CALL(*mockCameraDevice, GetStreamOperator(_, _));
     EXPECT_CALL(*mockCameraHostManager, GetCameraAbility(_, _));
 #ifndef PRODUCT_M40
     EXPECT_CALL(*mockStreamOperator, IsStreamsSupported(_, _,
-        A<const std::vector<std::shared_ptr<Camera::StreamInfo>> &>(), _));
+        A<const std::vector<std::shared_ptr<StreamInfo>> &>(), _));
 #endif
     EXPECT_CALL(*mockStreamOperator, CreateStreams(_));
     EXPECT_CALL(*mockStreamOperator, CommitStreams(_, _));

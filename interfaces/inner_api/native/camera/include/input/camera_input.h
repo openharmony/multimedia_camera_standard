@@ -318,7 +318,7 @@ public:
     *
     * @param result metadata got from callback from service layer.
     */
-    void ProcessAutoFocusUpdates(const std::shared_ptr<Camera::CameraMetadata> &result);
+    void ProcessAutoFocusUpdates(const std::shared_ptr<OHOS::Camera::CameraMetadata> &result);
 
     /**
     * @brief This function is called when there is exposure state change
@@ -326,7 +326,7 @@ public:
     *
     * @param result metadata got from callback from service layer.
     */
-    void ProcessAutoExposureUpdates(const std::shared_ptr<Camera::CameraMetadata> &result);
+    void ProcessAutoExposureUpdates(const std::shared_ptr<OHOS::Camera::CameraMetadata> &result);
 
     /**
     * @brief Get current Camera Settings.
@@ -357,7 +357,7 @@ public:
 
 private:
     std::mutex mutex_;
-    std::shared_ptr<Camera::CameraMetadata> changedMetadata_;
+    std::shared_ptr<OHOS::Camera::CameraMetadata> changedMetadata_;
     sptr<CameraInfo> cameraObj_;
     sptr<ICameraDeviceService> deviceObj_;
     std::shared_ptr<ErrorCallback> errorCallback_;
@@ -371,7 +371,7 @@ private:
     static void getVector(DataPtr data, size_t count, Vec &vect, VecType dataType);
     int32_t SetCropRegion(float zoomRatio);
     int32_t StartFocus(camera_focus_mode_enum_t focusMode);
-    int32_t UpdateSetting(std::shared_ptr<Camera::CameraMetadata> changedMetadata);
+    int32_t UpdateSetting(std::shared_ptr<OHOS::Camera::CameraMetadata> changedMetadata);
 };
     void SetVideoStabilizingMode(sptr<CameraInput> device, CameraVideoStabilizationMode VideoStabilizationMode);
     void SetRecordingFrameRateRange(sptr<CameraInput> device, int32_t minFpsVal, int32_t maxFpsVal);

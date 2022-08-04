@@ -16,6 +16,7 @@
 #include "hstream_repeat.h"
 
 #include "camera_util.h"
+#include "metadata_utils.h"
 #include "display.h"
 #include "display_manager.h"
 #include "camera_log.h"
@@ -49,8 +50,8 @@ HStreamRepeat::HStreamRepeat(sptr<OHOS::IBufferProducer> producer, int32_t forma
 HStreamRepeat::~HStreamRepeat()
 {}
 
-int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-                                 std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId)
+int32_t HStreamRepeat::LinkInput(sptr<IStreamOperator> streamOperator,
+                                 std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility, int32_t streamId)
 {
     int32_t ret = HStreamCommon::LinkInput(streamOperator, cameraAbility, streamId);
     if (ret != CAMERA_OK) {
@@ -62,18 +63,15 @@ int32_t HStreamRepeat::LinkInput(sptr<Camera::IStreamOperator> streamOperator,
     return CAMERA_OK;
 }
 
-void HStreamRepeat::SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo)
+void HStreamRepeat::SetStreamInfo(StreamInfo &streamInfo)
 {
-    if (streamInfo == nullptr) {
-        MEDIA_ERR_LOG("HStreamRepeat::SetStreamInfo null");
-        return;
-    }
     HStreamCommon::SetStreamInfo(streamInfo);
     if (isVideo_) {
-        streamInfo->intent_ = Camera::VIDEO;
-        streamInfo->encodeType_ = Camera::ENCODE_TYPE_H264;
+        streamInfo.intent_ = VIDEO;
+        streamInfo.encodeType_ = ENCODE_TYPE_H264;
     } else {
-        streamInfo->intent_ = Camera::PREVIEW;
+        streamInfo.intent_ = PREVIEW;
+        streamInfo.encodeType_ = ENCODE_TYPE_NULL;
     }
 }
 
@@ -93,13 +91,15 @@ int32_t HStreamRepeat::Start()
         MEDIA_ERR_LOG("HStreamRepeat::Start Failed to allocate a captureId");
         return ret;
     }
-    std::shared_ptr<Camera::CaptureInfo> captureInfo = std::make_shared<Camera::CaptureInfo>();
-    captureInfo->streamIds_ = {streamId_};
-    captureInfo->captureSetting_ = cameraAbility_;
-    captureInfo->enableShutterCallback_ = false;
+    std::vector<uint8_t> ability;
+    OHOS::Camera::MetadataUtils::ConvertMetadataToVec(cameraAbility_, ability);
+    CaptureInfo captureInfo;
+    captureInfo.streamIds_ = {streamId_};
+    captureInfo.captureSetting_ = ability;
+    captureInfo.enableShutterCallback_ = false;
     MEDIA_INFO_LOG("HStreamRepeat::Start Starting with capture ID: %{public}d", curCaptureID_);
-    Camera::CamRetCode rc = streamOperator_->Capture(curCaptureID_, captureInfo, true);
-    if (rc != Camera::NO_ERROR) {
+    CamRetCode rc = (CamRetCode)(streamOperator_->Capture(curCaptureID_, captureInfo, true));
+    if (rc != HDI::Camera::V1_0::NO_ERROR) {
         ReleaseCaptureId(curCaptureID_);
         curCaptureID_ = 0;
         MEDIA_ERR_LOG("HStreamRepeat::Start Failed with error Code:%{public}d", rc);
@@ -120,8 +120,8 @@ int32_t HStreamRepeat::Stop()
         return CAMERA_INVALID_STATE;
     }
     int32_t ret = CAMERA_OK;
-    Camera::CamRetCode rc = streamOperator_->CancelCapture(curCaptureID_);
-    if (rc != Camera::NO_ERROR) {
+    CamRetCode rc = (CamRetCode)(streamOperator_->CancelCapture(curCaptureID_));
+    if (rc != HDI::Camera::V1_0::NO_ERROR) {
         MEDIA_ERR_LOG("HStreamRepeat::Stop Failed with errorCode:%{public}d, curCaptureID_: %{public}d",
                       rc, curCaptureID_);
         ret = HdiToServiceError(rc);
@@ -181,7 +181,7 @@ int32_t HStreamRepeat::OnFrameEnded(int32_t frameCount)
 int32_t HStreamRepeat::OnFrameError(int32_t errorType)
 {
     if (streamRepeatCallback_ != nullptr) {
-        if (errorType == Camera::BUFFER_LOST) {
+        if (errorType == BUFFER_LOST) {
             streamRepeatCallback_->OnFrameError(CAMERA_STREAM_BUFFER_LOST);
         } else {
             streamRepeatCallback_->OnFrameError(CAMERA_UNKNOWN_ERROR);
@@ -199,7 +199,7 @@ void HStreamRepeat::DumpStreamInfo(std::string& dumpString)
 void HStreamRepeat::SetStreamTransform()
 {
     camera_metadata_item_t item;
-    int ret = Camera::FindCameraMetadataItem(cameraAbility_->get(), OHOS_SENSOR_ORIENTATION, &item);
+    int ret = OHOS::Camera::FindCameraMetadataItem(cameraAbility_->get(), OHOS_SENSOR_ORIENTATION, &item);
     if (ret != CAM_META_SUCCESS) {
         MEDIA_ERR_LOG("HStreamRepeat::SetStreamTransform get sensor orientation failed");
         return;

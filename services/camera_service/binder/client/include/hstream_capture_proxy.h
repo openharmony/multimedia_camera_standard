@@ -27,7 +27,7 @@ public:
 
     virtual ~HStreamCaptureProxy() = default;
 
-    int32_t Capture(const std::shared_ptr<Camera::CameraMetadata> &captureSettings) override;
+    int32_t Capture(const std::shared_ptr<OHOS::Camera::CameraMetadata> &captureSettings) override;
 
     int32_t CancelCapture() override;
 

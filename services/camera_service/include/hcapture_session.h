@@ -21,13 +21,15 @@
 #include "hstream_capture.h"
 #include "hstream_metadata.h"
 #include "hstream_repeat.h"
-#include "stream_operator_callback_stub.h"
+#include "v1_0/istream_operator_callback.h"
+#include "v1_0/istream_operator.h"
 
 #include <refbase.h>
 #include <iostream>
 
 namespace OHOS {
 namespace CameraStandard {
+using namespace OHOS::HDI::Camera::V1_0;
 class StreamOperatorCallback;
 
 enum class CaptureSessionState {
@@ -71,13 +73,16 @@ private:
     int32_t GetCameraDevice(sptr<HCameraDevice> &device);
     int32_t GetCurrentCameraDevice(sptr<HCameraDevice> &device);
     int32_t HandleCaptureOuputsConfig(sptr<HCameraDevice> &device);
-    int32_t CreateAndCommitStreams(sptr<HCameraDevice> &device, std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
-                                   std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);
-    int32_t CheckAndCommitStreams(sptr<HCameraDevice> &device, std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
-                                  std::vector<std::shared_ptr<Camera::StreamInfo>> &allStreamInfos,
-                                  std::vector<std::shared_ptr<Camera::StreamInfo>> &newStreamInfos);
-    int32_t GetCurrentStreamInfos(sptr<HCameraDevice> &device, std::shared_ptr<Camera::CameraMetadata> &deviceSettings,
-                                  std::vector<std::shared_ptr<Camera::StreamInfo>> &streamInfos);
+    int32_t CreateAndCommitStreams(sptr<HCameraDevice> &device,
+	                               std::shared_ptr<OHOS::Camera::CameraMetadata> &deviceSettings,
+                                   std::vector<StreamInfo> &streamInfos);
+    int32_t CheckAndCommitStreams(sptr<HCameraDevice> &device,
+	                              std::shared_ptr<OHOS::Camera::CameraMetadata> &deviceSettings,
+                                  std::vector<StreamInfo> &allStreamInfos,
+                                  std::vector<StreamInfo> &newStreamInfos);
+    int32_t GetCurrentStreamInfos(sptr<HCameraDevice> &device,
+	                              std::shared_ptr<OHOS::Camera::CameraMetadata> &deviceSettings,
+                                  std::vector<StreamInfo> &streamInfos);
     void UpdateSessionConfig(sptr<HCameraDevice> &device);
     void DeleteReleasedStream();
     void RestorePreviousState(sptr<HCameraDevice> &device, bool isCreateReleaseStreams);
@@ -106,19 +111,16 @@ private:
     int32_t uid_;
 };
 
-class StreamOperatorCallback : public Camera::StreamOperatorCallbackStub {
+class StreamOperatorCallback : public IStreamOperatorCallback {
 public:
     StreamOperatorCallback() = default;
     explicit StreamOperatorCallback(sptr<HCaptureSession> session);
     virtual ~StreamOperatorCallback() = default;
 
-    void OnCaptureStarted(int32_t captureId, const std::vector<int32_t> &streamId) override;
-    void OnCaptureEnded(int32_t captureId,
-                        const std::vector<std::shared_ptr<Camera::CaptureEndedInfo>> &info) override;
-    void OnCaptureError(int32_t captureId,
-                        const std::vector<std::shared_ptr<Camera::CaptureErrorInfo>> &info) override;
-    void OnFrameShutter(int32_t captureId,
-                        const std::vector<int32_t> &streamId, uint64_t timestamp) override;
+    int32_t OnCaptureStarted(int32_t captureId, const std::vector<int32_t>& streamIds) override;
+    int32_t OnCaptureEnded(int32_t captureId, const std::vector<CaptureEndedInfo>& infos) override;
+    int32_t OnCaptureError(int32_t captureId, const std::vector<CaptureErrorInfo>& infos) override;
+    int32_t OnFrameShutter(int32_t captureId, const std::vector<int32_t>& streamIds, uint64_t timestamp) override;
     void SetCaptureSession(sptr<HCaptureSession> captureSession);
 
 private:

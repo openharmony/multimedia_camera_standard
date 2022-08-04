@@ -53,6 +53,7 @@ ohos_shared_library("camera_framework") {
   ]
 
   deps = [
+    "//drivers/interface/camera/v1_0:libcamera_proxy_1.0",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/camera_standard/services/camera_service:camera_service",

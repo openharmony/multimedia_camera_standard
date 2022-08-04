@@ -20,7 +20,7 @@
 #include "display_type.h"
 #include "hstream_metadata_stub.h"
 #include "hstream_common.h"
-#include "istream_operator.h"
+#include "v1_0/istream_operator.h"
 
 #include <refbase.h>
 #include <iostream>
@@ -32,9 +32,9 @@ public:
     HStreamMetadata(sptr<OHOS::IBufferProducer> producer, int32_t format);
     ~HStreamMetadata();
 
-    int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-        std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
-    void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo) override;
+    int32_t LinkInput(sptr<IStreamOperator> streamOperator,
+        std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility, int32_t streamId) override;
+    void SetStreamInfo(StreamInfo &streamInfo) override;
     int32_t Release() override;
     int32_t Start() override;
     int32_t Stop() override;

@@ -18,20 +18,21 @@
 
 #include "camera_metadata_info.h"
 #include "istream_common.h"
-#include "istream_operator.h"
+#include "v1_0/istream_operator.h"
 
 #include <refbase.h>
 #include <iostream>
 
 namespace OHOS {
 namespace CameraStandard {
+using namespace OHOS::HDI::Camera::V1_0;
 class HStreamCommon : virtual public RefBase {
 public:
     HStreamCommon(StreamType streamType, sptr<OHOS::IBufferProducer> producer, int32_t format);
     virtual ~HStreamCommon();
-    virtual int32_t LinkInput(sptr<Camera::IStreamOperator> streamOperator,
-        std::shared_ptr<Camera::CameraMetadata> cameraAbility, int32_t streamId) = 0;
-    virtual void SetStreamInfo(std::shared_ptr<Camera::StreamInfo> streamInfo) = 0;
+    virtual int32_t LinkInput(sptr<IStreamOperator> streamOperator,
+        std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility, int32_t streamId) = 0;
+    virtual void SetStreamInfo(StreamInfo &streamInfo) = 0;
     virtual int32_t Release() = 0;
     virtual void DumpStreamInfo(std::string& dumpString) = 0;
     virtual bool IsReleaseStream() final;
@@ -45,8 +46,8 @@ public:
     int32_t width_;
     int32_t height_;
     sptr<OHOS::IBufferProducer> producer_;
-    sptr<Camera::IStreamOperator> streamOperator_;
-    std::shared_ptr<Camera::CameraMetadata> cameraAbility_;
+    sptr<IStreamOperator> streamOperator_;
+    std::shared_ptr<OHOS::Camera::CameraMetadata> cameraAbility_;
 
 private:
     StreamType streamType_;

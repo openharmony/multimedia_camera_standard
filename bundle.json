@@ -12,7 +12,7 @@
     "component": {
         "name": "multimedia_camera_standard",
         "subsystem": "multimedia",
-        "syscap": [],
+        "syscap": ["SystemCapability.Multimedia.Camera.Core"],
         "features": [],
         "adapted_system_type": [ "standard" ],
         "rom": "",

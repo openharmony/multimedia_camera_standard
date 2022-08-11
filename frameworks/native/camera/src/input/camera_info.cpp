@@ -154,7 +154,6 @@ std::vector<float> CameraInfo::GetZoomRatioRange()
         return zoomRatioRange_;
     }
 
-#ifndef PRODUCT_M40
     int ret;
     uint32_t zoomRangeCount = 2;
     camera_metadata_item_t item;
@@ -169,12 +168,6 @@ std::vector<float> CameraInfo::GetZoomRatioRange()
         return {};
     }
     range = {item.data.f[minIndex], item.data.f[maxIndex]};
-#else
-    range = CalculateZoomRange();
-    if (range.empty()) {
-        return {};
-    }
-#endif
 
     if (range[minIndex] > range[maxIndex]) {
         MEDIA_ERR_LOG("Invalid zoom range. min: %{public}f, max: %{public}f", range[minIndex], range[maxIndex]);

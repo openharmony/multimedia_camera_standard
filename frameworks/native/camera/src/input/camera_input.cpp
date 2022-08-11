@@ -767,13 +767,6 @@ void CameraInput::SetZoomRatio(float zoomRatio)
         return;
     }
 
-#ifdef PRODUCT_M40
-    ret = SetCropRegion(zoomRatio);
-    if (ret != CAM_META_SUCCESS) {
-        return;
-    }
-#endif
-
     ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_ZOOM_RATIO, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = changedMetadata_->addEntry(OHOS_CONTROL_ZOOM_RATIO, &zoomRatio, count);

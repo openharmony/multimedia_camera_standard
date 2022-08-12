@@ -570,13 +570,6 @@ void CameraInput::SetFocusMode(camera_focus_mode_enum_t focusMode)
 
     MEDIA_DEBUG_LOG("CameraInput::SetFocusMode Focus mode: %{public}d", focusMode);
 
-#ifdef PRODUCT_M40
-    ret = StartFocus(focusMode);
-    if (ret != CAM_META_SUCCESS) {
-        return;
-    }
-#endif
-
     ret = Camera::FindCameraMetadataItem(changedMetadata_->get(), OHOS_CONTROL_FOCUS_MODE, &item);
     if (ret == CAM_META_ITEM_NOT_FOUND) {
         status = changedMetadata_->addEntry(OHOS_CONTROL_FOCUS_MODE, &focus, count);

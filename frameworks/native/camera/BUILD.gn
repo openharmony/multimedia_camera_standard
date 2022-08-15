@@ -13,15 +13,43 @@
 
 import("//build/ohos.gni")
 
+config("camera_framework_public_config") {
+  include_dirs = [
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/camera/include",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/camera/include/input",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/camera/include/output",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/camera/include/session",
+  ]
+}
+
+config("camera_framework_local_config") {
+  include_dirs = [
+    "//foundation/multimedia/camera_framework/services/camera_service/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/base/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/include",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/camera/include",
+  ]
+}
+
+config("camera_framework_drivers_config") {
+  include_dirs = [
+    "//drivers/peripheral/camera/interfaces/include",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc",
+    "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
+    "//drivers/peripheral/camera/interfaces/metadata/include",
+  ]
+}
+
 ohos_shared_library("camera_framework") {
   install_enable = true
   sources = [
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcamera_device_proxy.cpp",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcamera_service_proxy.cpp",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hcapture_session_proxy.cpp",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_capture_proxy.cpp",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_metadata_proxy.cpp",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/src/hstream_repeat_proxy.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/src/hcamera_device_proxy.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/src/hcamera_service_proxy.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/src/hcapture_session_proxy.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/src/hstream_capture_proxy.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/src/hstream_metadata_proxy.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/src/hstream_repeat_proxy.cpp",
     "src/input/camera_info.cpp",
     "src/input/camera_input.cpp",
     "src/input/camera_manager.cpp",
@@ -42,12 +70,13 @@ ohos_shared_library("camera_framework") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
+  public_configs = [
+    ":camera_framework_public_config",
+    ":camera_framework_local_config",
+    ":camera_framework_drivers_config",
+  ]
+
   include_dirs = [
-    "//foundation/multimedia/camera_standard/services/camera_service/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
-    "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
     "//utils/system/safwk/native/include",
   ]
@@ -56,7 +85,7 @@ ohos_shared_library("camera_framework") {
     "//drivers/interface/camera/v1_0:libcamera_proxy_1.0",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
+    "//foundation/multimedia/camera_framework/services/camera_service:camera_service",
   ]
 
   external_deps = [
@@ -71,13 +100,6 @@ ohos_shared_library("camera_framework") {
     "samgr:samgr_proxy",
   ]
 
-  include_dirs += [
-    "//drivers/peripheral/camera/interfaces/include",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc",
-    "//drivers/peripheral/camera/interfaces/hdi_ipc/server",
-    "//drivers/peripheral/camera/interfaces/metadata/include",
-  ]
-
   if ("${product_name}" == "m40") {
     cflags += [ "-DPRODUCT_M40" ]
   } else {
@@ -87,6 +109,6 @@ ohos_shared_library("camera_framework") {
   }
   cflags_cc = cflags
 
-  part_name = "multimedia_camera_standard"
+  part_name = "multimedia_camera_framework"
   subsystem_name = "multimedia"
 }

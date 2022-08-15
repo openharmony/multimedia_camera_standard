@@ -39,7 +39,7 @@
 仓目录结构如下：
 
 ```
-/foundation/multimedia/camera_standard   # 相机组件业务代码
+/foundation/multimedia/camera_framework   # 相机组件业务代码
 ├── frameworks                           # 框架代码
 │   ├── native                           # 内部接口实现
 │   │   ├── camera                       # 相机框架实现
@@ -500,5 +500,5 @@
 
 ## 相关仓<a name="section16511040154318"></a>
 
-[multimedia\_camera\_standard](https://gitee.com/openharmony/multimedia_camera_standard/README_zh.md)
+[multimedia\_camera\_standard](https://gitee.com/openharmony/multimedia_camera_framework/README_zh.md)
 

@@ -108,14 +108,12 @@ int32_t HCameraService::CreateCameraDevice(std::string cameraId, sptr<ICameraDev
 
     int permission_result
         = OHOS::Security::AccessToken::TypePermissionState::PERMISSION_DENIED;
-    if (OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken)
-        == OHOS::Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        permission_result = OHOS::Security::AccessToken::AccessTokenKit::VerifyNativeToken(callerToken,
-            permissionName);
-    } else if (OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken)
-        == OHOS::Security::AccessToken::ATokenTypeEnum::TOKEN_HAP) {
-        permission_result = OHOS::Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken,
-            permissionName);
+    Security::AccessToken::ATokenTypeEnum tokenType
+        = OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if ((tokenType == OHOS::Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE)
+        || (tokenType == OHOS::Security::AccessToken::ATokenTypeEnum::TOKEN_HAP)) {
+        permission_result = OHOS::Security::AccessToken::AccessTokenKit::VerifyAccessToken(
+            callerToken, permissionName);
     } else {
         MEDIA_ERR_LOG("HCameraService::CreateCameraDevice: Unsupported Access Token Type");
         return CAMERA_INVALID_ARG;

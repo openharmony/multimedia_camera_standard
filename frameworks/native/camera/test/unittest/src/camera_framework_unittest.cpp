@@ -1529,6 +1529,7 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_045, TestSize.Level0
  * FunctionPoints: NA
  * EnvConditions: NA
  * CaseDescription: Test create metadata output
+ * @tc.require: SR000GVK5P SR000GVO5O
  */
 HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_046, TestSize.Level0)
 {
@@ -1544,6 +1545,7 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_046, TestSize.Level0
  * FunctionPoints: NA
  * EnvConditions: NA
  * CaseDescription: Test set metadata object callback and state callback
+ * @tc.require: SR000GVK5P SR000GVO5O
  */
 HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_047, TestSize.Level0)
 {
@@ -1566,6 +1568,7 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_047, TestSize.Level0
  * FunctionPoints: NA
  * EnvConditions: NA
  * CaseDescription: Test get supported metadata object types and set capturing metadata object type as face
+ * @tc.require: SR000GVK5P SR000GVO5O
  */
 HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_048, TestSize.Level0)
 {
@@ -1607,6 +1610,7 @@ HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_048, TestSize.Level0
  * FunctionPoints: NA
  * EnvConditions: NA
  * CaseDescription: Test session with preview + metadata
+ * @tc.require: SR000GVK5P SR000GVO5O
  */
 HWTEST_F(CameraFrameworkUnitTest, camera_framework_unittest_049, TestSize.Level0)
 {

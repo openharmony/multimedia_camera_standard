@@ -39,7 +39,7 @@ The  **camera\_standard**  repository enables your application to provide camera
 The structure of the repository directory is as follows:
 
 ```
-/foundation/multimedia/camera_standard  # Camera code
+/foundation/multimedia/camera_framework  # Camera code
 ├── frameworks                          # Framework code
 │   ├── native                          # Internal Native API Implementation
 │   │   ├── camera                      # Camera Framework Implementation
@@ -501,5 +501,5 @@ Flash mode can be configured on the Camera Input before capturing a photo or rec
 
 ## Repositories Involved<a name="section16511040154318"></a>
 
-[multimedia\_camera\_standard](https://gitee.com/openharmony/multimedia_camera_standard/README.md)
+[multimedia\_camera\_standard](https://gitee.com/openharmony/multimedia_camera_framework/README.md)
 

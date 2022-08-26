@@ -16,6 +16,6 @@ import("//build/ohos.gni")
 ohos_prebuilt_etc("camera_service.rc") {
   source = "camera_service.cfg"
   relative_install_dir = "init"
-  part_name = "multimedia_camera_standard"
+  part_name = "multimedia_camera_framework"
   subsystem_name = "multimedia"
 }

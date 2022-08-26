@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 
 js_declaration("camera_js") {
-  part_name = "multimedia_camera_standard"
+  part_name = "multimedia_camera_framework"
   sources = [ "./@ohos.multimedia.camera.d.ts" ]
 }
 
@@ -29,34 +29,34 @@ ohos_copy("camera_declaration") {
 ohos_shared_library("camera_napi") {
   include_dirs = [
     "//drivers/peripheral/camera/interfaces/metadata/include",
-    "//foundation/multimedia/camera_standard/interfaces/kits/js/camera_napi/include",
-    "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/include",
-    "//foundation/multimedia/camera_standard/frameworks/native/camera/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include/",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
+    "//foundation/multimedia/camera_framework/interfaces/kits/js/camera_napi/include",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/camera/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/include",
+    "//foundation/multimedia/camera_framework/frameworks/native/camera/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/base/include/",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/include",
     "//foundation/multimedia/graphic/graphic_2d/interfaces/inner_api/surface",
   ]
   sources = [
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/input/camera_info_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/input/camera_input_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/input/camera_manager_callback_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/input/camera_manager_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/input/camera_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/input/camera_size_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/native_module_ohos_camera.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/metadata_object_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/metadata_output_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/photo_output_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/preview_output_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/output/video_output_napi.cpp",
-    "//foundation/multimedia/camera_standard/frameworks/js/camera_napi/src/session/camera_session_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/input/camera_info_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/input/camera_input_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/input/camera_manager_callback_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/input/camera_manager_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/input/camera_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/input/camera_size_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/native_module_ohos_camera.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/output/metadata_object_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/output/metadata_output_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/output/photo_output_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/output/preview_output_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/output/video_output_napi.cpp",
+    "//foundation/multimedia/camera_framework/frameworks/js/camera_napi/src/session/camera_session_napi.cpp",
   ]
   deps = [
     "//foundation/arkui/napi:ace_napi",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-    "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
+    "//foundation/multimedia/camera_framework/frameworks/native/camera:camera_framework",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
   external_deps = [
@@ -74,6 +74,6 @@ ohos_shared_library("camera_napi") {
   }
   cflags_cc = cflags
   relative_install_dir = "module/multimedia"
-  part_name = "multimedia_camera_standard"
+  part_name = "multimedia_camera_framework"
   subsystem_name = "multimedia"
 }

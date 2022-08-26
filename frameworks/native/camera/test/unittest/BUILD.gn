@@ -13,26 +13,26 @@
 
 import("//build/test.gni")
 
-module_output_path = "multimedia_camera_standard/camera_framework_unittest"
+module_output_path = "multimedia_camera_framework/camera_framework_unittest"
 
 ohos_unittest("camera_framework_unittest") {
   module_out_path = module_output_path
   include_dirs = [
     "./include",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/base/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/include",
     "//drivers/peripheral/camera/interfaces/metadata/include",
-    "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
-    "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/camera/include",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/test",
     "//base/security/access_token/interfaces/innerkits/accesstoken/include",
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",
   ]
 
   sources = [
-    "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test/test_common.cpp",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/test/test_common.cpp",
     "src/camera_framework_unittest.cpp",
   ]
 
@@ -41,8 +41,8 @@ ohos_unittest("camera_framework_unittest") {
     "//drivers/interface/camera/v1_0:libcamera_proxy_1.0",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
-    "//foundation/multimedia/camera_standard/services/camera_service:camera_service",
+    "//foundation/multimedia/camera_framework/frameworks/native/camera:camera_framework",
+    "//foundation/multimedia/camera_framework/services/camera_service:camera_service",
     "//third_party/googletest:gmock_main",
   ]
 

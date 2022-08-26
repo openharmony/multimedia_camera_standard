@@ -15,12 +15,12 @@ import("//build/ohos.gni")
 
 config("camera_config") {
   include_dirs = [
-    "//foundation/multimedia/camera_standard/interfaces/inner_api/native/camera/include",
-    "//foundation/multimedia/camera_standard/interfaces/inner_api/native/test",
-    "//foundation/multimedia/camera_standard/services/camera_service/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/base/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/client/include",
-    "//foundation/multimedia/camera_standard/services/camera_service/binder/server/include",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/camera/include",
+    "//foundation/multimedia/camera_framework/interfaces/inner_api/native/test",
+    "//foundation/multimedia/camera_framework/services/camera_service/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/base/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/client/include",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/include",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
     "//drivers/peripheral/camera/interfaces/metadata/include",
     "//utils/system/safwk/native/include",
@@ -55,7 +55,7 @@ ohos_executable("camera_video") {
     "//drivers/interface/camera/v1_0:libcamera_proxy_1.0",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
+    "//foundation/multimedia/camera_framework/frameworks/native/camera:camera_framework",
   ]
 
   external_deps = [
@@ -69,7 +69,7 @@ ohos_executable("camera_video") {
     "ipc:ipc_single",
     "multimedia_player_framework:media_client",
   ]
-  part_name = "multimedia_camera_standard"
+  part_name = "multimedia_camera_framework"
   subsystem_name = "multimedia"
 }
 
@@ -89,7 +89,7 @@ ohos_executable("camera_capture") {
     "//drivers/interface/camera/v1_0:libcamera_proxy_1.0",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
+    "//foundation/multimedia/camera_framework/frameworks/native/camera:camera_framework",
   ]
 
   external_deps = [
@@ -101,7 +101,7 @@ ohos_executable("camera_capture") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
   ]
-  part_name = "multimedia_camera_standard"
+  part_name = "multimedia_camera_framework"
   subsystem_name = "multimedia"
 }
 
@@ -121,7 +121,7 @@ ohos_executable("camera_capture_video") {
     "//drivers/interface/camera/v1_0:libcamera_proxy_1.0",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/multimedia/camera_standard/frameworks/native/camera:camera_framework",
+    "//foundation/multimedia/camera_framework/frameworks/native/camera:camera_framework",
   ]
 
   external_deps = [
@@ -133,6 +133,6 @@ ohos_executable("camera_capture_video") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
   ]
-  part_name = "multimedia_camera_standard"
+  part_name = "multimedia_camera_framework"
   subsystem_name = "multimedia"
 }

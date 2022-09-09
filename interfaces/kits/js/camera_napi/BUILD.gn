@@ -63,6 +63,7 @@ ohos_shared_library("camera_napi") {
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
   ]
   cflags = [ "-fPIC" ]
   if ("${product_name}" == "m40") {

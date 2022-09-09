@@ -50,6 +50,7 @@ ohos_moduletest("camera_framework_moduletest") {
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
   ]
 
   include_dirs += [

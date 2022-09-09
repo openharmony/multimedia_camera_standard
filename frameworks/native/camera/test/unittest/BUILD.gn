@@ -52,6 +52,7 @@ ohos_unittest("camera_framework_unittest") {
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
     "safwk:system_ability_fwk",
   ]
 

@@ -20,11 +20,49 @@
 #include "surface.h"
 #include "ipc_skeleton.h"
 #include "metadata_utils.h"
+#include "bundle_mgr_interface.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+
+using namespace OHOS::AppExecFwk;
+using namespace OHOS::AAFwk;
 
 namespace OHOS {
 namespace CameraStandard {
 static std::map<int32_t, sptr<HCaptureSession>> session_;
 static std::mutex sessionLock_;
+
+static std::string GetClientBundle(int uid)
+{
+    std::string bundleName = "";
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        MEDIA_ERR_LOG("Get ability manager failed");
+        return bundleName;
+    }
+
+    sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (object == nullptr) {
+        MEDIA_DEBUG_LOG("object is NULL.");
+        return bundleName;
+    }
+
+    sptr<AppExecFwk::IBundleMgr> bms = iface_cast<AppExecFwk::IBundleMgr>(object);
+    if (bms == nullptr) {
+        MEDIA_DEBUG_LOG("bundle manager service is NULL.");
+        return bundleName;
+    }
+
+    auto result = bms->GetBundleNameForUid(uid, bundleName);
+    if (!result) {
+        MEDIA_ERR_LOG("GetBundleNameForUid fail");
+        return "";
+    }
+    MEDIA_INFO_LOG("bundle name is %{public}s ", bundleName.c_str());
+
+    return bundleName;
+}
+
 HCaptureSession::HCaptureSession(sptr<HCameraHostManager> cameraHostManager,
     sptr<StreamOperatorCallback> streamOperatorCb)
     : cameraHostManager_(cameraHostManager), streamOperatorCallback_(streamOperatorCb),
@@ -102,6 +140,7 @@ int32_t HCaptureSession::AddInput(sptr<ICameraDeviceService> cameraDevice)
         cameraDevice_->SetReleaseCameraDevice(false);
     } else {
         tempCameraDevices_.emplace_back(localCameraDevice);
+        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddInput"));
     }
     return CAMERA_OK;
 }
@@ -143,6 +182,7 @@ int32_t HCaptureSession::AddOutput(StreamType streamType, sptr<IStreamCommon> st
     }  else if (streamType == StreamType::METADATA) {
         rc = AddOutputStream(static_cast<HStreamMetadata *>(stream.GetRefPtr()));
     }
+    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddOutput with %d", streamType));
     return rc;
 }
 
@@ -168,6 +208,7 @@ int32_t HCaptureSession::RemoveInput(sptr<ICameraDeviceService> cameraDevice)
         MEDIA_ERR_LOG("HCaptureSession::RemoveInput Invalid camera device");
         return CAMERA_INVALID_SESSION_CFG;
     }
+    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemoveInput"));
     return CAMERA_OK;
 }
 
@@ -213,6 +254,7 @@ int32_t HCaptureSession::RemoveOutput(StreamType streamType, sptr<IStreamCommon>
     } else if (streamType == StreamType::METADATA) {
         rc = RemoveOutputStream(static_cast<HStreamMetadata *>(stream.GetRefPtr()));
     }
+    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemoveOutput with %d", streamType));
     return rc;
 }
 
@@ -543,6 +585,13 @@ int32_t HCaptureSession::CommitConfig()
         RestorePreviousState(cameraDevice_, !deletedStreamIds_.empty());
         return rc;
     }
+    if (device != nullptr) {
+        int32_t pid = IPCSkeleton::GetCallingPid();
+        int32_t uid = IPCSkeleton::GetCallingUid();
+        POWERMGR_SYSEVENT_CAMERA_CONNECT(pid, uid, device->GetCameraId().c_str(),
+                                         GetClientBundle(uid));
+    }
+
     if (cameraDevice_ != nullptr && device != cameraDevice_) {
         cameraDevice_->Close();
         cameraDevice_ = nullptr;
@@ -641,6 +690,7 @@ int32_t HCaptureSession::Release(pid_t pid)
     }
     if (cameraDevice_ != nullptr) {
         cameraDevice_->Close();
+        POWERMGR_SYSEVENT_CAMERA_DISCONNECT(cameraDevice_->GetCameraId().c_str());
         cameraDevice_ = nullptr;
     }
     ClearCaptureSession(pid);

@@ -65,7 +65,6 @@ public:
     int32_t OnFrameError(const int32_t errorCode) override
     {
         if (videoOutput_ != nullptr && videoOutput_->GetApplicationCallback() != nullptr) {
-            CAMERA_SYSEVENT_FAULT(CreateMsg("Video OnFrameError! errorCode:%d", errorCode));
             videoOutput_->GetApplicationCallback()->OnError(errorCode);
         } else {
             MEDIA_INFO_LOG("Discarding HStreamRepeatCallbackImpl::OnFrameError callback in video");

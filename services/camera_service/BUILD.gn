@@ -22,17 +22,11 @@ ohos_shared_library("camera_service") {
     "binder/client/src/hcapture_session_callback_proxy.cpp",
     "binder/client/src/hstream_capture_callback_proxy.cpp",
     "binder/client/src/hstream_repeat_callback_proxy.cpp",
-    "binder/server/src/hcamera_device_callback_stub.cpp",
     "binder/server/src/hcamera_device_stub.cpp",
-    "binder/server/src/hcamera_listener_stub.cpp",
-    "binder/server/src/hcamera_service_callback_stub.cpp",
     "binder/server/src/hcamera_service_stub.cpp",
-    "binder/server/src/hcapture_session_callback_stub.cpp",
     "binder/server/src/hcapture_session_stub.cpp",
-    "binder/server/src/hstream_capture_callback_stub.cpp",
     "binder/server/src/hstream_capture_stub.cpp",
     "binder/server/src/hstream_metadata_stub.cpp",
-    "binder/server/src/hstream_repeat_callback_stub.cpp",
     "binder/server/src/hstream_repeat_stub.cpp",
     "src/camera_util.cpp",
     "src/hcamera_device.cpp",
@@ -75,7 +69,10 @@ ohos_shared_library("camera_service") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",

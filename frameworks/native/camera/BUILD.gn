@@ -50,6 +50,12 @@ ohos_shared_library("camera_framework") {
     "//foundation/multimedia/camera_framework/services/camera_service/binder/client/src/hstream_capture_proxy.cpp",
     "//foundation/multimedia/camera_framework/services/camera_service/binder/client/src/hstream_metadata_proxy.cpp",
     "//foundation/multimedia/camera_framework/services/camera_service/binder/client/src/hstream_repeat_proxy.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/src/hcamera_device_callback_stub.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/src/hcamera_listener_stub.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/src/hcamera_service_callback_stub.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/src/hcapture_session_callback_stub.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/src/hstream_capture_callback_stub.cpp",
+    "//foundation/multimedia/camera_framework/services/camera_service/binder/server/src/hstream_repeat_callback_stub.cpp",
     "src/input/camera_info.cpp",
     "src/input/camera_input.cpp",
     "src/input/camera_manager.cpp",
@@ -85,13 +91,9 @@ ohos_shared_library("camera_framework") {
     "//drivers/interface/camera/v1_0:libcamera_proxy_1.0",
     "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/multimedia/camera_framework/services/camera_service:camera_service",
   ]
 
   external_deps = [
-    "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",

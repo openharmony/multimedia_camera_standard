@@ -181,11 +181,14 @@ int32_t HStreamRepeat::OnFrameEnded(int32_t frameCount)
 int32_t HStreamRepeat::OnFrameError(int32_t errorType)
 {
     if (streamRepeatCallback_ != nullptr) {
+        int32_t repeatErrorCode;
         if (errorType == BUFFER_LOST) {
-            streamRepeatCallback_->OnFrameError(CAMERA_STREAM_BUFFER_LOST);
+            repeatErrorCode = CAMERA_STREAM_BUFFER_LOST;
         } else {
-            streamRepeatCallback_->OnFrameError(CAMERA_UNKNOWN_ERROR);
+            repeatErrorCode = CAMERA_UNKNOWN_ERROR;
         }
+        CAMERA_SYSEVENT_FAULT(CreateMsg("Preview OnFrameError! errorCode:%d", repeatErrorCode));
+        streamRepeatCallback_->OnFrameError(repeatErrorCode);
     }
     return CAMERA_OK;
 }

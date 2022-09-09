@@ -63,6 +63,8 @@ private:
     std::shared_ptr<OHOS::Camera::CameraMetadata> updateSettings_;
     sptr<IStreamOperator> streamOperator_;
     std::mutex deviceLock_;
+
+    void ReportFlashEvent(const std::shared_ptr<OHOS::Camera::CameraMetadata> &settings);
 };
 
 class CameraDeviceCallback : public ICameraDeviceCallback {

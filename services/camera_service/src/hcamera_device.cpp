@@ -17,6 +17,7 @@
 
 #include "camera_util.h"
 #include "camera_log.h"
+#include "ipc_skeleton.h"
 #include "metadata_utils.h"
 
 namespace OHOS {
@@ -177,10 +178,27 @@ int32_t HCameraDevice::UpdateSetting(const std::shared_ptr<OHOS::Camera::CameraM
             MEDIA_ERR_LOG("HCameraDevice::UpdateSetting failed with error Code: %{public}d", rc);
             return HdiToServiceError(rc);
         }
+        ReportFlashEvent(updateSettings_);
         updateSettings_ = nullptr;
     }
     MEDIA_DEBUG_LOG("HCameraDevice::UpdateSetting Updated device settings");
     return CAMERA_OK;
+}
+
+void HCameraDevice::ReportFlashEvent(const std::shared_ptr<OHOS::Camera::CameraMetadata> &settings) {
+    camera_metadata_item_t item;
+    camera_flash_mode_enum_t flashMode = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
+    int ret = OHOS::Camera::FindCameraMetadataItem(settings->get(), OHOS_CONTROL_FLASH_MODE, &item);
+    if (ret != CAM_META_SUCCESS) {
+        MEDIA_ERR_LOG("CameraInput::GetFlashMode Failed with return code %{public}d", ret);
+        flashMode = static_cast<camera_flash_mode_enum_t>(item.data.u8[0]);
+    }
+
+    if (flashMode == OHOS_CAMERA_FLASH_MODE_CLOSE) {
+        POWERMGR_SYSEVENT_FLASH_OFF();
+    } else {
+        POWERMGR_SYSEVENT_FLASH_ON();
+    }
 }
 
 int32_t HCameraDevice::EnableResult(std::vector<int32_t> &results)
@@ -264,13 +282,17 @@ sptr<IStreamOperator> HCameraDevice::GetStreamOperator()
 int32_t HCameraDevice::OnError(const ErrorType type, const int32_t errorMsg)
 {
     if (deviceSvcCallback_ != nullptr) {
+        int32_t errorType;
         if (type == REQUEST_TIMEOUT) {
-            deviceSvcCallback_->OnError(CAMERA_DEVICE_REQUEST_TIMEOUT, errorMsg);
+            errorType = CAMERA_DEVICE_REQUEST_TIMEOUT;
         } else if (type == DEVICE_PREEMPT) {
-            deviceSvcCallback_->OnError(CAMERA_DEVICE_PREEMPTED, errorMsg);
+            errorType = CAMERA_DEVICE_PREEMPTED;
         } else {
-            deviceSvcCallback_->OnError(CAMERA_UNKNOWN_ERROR, errorMsg);
+            errorType = CAMERA_UNKNOWN_ERROR;
         }
+        deviceSvcCallback_->OnError(errorType, errorMsg);
+        CAMERA_SYSEVENT_FAULT(CreateMsg("CameraDeviceServiceCallback::OnError() is called!, errorType: %d,"
+                                        "errorMsg: %d", errorType, errorMsg));
     }
     return CAMERA_OK;
 }
@@ -281,6 +303,38 @@ int32_t HCameraDevice::OnResult(const uint64_t timestamp,
     if (deviceSvcCallback_ != nullptr) {
         deviceSvcCallback_->OnResult(timestamp, result);
     }
+    camera_metadata_item_t item;
+    common_metadata_header_t *metadata = result->get();
+    int ret = OHOS::Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_FLASH_MODE, &item);
+    if (ret == 0) {
+        MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASH_MODE is %{public}d",
+                        item.data.u8[0]);
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashModeChanged! current OHOS_CONTROL_FLASH_MODE is %d",
+                                            item.data.u8[0]));
+    }
+    ret = OHOS::Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_FLASH_STATE, &item);
+    if (ret == 0) {
+        MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASH_STATE is %{public}d",
+                        item.data.u8[0]);
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashStateChanged! current OHOS_CONTROL_FLASH_STATE is %d",
+                                            item.data.u8[0]));
+        POWERMGR_SYSEVENT_TORCH_STATE(IPCSkeleton::GetCallingPid(),
+                                      IPCSkeleton::GetCallingUid(), item.data.u8[0]);
+    }
+
+    ret = OHOS::Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_FOCUS_MODE, &item);
+    if (ret == CAM_META_SUCCESS) {
+        MEDIA_DEBUG_LOG("Focus mode: %{public}d", item.data.u8[0]);
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusModeChanged! current OHOS_CONTROL_FOCUS_MODE is %d",
+                                           item.data.u8[0]));
+    }
+    ret = OHOS::Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_FOCUS_STATE, &item);
+    if (ret == CAM_META_SUCCESS) {
+        MEDIA_INFO_LOG("Focus state: %{public}d", item.data.u8[0]);
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusStateChanged! current OHOS_CONTROL_FOCUS_STATE is %d",
+                                           item.data.u8[0]));
+    }
+
     return CAMERA_OK;
 }
 

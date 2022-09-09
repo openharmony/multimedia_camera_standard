@@ -123,11 +123,15 @@ int32_t HStreamCapture::OnCaptureEnded(int32_t captureId, int32_t frameCount)
 int32_t HStreamCapture::OnCaptureError(int32_t captureId, int32_t errorCode)
 {
     if (streamCaptureCallback_ != nullptr) {
+        int32_t captureErrorCode;
         if (errorCode == BUFFER_LOST) {
-            streamCaptureCallback_->OnCaptureError(captureId, CAMERA_STREAM_BUFFER_LOST);
+            captureErrorCode = CAMERA_STREAM_BUFFER_LOST;
         } else {
-            streamCaptureCallback_->OnCaptureError(captureId, CAMERA_UNKNOWN_ERROR);
+            captureErrorCode = CAMERA_UNKNOWN_ERROR;
         }
+        CAMERA_SYSEVENT_FAULT(CreateMsg("Photo OnCaptureError! captureId:%d & "
+                                        "errorCode:%{public}d", captureId, captureErrorCode));
+        streamCaptureCallback_->OnCaptureError(captureId, captureErrorCode);
     }
     return CAMERA_OK;
 }

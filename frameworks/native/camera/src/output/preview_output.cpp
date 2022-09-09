@@ -72,7 +72,6 @@ public:
     int32_t OnFrameError(int32_t errorCode) override
     {
         if (previewOutput_ != nullptr && previewOutput_->GetApplicationCallback() != nullptr) {
-            CAMERA_SYSEVENT_FAULT(CreateMsg("Preview OnFrameError! errorCode:%d", errorCode));
             previewOutput_->GetApplicationCallback()->OnError(errorCode);
         } else {
             MEDIA_INFO_LOG("Discarding HStreamRepeatCallbackImpl::OnFrameError callback in preview");

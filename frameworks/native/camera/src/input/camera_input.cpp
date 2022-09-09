@@ -20,7 +20,6 @@
 #include "camera_device_ability_items.h"
 #include "camera_util.h"
 #include "hcamera_device_callback_stub.h"
-#include "ipc_skeleton.h"
 #include "camera_log.h"
 #include "metadata_utils.h"
 
@@ -51,8 +50,6 @@ public:
         MEDIA_ERR_LOG("CameraDeviceServiceCallback::OnError() is called!, errorType: %{public}d, errorMsg: %{public}d",
                       errorType, errorMsg);
         if (camInput_ != nullptr && camInput_->GetErrorCallback() != nullptr) {
-            CAMERA_SYSEVENT_FAULT(CreateMsg("CameraDeviceServiceCallback::OnError() is called!, errorType: %d,"
-                                            "errorMsg: %d", errorType, errorMsg));
             camInput_->GetErrorCallback()->OnError(errorType, errorMsg);
         } else {
             MEDIA_INFO_LOG("CameraDeviceServiceCallback::ErrorCallback not set!, Discarding callback");
@@ -64,23 +61,6 @@ public:
     {
         MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() is called!, cameraId: %{public}s, timestamp: %{public}"
                        PRIu64, camInput_->GetCameraDeviceInfo()->GetID().c_str(), timestamp);
-        camera_metadata_item_t item;
-        int ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASH_STATE, &item);
-        if (ret == 0) {
-            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASH_STATE is %{public}d",
-                           item.data.u8[0]);
-            CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashStateChanged! current OHOS_CONTROL_FLASH_STATE is %d",
-                                               item.data.u8[0]));
-            POWERMGR_SYSEVENT_TORCH_STATE(IPCSkeleton::GetCallingPid(),
-                                          IPCSkeleton::GetCallingUid(), item.data.u8[0]);
-        }
-        ret = Camera::FindCameraMetadataItem(result->get(), OHOS_CONTROL_FLASH_MODE, &item);
-        if (ret == 0) {
-            MEDIA_INFO_LOG("CameraDeviceServiceCallback::OnResult() OHOS_CONTROL_FLASH_MODE is %{public}d",
-                           item.data.u8[0]);
-            CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FlashModeChanged! current OHOS_CONTROL_FLASH_MODE is %d",
-                                               item.data.u8[0]));
-        }
 
         camInput_->ProcessAutoExposureUpdates(result);
         camInput_->ProcessAutoFocusUpdates(result);
@@ -822,12 +802,6 @@ void CameraInput::SetFlashMode(camera_flash_mode_enum_t flashMode)
         MEDIA_ERR_LOG("CameraInput::SetFlashMode Failed to set flash mode");
         return;
     }
-
-    if (flashMode == OHOS_CAMERA_FLASH_MODE_CLOSE) {
-        POWERMGR_SYSEVENT_FLASH_OFF();
-    } else {
-        POWERMGR_SYSEVENT_FLASH_ON();
-    }
 }
 
 void CameraInput::SetErrorCallback(std::shared_ptr<ErrorCallback> errorCallback)
@@ -856,14 +830,10 @@ void CameraInput::ProcessAutoFocusUpdates(const std::shared_ptr<Camera::CameraMe
     int ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_FOCUS_MODE, &item);
     if (ret == CAM_META_SUCCESS) {
         MEDIA_DEBUG_LOG("Focus mode: %{public}d", item.data.u8[0]);
-        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusModeChanged! current OHOS_CONTROL_FOCUS_MODE is %d",
-                                           item.data.u8[0]));
     }
     ret = Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_FOCUS_STATE, &item);
     if (ret == CAM_META_SUCCESS) {
         MEDIA_INFO_LOG("Focus state: %{public}d", item.data.u8[0]);
-        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("FocusStateChanged! current OHOS_CONTROL_FOCUS_STATE is %d",
-                                           item.data.u8[0]));
         if (focusCallback_ != nullptr) {
             camera_focus_state_t focusState = static_cast<camera_focus_state_t>(item.data.u8[0]);
             auto itr = mapFromMetadataFocus_.find(focusState);

@@ -33,14 +33,21 @@
             ]
         },
         "build": {
-          "sub_component": [
-            "//foundation/multimedia/camera_framework/sa_profile:camera_service_sa_profile",
-            "//foundation/multimedia/camera_framework/services/etc:camera_service.rc",
-            "//foundation/multimedia/camera_framework/services/camera_service:camera_service",
-            "//foundation/multimedia/camera_framework/frameworks/native/camera:camera_framework",
-            "//foundation/multimedia/camera_framework/interfaces/kits/js/camera_napi:camera_napi",
-            "//foundation/multimedia/camera_framework/interfaces/kits/js/camera_napi:camera_js"
-          ],
+          "group_type": {
+            "base_group": [
+            ],
+            "fwk_group": [
+              "//foundation/multimedia/camera_framework/frameworks/native/camera:camera_framework",
+              "//foundation/multimedia/camera_framework/interfaces/kits/js/camera_napi:camera_napi",
+              "//foundation/multimedia/camera_framework/interfaces/kits/js/camera_napi:camera_js"
+            ],
+            "service_group": [
+              "//foundation/multimedia/camera_framework/sa_profile:camera_service_sa_profile",
+              "//foundation/multimedia/camera_framework/services/etc:camera_service.rc",
+              "//foundation/multimedia/camera_framework/services/camera_service:camera_service"
+            ]
+          },
+
           "inner_kits": [
             {
               "type": "none",

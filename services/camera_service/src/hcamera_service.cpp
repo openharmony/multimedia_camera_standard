@@ -92,6 +92,35 @@ int32_t HCameraService::GetCameras(std::vector<std::string> &cameraIds,
             MEDIA_ERR_LOG("HCameraService::GetCameraAbility failed");
             return ret;
         }
+
+        camera_metadata_item_t item;
+        common_metadata_header_t *metadata = cameraAbility->get();
+        camera_position_enum_t cameraPosition = OHOS_CAMERA_POSITION_OTHER;
+        int ret = OHOS::Camera::FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_POSITION, &item);
+        if (ret == CAM_META_SUCCESS) {
+            cameraPosition = static_cast<camera_position_enum_t>(item.data.u8[0]);
+        }
+
+        camera_type_enum_t cameraType = OHOS_CAMERA_TYPE_UNSPECIFIED;
+        ret = OHOS::Camera::FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_TYPE, &item);
+        if (ret == CAM_META_SUCCESS) {
+            cameraType = static_cast<camera_type_enum_t>(item.data.u8[0]);
+        }
+
+        camera_connection_type_t connectionType = OHOS_CAMERA_CONNECTION_TYPE_BUILTIN;
+        ret = OHOS::Camera::FindCameraMetadataItem(metadata, OHOS_ABILITY_CAMERA_CONNECTION_TYPE, &item);
+        if (ret == CAM_META_SUCCESS) {
+            connectionType = static_cast<camera_connection_type_t>(item.data.u8[0]);
+        }
+
+        bool isMirrorSupported = false;
+        ret = OHOS::Camera::FindCameraMetadataItem(metadata, OHOS_CONTROL_CAPTURE_MIRROR_SUPPORTED, &item);
+        if (ret == CAM_META_SUCCESS) {
+            isMirrorSupported = ((item.data.u8[0] == 1) || (item.data.u8[0] == 0));
+        }
+        CAMERA_SYSEVENT_STATISTIC(CreateMsg("CameraManager GetCameras camera ID:%s, Camera position:%d,"
+                                            " Camera Type:%d, Connection Type:%d, Mirror support:%d", id.c_str(),
+                                            cameraPosition, cameraType, connectionType, isMirrorSupported));
         cameraAbilityList.emplace_back(cameraAbility);
     }
 
@@ -132,6 +161,7 @@ int32_t HCameraService::CreateCameraDevice(std::string cameraId, sptr<ICameraDev
     }
     devices_.insert(std::make_pair(cameraId, cameraDevice));
     device = cameraDevice;
+    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CameraManager_CreateCameraInput CameraId:%s", cameraId.c_str()));
     return CAMERA_OK;
 }
 
@@ -170,6 +200,8 @@ int32_t HCameraService::CreatePhotoOutput(const sptr<OHOS::IBufferProducer> &pro
         MEDIA_ERR_LOG("HCameraService::CreatePhotoOutput HStreamCapture allocation failed");
         return CAMERA_ALLOC_ERROR;
     }
+    POWERMGR_SYSEVENT_CAMERA_CONFIG(PHOTO, producer->GetDefaultWidth(),
+                                    producer->GetDefaultHeight());
     photoOutput = streamCapture;
     return CAMERA_OK;
 }
@@ -189,6 +221,8 @@ int32_t HCameraService::CreatePreviewOutput(const sptr<OHOS::IBufferProducer> &p
         MEDIA_ERR_LOG("HCameraService::CreatePreviewOutput HStreamRepeat allocation failed");
         return CAMERA_ALLOC_ERROR;
     }
+    POWERMGR_SYSEVENT_CAMERA_CONFIG(PREVIEW, producer->GetDefaultWidth(),
+                                    producer->GetDefaultHeight());
     previewOutput = streamRepeatPreview;
     return CAMERA_OK;
 }
@@ -208,6 +242,7 @@ int32_t HCameraService::CreateCustomPreviewOutput(const sptr<OHOS::IBufferProduc
         MEDIA_ERR_LOG("HCameraService::CreateCustomPreviewOutput HStreamRepeat allocation failed");
         return CAMERA_ALLOC_ERROR;
     }
+    POWERMGR_SYSEVENT_CAMERA_CONFIG(PREVIEW, width, height);
     previewOutput = streamRepeatPreview;
     return CAMERA_OK;
 }
@@ -227,6 +262,8 @@ int32_t HCameraService::CreateMetadataOutput(const sptr<OHOS::IBufferProducer> &
         MEDIA_ERR_LOG("HCameraService::CreateMetadataOutput HStreamMetadata allocation failed");
         return CAMERA_ALLOC_ERROR;
     }
+    POWERMGR_SYSEVENT_CAMERA_CONFIG(METADATA, producer->GetDefaultWidth(),
+                                    producer->GetDefaultHeight());
     metadataOutput = streamMetadata;
     return CAMERA_OK;
 }
@@ -246,6 +283,8 @@ int32_t HCameraService::CreateVideoOutput(const sptr<OHOS::IBufferProducer> &pro
         MEDIA_ERR_LOG("HCameraService::CreateVideoOutput HStreamRepeat allocation failed");
         return CAMERA_ALLOC_ERROR;
     }
+    POWERMGR_SYSEVENT_CAMERA_CONFIG(VIDEO, producer->GetDefaultWidth(),
+                                    producer->GetDefaultHeight());
     videoOutput = streamRepeatVideo;
     return CAMERA_OK;
 }
@@ -254,6 +293,8 @@ void HCameraService::OnCameraStatus(const std::string& cameraId, CameraStatus st
 {
     if (cameraServiceCallback_) {
         cameraServiceCallback_->OnCameraStatusChanged(cameraId, status);
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("OnCameraStatusChanged! for cameraId:%s, current Camera Status:%d",
+                                           cameraId.c_str(), status));
     }
 }
 
@@ -261,6 +302,10 @@ void HCameraService::OnFlashlightStatus(const std::string& cameraId, FlashStatus
 {
     if (cameraServiceCallback_) {
         cameraServiceCallback_->OnFlashlightStatusChanged(cameraId, status);
+        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("OnFlashlightStatusChanged! for cameraId:%s, current Flash Status:%d",
+                                           cameraId.c_str(), status));
+        POWERMGR_SYSEVENT_TORCH_STATE(IPCSkeleton::GetCallingPid(),
+                                      IPCSkeleton::GetCallingUid(), status);
     }
 }
 

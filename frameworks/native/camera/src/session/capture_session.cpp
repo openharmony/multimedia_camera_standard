@@ -17,17 +17,10 @@
 #include "camera_util.h"
 #include "hcapture_session_callback_stub.h"
 #include "input/camera_input.h"
-#include "ipc_skeleton.h"
 #include "camera_log.h"
 #include "output/photo_output.h"
 #include "output/preview_output.h"
 #include "output/video_output.h"
-#include "bundle_mgr_interface.h"
-#include "iservice_registry.h"
-#include "system_ability_definition.h"
-
-using namespace OHOS::AppExecFwk;
-using namespace OHOS::AAFwk;
 
 namespace OHOS {
 namespace CameraStandard {
@@ -50,7 +43,6 @@ public:
         MEDIA_INFO_LOG("CaptureSessionCallback::OnError() is called!, errorCode: %{public}d",
                        errorCode);
         if (captureSession_ != nullptr && captureSession_->GetApplicationCallback() != nullptr) {
-            CAMERA_SYSEVENT_FAULT(CreateMsg("Session OnError! errorCode:%d", errorCode));
             captureSession_->GetApplicationCallback()->OnError(errorCode);
         } else {
             MEDIA_INFO_LOG("CaptureSessionCallback::ApplicationCallback not set!, Discarding callback");
@@ -58,37 +50,6 @@ public:
         return CAMERA_OK;
     }
 };
-
-static std::string GetClientBundle(int uid)
-{
-    std::string bundleName = "";
-    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (samgr == nullptr) {
-        MEDIA_ERR_LOG("Get ability manager failed");
-        return bundleName;
-    }
-
-    sptr<IRemoteObject> object = samgr->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (object == nullptr) {
-        MEDIA_DEBUG_LOG("object is NULL.");
-        return bundleName;
-    }
-
-    sptr<AppExecFwk::IBundleMgr> bms = iface_cast<AppExecFwk::IBundleMgr>(object);
-    if (bms == nullptr) {
-        MEDIA_DEBUG_LOG("bundle manager service is NULL.");
-        return bundleName;
-    }
-
-    auto result = bms->GetBundleNameForUid(uid, bundleName);
-    if (!result) {
-        MEDIA_ERR_LOG("GetBundleNameForUid fail");
-        return "";
-    }
-    MEDIA_INFO_LOG("bundle name is %{public}s ", bundleName.c_str());
-
-    return bundleName;
-}
 
 CaptureSession::CaptureSession(sptr<ICaptureSession> &captureSession)
 {
@@ -112,14 +73,6 @@ int32_t CaptureSession::BeginConfig()
 int32_t CaptureSession::CommitConfig()
 {
     CAMERA_SYNC_TRACE;
-    if (inputDevice_ != nullptr) {
-        int32_t pid = IPCSkeleton::GetCallingPid();
-        int32_t uid = IPCSkeleton::GetCallingUid();
-        POWERMGR_SYSEVENT_CAMERA_CONNECT(pid, uid,
-                                         inputDevice_->GetCameraDeviceInfo()->GetID().c_str(),
-                                         GetClientBundle(uid));
-    }
-
     return captureSession_->CommitConfig();
 }
 
@@ -130,7 +83,6 @@ int32_t CaptureSession::AddInput(sptr<CaptureInput> &input)
         MEDIA_ERR_LOG("CaptureSession::AddInput input is null");
         return CAMERA_INVALID_ARG;
     }
-    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddInput"));
     inputDevice_ = input;
     return captureSession_->AddInput(((sptr<CameraInput> &)input)->GetCameraDevice());
 }
@@ -142,7 +94,6 @@ int32_t CaptureSession::AddOutput(sptr<CaptureOutput> &output)
         MEDIA_ERR_LOG("CaptureSession::AddOutput output is null");
         return CAMERA_INVALID_ARG;
     }
-    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::AddOutput with %s", output->GetOutputTypeString()));
     output->SetSession(this);
     return captureSession_->AddOutput(output->GetStreamType(), output->GetStream());
 }
@@ -154,7 +105,6 @@ int32_t CaptureSession::RemoveInput(sptr<CaptureInput> &input)
         MEDIA_ERR_LOG("CaptureSession::RemoveInput input is null");
         return CAMERA_INVALID_ARG;
     }
-    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemoveInput"));
     if (inputDevice_ != nullptr) {
         inputDevice_ = nullptr;
     }
@@ -168,7 +118,6 @@ int32_t CaptureSession::RemoveOutput(sptr<CaptureOutput> &output)
         MEDIA_ERR_LOG("CaptureSession::RemoveOutput output is null");
         return CAMERA_INVALID_ARG;
     }
-    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CaptureSession::RemoveOutput with %s", output->GetOutputTypeString()));
     output->SetSession(nullptr);
     return captureSession_->RemoveOutput(output->GetStreamType(), output->GetStream());
 }
@@ -300,10 +249,6 @@ std::shared_ptr<SessionCallback> CaptureSession::GetApplicationCallback()
 void CaptureSession::Release()
 {
     CAMERA_SYNC_TRACE;
-    if (inputDevice_ != nullptr) {
-        POWERMGR_SYSEVENT_CAMERA_DISCONNECT(inputDevice_->GetCameraDeviceInfo()->GetID().c_str());
-        inputDevice_ = nullptr;
-    }
     int32_t errCode = captureSession_->Release(0);
     if (errCode != CAMERA_OK) {
         MEDIA_ERR_LOG("Failed to Release capture session!, %{public}d", errCode);

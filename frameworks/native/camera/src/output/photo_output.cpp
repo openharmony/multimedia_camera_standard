@@ -206,8 +206,6 @@ public:
     int32_t OnCaptureError(const int32_t captureId, const int32_t errorCode) override
     {
         if (photoOutput_ != nullptr && photoOutput_->GetApplicationCallback() != nullptr) {
-            CAMERA_SYSEVENT_FAULT(CreateMsg("Photo OnCaptureError! captureId:%d & "
-                                            "errorCode:%{public}d", captureId, errorCode));
             photoOutput_->GetApplicationCallback()->OnCaptureError(captureId, errorCode);
         } else {
             MEDIA_INFO_LOG("Discarding HStreamCaptureCallbackImpl::OnCaptureError callback");

@@ -70,9 +70,6 @@ public:
         CameraDeviceStatus deviceStatus;
         CameraStatusInfo cameraStatusInfo;
 
-        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("OnCameraStatusChanged! for cameraId:%s, current Camera Status:%d",
-                                           cameraId.c_str(), status));
-
         if (camMngr_ != nullptr && camMngr_->GetApplicationCallback() != nullptr) {
             switch (status) {
                 case CAMERA_STATUS_UNAVAILABLE:
@@ -103,12 +100,6 @@ public:
     int32_t OnFlashlightStatusChanged(const std::string& cameraId, const FlashStatus status) override
     {
         FlashlightStatus flashlightStatus;
-
-        CAMERA_SYSEVENT_BEHAVIOR(CreateMsg("OnFlashlightStatusChanged! for cameraId:%s, current Flash Status:%d",
-                                           cameraId.c_str(), status));
-        POWERMGR_SYSEVENT_TORCH_STATE(IPCSkeleton::GetCallingPid(),
-                                      IPCSkeleton::GetCallingUid(), status);
-
         MEDIA_INFO_LOG("OnFlashlightStatusChanged: cameraId: %{public}s, status: %{public}d", cameraId.c_str(), status);
         if (camMngr_ != nullptr && camMngr_->GetApplicationCallback() != nullptr) {
             switch (status) {
@@ -176,9 +167,6 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(sptr<Surface> &surface)
         result = new(std::nothrow) PhotoOutput(streamCapture);
         if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PhotoOutput ");
-        } else {
-            POWERMGR_SYSEVENT_CAMERA_CONFIG(PHOTO, surface->GetDefaultWidth(),
-                                            surface->GetDefaultHeight());
         }
     } else {
         MEDIA_ERR_LOG("Failed to get stream capture object from hcamera service!, %{public}d", retCode);
@@ -202,10 +190,6 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(const sptr<OHOS::IBufferProdu
         result = new(std::nothrow) PhotoOutput(streamCapture);
         if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PhotoOutput");
-        } else {
-            POWERMGR_SYSEVENT_CAMERA_CONFIG(PHOTO,
-                                            producer->GetDefaultWidth(),
-                                            producer->GetDefaultHeight());
         }
     } else {
         MEDIA_ERR_LOG("Failed to get stream capture object from hcamera service!, %{public}d", retCode);
@@ -230,10 +214,6 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
         result = new(std::nothrow) PreviewOutput(streamRepeat);
         if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PreviewOutput");
-        } else {
-            POWERMGR_SYSEVENT_CAMERA_CONFIG(PREVIEW,
-                                            surface->GetDefaultWidth(),
-                                            surface->GetDefaultHeight());
         }
     } else {
         MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
@@ -257,10 +237,6 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(const sptr<OHOS::IBufferP
         result = new(std::nothrow) PreviewOutput(streamRepeat);
         if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PreviewOutput");
-        } else {
-            POWERMGR_SYSEVENT_CAMERA_CONFIG(PREVIEW,
-                                            producer->GetDefaultWidth(),
-                                            producer->GetDefaultHeight());
         }
     } else {
         MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
@@ -286,8 +262,6 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(sptr<Surface> surfa
         result = new(std::nothrow) PreviewOutput(streamRepeat);
         if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PreviewOutput");
-        } else {
-            POWERMGR_SYSEVENT_CAMERA_CONFIG(PREVIEW, width, height);
         }
     } else {
         MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
@@ -312,8 +286,6 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(const sptr<OHOS::IB
         result = new(std::nothrow) PreviewOutput(streamRepeat);
         if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new PreviewOutput");
-        } else {
-            POWERMGR_SYSEVENT_CAMERA_CONFIG(PREVIEW, width, height);
         }
     } else {
         MEDIA_ERR_LOG("PreviewOutput: Failed to get stream repeat object from hcamera service!, %{public}d", retCode);
@@ -365,7 +337,6 @@ sptr<MetadataOutput> CameraManager::CreateMetadataOutput()
         MEDIA_ERR_LOG("CameraManager::CreateMetadataOutput Surface consumer listener registration failed");
         return nullptr;
     }
-    POWERMGR_SYSEVENT_CAMERA_CONFIG(METADATA, width, height);
     return result;
 }
 
@@ -386,10 +357,6 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
         result = new(std::nothrow) VideoOutput(streamRepeat);
         if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new VideoOutput");
-        } else {
-            POWERMGR_SYSEVENT_CAMERA_CONFIG(VIDEO,
-                                            surface->GetDefaultWidth(),
-                                            surface->GetDefaultHeight());
         }
     } else {
         MEDIA_ERR_LOG("VideoOutpout: Failed to get stream repeat object from hcamera service! %{public}d", retCode);
@@ -413,10 +380,6 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(const sptr<OHOS::IBufferProdu
         result = new(std::nothrow) VideoOutput(streamRepeat);
         if (result == nullptr) {
             MEDIA_ERR_LOG("Failed to new VideoOutput");
-        } else {
-            POWERMGR_SYSEVENT_CAMERA_CONFIG(VIDEO,
-                                            producer->GetDefaultWidth(),
-                                            producer->GetDefaultHeight());
         }
     } else {
         MEDIA_ERR_LOG("VideoOutpout: Failed to get stream repeat object from hcamera service! %{public}d", retCode);
@@ -560,10 +523,6 @@ std::vector<sptr<CameraInfo>> CameraManager::GetCameras()
                 MEDIA_ERR_LOG("CameraManager::GetCameras new CameraInfo failed for id={public}%s", it.c_str());
                 continue;
             }
-            CAMERA_SYSEVENT_STATISTIC(CreateMsg("CameraManager GetCameras camera ID:%s, Camera position:%d,"
-                                                " Camera Type:%d, Connection Type:%d, Mirror support:%d", it.c_str(),
-                                                cameraObj->GetPosition(), cameraObj->GetCameraType(),
-                                                cameraObj->GetConnectionType(), cameraObj->IsMirrorSupported()));
             cameraObjList.emplace_back(cameraObj);
         }
     } else {
@@ -592,8 +551,6 @@ sptr<CameraInput> CameraManager::CreateCameraInput(sptr<CameraInfo> &camera)
     } else {
         MEDIA_ERR_LOG("CameraManager::CreateCameraInput: Camera object is null");
     }
-    CAMERA_SYSEVENT_STATISTIC(CreateMsg("CameraManager_CreateCameraInput CameraId:%s", camera->GetID().c_str()));
-
     return cameraInput;
 }
 

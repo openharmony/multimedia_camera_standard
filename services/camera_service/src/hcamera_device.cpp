@@ -189,15 +189,13 @@ void HCameraDevice::ReportFlashEvent(const std::shared_ptr<OHOS::Camera::CameraM
     camera_metadata_item_t item;
     camera_flash_mode_enum_t flashMode = OHOS_CAMERA_FLASH_MODE_ALWAYS_OPEN;
     int ret = OHOS::Camera::FindCameraMetadataItem(settings->get(), OHOS_CONTROL_FLASH_MODE, &item);
-    if (ret != CAM_META_SUCCESS) {
-        MEDIA_ERR_LOG("CameraInput::GetFlashMode Failed with return code %{public}d", ret);
+    if (ret == CAM_META_SUCCESS) {
         flashMode = static_cast<camera_flash_mode_enum_t>(item.data.u8[0]);
-    }
-
-    if (flashMode == OHOS_CAMERA_FLASH_MODE_CLOSE) {
-        POWERMGR_SYSEVENT_FLASH_OFF();
-    } else {
         POWERMGR_SYSEVENT_FLASH_ON();
+    } else {
+        MEDIA_ERR_LOG("ReportFlashEvent::GetFlashMode Failed with return code %{public}d", ret);
+        flashMode = OHOS_CAMERA_FLASH_MODE_CLOSE;
+        POWERMGR_SYSEVENT_FLASH_OFF();
     }
 }
 

@@ -41,7 +41,7 @@ class ErrorCallback {
 public:
     ErrorCallback() = default;
     virtual ~ErrorCallback() = default;
-    virtual void OnError(const int32_t errorType, const int32_t errorMsg) const;
+    virtual void OnError(const int32_t errorType, const int32_t errorMsg) const = 0;
 };
 
 class ExposureCallback {

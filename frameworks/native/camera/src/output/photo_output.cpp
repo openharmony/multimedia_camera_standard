@@ -56,6 +56,7 @@ PhotoCaptureSetting::QualityLevel PhotoCaptureSetting::GetQuality()
 
 void PhotoCaptureSetting::SetQuality(PhotoCaptureSetting::QualityLevel qualityLevel)
 {
+    MEDIA_DEBUG_LOG("PhotoCaptureSetting::SetQuality qualityLevel=%{public}d", qualityLevel);
     bool status = false;
     camera_metadata_item_t item;
     uint8_t highQuality = 100;

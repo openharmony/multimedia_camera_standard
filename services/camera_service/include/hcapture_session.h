@@ -90,7 +90,6 @@ private:
     void ClearCaptureSession(pid_t pid);
     std::string GetSessionState();
 
-    std::mutex mutex_;
     CaptureSessionState curState_ = CaptureSessionState::SESSION_INIT;
     CaptureSessionState prevState_ = CaptureSessionState::SESSION_INIT;
     sptr<HCameraDevice> cameraDevice_;

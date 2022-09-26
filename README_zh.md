@@ -343,7 +343,7 @@
 2.  使用相机对象创建相机输入来打开相机。
 
     ```
-    sptr<CaptureSession> captureSession = camManagerObj->CreateCaptureSession();
+    sptr<CaptureInput> cameraInput = camManagerObj->CreateCameraInput(cameraObjList[0]);
     ```
     
 3.  创建采集会话。

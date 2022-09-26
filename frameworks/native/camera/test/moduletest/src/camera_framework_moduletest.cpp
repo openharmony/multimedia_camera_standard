@@ -2310,63 +2310,6 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_042, TestSize.Le
     session_->Stop();
 }
 
-/*
- * Feature: Framework
- * Function: Test camera preempted.
- * SubFunction: NA
- * FunctionPoints: NA
- * EnvConditions: NA
- * CaseDescription: Test camera preempted.
- * @tc.require: SR000GVTU0
- */
-HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Level0)
-{
-    sptr<CaptureSession> session_2 = manager_->CreateCaptureSession();
-    ASSERT_NE(session_2, nullptr);
-
-    int32_t intResult = session_2->BeginConfig();
-    EXPECT_EQ(intResult, 0);
-
-    std::shared_ptr<AppCallback> callback = std::make_shared<AppCallback>();
-    sptr<CaptureInput> input_2 = manager_->CreateCameraInput(cameras_[0]);
-    ASSERT_NE(input_2, nullptr);
-    sptr<CameraInput> camInput_2 = (sptr<CameraInput> &)input_2;
-    camInput_2->SetErrorCallback(callback);
-
-    intResult = session_2->AddInput(input_2);
-    EXPECT_EQ(intResult, 0);
-
-    sptr<CaptureOutput> previewOutput_2 = CreatePreviewOutput();
-    ASSERT_NE(previewOutput_2, nullptr);
-
-    intResult = session_2->AddOutput(previewOutput_2);
-    EXPECT_EQ(intResult, 0);
-
-    intResult = session_2->CommitConfig();
-    EXPECT_EQ(intResult, 0);
-
-    intResult = session_2->Start();
-    EXPECT_EQ(intResult, 0);
-
-    sptr<CaptureSession> session_3 = manager_->CreateCaptureSession();
-    ASSERT_NE(session_3, nullptr);
-    EXPECT_EQ(g_sessionclosed, true);
-
-    intResult = session_3->BeginConfig();
-    EXPECT_EQ(intResult, 0);
-
-    intResult = session_3->AddInput(input_2);
-    EXPECT_EQ(intResult, 0);
-
-    intResult = session_3->AddOutput(previewOutput_2);
-    EXPECT_EQ(intResult, 0);
-
-    intResult = session_3->CommitConfig();
-    EXPECT_EQ(intResult, 0);
-
-    session_3->Stop();
-}
-
 #ifdef PRODUCT_M40
 /*
  * Feature: Framework
@@ -2377,7 +2320,7 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Le
  * CaseDescription: Test Preview + Metadata
  * @tc.require: SR000GVK5P SR000GVO5O
  */
-HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_044, TestSize.Level0)
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_043, TestSize.Level0)
 {
     int32_t intResult = session_->BeginConfig();
     EXPECT_EQ(intResult, 0);
@@ -2428,5 +2371,69 @@ HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_044, TestSize.Le
     metaOutput->Release();
 }
 #endif
+
+/*
+ * Feature: Framework
+ * Function: Test camera preempted.
+ * SubFunction: NA
+ * FunctionPoints: NA
+ * EnvConditions: NA
+ * CaseDescription: Test camera preempted.
+ * @tc.require: SR000GVTU0
+ */
+HWTEST_F(CameraFrameworkModuleTest, camera_framework_moduletest_044, TestSize.Level0)
+{
+    sptr<CaptureSession> session_2 = manager_->CreateCaptureSession();
+    ASSERT_NE(session_2, nullptr);
+
+    int32_t intResult = session_2->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    std::shared_ptr<AppCallback> callback = std::make_shared<AppCallback>();
+    sptr<CaptureInput> input_2 = manager_->CreateCameraInput(cameras_[0]);
+    ASSERT_NE(input_2, nullptr);
+    sptr<CameraInput> camInput_2 = (sptr<CameraInput> &)input_2;
+    camInput_2->SetErrorCallback(callback);
+
+    intResult = session_2->AddInput(input_2);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput_2 = CreatePreviewOutput();
+    ASSERT_NE(previewOutput_2, nullptr);
+
+    intResult = session_2->AddOutput(previewOutput_2);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_2->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_2->Start();
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureSession> session_3 = manager_->CreateCaptureSession();
+    ASSERT_NE(session_3, nullptr);
+    EXPECT_EQ(g_sessionclosed, true);
+
+    intResult = session_3->BeginConfig();
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureInput> input_3 = manager_->CreateCameraInput(cameras_[0]);
+    ASSERT_NE(input_3, nullptr);
+
+    intResult = session_3->AddInput(input_3);
+    EXPECT_EQ(intResult, 0);
+
+    sptr<CaptureOutput> previewOutput_3 = CreatePreviewOutput();
+    ASSERT_NE(previewOutput_3, nullptr);
+
+    intResult = session_3->AddOutput(previewOutput_3);
+    EXPECT_EQ(intResult, 0);
+
+    intResult = session_3->CommitConfig();
+    EXPECT_EQ(intResult, 0);
+
+    session_3->Stop();
+}
+
 } // CameraStandard
 } // OHOS

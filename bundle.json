@@ -102,7 +102,6 @@
             }
           ],
           "test": [
-            "//foundation/multimedia/camera_framework/frameworks/native/camera/test/moduletest:camera_framework_moduletest",
             "//foundation/multimedia/camera_framework/frameworks/native/camera/test/unittest:camera_framework_unittest",
             "//foundation/multimedia/camera_framework/interfaces/inner_api/native/test:camera_video",
             "//foundation/multimedia/camera_framework/interfaces/inner_api/native/test:camera_capture",

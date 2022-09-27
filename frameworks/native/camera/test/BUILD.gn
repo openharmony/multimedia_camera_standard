@@ -15,7 +15,6 @@ group("cameraframeworktest") {
   testonly = true
 
   deps = [
-    "moduletest:camera_framework_moduletest",
     "unittest:camera_framework_unittest",
   ]
 }

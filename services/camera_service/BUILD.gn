@@ -37,6 +37,7 @@ ohos_shared_library("camera_service") {
     "src/hstream_common.cpp",
     "src/hstream_metadata.cpp",
     "src/hstream_repeat.cpp",
+    "src/permission_status_change_cb.cpp",
   ]
   cflags = [
     "-fPIC",

@@ -23,6 +23,7 @@
 #include "hstream_repeat.h"
 #include "v1_0/istream_operator_callback.h"
 #include "v1_0/istream_operator.h"
+#include "permission_status_change_cb.h"
 
 #include <refbase.h>
 #include <iostream>
@@ -31,6 +32,7 @@ namespace OHOS {
 namespace CameraStandard {
 using namespace OHOS::HDI::Camera::V1_0;
 class StreamOperatorCallback;
+class PermissionStatusChangeCb;
 
 enum class CaptureSessionState {
     SESSION_INIT = 0,
@@ -39,10 +41,11 @@ enum class CaptureSessionState {
 };
 
 static const int32_t STREAMID_BEGIN = 1;
+const std::string ACCESS_CAMERA = "ohos.permission.CAMERA";
 
 class HCaptureSession : public HCaptureSessionStub {
 public:
-    HCaptureSession(sptr<HCameraHostManager> cameraHostManager, sptr<StreamOperatorCallback> streamOperatorCb);
+    HCaptureSession(sptr<HCameraHostManager> cameraHostManager, sptr<StreamOperatorCallback> streamOperatorCb, const uint32_t callingTokenId);
     ~HCaptureSession();
 
     int32_t BeginConfig() override;
@@ -57,6 +60,7 @@ public:
     int32_t Start() override;
     int32_t Stop() override;
     int32_t Release(pid_t pid) override;
+    int32_t ReleaseInner();
     static void DestroyStubObjectForPid(pid_t pid);
     int32_t SetCallback(sptr<ICaptureSessionCallback> &callback) override;
 
@@ -88,6 +92,8 @@ private:
     void RestorePreviousState(sptr<HCameraDevice> &device, bool isCreateReleaseStreams);
     void ReleaseStreams();
     void ClearCaptureSession(pid_t pid);
+    void RegisterPermissionCallback(const uint32_t callingTokenId, const std::string permissionName);
+    void UnregisterPermissionCallback(const uint32_t callingTokenId);
     std::string GetSessionState();
 
     CaptureSessionState curState_ = CaptureSessionState::SESSION_INIT;
@@ -108,6 +114,8 @@ private:
     std::map<CaptureSessionState, std::string> sessionState_;
     pid_t pid_;
     int32_t uid_;
+    uint32_t callerToken_;
+    std::shared_ptr<PermissionStatusChangeCb> callbackPtr_;
 };
 
 class StreamOperatorCallback : public IStreamOperatorCallback {

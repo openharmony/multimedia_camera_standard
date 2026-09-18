@@ -14,6 +14,7 @@
  */
 
 #include "input/camera_manager.h"
+#include "input/parse_camera_userdata_int.h"
 
 #include <cstring>
 
@@ -162,7 +163,12 @@ sptr<PhotoOutput> CameraManager::CreatePhotoOutput(sptr<Surface> &surface)
         return nullptr;
     }
     std::string format = surface->GetUserData(surfaceFormat);
-    retCode = serviceProxy_->CreatePhotoOutput(surface->GetProducer(), std::stoi(format), streamCapture);
+    int32_t formatInt = 0;
+    if (!ParseCameraUserDataInt(format, formatInt)) {
+        MEDIA_ERR_LOG("CameraManager::CreatePhotoOutput invalid CAMERA_SURFACE_FORMAT userdata");
+        return nullptr;
+    }
+    retCode = serviceProxy_->CreatePhotoOutput(surface->GetProducer(), formatInt, streamCapture);
     if (retCode == CAMERA_OK) {
         result = new(std::nothrow) PhotoOutput(streamCapture);
         if (result == nullptr) {
@@ -209,7 +215,12 @@ sptr<PreviewOutput> CameraManager::CreatePreviewOutput(sptr<Surface> surface)
         return nullptr;
     }
     std::string format = surface->GetUserData(surfaceFormat);
-    retCode = serviceProxy_->CreatePreviewOutput(surface->GetProducer(), std::stoi(format), streamRepeat);
+    int32_t formatInt = 0;
+    if (!ParseCameraUserDataInt(format, formatInt)) {
+        MEDIA_ERR_LOG("CameraManager::CreatePreviewOutput invalid CAMERA_SURFACE_FORMAT userdata");
+        return nullptr;
+    }
+    retCode = serviceProxy_->CreatePreviewOutput(surface->GetProducer(), formatInt, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new(std::nothrow) PreviewOutput(streamRepeat);
         if (result == nullptr) {
@@ -256,7 +267,12 @@ sptr<PreviewOutput> CameraManager::CreateCustomPreviewOutput(sptr<Surface> surfa
         return nullptr;
     }
     std::string format = surface->GetUserData(surfaceFormat);
-    retCode = serviceProxy_->CreateCustomPreviewOutput(surface->GetProducer(), std::stoi(format), width, height,
+    int32_t formatInt = 0;
+    if (!ParseCameraUserDataInt(format, formatInt)) {
+        MEDIA_ERR_LOG("CameraManager::CreateCustomPreviewOutput invalid CAMERA_SURFACE_FORMAT userdata");
+        return nullptr;
+    }
+    retCode = serviceProxy_->CreateCustomPreviewOutput(surface->GetProducer(), formatInt, width, height,
                                                        streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new(std::nothrow) PreviewOutput(streamRepeat);
@@ -352,7 +368,12 @@ sptr<VideoOutput> CameraManager::CreateVideoOutput(sptr<Surface> &surface)
         return nullptr;
     }
     std::string format = surface->GetUserData(surfaceFormat);
-    retCode = serviceProxy_->CreateVideoOutput(surface->GetProducer(), std::stoi(format), streamRepeat);
+    int32_t formatInt = 0;
+    if (!ParseCameraUserDataInt(format, formatInt)) {
+        MEDIA_ERR_LOG("CameraManager::CreateVideoOutput invalid CAMERA_SURFACE_FORMAT userdata");
+        return nullptr;
+    }
+    retCode = serviceProxy_->CreateVideoOutput(surface->GetProducer(), formatInt, streamRepeat);
     if (retCode == CAMERA_OK) {
         result = new(std::nothrow) VideoOutput(streamRepeat);
         if (result == nullptr) {

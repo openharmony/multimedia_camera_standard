@@ -15,6 +15,7 @@
 
 
 #include "output/preview_output_napi.h"
+#include "input/parse_camera_userdata_int.h"
 #include <unistd.h>
 #include <uv.h>
 
@@ -271,8 +272,8 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
             return result;
         }
 
-        int32_t surfaceWidth;
-        int32_t surfaceHeight;
+        int32_t surfaceWidth = 0;
+        int32_t surfaceHeight = 0;
         if (xCompPreviewSurface) {
             int retrytimes = 20;
             int usleeptimes = 50000;
@@ -288,8 +289,11 @@ napi_value PreviewOutputNapi::CreatePreviewOutput(napi_env env, uint64_t surface
                 }
                 usleep(usleeptimes);
             }
-            surfaceWidth = std::stoi(width);
-            surfaceHeight = std::stoi(height);
+            if (!ParseCameraUserDataInt(width, surfaceWidth) ||
+                !ParseCameraUserDataInt(height, surfaceHeight)) {
+                MEDIA_ERR_LOG("create previewOutput: invalid SURFACE_WIDTH/HEIGHT userdata");
+                return result;
+            }
         } else {
             surfaceWidth = surface->GetDefaultWidth();
             surfaceHeight = surface->GetDefaultHeight();
